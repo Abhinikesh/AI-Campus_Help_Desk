@@ -23,11 +23,6 @@
 
 ## 📸 Screenshots
 
-### 🌟 Splash Screen
-![Splash Screen](campussphere-ai/Splash.png)
-
----
-
 ### 🏠 Home Page
 ![Home Page](campussphere-ai/home.png)
 
@@ -75,45 +70,6 @@
 | 🔐 **Role-Based Access** | 5 roles — Student, Faculty, Admin, Parent, New Admission |
 | 📢 **Announcements** | Faculty posts announcements, students & parents receive them |
 | 📱 **Fully Responsive** | Works perfectly on desktop, tablet and mobile |
-
----
-
-## 🎭 Roles & Access
-
-┌─────────────────┬──────────────────────────────────────────────┐
-│ Role            │ Access                                        │
-├─────────────────┼──────────────────────────────────────────────┤
-│ 🎓 Student      │ Dashboard, Attendance, Exams, Results,        │
-│                 │ AI Help Desk, Virtual Tour, Drive, Complaints │
-├─────────────────┼──────────────────────────────────────────────┤
-│ 👨‍🏫 Faculty     │ Dashboard, Timetable, Subjects, Announcements,│
-│                 │ AI Help Desk, Virtual Tour, Complaints        │
-├─────────────────┼──────────────────────────────────────────────┤
-│ 🛡️ Admin        │ Analytics, All Complaints, Announcements,    │
-│                 │ Student Management, Stats                     │
-├─────────────────┼──────────────────────────────────────────────┤
-│ 👨‍👧 Parent       │ Child Progress, Calendar, AI Help Desk,      │
-│                 │ Virtual Tour, Contact Directory               │
-├─────────────────┼──────────────────────────────────────────────┤
-│ 📋 New Admission│ Programs, Admission Steps, FAQs,             │
-│                 │ Important Dates, Campus Highlights            │
-└─────────────────┴──────────────────────────────────────────────┘
-
----
-
-## 🤖 AI Agents
-
-┌─────────────────────────────────────────────────────────────┐
-│                    CAMPUS AI ASSISTANT                       │
-├──────────────┬──────────────┬──────────────┬────────────────┤
-│  📚 Academic │  🏛️ Admin    │  🗺️ Navigate │  📝 Complaint  │
-│    Agent     │    Agent     │    Agent     │    Agent       │
-├──────────────┼──────────────┼──────────────┼────────────────┤
-│ Timetable    │ Fees         │ Room Finding │ Raise Issues   │
-│ Results      │ ID Card      │ Directions   │ Track Status   │
-│ Attendance   │ Documents    │ Campus Map   │ Grievances     │
-│ Exams        │ Certificates │ Locations    │ Resolution     │
-└──────────────┴──────────────┴──────────────┴────────────────┘
 
 ---
 
