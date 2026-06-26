@@ -1,76 +1,100 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import {
   GraduationCap, BookOpen, Users, UserPlus, Shield,
-  Bot, Map, CheckSquare, AlertTriangle, FolderOpen, LayoutDashboard,
-  ArrowRight, Cpu
+  Bot, Map, CheckSquare, AlertTriangle, FolderOpen,
+  LayoutDashboard
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import LoginModal from '../../components/LoginModal/LoginModal';
 import './Landing.css';
 
-// ── Particles ──────────────────────────────────────────────
-const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
-  id: i,
-  size:  Math.random() * 4 + 2,
-  left:  Math.random() * 100,
-  delay: Math.random() * 8,
-  dur:   Math.random() * 12 + 10,
-}));
-
 // ── Role definitions ────────────────────────────────────────
 const ROLES = [
   {
-    id:       'student',
-    icon:     GraduationCap,
-    name:     'Student',
-    desc:     'Access your courses, attendance & results',
+    id:   'student',
+    icon: GraduationCap,
+    name: 'Student',
+    desc: 'Access your courses, attendance and results',
   },
   {
-    id:       'faculty',
-    icon:     BookOpen,
-    name:     'Faculty / Teacher',
-    desc:     'Manage classes, grades & announcements',
+    id:   'faculty',
+    icon: BookOpen,
+    name: 'Faculty / Teacher',
+    desc: 'Manage classes, grades and announcements',
   },
   {
-    id:       'parent',
-    icon:     Users,
-    name:     'Parent',
-    desc:     "Track your child's progress & attendance",
+    id:   'parent',
+    icon: Users,
+    name: 'Parent',
+    desc: "Track your child's progress and attendance",
   },
   {
-    id:       'admission',
-    icon:     UserPlus,
-    name:     'New Admission',
-    desc:     'Begin your admission journey here',
+    id:   'admission',
+    icon: UserPlus,
+    name: 'New Admission',
+    desc: 'Begin your admission journey here',
   },
   {
-    id:       'admin',
-    icon:     Shield,
-    name:     'College Admin',
-    desc:     'Manage campus operations & analytics',
+    id:   'admin',
+    icon: Shield,
+    name: 'College Admin',
+    desc: 'Manage campus operations and analytics',
   },
 ];
 
 // ── Feature definitions ─────────────────────────────────────
 const FEATURES = [
-  { icon: Bot,           title: 'AI Multi-Agent Help Desk',    desc: 'Academic, Admin, Navigation & Complaint agents in one chat' },
-  { icon: Map,           title: '360° Virtual Campus Tour',    desc: 'Explore campus virtually from anywhere, anytime'            },
-  { icon: CheckSquare,   title: 'Real-Time Attendance',        desc: 'Live attendance tracking with low-attendance alerts'        },
-  { icon: AlertTriangle, title: 'Smart Complaint System',      desc: 'Raise, track and resolve complaints instantly'              },
-  { icon: FolderOpen,    title: 'Academic Drive',              desc: 'Access notes, papers and resources in one place'           },
-  { icon: LayoutDashboard, title: 'Role-Based Dashboards',    desc: 'Personalized experience for every campus role'             },
+  {
+    icon:  Bot,
+    title: 'AI Help Desk',
+    desc:  'Instant AI-powered answers for academic and admin queries',
+  },
+  {
+    icon:  CheckSquare,
+    title: 'Real-Time Attendance',
+    desc:  'Automated tracking with low-attendance alerts',
+  },
+  {
+    icon:  FolderOpen,
+    title: 'Academic Drive',
+    desc:  'Centralized notes, papers, and resources',
+  },
+  {
+    icon:  AlertTriangle,
+    title: 'Smart Complaints',
+    desc:  'Raise, track and resolve grievances instantly',
+  },
+  {
+    icon:  LayoutDashboard,
+    title: 'Role-Based Dashboards',
+    desc:  'Personalized views for every campus role',
+  },
+  {
+    icon:  Map,
+    title: 'Virtual Campus Tour',
+    desc:  'Explore campus facilities from anywhere',
+  },
 ];
 
 // ── Stats ───────────────────────────────────────────────────
 const STATS = [
-  { value: 5000, suffix: '+', label: 'Students Enrolled' },
-  { value: 200,  suffix: '+', label: 'Expert Faculty'     },
-  { value: 94,   suffix: '%', label: 'Placement Rate'     },
-  { value: 24,   suffix: 'x7', label: 'AI Support'        },
+  { value: 4536, suffix: '+',  label: 'Students Enrolled' },
+  { value: 200,  suffix: '+',  label: 'Expert Faculty'     },
+  { value: 94,   suffix: '%',  label: 'Placement Rate'     },
+  { value: 24,   suffix: 'x7', label: 'AI Support'         },
 ];
 
-// ── AnimatedNumber component ────────────────────────────────
+// ── About highlights ────────────────────────────────────────
+const HIGHLIGHTS = [
+  'Multi-agent AI helpdesk for instant answers',
+  'Role-based access for all campus stakeholders',
+  'Real-time attendance and academic tracking',
+  '360-degree virtual campus experience',
+  'Integrated complaint and grievance management',
+];
+
+// ── Animated Number ─────────────────────────────────────────
 const AnimatedNumber = ({ value, suffix, inView }) => {
   const [count, setCount] = useState(0);
   useEffect(() => {
@@ -87,7 +111,7 @@ const AnimatedNumber = ({ value, suffix, inView }) => {
   return <>{count}{suffix}</>;
 };
 
-// ── Landing Page ────────────────────────────────────────────
+// ── Dashboard redirects ─────────────────────────────────────
 const ROLE_DASHBOARDS = {
   student:   '/student/dashboard',
   faculty:   '/faculty/dashboard',
@@ -96,12 +120,12 @@ const ROLE_DASHBOARDS = {
   admin:     '/admin/dashboard',
 };
 
+// ── Landing Page ────────────────────────────────────────────
 const Landing = () => {
-  const navigate = useNavigate();
   const { user, loading } = useAuth();
 
   const [scrolled,    setScrolled]    = useState(false);
-  const [activeModal, setActiveModal] = useState(null); // role string | null
+  const [activeModal, setActiveModal] = useState(null);
   const [statsInView, setStatsInView] = useState(false);
   const statsRef = useRef(null);
 
@@ -122,8 +146,7 @@ const Landing = () => {
     return () => observer.disconnect();
   }, []);
 
-  // ── If already authenticated, redirect to their dashboard ──
-  // We wait until loading=false so we don't redirect before the JWT check completes
+  // Redirect if already logged in
   if (!loading && user) {
     return <Navigate to={ROLE_DASHBOARDS[user.role] || '/'} replace />;
   }
@@ -135,84 +158,83 @@ const Landing = () => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const scrollToSection = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a' }}>
+    <div style={{ minHeight: '100vh', background: '#FFFFFF' }}>
 
       {/* ── NAVBAR ── */}
       <nav className={`landing-nav${scrolled ? ' scrolled' : ''}`}>
         <a className="nav-brand" href="/">
-          <GraduationCap size={28} color="#3b82f6" strokeWidth={2} />
-          <span className="nav-brand-text">
-            Campus<span>Sphere</span> AI
+          {/* Cap-and-gown SVG icon */}
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A56DB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+          <span className="nav-brand-logo-text">
+            CampusSphere<span className="brand-ai"> AI</span>
           </span>
         </a>
+
+        <div className="landing-nav-links">
+          <button className="landing-nav-link" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            Home
+          </button>
+          <button className="landing-nav-link" onClick={() => scrollToSection('features')}>
+            Features
+          </button>
+          <button className="landing-nav-link" onClick={() => scrollToSection('about')}>
+            About
+          </button>
+          <button className="landing-nav-link" onClick={() => scrollToSection('footer')}>
+            Contact
+          </button>
+        </div>
+
+        <div className="landing-nav-actions">
+          <button className="btn-outline" style={{ height: 38, fontSize: 14 }} onClick={() => openModal('student')}>
+            Login
+          </button>
+          <button className="btn-primary" style={{ height: 38, fontSize: 14 }} onClick={() => openModal('student')}>
+            Get Started
+          </button>
+        </div>
       </nav>
 
       {/* ── HERO ── */}
       <section className="hero-section">
-        {/* 🖼️ REPLACE: put your image file named 'hero-bg.jpg' in /client/public/assets/images/ */}
-        <img
-          src="/assets/images/hero-bg.jpg"
-          alt="Campus aerial view"
-          className="hero-bg-img"
-          onError={(e) => { e.target.style.display = 'none'; }}
-        />
-        <div className="hero-overlay" />
-
-        {/* Floating particles */}
-        {PARTICLES.map((p) => (
-          <div
-            key={p.id}
-            className="particle"
-            style={{
-              width:  p.size,
-              height: p.size,
-              left:   `${p.left}%`,
-              bottom: '-20px',
-              animationDuration:  `${p.dur}s`,
-              animationDelay:     `${p.delay}s`,
-              opacity: 0,
-            }}
-          />
-        ))}
-
         <div className="hero-content">
-          <div className="hero-eyebrow">
-            <Cpu size={13} />
+          <div className="hero-pill">
             Powered by Gemini AI
           </div>
 
           <h1 className="hero-title">
-            Your AI-Powered<br />
-            <span className="gradient-text">Smart Campus</span>
+            The Smart Campus Platform<br />
+            for Modern Institutions
           </h1>
 
           <p className="hero-sub">
-            One platform for students, faculty, parents and admin.
-            Powered by multi-agent AI for real answers, real fast.
+            Manage students, faculty, attendance, admissions, and campus
+            operations — all in one place.
           </p>
 
           <div className="hero-cta-row">
-            <button className="btn-primary" onClick={handleExplore}
-              style={{ fontSize: 16, padding: '14px 32px' }}>
+            <button className="hero-cta-primary" onClick={handleExplore}>
               Explore Features
             </button>
-            <button className="btn-outline" onClick={() => openModal('student')}
-              style={{ fontSize: 16, padding: '14px 32px' }}>
-              Get Started
+            <button className="hero-cta-secondary" onClick={() => openModal('student')}>
+              Sign In
             </button>
           </div>
 
-          <div className="hero-badges">
-            {[
-              { icon: '🎓', text: '5000+ Students'   },
-              { icon: '👨‍🏫', text: '200+ Faculty'     },
-              { icon: '🤖', text: 'AI Powered 24×7'  },
-            ].map((b) => (
-              <div key={b.text} className="hero-badge">
-                <span>{b.icon}</span> {b.text}
-              </div>
-            ))}
+          <div className="hero-stats-row">
+            <span className="hero-stat-item">4536+ Students</span>
+            <div className="hero-stat-separator" />
+            <span className="hero-stat-item">200+ Faculty</span>
+            <div className="hero-stat-separator" />
+            <span className="hero-stat-item">AI Powered 24x7</span>
           </div>
         </div>
       </section>
@@ -220,9 +242,11 @@ const Landing = () => {
       {/* ── WHO ARE YOU ── */}
       <section className="roles-section">
         <div className="section-header">
-          <div className="section-tag">Get Started</div>
-          <h2 className="section-title">Who Are You?</h2>
-          <p className="section-sub">Select your role to access your personalised dashboard</p>
+          <div className="section-label">GET STARTED</div>
+          <h2 className="section-title">Select Your Role to Continue</h2>
+          <p className="section-sub">
+            Access your personalized dashboard based on your campus role.
+          </p>
         </div>
 
         <div className="roles-grid">
@@ -238,15 +262,10 @@ const Landing = () => {
                 onKeyDown={(e) => e.key === 'Enter' && openModal(r.id)}
               >
                 <div className="role-icon-wrap">
-                  <Icon size={28} color="#3b82f6" strokeWidth={1.75} />
+                  <Icon size={24} color="#1A56DB" strokeWidth={1.75} />
                 </div>
-                <div>
-                  <div className="role-name">{r.name}</div>
-                  <div className="role-desc">{r.desc}</div>
-                </div>
-                <div className="role-arrow">
-                  <ArrowRight size={18} />
-                </div>
+                <div className="role-name">{r.name}</div>
+                <div className="role-desc">{r.desc}</div>
               </div>
             );
           })}
@@ -254,13 +273,13 @@ const Landing = () => {
       </section>
 
       {/* ── FEATURES ── */}
-      <section id="features">
+      <section id="features" className="features-section">
         <div className="section-wrap">
           <div className="section-header">
-            <div className="section-tag">Features</div>
-            <h2 className="section-title">Powerful Features</h2>
+            <div className="section-label">FEATURES</div>
+            <h2 className="section-title">Everything Your Campus Needs</h2>
             <p className="section-sub">
-              Everything you need for a seamless campus experience, all in one place
+              A unified platform built for every stakeholder in your institution.
             </p>
           </div>
 
@@ -270,7 +289,7 @@ const Landing = () => {
               return (
                 <div key={f.title} className="feature-card">
                   <div className="feature-icon">
-                    <Icon size={26} color="#3b82f6" strokeWidth={1.75} />
+                    <Icon size={22} color="#1A56DB" strokeWidth={1.75} />
                   </div>
                   <h3 className="feature-title">{f.title}</h3>
                   <p className="feature-desc">{f.desc}</p>
@@ -281,7 +300,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ── STATS ── */}
+      {/* ── STATS BAR ── */}
       <section className="stats-section" ref={statsRef}>
         <div className="stats-grid">
           {STATS.map((s) => (
@@ -296,50 +315,69 @@ const Landing = () => {
       </section>
 
       {/* ── ABOUT ── */}
-      <section style={{ padding: '96px 0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
-          <div className="about-grid">
-            {/* Left: text */}
-            <div>
-              <div className="section-tag">About</div>
-              <h2 className="about-title" style={{ marginTop: 14 }}>
-                About <span className="gradient-text">CampusSphere AI</span>
-              </h2>
-              <p className="about-text">
-                CampusSphere AI is a next-generation smart campus platform designed to simplify
-                every aspect of college life. From real-time attendance and results to an intelligent
-                helpdesk powered by Gemini AI, we bring all campus services under one roof.
-              </p>
-              <ul className="about-highlights">
-                {[
-                  'Multi-agent AI helpdesk for instant answers',
-                  'Role-based access for 5 campus stakeholders',
-                  'Real-time attendance & academic tracking',
-                  '360° virtual campus tour experience',
-                  'Integrated complaint & grievance system',
-                ].map((item) => (
-                  <li key={item}>
-                    <div className="highlight-dot" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+      <section id="about" className="about-section">
+        <div className="about-grid">
+          {/* Left: text */}
+          <div>
+            <div className="section-label">ABOUT</div>
+            <h2 className="about-title">About CampusSphere AI</h2>
+            <p className="about-text">
+              CampusSphere AI is a next-generation smart campus platform built to simplify
+              every aspect of institutional life. From real-time attendance tracking to an
+              AI-powered helpdesk, we bring all campus operations under one roof.
+            </p>
+            <ul className="about-highlights">
+              {HIGHLIGHTS.map((item) => (
+                <li key={item}>
+                  <svg
+                    className="highlight-check"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle cx="10" cy="10" r="10" fill="rgba(26, 86, 219, 0.1)" />
+                    <path
+                      d="M6 10.5L8.5 13L14 7.5"
+                      stroke="#1A56DB"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
 
-            {/* Right: image */}
-            <div className="about-img-wrap">
-              {/* 🖼️ REPLACE: put your image file named 'about-campus.jpg' in /client/public/assets/images/ */}
-              <img
-                src="/assets/images/about-campus.jpg"
-                alt="Campus building"
-                className="about-img"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-              <div className="about-img-placeholder" style={{ display: 'none' }}>
-                <GraduationCap size={80} color="rgba(255,255,255,0.2)" />
+          {/* Right: illustration placeholder */}
+          <div className="about-img-wrap">
+            <img
+              src="/assets/images/about-campus.jpg"
+              alt="Campus building"
+              className="about-img"
+              style={{ display: 'none' }}
+              onLoad={(e) => {
+                e.target.style.display = 'block';
+                e.target.nextSibling.style.display = 'none';
+              }}
+            />
+            <div className="about-img-placeholder">
+              <div className="about-placeholder-grid">
+                {[
+                  { icon: CheckSquare, label: 'Attendance', sublabel: '94.2% avg' },
+                  { icon: Bot,         label: 'AI Help Desk', sublabel: '24x7 active' },
+                  { icon: FolderOpen,  label: 'Drive',         sublabel: '1200+ files' },
+                  { icon: LayoutDashboard, label: 'Dashboard', sublabel: '5 roles' },
+                ].map(({ icon: Icon, label, sublabel }) => (
+                  <div key={label} className="about-placeholder-card">
+                    <div className="about-placeholder-icon">
+                      <Icon size={16} color="#1A56DB" strokeWidth={1.75} />
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', marginTop: 4 }}>{label}</div>
+                    <div style={{ fontSize: 12, color: '#6B7280' }}>{sublabel}</div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -347,15 +385,18 @@ const Landing = () => {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="landing-footer">
+      <footer id="footer" className="landing-footer">
         <div className="footer-grid">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <GraduationCap size={24} color="#3b82f6" />
-              <div className="footer-brand-name">CampusSphere AI</div>
+            <div className="footer-brand-name">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A56DB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+              </svg>
+              CampusSphere<span className="footer-brand-ai"> AI</span>
             </div>
             <p className="footer-tagline">
-              Your Smart Campus. Powered by AI. One platform for every campus stakeholder.
+              Your Smart Campus. Powered by AI.
             </p>
           </div>
 
@@ -365,6 +406,7 @@ const Landing = () => {
               <li><a href="/">Home</a></li>
               <li><a href="#features">Features</a></li>
               <li><a href="#about">About</a></li>
+              <li><a href="#footer">Contact</a></li>
             </ul>
           </div>
 
@@ -372,14 +414,14 @@ const Landing = () => {
             <div className="footer-col-title">Contact</div>
             <div className="footer-contact">
               <p>info@campussphere.edu</p>
-              <p style={{ marginTop: 6 }}>+91 98765 43210</p>
-              <p style={{ marginTop: 6 }}>Bengaluru, Karnataka, India</p>
+              <p>+91 98765 43210</p>
+              <p>Bengaluru, Karnataka, India</p>
             </div>
           </div>
         </div>
 
         <div className="footer-bottom">
-          © 2026 CampusSphere AI. All rights reserved. · Built with ❤️ using Gemini AI
+          &copy; 2026 CampusSphere AI. All rights reserved.
         </div>
       </footer>
 

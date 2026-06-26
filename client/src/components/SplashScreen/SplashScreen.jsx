@@ -21,11 +21,11 @@ const SplashScreen = ({ onDone }) => {
       {/* ── Center content ── */}
       <div className="splash-logo-wrap">
         <div className="splash-icon-ring">
-          <GraduationCap size={60} color="#3b82f6" strokeWidth={1.5} />
+          <GraduationCap size={52} color="#1A56DB" strokeWidth={1.5} />
         </div>
 
         <h1 className="splash-title">
-          Campus<span>Sphere</span> AI
+          CampusSphere<span> AI</span>
         </h1>
 
         <p className="splash-tagline">Your Smart Campus. Powered by AI.</p>

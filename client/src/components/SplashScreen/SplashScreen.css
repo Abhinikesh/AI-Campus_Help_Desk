@@ -1,4 +1,4 @@
-/* ── SplashScreen.css ─────────────────────────────────────── */
+/* ── SplashScreen.css — White Enterprise Theme ───────────── */
 
 .splash-root {
   position: fixed;
@@ -9,14 +9,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at center, #0d1b3e 0%, #0f172a 45%, #050912 100%);
+  background: #FFFFFF;
   z-index: 9999;
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 .splash-root.fade-out {
   opacity: 0;
-  transform: scale(0.95);
+  transform: scale(0.98);
   pointer-events: none;
 }
 
@@ -25,16 +25,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  animation: splashFadeIn 0.8s ease forwards;
+  gap: 18px;
+  animation: splashFadeIn 0.7s ease forwards;
 }
 
 .splash-icon-ring {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  background: rgba(59, 130, 246, 0.12);
-  border: 1.5px solid rgba(59, 130, 246, 0.3);
+  background: rgba(26, 86, 219, 0.07);
+  border: 1.5px solid rgba(26, 86, 219, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,38 +46,35 @@
   position: absolute;
   inset: -8px;
   border-radius: 50%;
-  border: 1px solid rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(26, 86, 219, 0.1);
   animation: pulseRing 2s ease infinite;
 }
 
 @keyframes pulseRing {
   0%, 100% { transform: scale(1); opacity: 1; }
-  50%       { transform: scale(1.08); opacity: 0.5; }
+  50%       { transform: scale(1.06); opacity: 0.4; }
 }
 
 .splash-title {
-  font-family: 'Poppins', sans-serif;
-  font-size: 48px;
+  font-family: 'Inter', sans-serif;
+  font-size: 40px;
   font-weight: 700;
-  color: #ffffff;
+  color: #111827;
   letter-spacing: -0.5px;
   text-align: center;
 }
 
 .splash-title span {
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #1A56DB;
 }
 
 .splash-tagline {
   font-family: 'Inter', sans-serif;
-  font-size: 18px;
-  color: #94a3b8;
+  font-size: 15px;
+  color: #6B7280;
   text-align: center;
-  margin-top: -8px;
-  letter-spacing: 0.2px;
+  margin-top: -4px;
+  font-weight: 400;
 }
 
 /* ── Loading bar ──────────────────────────────────────────── */
@@ -89,14 +86,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  width: 280px;
+  gap: 14px;
+  width: 240px;
 }
 
 .splash-bar-track {
   width: 100%;
   height: 3px;
-  background: rgba(255, 255, 255, 0.08);
+  background: #E2E8F0;
   border-radius: 2px;
   overflow: hidden;
 }
@@ -104,7 +101,7 @@
 .splash-bar-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  background: #1A56DB;
   border-radius: 2px;
   animation: loadBar 2.5s ease forwards;
 }
@@ -117,26 +114,26 @@
 /* ── Pulse dots ───────────────────────────────────────────── */
 .splash-dots {
   display: flex;
-  gap: 8px;
+  gap: 7px;
 }
 
 .splash-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: #1A56DB;
   animation: dotPulse 1.2s ease infinite;
 }
-.splash-dot:nth-child(2) { animation-delay: 0.2s; background: #6366f1; }
-.splash-dot:nth-child(3) { animation-delay: 0.4s; background: #8b5cf6; }
+.splash-dot:nth-child(2) { animation-delay: 0.2s; opacity: 0.6; }
+.splash-dot:nth-child(3) { animation-delay: 0.4s; opacity: 0.35; }
 
 @keyframes dotPulse {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50%       { transform: scale(1.4); opacity: 1; }
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50%       { transform: scale(1.5); opacity: 1; }
 }
 
 /* ── FadeIn ───────────────────────────────────────────────── */
 @keyframes splashFadeIn {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }

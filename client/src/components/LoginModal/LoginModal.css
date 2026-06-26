@@ -1,17 +1,18 @@
-/* ── LoginModal.css ───────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   LoginModal.css — White Enterprise Design System
+   ═══════════════════════════════════════════════════════════ */
 
-/* Backdrop */
+/* ── Backdrop ─────────────────────────────────────────────── */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.4);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  animation: backdropIn 0.25s ease;
+  padding: 20px;
+  animation: backdropIn 0.2s ease;
 }
 
 @keyframes backdropIn {
@@ -19,163 +20,342 @@
   to   { opacity: 1; }
 }
 
-/* Modal box */
+/* ── Modal Box ────────────────────────────────────────────── */
 .modal-box {
-  background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
   padding: 40px;
   width: 100%;
   max-width: 440px;
   position: relative;
-  animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlideUp 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+  max-height: 95vh;
+  overflow-y: auto;
 }
 
 .modal-box.closing {
-  animation: modalSlideDown 0.25s ease forwards;
+  animation: modalSlideDown 0.22s ease forwards;
 }
 
 @keyframes modalSlideUp {
-  from { opacity: 0; transform: translateY(40px) scale(0.95); }
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes modalSlideDown {
   from { opacity: 1; transform: translateY(0) scale(1); }
-  to   { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to   { opacity: 0; transform: translateY(12px) scale(0.97); }
 }
 
-/* Close button */
+/* ── Close Button ─────────────────────────────────────────── */
 .modal-close {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: rgba(255,255,255,0.06);
+  background: none;
   border: none;
-  border-radius: 8px;
-  width: 36px;
-  height: 36px;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #94a3b8;
-  transition: background 0.2s, color 0.2s;
+  color: #9CA3AF;
+  transition: color 0.15s, background 0.15s;
 }
-.modal-close:hover { background: rgba(255,255,255,0.12); color: white; }
+.modal-close:hover {
+  color: #374151;
+  background: #F4F5F7;
+}
 
-/* Header */
+/* ── Role Badge ───────────────────────────────────────────── */
 .modal-role-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(59, 130, 246, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  gap: 6px;
+  border: 1px solid #E2E8F0;
   border-radius: 100px;
-  padding: 6px 14px;
-  color: #3b82f6;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 16px;
+  padding: 4px 12px;
+  color: #6B7280;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 18px;
+  background: #FFFFFF;
 }
 
+/* ── Title & Subtitle ─────────────────────────────────────── */
 .modal-title {
-  font-family: 'Poppins', sans-serif;
-  font-size: 26px;
+  font-family: 'Inter', sans-serif;
+  font-size: 22px;
   font-weight: 700;
-  color: white;
+  color: #111827;
   margin-bottom: 6px;
+  letter-spacing: -0.3px;
 }
 
 .modal-subtitle {
   font-size: 14px;
-  color: #64748b;
+  color: #6B7280;
   margin-bottom: 28px;
+  line-height: 1.55;
+  font-weight: 400;
 }
 
-/* Form */
+/* ── Form Layout ──────────────────────────────────────────── */
 .modal-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 .modal-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .modal-label {
   font-size: 13px;
   font-weight: 500;
-  color: #94a3b8;
-  letter-spacing: 0.3px;
+  color: #374151;
 }
 
+/* ── Text Inputs ──────────────────────────────────────────── */
 .modal-input {
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 13px 16px;
-  color: #f1f5f9;
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  padding: 0 14px;
+  height: 42px;
+  color: #111827;
   font-family: 'Inter', sans-serif;
   font-size: 15px;
   width: 100%;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .modal-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: #1A56DB;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
 }
-.modal-input::placeholder { color: #475569; }
-.modal-input.error-input { border-color: #ef4444; }
+.modal-input::placeholder { color: #9CA3AF; }
+.modal-input.error-input  { border-color: #DC2626; }
+.modal-input.error-input:focus {
+  border-color: #DC2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
 
-.field-error {
-  font-size: 12px;
-  color: #ef4444;
+/* ── Password Input Wrapper (for eye toggle) ──────────────── */
+.pw-wrap {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 5px;
+}
+.pw-wrap .modal-input {
+  padding-right: 44px;
+}
+.pw-toggle {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9CA3AF;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 0.15s;
+}
+.pw-toggle:hover { color: #374151; }
+
+/* ── Field Error ──────────────────────────────────────────── */
+.field-error {
+  font-size: 12px;
+  color: #DC2626;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 400;
+  margin-top: 2px;
 }
 
-/* Submit button */
+/* ── Field Hint ───────────────────────────────────────────── */
+.field-hint {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+/* ── Submit Button ────────────────────────────────────────── */
 .modal-submit {
   width: 100%;
-  background: #3b82f6;
-  color: white;
+  background: #1A56DB;
+  color: #FFFFFF;
   border: none;
-  border-radius: 10px;
-  padding: 14px;
+  border-radius: 6px;
+  height: 42px;
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: 15px;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s;
+  transition: background 0.18s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.modal-submit:hover:not(:disabled) { background: #1648C0; }
+.modal-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Spinner inside button ────────────────────────────────── */
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: spinBtn 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spinBtn {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Forgot Password Link ─────────────────────────────────── */
+.modal-forgot {
+  text-align: right;
+  margin-top: -10px;
+}
+.modal-forgot button {
+  background: none;
+  border: none;
+  color: #1A56DB;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+.modal-forgot button:hover { color: #1648C0; text-decoration: underline; }
+
+/* ── Divider ──────────────────────────────────────────────── */
+.modal-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #9CA3AF;
+  font-size: 13px;
+  font-weight: 400;
+  margin: 4px 0;
+}
+.modal-divider::before,
+.modal-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #E2E8F0;
+}
+
+/* ── Google Button ────────────────────────────────────────── */
+.google-btn {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-top: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
-.modal-submit:hover:not(:disabled) {
-  background: #2563eb;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+.google-btn:hover {
+  background: #F9FAFB;
+  border-color: #9CA3AF;
 }
-.modal-submit:disabled { opacity: 0.65; cursor: not-allowed; }
 
-/* API error banner */
+/* ── API Error Banner ─────────────────────────────────────── */
 .modal-api-error {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 8px;
+  background: #FFFFFF;
+  border-left: 3px solid #DC2626;
+  border-radius: 0 6px 6px 0;
+  border-top: 1px solid #FCA5A5;
+  border-right: 1px solid #FCA5A5;
+  border-bottom: 1px solid #FCA5A5;
   padding: 12px 14px;
   font-size: 13px;
-  color: #fca5a5;
+  color: #DC2626;
   display: flex;
   align-items: center;
   gap: 8px;
+  font-weight: 500;
+}
+
+/* ── Register Link (Admission) ────────────────────────────── */
+.modal-register-link {
+  text-align: center;
+  font-size: 13px;
+  color: #6B7280;
+  font-weight: 400;
+}
+.modal-register-link a,
+.modal-register-link button {
+  color: #1A56DB;
+  font-weight: 500;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  padding: 0;
+}
+.modal-register-link a:hover,
+.modal-register-link button:hover { text-decoration: underline; }
+
+/* ── Forgot Password View ─────────────────────────────────── */
+.modal-back-btn {
+  background: none;
+  border: none;
+  color: #6B7280;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  margin-bottom: 20px;
+  transition: color 0.15s;
+  font-weight: 400;
+}
+.modal-back-btn:hover { color: #374151; }
+
+/* ── Scrollbar inside modal ───────────────────────────────── */
+.modal-box::-webkit-scrollbar { width: 4px; }
+.modal-box::-webkit-scrollbar-track { background: transparent; }
+.modal-box::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 2px; }
+
+/* ── Mobile ───────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .modal-box {
+    padding: 28px 20px;
+    border-radius: 12px;
+    max-height: 100vh;
+  }
+  .modal-backdrop { padding: 12px; align-items: flex-end; }
+  .modal-box { border-radius: 12px 12px 0 0; max-width: 100%; }
 }
