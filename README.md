@@ -15,7 +15,7 @@
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
-[🌐 Live Demo](#) • [📖 Documentation](#) • [🐛 Report Bug](https://github.com/Abhinikesh/AI-Enabled_Campus_Help_Desk/issues)
+[🌐 Live Demo](#) 
 
 </div>
 
@@ -70,19 +70,6 @@
 | 🔐 **Role-Based Access** | 5 roles — Student, Faculty, Admin, Parent, New Admission |
 | 📢 **Announcements** | Faculty posts announcements, students & parents receive them |
 | 📱 **Fully Responsive** | Works perfectly on desktop, tablet and mobile |
-
----
-
-## 🏗️ Tech Stack
-
-Frontend          Backend           Database          AI
-─────────         ───────           ────────          ──
-React + Vite      Node.js           MongoDB           Gemini 1.5 Flash
-Tailwind CSS      Express.js        Mongoose          Multi-Agent System
-React Router      JWT Auth          Seed Data         Auto-Detection
-Framer Motion     Bcrypt            Real Storage      Hindi/English
-Lucide Icons      Multer            Drive Files       Quick Ask
-Axios             Cookie Parser     Complaints        Chat History
 
 ---
 
