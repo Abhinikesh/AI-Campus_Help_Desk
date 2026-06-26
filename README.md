@@ -23,11 +23,6 @@
 
 ## 📸 Screenshots
 
-### 🏠 Home Page
-![Home Page](campussphere-ai/home.png)
-
----
-
 ### 👥 Role Selection
 ![Who Are You](campussphere-ai/Who_are_you.png)
 
