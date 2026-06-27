@@ -1,16 +1,35 @@
 import React, { useState } from 'react';
 import Navbar from '../../components/Navbar/Navbar';
-import { ArrowLeft, ArrowRight, BrainCircuit } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  ArrowRight, 
+  BrainCircuit, 
+  Building2, 
+  BookOpen, 
+  Laptop, 
+  Building, 
+  Home, 
+  Tv 
+} from 'lucide-react';
 import './VirtualTour.css';
 
 const locations = [
-  { id: 'gate', name: 'Main Gate', icon: '🏛', desc: 'Welcome to CampusSphere! The main gate is your entry point to our 25-acre campus. The Administration Block is to your left, Academic Block A is straight ahead.' },
-  { id: 'library', name: 'Central Library', icon: '📚', desc: 'The Central Library houses over 50,000 books and journals. Open 8 AM to 10 PM. Digital resources available 24x7 with student login.' },
-  { id: 'cs', name: 'Computer Science Dept', icon: '💻', desc: 'The Computer Science Department has 8 labs with 40 systems each, high-speed internet, and dedicated AI research lab.' },
-  { id: 'admin', name: 'Administration Office', icon: '🏢', desc: 'Administrative services: Fee payment, ID cards, certificates, bonafide letters. Open Monday-Friday 9 AM to 5 PM.' },
-  { id: 'hostel', name: 'Student Hostels', icon: '🏠', desc: 'Campus hostels accommodate 2000+ students. Separate blocks for boys and girls. Facilities: WiFi, laundry, mess, gym, indoor games.' },
-  { id: 'auditorium', name: 'Main Auditorium', icon: '🎭', desc: 'Main Auditorium seats 1500. Used for convocations, cultural events, guest lectures, and competitions.' }
+  { id: 'gate', name: 'Main Gate', desc: 'Welcome to CampusSphere! The main gate is your entry point to our 25-acre campus. The Administration Block is to your left, Academic Block A is straight ahead.' },
+  { id: 'library', name: 'Central Library', desc: 'The Central Library houses over 50,000 books and journals. Open 8 AM to 10 PM. Digital resources available 24x7 with student login.' },
+  { id: 'cs', name: 'Computer Science Dept', desc: 'The Computer Science Department has 8 labs with 40 systems each, high-speed internet, and dedicated AI research lab.' },
+  { id: 'admin', name: 'Administration Office', desc: 'Administrative services: Fee payment, ID cards, certificates, bonafide letters. Open Monday-Friday 9 AM to 5 PM.' },
+  { id: 'hostel', name: 'Student Hostels', desc: 'Campus hostels accommodate 2000+ students. Separate blocks for boys and girls. Facilities: WiFi, laundry, mess, gym, indoor games.' },
+  { id: 'auditorium', name: 'Main Auditorium', desc: 'Main Auditorium seats 1500. Used for convocations, cultural events, guest lectures, and competitions.' }
 ];
+
+const locationIcons = {
+  gate: Building2,
+  library: BookOpen,
+  cs: Laptop,
+  admin: Building,
+  hostel: Home,
+  auditorium: Tv
+};
 
 const VirtualTour = () => {
   const [activeLocIndex, setActiveLocIndex] = useState(-1); // -1 means none selected
@@ -46,21 +65,24 @@ const VirtualTour = () => {
         {/* LEFT SIDEBAR */}
         <aside className="vt-sidebar">
           <div>
-            <h2 className="vt-sidebar-title">🗺 Campus Locations</h2>
-            <p className="vt-sidebar-subtitle">Click a location to explore</p>
+            <h2 className="vt-sidebar-title">Campus Locations</h2>
+            <p className="vt-sidebar-subtitle">Select a location to explore</p>
           </div>
           
           <div className="vt-loc-list">
-            {locations.map((loc, idx) => (
-              <button 
-                key={loc.id} 
-                className={`vt-loc-btn ${activeLocIndex === idx ? 'active' : ''}`}
-                onClick={() => { setActiveLocIndex(idx); setAiGuideOpen(true); }}
-              >
-                <span className="vt-loc-icon">{loc.icon}</span>
-                <span className="vt-loc-name">{loc.name}</span>
-              </button>
-            ))}
+            {locations.map((loc, idx) => {
+              const LocIcon = locationIcons[loc.id] || Building2;
+              return (
+                <button 
+                  key={loc.id} 
+                  className={`vt-loc-btn ${activeLocIndex === idx ? 'active' : ''}`}
+                  onClick={() => { setActiveLocIndex(idx); setAiGuideOpen(true); }}
+                >
+                  <LocIcon size={18} className="vt-loc-icon" />
+                  <span className="vt-loc-name">{loc.name}</span>
+                </button>
+              );
+            })}
           </div>
         </aside>
 
@@ -68,9 +90,8 @@ const VirtualTour = () => {
         <main className="vt-main">
           {activeLocIndex === -1 ? (
             <div className="vt-placeholder">
-              {/* 🖼️ REPLACE: put 'campus-map.jpg' in client/public/assets/images/ */}
               <div className="image-fallback vt-map-fallback">
-                <span className="fallback-emoji">🏫</span>
+                <Building2 size={48} className="fallback-icon" />
                 <span className="fallback-text">Campus Map</span>
               </div>
               <img 
@@ -103,7 +124,7 @@ const VirtualTour = () => {
               {/* CENTER SCENE */}
               <div className="vt-scene-view">
                 {/* Scene Label inside the view */}
-                <div className="vt-scene-label">{activeLoc.icon} {activeLoc.name}</div>
+                <div className="vt-scene-label">{activeLoc.name}</div>
                 
                 {/* Animations and Particles based on location */}
                 {activeLoc.id === 'gate' && <div className="scene-effect clouds"></div>}
@@ -142,7 +163,7 @@ const VirtualTour = () => {
               {/* AI GUIDE PANEL */}
               <div className={`vt-ai-panel ${aiGuideOpen ? 'open' : ''}`}>
                 <div className="vt-ai-header">
-                  <BrainCircuit size={20} color="#3b82f6" />
+                  <BrainCircuit size={20} color="#1A56DB" />
                   <span className="fw-bold">Campus AI Guide</span>
                 </div>
                 <div className="vt-ai-body">

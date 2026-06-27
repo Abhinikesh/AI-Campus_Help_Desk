@@ -5,6 +5,8 @@ import SplashScreen from './components/SplashScreen/SplashScreen';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
 
+const NotFound = React.lazy(() => import('./pages/NotFound/index'));
+
 // ── Pages (lazy-load) ──────────────────────────────────────
 const Landing            = React.lazy(() => import('./pages/Landing/index'));
 const StudentDashboard   = React.lazy(() => import('./pages/StudentDashboard/index'));
@@ -131,8 +133,8 @@ const App = () => {
               element={<ProtectedRoute role="admin"><Complaints /></ProtectedRoute>}
             />
 
-            {/* ── Catch-all ── */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* ── 404 ── */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </div>

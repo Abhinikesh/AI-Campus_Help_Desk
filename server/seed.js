@@ -74,9 +74,12 @@ const studentExams = [
   { subject: 'Cyber Security', code: 'CS405', date: 'Apr 18, 2026', time: '10:00 AM', room: 'Exam Hall A' },
 ];
 
-const seed = async () => {
+const seed = async (shouldExit = true) => {
   try {
-    await connectDB();
+    // Only call connectDB if we are not already connected
+    if (mongoose.connection.readyState === 0) {
+      await connectDB();
+    }
 
     // ── Wipe existing data ────────────────────────────────────
     console.log('🗑️  Clearing existing data...');
@@ -199,11 +202,20 @@ const seed = async () => {
     console.log('Admin:   admin@campus.edu   / admin1234');
     console.log('Parent:  parent@campus.edu  / parent123');
 
-    process.exit(0);
+    if (shouldExit) {
+      process.exit(0);
+    }
   } catch (error) {
     console.error('❌ Seed failed:', error.message);
-    process.exit(1);
+    if (shouldExit) {
+      process.exit(1);
+    }
+    throw error;
   }
 };
 
-seed();
+if (require.main === module) {
+  seed(true);
+}
+
+module.exports = () => seed(false);

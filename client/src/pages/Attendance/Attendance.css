@@ -1,11 +1,13 @@
+/* Attendance.css — White Enterprise Redesign */
 .attendance-layout {
   min-height: 100vh;
-  background-color: #0f172a;
-  padding-top: 64px;
+  background-color: #FFFFFF;
+  padding-top: 80px; /* offset for header/navbar */
+  font-family: 'Inter', sans-serif;
 }
 
 .attendance-content {
-  max-width: 1440px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 32px 24px;
   display: flex;
@@ -17,52 +19,56 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid #E2E8F0;
+  padding-bottom: 16px;
 }
 
 .page-title {
-  font-family: 'Poppins', sans-serif;
-  font-size: 28px;
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
   font-weight: 700;
-  color: white;
+  color: #111827;
   margin: 0;
 }
 
 .semester-badge {
-  background-color: #1e293b;
-  color: #3b82f6;
+  background-color: #EFF6FF;
+  color: #1A56DB;
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  padding: 8px 16px;
+  padding: 6px 14px;
   border-radius: 9999px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(26, 86, 219, 0.15);
 }
 
 .warning-banner {
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid #ef4444;
-  color: #ef4444;
+  background-color: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #DC2626;
   font-family: 'Inter', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   padding: 16px;
-  border-radius: 12px;
-  text-align: center;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .overall-attendance-card {
-  background: linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  border-radius: 16px;
-  padding: 32px;
+  background: #F8F9FA;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 24px;
   text-align: center;
 }
 
 .overall-stat {
-  font-family: 'Poppins', sans-serif;
-  font-size: 36px;
+  font-family: 'Inter', sans-serif;
+  font-size: 32px;
   font-weight: 700;
-  color: #22c55e;
+  color: #16A34A; /* clean green-600 */
   margin: 0;
 }
 
@@ -85,63 +91,85 @@
 }
 
 .attendance-card {
-  background-color: #1e293b;
-  border-radius: 16px;
-  padding: 32px 24px;
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .attendance-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .warning-card {
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  background-color: rgba(239, 68, 68, 0.02);
+  border: 1px solid #FCA5A5;
+  background-color: #FEF2F2;
 }
 
 .att-card-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .att-subject-name {
   font-family: 'Inter', sans-serif;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  color: white;
+  color: #111827;
   margin: 0 0 8px 0;
 }
 
 .att-subject-code {
   display: inline-block;
-  background-color: #0f172a;
-  border: 1px solid #334155;
-  color: #94a3b8;
+  background-color: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  color: #4B5563;
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  padding: 4px 12px;
+  font-size: 12px;
+  padding: 3px 10px;
   border-radius: 9999px;
 }
 
 .progress-ring-container-large {
   display: flex;
   justify-content: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .progress-ring-large {
-  width: 140px;
-  height: 140px;
+  width: 120px;
+  height: 120px;
   transform: rotate(-90deg);
 }
 
+.ring-bg {
+  stroke: #E5E7EB;
+  stroke-width: 8;
+  fill: transparent;
+}
+
+.ring-progress {
+  stroke-width: 8;
+  stroke-linecap: round;
+  fill: transparent;
+}
+
+.green-ring {
+  stroke: #16A34A;
+}
+
+.red-ring {
+  stroke: #DC2626;
+}
+
 .ring-text-large {
-  fill: white;
-  font-family: 'Poppins', sans-serif;
-  font-size: 24px;
+  fill: #111827;
+  font-family: 'Inter', sans-serif;
+  font-size: 20px;
   font-weight: 700;
   transform: rotate(90deg) translate(50%, -44%);
   transform-origin: center;
@@ -151,51 +179,48 @@
 
 .att-stats {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .att-ratio {
   font-family: 'Inter', sans-serif;
-  font-size: 15px;
-  color: #cbd5e1;
-  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #4B5563;
+  margin: 0 0 4px 0;
 }
 
 .text-red {
-  color: #ef4444;
-}
-
-.att-last-attended {
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  color: #64748b;
-  margin: 0 0 8px 0;
+  color: #DC2626;
 }
 
 .att-classes-needed {
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  color: #f59e0b;
-  background-color: rgba(245, 158, 11, 0.1);
-  padding: 8px;
-  border-radius: 8px;
-  margin-top: 8px;
+  font-size: 12px;
+  color: #D97706;
+  background-color: #FEF3C7;
+  padding: 6px;
+  border-radius: 6px;
+  margin-top: 6px;
 }
 
 .att-trend {
   text-align: center;
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 12px;
+  border-top: 1px solid #E2E8F0;
   margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .trend-improving {
-  color: #22c55e;
+  color: #16A34A;
 }
 
 .trend-declining {
-  color: #ef4444;
+  color: #DC2626;
 }

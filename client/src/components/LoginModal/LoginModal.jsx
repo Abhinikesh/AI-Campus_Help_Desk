@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  X, GraduationCap, BookOpen, Users, UserPlus, Shield,
-  AlertCircle, Eye, EyeOff, ArrowLeft
+  X, GraduationCap, BookOpen, Shield, AlertCircle, Eye, EyeOff
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './LoginModal.css';
@@ -22,20 +21,6 @@ const ROLE_META = {
     title:    'Faculty Login',
     subtitle: 'Sign in to access your faculty dashboard',
     btnText:  'Sign in as Faculty',
-  },
-  parent: {
-    label:    'Parent',
-    icon:     Users,
-    title:    'Parent Login',
-    subtitle: "Track your child's academic progress and attendance",
-    btnText:  'Sign in as Parent',
-  },
-  admission: {
-    label:    'New Admission',
-    icon:     UserPlus,
-    title:    'New Admission Portal',
-    subtitle: 'Begin your admission journey at CampusSphere',
-    btnText:  'Continue to Admission',
   },
   admin: {
     label:    'Admin',
@@ -103,7 +88,7 @@ const PasswordField = ({ label, value, onChange, error, placeholder, hint }) => 
 // Main LoginModal component
 // ═══════════════════════════════════════════════════════════════
 const LoginModal = ({ role, onClose }) => {
-  const { login, admissionLogin } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const [closing,      setClosing]      = useState(false);
@@ -112,11 +97,12 @@ const LoginModal = ({ role, onClose }) => {
   const [forgotView,   setForgotView]   = useState(false);
   const [resetSent,    setResetSent]    = useState(false);
 
+  const activeRole = role || 'student';
+  const [idFocused,    setIdFocused]    = useState(false);
+
   // ── Shared fields ──────────────────────────────────────────
-  const [identifier, setIdentifier] = useState(''); // roll / email / phone / appId
+  const [identifier, setIdentifier] = useState(''); // roll / email
   const [password,   setPassword]   = useState('');
-  const [dob,        setDob]        = useState('');   // admission: date of birth
-  const [admPhone,   setAdmPhone]   = useState('');   // admission: phone number
 
   // ── Forgot password field ──────────────────────────────────
   const [resetEmail, setResetEmail] = useState('');
@@ -124,55 +110,23 @@ const LoginModal = ({ role, onClose }) => {
   // ── Inline validation errors ───────────────────────────────
   const [idError,  setIdError]  = useState('');
   const [pwError,  setPwError]  = useState('');
-  const [dobError, setDobError] = useState('');
 
-  const meta       = ROLE_META[role] || ROLE_META.student;
-  const RoleIcon   = meta.icon;
-  const isAdm      = role === 'admission';
-  const isStudent  = role === 'student';
-  const isParent   = role === 'parent';
+  const meta       = ROLE_META[activeRole] || ROLE_META.student;
+  const isStudent  = activeRole === 'student';
 
   // ── Helpers ────────────────────────────────────────────────
-  const clearErrors = () => { setIdError(''); setPwError(''); setDobError(''); setApiError(''); };
+  const clearErrors = () => { setIdError(''); setPwError(''); setApiError(''); };
 
   // ── Validation ─────────────────────────────────────────────
   const validate = () => {
     let ok = true;
     clearErrors();
 
-    if (isAdm) {
-      // Admission: Application ID required
-      if (!identifier.trim()) {
-        setIdError('Application ID is required'); ok = false;
-      }
-      // DOB required
-      if (!dob) {
-        setDobError('Date of birth is required'); ok = false;
-      }
-      // Password required
-      if (!password) {
-        setPwError('Password is required'); ok = false;
-      } else if (password.length < 6) {
-        setPwError('Password must be at least 6 characters'); ok = false;
-      }
-    } else {
-      // identifier validation
-      if (!identifier.trim()) {
-        setIdError('This field is required'); ok = false;
-      } else if (isStudent && !/^\d{8}$/.test(identifier)) {
-        setIdError('Roll number must be exactly 8 digits'); ok = false;
-      } else if (!isStudent && !isParent && !identifier.includes('@')) {
-        setIdError('Please enter a valid email address'); ok = false;
-      } else if (isParent && !/^\d{10}$/.test(identifier)) {
-        setIdError('Please enter a valid 10-digit mobile number'); ok = false;
-      }
-
-      // password
-      if (!password) {
-        setPwError('Password is required'); ok = false;
-      } else if (password.length < 8) {
-        setPwError('Password must be at least 8 characters'); ok = false;
-      }
+    if (!identifier.trim()) {
+      setIdError('Required'); ok = false;
+    }
+    if (!password) {
+      setPwError('Required'); ok = false;
     }
     return ok;
   };
@@ -194,16 +148,9 @@ const LoginModal = ({ role, onClose }) => {
 
     setLoading(true);
     try {
-      if (isAdm) {
-        // Bridge: pass identifier as name, admPhone as phone to existing API
-        const data = await admissionLogin(identifier, admPhone || dob);
-        handleClose();
-        navigate(data.redirectTo);
-      } else {
-        const data = await login(identifier, password, role);
-        handleClose();
-        navigate(data.redirectTo);
-      }
+      const data = await login(identifier, password, activeRole);
+      handleClose();
+      navigate(data.redirectTo);
     } catch (err) {
       setApiError(
         err?.response?.data?.message ||
@@ -226,28 +173,27 @@ const LoginModal = ({ role, onClose }) => {
     const onKey = (e) => { if (e.key === 'Escape') handleClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Identifier label / placeholder per role ─────────────────
   const idLabel = isStudent
-    ? 'Roll Number'
-    : isParent
-    ? 'Registered Mobile Number'
+    ? 'Student ID'
+    : activeRole === 'faculty'
+    ? 'Faculty ID / Email'
+    : activeRole === 'admin'
+    ? 'Admin Email'
     : 'Email Address';
 
   const idPlaceholder = isStudent
-    ? 'Enter your 8-digit roll number'
-    : isParent
-    ? '10-digit mobile number'
-    : role === 'admin'
-    ? 'Enter admin email address'
-    : 'Enter your institutional email';
+    ? 'e.g. 1/24/SET/BCS/001'
+    : activeRole === 'faculty'
+    ? 'faculty@campussphere.edu'
+    : activeRole === 'admin'
+    ? 'admin@campussphere.edu'
+    : 'Enter your ID or email';
 
-  const idType = isStudent
-    ? 'text'
-    : isParent
-    ? 'tel'
-    : 'email';
+  const idType = isStudent ? 'text' : 'email';
 
   // ════════════════════════════════════════════════════════════
   // RENDER
@@ -266,152 +212,117 @@ const LoginModal = ({ role, onClose }) => {
         ═══════════════════════════════════════════════════ */}
         {forgotView ? (
           <>
-            <button
-              type="button"
-              className="modal-back-btn"
-              onClick={() => { setForgotView(false); setResetSent(false); setResetEmail(''); }}
-            >
-              <ArrowLeft size={14} /> Back to Login
-            </button>
+            <h2 className="modal-title">Reset Password</h2>
 
-            <h2 className="modal-title">Reset Your Password</h2>
-            <p className="modal-subtitle">
-              Enter your registered email or roll number and we will send you a reset link.
-            </p>
-
-            {resetSent ? (
-              <div style={{
-                background: 'rgba(22, 163, 74, 0.06)',
-                border: '1px solid rgba(22, 163, 74, 0.25)',
-                borderRadius: 6,
-                padding: '14px 16px',
-                fontSize: 14,
-                color: '#16A34A',
-                fontWeight: 500,
-              }}>
-                Reset link sent! Check your email or SMS inbox.
+            <form onSubmit={handleResetSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 20 }}>
+              <div className="modal-field">
+                <label className="modal-label">Your Student ID / Email</label>
+                <input
+                  className="modal-input"
+                  type="text"
+                  placeholder="Enter your ID or email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  autoFocus
+                />
               </div>
-            ) : (
-              <form onSubmit={handleResetSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <div className="modal-field">
-                  <label className="modal-label">Email / Roll Number</label>
-                  <input
-                    className="modal-input"
-                    type="text"
-                    placeholder="Enter your registered email or roll number"
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    autoFocus
-                  />
+
+              {resetSent && (
+                <div style={{ fontSize: 13, color: '#16A34A', fontWeight: 500, textAlign: 'center' }}>
+                  Reset link sent! Check your inbox.
                 </div>
-                <button type="submit" className="modal-submit">
-                  Send Reset Link
-                </button>
-              </form>
-            )}
+              )}
+
+              <button type="submit" className="modal-submit">
+                Send Reset Link
+              </button>
+
+              <button
+                type="button"
+                className="modal-back-link"
+                onClick={() => { setForgotView(false); setResetSent(false); setResetEmail(''); }}
+              >
+                ← Back to Login
+              </button>
+            </form>
           </>
         ) : (
         /* ═══════════════════════════════════════════════════
             MAIN LOGIN VIEW
         ═══════════════════════════════════════════════════ */
         <>
-          {/* Role badge */}
-          <div className="modal-role-badge">
-            <RoleIcon size={13} strokeWidth={1.75} />
-            {meta.label}
-          </div>
-
           <h2 className="modal-title">{meta.title}</h2>
           <p className="modal-subtitle">{meta.subtitle}</p>
 
-          {/* API error banner */}
-          {apiError && (
-            <div className="modal-api-error" style={{ marginBottom: 20 }}>
-              <AlertCircle size={14} />
-              {apiError}
-            </div>
-          )}
-
           <form className="modal-form" onSubmit={handleSubmit} noValidate>
 
-            {/* ── ADMISSION FORM ── */}
-            {isAdm ? (
-              <>
-                <div className="modal-field">
-                  <label className="modal-label">Application ID</label>
-                  <input
-                    className={`modal-input${idError ? ' error-input' : ''}`}
-                    type="text"
-                    placeholder="Enter your application ID"
-                    value={identifier}
-                    onChange={(e) => { setIdentifier(e.target.value); setIdError(''); }}
-                  />
-                  {idError && (
-                    <span className="field-error"><AlertCircle size={12} /> {idError}</span>
-                  )}
-                </div>
-
-                <div className="modal-field">
-                  <label className="modal-label">Date of Birth</label>
-                  <input
-                    className={`modal-input${dobError ? ' error-input' : ''}`}
-                    type="date"
-                    placeholder="DD/MM/YYYY"
-                    value={dob}
-                    onChange={(e) => { setDob(e.target.value); setDobError(''); }}
-                  />
-                  {dobError && (
-                    <span className="field-error"><AlertCircle size={12} /> {dobError}</span>
-                  )}
-                </div>
-
-                <PasswordField
-                  label="Password"
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setPwError(''); }}
-                  error={pwError}
-                  placeholder="Create or enter your password"
-                />
-              </>
-            ) : (
-            /* ── ALL OTHER ROLES ── */
-            <>
-              {/* Identifier field */}
-              <div className="modal-field">
-                <label className="modal-label">{idLabel}</label>
-                <input
-                  className={`modal-input${idError ? ' error-input' : ''}`}
-                  type={idType}
-                  inputMode={isStudent ? 'numeric' : isParent ? 'tel' : 'email'}
-                  placeholder={idPlaceholder}
-                  value={identifier}
-                  onChange={(e) => { setIdentifier(e.target.value); setIdError(''); }}
-                  maxLength={isStudent ? 8 : undefined}
-                  autoComplete="username"
-                  autoFocus
-                />
-                {idError && (
-                  <span className="field-error"><AlertCircle size={12} /> {idError}</span>
-                )}
-              </div>
-
-              {/* Password field */}
-              <PasswordField
-                label="Password"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setPwError(''); }}
-                error={pwError}
-                hint={role === 'admin' ? 'Admin accounts require institutional email only' : undefined}
+            {/* Identifier field */}
+            <div className="modal-field">
+              <label className="modal-label">{idLabel}</label>
+              <input
+                className={`modal-input${idError ? ' error-input' : ''}`}
+                type={idType}
+                placeholder={idPlaceholder}
+                value={identifier}
+                onChange={(e) => { setIdentifier(e.target.value); setIdError(''); }}
+                onFocus={() => setIdFocused(true)}
+                onBlur={() => setIdFocused(false)}
+                autoComplete="username"
+                autoFocus
               />
+              {isStudent && (
+                <span className="field-helper-text">
+                  Format: Batch/Year/School/Branch/RollNo
+                </span>
+              )}
+              {isStudent && idFocused && (
+                <div className="id-helper-card">
+                  <div className="id-helper-row">
+                    <div className="id-helper-segment">
+                      <span className="segment-value">1</span>
+                      <span className="segment-line">|</span>
+                      <span className="segment-label">Div</span>
+                    </div>
+                    <span className="segment-separator">/</span>
+                    <div className="id-helper-segment">
+                      <span className="segment-value">24</span>
+                      <span className="segment-line">|</span>
+                      <span className="segment-label">Year</span>
+                    </div>
+                    <span className="segment-separator">/</span>
+                    <div className="id-helper-segment">
+                      <span className="segment-value">SET</span>
+                      <span className="segment-line">|</span>
+                      <span className="segment-label">School</span>
+                    </div>
+                    <span className="segment-separator">/</span>
+                    <div className="id-helper-segment">
+                      <span className="segment-value">BCS</span>
+                      <span className="segment-line">|</span>
+                      <span className="segment-label">Branch</span>
+                    </div>
+                    <span className="segment-separator">/</span>
+                    <div className="id-helper-segment">
+                      <span className="segment-value">001</span>
+                      <span className="segment-line">|</span>
+                      <span className="segment-label">Roll</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {idError && (
+                <span className="field-error">{idError}</span>
+              )}
+            </div>
 
-              {/* Forgot password */}
-              <div className="modal-forgot">
-                <button type="button" onClick={() => { clearErrors(); setForgotView(true); }}>
-                  Forgot password?
-                </button>
-              </div>
-            </>
-            )}
+            {/* Password field */}
+            <PasswordField
+              label="Password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setPwError(''); }}
+              error={pwError}
+              hint={isStudent ? 'Default password is your Student ID' : undefined}
+            />
 
             {/* Submit */}
             <button className="modal-submit" type="submit" disabled={loading}>
@@ -422,13 +333,18 @@ const LoginModal = ({ role, onClose }) => {
               )}
             </button>
 
-            {/* Admission: register link */}
-            {isAdm && (
-              <p className="modal-register-link">
-                New applicant?{' '}
-                <button type="button" onClick={() => {}}>Register here</button>
-              </p>
+            {apiError && (
+              <div className="modal-api-error-text">
+                Incorrect ID or password
+              </div>
             )}
+
+            {/* Forgot password */}
+            <div className="modal-forgot">
+              <button type="button" onClick={() => { clearErrors(); setForgotView(true); }}>
+                Forgot password?
+              </button>
+            </div>
 
           </form>
 

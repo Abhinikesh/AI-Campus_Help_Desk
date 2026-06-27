@@ -1,252 +1,304 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { aiService } from '../../services/ai.service';
-import Navbar from '../../components/Navbar/Navbar';
-import { useAuth } from '../../context/AuthContext';
-import { Send, Trash2, Globe } from 'lucide-react';
+import {
+  Send, Trash2, Plus, BookOpen, Building2, Map, Flag, Cpu
+} from 'lucide-react';
+import '../../styles/dashboard-shared.css';
 import './AIHelpDesk.css';
 
-const agentDetails = {
-  academic: { name: 'Academic Agent', desc: 'Timetable, Results, Exams', icon: '📚' },
-  admin: { name: 'Admin Agent', desc: 'Fees, ID Card, Documents', icon: '🏛' },
-  navigation: { name: 'Navigation Agent', desc: 'Find rooms & locations', icon: '🗺' },
-  complaint: { name: 'Complaint Agent', desc: 'Raise & track issues', icon: '📝' }
+/* ── Agent registry ──────────────────────────────────────── */
+const AGENTS = {
+  auto:      { label: 'Auto',           Icon: Cpu,       desc: 'Smart routing'             },
+  academic:  { label: 'Academic Agent', Icon: BookOpen,  desc: 'Timetable, Results, Exams' },
+  admin:     { label: 'Admin Agent',    Icon: Building2, desc: 'Fees, ID Card, Documents'  },
+  navigation:{ label: 'Navigation Agent',Icon: Map,      desc: 'Find rooms & locations'    },
+  complaint: { label: 'Complaint Agent',Icon: Flag,      desc: 'Raise & track issues'      },
 };
 
+const SUGGESTIONS = [
+  'Check my attendance',
+  'Upcoming exam schedule',
+  'Raise a complaint',
+  'How to pay fees?',
+  'Where is the library?',
+];
+
+/* ── Empty-state SVG ──────────────────────────────────────── */
+const EmptyChatSVG = () => (
+  <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="8" y="14" width="56" height="38" rx="8" stroke="#D1D5DB" strokeWidth="2" fill="none"/>
+    <circle cx="22" cy="33" r="4" fill="#D1D5DB"/>
+    <circle cx="36" cy="33" r="4" fill="#D1D5DB"/>
+    <circle cx="50" cy="33" r="4" fill="#D1D5DB"/>
+    <path d="M28 52l4 6 4-6" stroke="#D1D5DB" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+/* ── Dot typing indicator ─────────────────────────────────── */
+const TypingDots = () => (
+  <div className="ai-typing">
+    <span /><span /><span />
+  </div>
+);
+
+/* ════════════════════════════════════════════════════════════
+   Main component
+════════════════════════════════════════════════════════════ */
 const AIHelpDesk = () => {
-  const { user } = useAuth() || { user: { role: 'student', name: 'User' } };
-  const [messages, setMessages] = useState([
-    { id: 1, role: 'ai', content: "👋 Hello! I'm your Campus AI Assistant. I can help you with academics, administration, navigation, and complaints. How can I help you today?", agent: 'academic', timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
-  ]);
-  const [currentAgent, setCurrentAgent] = useState('academic');
-  const [isLoading, setIsLoading] = useState(false);
-  const [autoDetect, setAutoDetect] = useState(true);
-  const [language, setLanguage] = useState('EN');
-  const [inputValue, setInputValue] = useState('');
-  const messagesEndRef = useRef(null);
+  /* chat sessions: [{ id, agentKey, messages[] }] */
+  const [sessions,    setSessions]    = useState([]);
+  const [activeId,    setActiveId]    = useState(null);
+  const [agentKey,    setAgentKey]    = useState('auto');
+  const [autoDetect,  setAutoDetect]  = useState(true);
+  const [inputVal,    setInputVal]    = useState('');
+  const [isLoading,   setIsLoading]   = useState(false);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const bottomRef  = useRef(null);
+  const inputRef   = useRef(null);
 
+  const emptyMessagesRef = useRef([]);
+  const activeSession = sessions.find(s => s.id === activeId) || null;
+  const messages = activeSession?.messages || emptyMessagesRef.current;
+
+  /* Scroll to bottom when messages change */
   useEffect(() => {
-    scrollToBottom();
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  const switchAgent = (agent) => {
-    setCurrentAgent(agent);
-    setAutoDetect(false);
+  /* New chat */
+  const newChat = () => {
+    const id = Date.now();
+    setSessions(prev => [{
+      id,
+      agentKey,
+      messages: [{
+        id: 1, role: 'ai', agentKey,
+        content: "Hello! I'm your Campus AI Assistant. Ask me anything about academics, administration, campus navigation, or complaints.",
+        ts: now(),
+      }]
+    }, ...prev]);
+    setActiveId(id);
+    setInputVal('');
+    setTimeout(() => inputRef.current?.focus(), 100);
   };
 
+  /* Clear current chat */
   const clearChat = () => {
-    setMessages([
-      { id: Date.now(), role: 'ai', content: language === 'HI' ? "👋 नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?" : "👋 Hello! How can I help you today?", agent: currentAgent, timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
-    ]);
+    if (!activeId) return;
+    setSessions(prev => prev.map(s => s.id !== activeId ? s : {
+      ...s,
+      messages: [{
+        id: Date.now(), role: 'ai', agentKey,
+        content: 'Chat cleared. How can I help you?',
+        ts: now(),
+      }]
+    }));
   };
 
-  const handleQuickAsk = (question) => {
-    setInputValue(question);
-    sendMessage(question);
-  };
-
+  /* Send */
   const sendMessage = async (textOverride) => {
-    const text = textOverride || inputValue.trim();
-    if (!text) return;
+    const text = (textOverride || inputVal).trim();
+    if (!text || isLoading) return;
 
-    const newMessage = {
-      id: Date.now(),
-      role: 'user',
-      content: text,
-      timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
-    setInputValue('');
+    // If no session exists, create one
+    let sid = activeId;
+    if (!sid) {
+      sid = Date.now();
+      setSessions(prev => [{
+        id: sid, agentKey,
+        messages: [{
+          id: 1, role: 'ai', agentKey,
+          content: "Hello! I'm your Campus AI Assistant.",
+          ts: now(),
+        }]
+      }, ...prev]);
+      setActiveId(sid);
+    }
+
+    const userMsg = { id: Date.now(), role: 'user', content: text, ts: now() };
+    setSessions(prev => prev.map(s => s.id !== sid ? s : { ...s, messages: [...s.messages, userMsg] }));
+    setInputVal('');
     setIsLoading(true);
 
     try {
-      // Keep only last 10 messages for context
-      const history = messages.slice(-10);
-      
-      const payload = {
-        message: text,
-        history,
-        agent: autoDetect ? null : currentAgent
-      };
+      const history = (sessions.find(s => s.id === sid)?.messages || []).slice(-10);
+      const res = await aiService.chat({ message: text, history, agent: autoDetect ? null : agentKey });
+      const respondingAgent = res?.agent || agentKey;
+      if (res?.agent && autoDetect) setAgentKey(res.agent);
 
-      const res = await aiService.chat(payload);
-
-      if (res?.agent && autoDetect) {
-        setCurrentAgent(res.agent);
-      }
-
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        role: 'ai',
+      const aiMsg = {
+        id: Date.now() + 1, role: 'ai', agentKey: respondingAgent,
         content: res?.reply || "Sorry, I couldn't connect. Please try again.",
-        agent: res?.agent || currentAgent,
-        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-      }]);
-    } catch (error) {
-      console.error(error);
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        role: 'ai',
-        content: "Sorry, I couldn't connect. Please try again.",
-        agent: currentAgent,
-        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-      }]);
+        ts: now(),
+      };
+      setSessions(prev => prev.map(s => s.id !== sid ? s : { ...s, messages: [...s.messages, aiMsg] }));
+    } catch {
+      setSessions(prev => prev.map(s => s.id !== sid ? s : {
+        ...s,
+        messages: [...s.messages, {
+          id: Date.now() + 1, role: 'ai', agentKey,
+          content: "Sorry, I couldn't connect. Please try again.",
+          ts: now(),
+        }]
+      }));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+  const handleKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
-  const placeholderText = language === 'HI' ? "अपना संदेश यहाँ टाइप करें..." : "Type your message here...";
+  const now = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  // Format markdown-like text (bold)
-  const formatText = (text) => {
-    return text.split('\n').map((line, i) => (
-      <span key={i}>
-        {line.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}
-        <br />
-      </span>
-    ));
+  const preview = (msgs) => {
+    const last = [...msgs].reverse().find(m => m.role === 'user');
+    return last?.content?.slice(0, 42) || 'New conversation';
   };
 
   return (
-    <div className="ai-layout">
-      <Navbar />
-      <div className="ai-container">
-        
-        {/* LEFT SIDEBAR */}
-        <aside className="ai-sidebar">
-          <div className="ai-sidebar-top">
-            <h3 className="ai-sidebar-heading">Select Agent</h3>
-            <div className="ai-agent-list">
-              {Object.entries(agentDetails).map(([key, details]) => (
-                <button 
-                  key={key}
-                  className={`agent-btn ${currentAgent === key ? 'active' : ''}`}
-                  onClick={() => switchAgent(key)}
-                >
-                  <span className="agent-icon">{details.icon}</span>
-                  <div className="agent-info">
-                    <span className="agent-name">{details.name}</span>
-                    <span className="agent-desc">{details.desc}</span>
-                  </div>
-                  {currentAgent === key && <span className="agent-active-dot"></span>}
-                </button>
-              ))}
-            </div>
+    <div className="ai-page">
 
-            <div className="ai-lang-toggle">
-              <button 
-                className={`lang-btn ${language === 'EN' ? 'active' : ''}`}
-                onClick={() => setLanguage('EN')}
-              >EN</button>
-              <button 
-                className={`lang-btn ${language === 'HI' ? 'active' : ''}`}
-                onClick={() => setLanguage('HI')}
-              >HI</button>
-            </div>
+      {/* ── LEFT: Session history ── */}
+      <aside className="ai-history-panel">
+        <div className="ai-history-header">
+          <span className="ai-history-title">Recent Chats</span>
+        </div>
 
-            <div className="ai-auto-detect">
-              <span className="ai-sidebar-heading" style={{margin: 0}}>Auto-detect Agent</span>
-              <label className="switch">
-                <input type="checkbox" checked={autoDetect} onChange={(e) => setAutoDetect(e.target.checked)} />
-                <span className="slider round"></span>
-              </label>
-            </div>
-          </div>
-
-          <div className="ai-sidebar-bottom">
-            <h3 className="ai-sidebar-heading">Quick Ask</h3>
-            <div className="ai-quick-links">
-              {['What is my attendance?', 'When is my next exam?', 'How to pay fees?', 'Where is the library?', 'Raise a complaint', 'What is my CGPA?'].map((q, i) => (
-                <button key={i} className="quick-pill" onClick={() => handleQuickAsk(q)}>{q}</button>
-              ))}
-            </div>
-          </div>
-        </aside>
-
-        {/* RIGHT CHAT AREA */}
-        <main className="ai-chat-area">
-          <div className="chat-top-bar">
-            <div className="chat-tb-left">
-              <span className="tb-icon">{agentDetails[currentAgent].icon}</span>
-              <span className="tb-name">{agentDetails[currentAgent].name}</span>
-              <span className="tb-online"></span>
-            </div>
-            <div className="chat-tb-center">
-              <span className="tb-lang-badge"><Globe size={14}/> {language}</span>
-            </div>
-            <div className="chat-tb-right">
-              <button className="tb-clear-btn" onClick={clearChat} title="Clear Chat">
-                <Trash2 size={18} />
-              </button>
-            </div>
-          </div>
-
-          <div className="chat-messages">
-            {messages.map((msg) => (
-              <div key={msg.id} className={`chat-bubble-wrapper ${msg.role}`}>
-                {msg.role === 'ai' && (
-                  <div className="chat-avatar">{agentDetails[msg.agent || currentAgent].icon}</div>
-                )}
-                <div className="chat-content-wrap">
-                  {msg.role === 'ai' && <div className="chat-agent-name">{agentDetails[msg.agent || currentAgent].name}</div>}
-                  <div className={`chat-bubble ${msg.role === 'ai' ? 'ai-bg' : 'user-bg'} ${msg.content.includes("Sorry, I couldn't connect") ? 'error-bg' : ''}`}>
-                    <div className="chat-text" dangerouslySetInnerHTML={{ __html: msg.content.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br/>') }} />
-                  </div>
-                  <div className="chat-timestamp">{msg.timestamp}</div>
-                </div>
-              </div>
-            ))}
-            
-            {isLoading && (
-              <div className="chat-bubble-wrapper ai">
-                <div className="chat-avatar">{agentDetails[currentAgent].icon}</div>
-                <div className="chat-content-wrap">
-                  <div className="chat-bubble ai-bg thinking-bubble">
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                  </div>
-                  <div className="chat-timestamp">{agentDetails[currentAgent].name} is thinking...</div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="chat-input-bar">
-            <textarea
-              className="chat-textarea"
-              placeholder={placeholderText}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              rows={1}
-            />
-            <button 
-              className={`chat-send-btn ${!inputValue.trim() || isLoading ? 'disabled' : ''}`} 
-              onClick={() => sendMessage()}
-              disabled={!inputValue.trim() || isLoading}
+        <div className="ai-history-list">
+          {sessions.length === 0 ? (
+            <div className="ai-history-empty">No conversations yet</div>
+          ) : sessions.map(s => (
+            <button
+              key={s.id}
+              className={`ai-history-item${s.id === activeId ? ' active' : ''}`}
+              onClick={() => setActiveId(s.id)}
             >
-              {isLoading ? <div className="spinner-small"></div> : <Send size={20} />}
+              <div className="ai-history-preview">{preview(s.messages)}</div>
+              <div className="ai-history-ts">
+                {new Date(s.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="ai-history-footer">
+          <button className="ds-btn outline full" onClick={newChat}>
+            <Plus size={14} /> New Chat
+          </button>
+        </div>
+      </aside>
+
+      {/* ── RIGHT: Chat window ── */}
+      <div className="ai-chat-panel">
+
+        {/* Chat header */}
+        <div className="ai-chat-header">
+          <span className="ai-chat-title">AI Help Desk</span>
+          <div className="ai-chat-controls">
+            <select
+              className="ai-agent-select"
+              value={agentKey}
+              onChange={e => { setAgentKey(e.target.value); setAutoDetect(e.target.value === 'auto'); }}
+            >
+              {Object.entries(AGENTS).map(([k, a]) => (
+                <option key={k} value={k}>{a.label}</option>
+              ))}
+            </select>
+            {activeSession && (
+              <button className="ds-btn ghost sm" onClick={clearChat} title="Clear chat">
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="ai-messages">
+          {!activeSession ? (
+            /* Empty state */
+            <div className="ai-empty-state">
+              <EmptyChatSVG />
+              <h3 className="ai-empty-title">How can we help you today?</h3>
+              <p className="ai-empty-sub">Ask anything about your courses, campus, or administration.</p>
+              <div className="ai-chips">
+                {SUGGESTIONS.map((s, i) => (
+                  <button key={i} className="ai-chip" onClick={() => sendMessage(s)}>{s}</button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              {messages.map(msg => {
+                const agInfo = AGENTS[msg.agentKey] || AGENTS.academic;
+                return (
+                  <div key={msg.id} className={`ai-msg-row ${msg.role}`}>
+                    {msg.role === 'ai' && (
+                      <div className="ai-msg-avatar">
+                        <agInfo.Icon size={14} strokeWidth={1.75} color="#1A56DB" />
+                      </div>
+                    )}
+                    <div className="ai-msg-col">
+                      {msg.role === 'ai' && (
+                        <div className="ai-agent-label">{agInfo.label}</div>
+                      )}
+                      <div className={`ai-bubble ${msg.role}`}
+                        dangerouslySetInnerHTML={{
+                          __html: msg.content
+                            .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                            .replace(/\n/g, '<br/>')
+                        }}
+                      />
+                      <div className="ai-msg-ts">{msg.ts}</div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {isLoading && (
+                <div className="ai-msg-row ai">
+                  <div className="ai-msg-avatar">
+                    <Cpu size={14} strokeWidth={1.75} color="#1A56DB" />
+                  </div>
+                  <div className="ai-msg-col">
+                    <div className="ai-agent-label">{AGENTS[agentKey]?.label}</div>
+                    <div className="ai-bubble ai"><TypingDots /></div>
+                    <div className="ai-msg-ts">typing…</div>
+                  </div>
+                </div>
+              )}
+              <div ref={bottomRef} />
+            </>
+          )}
+        </div>
+
+        {/* Input */}
+        <div className="ai-input-bar">
+          <div className="ai-input-wrap">
+            <textarea
+              ref={inputRef}
+              className="ai-textarea"
+              rows={1}
+              placeholder="Ask anything about academics, admin, campus…"
+              value={inputVal}
+              onChange={e => setInputVal(e.target.value)}
+              onKeyDown={handleKey}
+            />
+            <button
+              className="ai-send-btn"
+              onClick={() => sendMessage()}
+              disabled={!inputVal.trim() || isLoading}
+              aria-label="Send"
+            >
+              <Send size={16} />
             </button>
           </div>
-        </main>
-
+          <div className="ai-powered">Powered by Gemini AI</div>
+        </div>
       </div>
     </div>
   );
-}
+};
 
 export default AIHelpDesk;

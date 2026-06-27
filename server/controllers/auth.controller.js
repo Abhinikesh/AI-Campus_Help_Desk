@@ -14,11 +14,46 @@ const ROLE_REDIRECTS = {
   admin:     '/admin/dashboard',
 };
 
+// ── Hardcoded Demo Credentials (no DB required) ──────────────────────────────
+// These are for demonstration/testing only. In production, remove these and
+// use proper seeded DB records with hashed passwords.
+const DEMO_ACCOUNTS = [
+  {
+    identifier: '1/24/SET/BCS/001',
+    password:   'student123',
+    role:       'student',
+    name:       'Demo Student',
+    email:      'demo.student@campussphere.edu',
+  },
+  {
+    identifier: 'faculty@campussphere.edu',
+    password:   'faculty123',
+    role:       'faculty',
+    name:       'Demo Faculty',
+    email:      'faculty@campussphere.edu',
+  },
+  {
+    identifier: 'admin@campussphere.edu',
+    password:   'admin123',
+    role:       'admin',
+    name:       'Campus Admin',
+    email:      'admin@campussphere.edu',
+  },
+];
+
 const generateToken = (user) => {
   return jwt.sign(
-    { userId: user._id, role: user.role, name: user.name },
+    { userId: user._id || user.demoId, role: user.role, name: user.name },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+  );
+};
+
+const generateDemoToken = (demo) => {
+  return jwt.sign(
+    { userId: `demo_${demo.role}`, role: demo.role, name: demo.name },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
   );
 };
 
@@ -108,64 +143,70 @@ const login = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Identifier, password, and role are required' });
     }
 
+    // ── Check Demo Accounts first (no DB required) ────────────────────────────
+    const demo = DEMO_ACCOUNTS.find(
+      (d) => d.identifier === identifier && d.password === password && d.role === role
+    );
+
+    if (demo) {
+      const token = generateDemoToken(demo);
+      setCookieToken(res, token);
+      console.log(`✅ Demo login: ${identifier} [${role}]`);
+      return res.json({
+        success: true,
+        role:       demo.role,
+        name:       demo.name,
+        redirectTo: ROLE_REDIRECTS[demo.role],
+      });
+    }
+
+    // ── Fall back to DB lookup ────────────────────────────────────────────────
     let user;
 
     if (role === 'student') {
-      // Student logs in with roll number
-      const studentProfile = await Student.findOne({ 
-        rollNumber: identifier 
+      // Student logs in with roll number (also try email fallback)
+      const studentProfile = await Student.findOne({
+        rollNumber: identifier
       }).populate('userId');
-      
-      if (!studentProfile || !studentProfile.userId) {
-        return res.status(401).json({ 
-          success: false, 
-          error: 'Invalid roll number or password' 
-        });
+
+      if (studentProfile && studentProfile.userId) {
+        user = studentProfile.userId;
+      } else {
+        // Fallback: try email
+        user = await User.findOne({ email: identifier, role: 'student' });
       }
-      user = studentProfile.userId;
     } else {
       // All other roles login with email
       user = await User.findOne({ email: identifier, role });
     }
 
     if (!user) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Invalid credentials' 
-      });
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Invalid credentials' 
-      });
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
-    // Check if user is active
     if (user.isActive === false) {
       return res.status(403).json({ success: false, error: 'Your account has been deactivated' });
     }
 
     const token = generateToken(user);
     setCookieToken(res, token);
-    
     console.log(`✅ User logged in: ${identifier} [${role}]`);
 
     res.json({
       success: true,
-      role: user.role,
-      name: user.name,
-      redirectTo: ROLE_REDIRECTS[user.role]
+      role:       user.role,
+      name:       user.name,
+      redirectTo: ROLE_REDIRECTS[user.role],
     });
 
   } catch (error) {
     console.error('❌ Login error:', error.message);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error' 
-    });
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
@@ -190,13 +231,29 @@ const logout = async (req, res) => {
 
 const getMe = async (req, res) => {
   try {
-    // req.user is set by auth middleware
-    const user = await User.findById(req.user.userId);
+    const { userId, role, name } = req.user;
+
+    // Demo session — return synthetic data without DB hit
+    if (typeof userId === 'string' && userId.startsWith('demo_')) {
+      const demo = DEMO_ACCOUNTS.find((d) => d.role === role);
+      return res.status(200).json({
+        success: true,
+        user: {
+          name:       demo ? demo.name : name,
+          email:      demo ? demo.email : `${role}@campussphere.edu`,
+          role,
+          rollNumber: null,
+        },
+      });
+    }
+
+    // Real DB user
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    console.log(`✅ getMe success for userId: ${req.user.userId}`);
+    console.log(`✅ getMe success for userId: ${userId}`);
     return res.status(200).json({
       success: true,
       user: {
@@ -212,38 +269,39 @@ const getMe = async (req, res) => {
   }
 };
 
-// ── ADMISSION LOGIN (GUEST) ────────────────────────────────────────────────
-// Allows new admission users to get a session to use the AI Help Desk
-const admissionLogin = async (req, res) => {
+// ── ADMISSION INQUIRY (PUBLIC — no auth required) ─────────────────────────
+// Anyone can submit an admission inquiry. No session is created.
+const admissionInquiry = async (req, res) => {
   try {
-    const { name, phone } = req.body;
+    const { name, email, phone, course, message } = req.body;
 
-    if (!name || !phone) {
-      return res.status(400).json({ success: false, message: 'Name and phone are required for admission portal' });
+    if (!name || !email || !phone) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, email, and phone are required.',
+      });
     }
 
-    // We don't save these to the User model, just give them a session 'admission' role
-    // Create a dummy ID for the session
-    const dummyId = `adm_${Date.now()}`;
-    const token = jwt.sign(
-      { userId: dummyId, role: 'admission', name: name },
-      process.env.JWT_SECRET,
-      { expiresIn: '2h' } // Short lived session
-    );
-
-    setCookieToken(res, token);
-    console.log(`✅ Admission guest logged in: ${name}`);
+    // In a real app: save to DB, send email, etc.
+    // For now, just log and confirm.
+    console.log(`📩 Admission Inquiry — ${name} | ${email} | ${phone} | Course: ${course || 'N/A'}`);
 
     return res.status(200).json({
       success: true,
-      role: 'admission',
-      name: name,
-      redirectTo: ROLE_REDIRECTS.admission,
+      message: 'Your inquiry has been received. Our admission team will contact you within 24 hours.',
     });
   } catch (error) {
-    console.error('❌ Admission login error:', error.message);
-    return res.status(500).json({ success: false, message: 'Server error during admission login' });
+    console.error('❌ Admission inquiry error:', error.message);
+    return res.status(500).json({ success: false, message: 'Server error. Please try again.' });
   }
 };
 
-module.exports = { register, login, logout, getMe, admissionLogin };
+// ── ADMISSION LOGIN (kept for any backward-compat usage) ──────────────────
+const admissionLogin = async (req, res) => {
+  return res.status(410).json({
+    success: false,
+    message: 'Admission login has been replaced by the public inquiry form. No credentials needed.',
+  });
+};
+
+module.exports = { register, login, logout, getMe, admissionLogin, admissionInquiry };

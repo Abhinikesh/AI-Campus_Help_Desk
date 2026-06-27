@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar/Navbar';
 import { studentService } from '../../services/student.service';
-import { Loader2, Download, CheckCircle, AlertCircle } from 'lucide-react';
+import { Download, CheckCircle, AlertCircle } from 'lucide-react';
+import '../../styles/dashboard-shared.css';
 import './Results.css';
 
 const Results = () => {
@@ -52,8 +53,9 @@ const Results = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0f172a] text-white">
-        <Loader2 className="animate-spin mr-2" /> Fetching Results...
+      <div className="ds-loading">
+        <div className="ds-spinner"></div>
+        <div className="ds-loading-text">Fetching Results...</div>
       </div>
     );
   }
@@ -167,9 +169,9 @@ const Results = () => {
 
           </div>
         ) : (
-          <div className="empty-state">
-            <AlertCircle size={48} className="mx-auto mb-4 text-slate-600" />
-            <p className="text-slate-400">Historical results for {activeTab} are currently being migrated to the new system.</p>
+          <div className="ds-empty">
+            <AlertCircle size={48} />
+            <p>Historical results for {activeTab} are currently being migrated to the new system.</p>
           </div>
         )}
       </main>

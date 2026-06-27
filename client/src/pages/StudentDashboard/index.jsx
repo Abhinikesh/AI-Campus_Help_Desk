@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -95,7 +96,6 @@ const StudentDashboard = () => {
       )
     : 84;
 
-  const activeComplaints = complaints.filter(c => c.status !== 'resolved').length;
   const cgpa = profile?.results?.length
     ? (profile.results.reduce((s, r) => s + (r.marks || 0), 0) /
        profile.results.length / 10).toFixed(1)

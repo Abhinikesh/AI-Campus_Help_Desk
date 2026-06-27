@@ -12,31 +12,31 @@ import './Landing.css';
 // ── Role definitions ────────────────────────────────────────
 const ROLES = [
   {
-    id:   'student',
+    id: 'student',
     icon: GraduationCap,
     name: 'Student',
     desc: 'Access your courses, attendance and results',
   },
   {
-    id:   'faculty',
+    id: 'faculty',
     icon: BookOpen,
     name: 'Faculty / Teacher',
     desc: 'Manage classes, grades and announcements',
   },
   {
-    id:   'parent',
+    id: 'parent',
     icon: Users,
     name: 'Parent',
     desc: "Track your child's progress and attendance",
   },
   {
-    id:   'admission',
+    id: 'admission',
     icon: UserPlus,
     name: 'New Admission',
     desc: 'Begin your admission journey here',
   },
   {
-    id:   'admin',
+    id: 'admin',
     icon: Shield,
     name: 'College Admin',
     desc: 'Manage campus operations and analytics',
@@ -46,43 +46,43 @@ const ROLES = [
 // ── Feature definitions ─────────────────────────────────────
 const FEATURES = [
   {
-    icon:  Bot,
+    icon: Bot,
     title: 'AI Help Desk',
-    desc:  'Instant AI-powered answers for academic and admin queries',
+    desc: 'Instant AI-powered answers for academic and admin queries',
   },
   {
-    icon:  CheckSquare,
+    icon: CheckSquare,
     title: 'Real-Time Attendance',
-    desc:  'Automated tracking with low-attendance alerts',
+    desc: 'Automated tracking with low-attendance alerts',
   },
   {
-    icon:  FolderOpen,
+    icon: FolderOpen,
     title: 'Academic Drive',
-    desc:  'Centralized notes, papers, and resources',
+    desc: 'Centralized notes, papers, and resources',
   },
   {
-    icon:  AlertTriangle,
+    icon: AlertTriangle,
     title: 'Smart Complaints',
-    desc:  'Raise, track and resolve grievances instantly',
+    desc: 'Raise, track and resolve grievances instantly',
   },
   {
-    icon:  LayoutDashboard,
+    icon: LayoutDashboard,
     title: 'Role-Based Dashboards',
-    desc:  'Personalized views for every campus role',
+    desc: 'Personalized views for every campus role',
   },
   {
-    icon:  Map,
+    icon: Map,
     title: 'Virtual Campus Tour',
-    desc:  'Explore campus facilities from anywhere',
+    desc: 'Explore campus facilities from anywhere',
   },
 ];
 
 // ── Stats ───────────────────────────────────────────────────
 const STATS = [
-  { value: 4536, suffix: '+',  label: 'Students Enrolled' },
-  { value: 200,  suffix: '+',  label: 'Expert Faculty'     },
-  { value: 94,   suffix: '%',  label: 'Placement Rate'     },
-  { value: 24,   suffix: 'x7', label: 'AI Support'         },
+  { value: 4536, suffix: '+', label: 'Students Enrolled' },
+  { value: 200, suffix: '+', label: 'Expert Faculty' },
+  { value: 94, suffix: '%', label: 'Placement Rate' },
+  { value: 24, suffix: 'x7', label: 'AI Support' },
 ];
 
 // ── About highlights ────────────────────────────────────────
@@ -113,18 +113,18 @@ const AnimatedNumber = ({ value, suffix, inView }) => {
 
 // ── Dashboard redirects ─────────────────────────────────────
 const ROLE_DASHBOARDS = {
-  student:   '/student/dashboard',
-  faculty:   '/faculty/dashboard',
-  parent:    '/parent/dashboard',
+  student: '/student/dashboard',
+  faculty: '/faculty/dashboard',
+  parent: '/parent/dashboard',
   admission: '/admission/dashboard',
-  admin:     '/admin/dashboard',
+  admin: '/admin/dashboard',
 };
 
 // ── Landing Page ────────────────────────────────────────────
 const Landing = () => {
   const { user, loading } = useAuth();
 
-  const [scrolled,    setScrolled]    = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [statsInView, setStatsInView] = useState(false);
   const statsRef = useRef(null);
@@ -151,8 +151,8 @@ const Landing = () => {
     return <Navigate to={ROLE_DASHBOARDS[user.role] || '/'} replace />;
   }
 
-  const openModal  = (roleId) => setActiveModal(roleId);
-  const closeModal = ()       => setActiveModal(null);
+  const openModal = (roleId) => setActiveModal(roleId);
+  const closeModal = () => setActiveModal(null);
 
   const handleExplore = () => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
@@ -170,8 +170,8 @@ const Landing = () => {
         <a className="nav-brand" href="/">
           {/* Cap-and-gown SVG icon */}
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A56DB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+            <path d="M6 12v5c3 3 9 3 12 0v-5" />
           </svg>
           <span className="nav-brand-logo-text">
             CampusSphere<span className="brand-ai"> AI</span>
@@ -211,8 +211,7 @@ const Landing = () => {
           </div>
 
           <h1 className="hero-title">
-            The Smart Campus Platform<br />
-            for Modern Institutions
+            Smart Campus Platform
           </h1>
 
           <p className="hero-sub">
@@ -366,8 +365,8 @@ const Landing = () => {
               <div className="about-placeholder-grid">
                 {[
                   { icon: CheckSquare, label: 'Attendance', sublabel: '94.2% avg' },
-                  { icon: Bot,         label: 'AI Help Desk', sublabel: '24x7 active' },
-                  { icon: FolderOpen,  label: 'Drive',         sublabel: '1200+ files' },
+                  { icon: Bot, label: 'AI Help Desk', sublabel: '24x7 active' },
+                  { icon: FolderOpen, label: 'Drive', sublabel: '1200+ files' },
                   { icon: LayoutDashboard, label: 'Dashboard', sublabel: '5 roles' },
                 ].map(({ icon: Icon, label, sublabel }) => (
                   <div key={label} className="about-placeholder-card">
@@ -390,8 +389,8 @@ const Landing = () => {
           <div>
             <div className="footer-brand-name">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A56DB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                <path d="M6 12v5c3 3 9 3 12 0v-5" />
               </svg>
               CampusSphere<span className="footer-brand-ai"> AI</span>
             </div>

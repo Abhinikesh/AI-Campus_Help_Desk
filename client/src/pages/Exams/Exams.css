@@ -1,7 +1,9 @@
+/* Exams.css — White Enterprise Redesign */
 .exams-layout {
   min-height: 100vh;
-  background-color: #0f172a;
-  padding-top: 64px;
+  background-color: #FFFFFF;
+  padding-top: 80px;
+  font-family: 'Inter', sans-serif;
 }
 
 .exams-content {
@@ -14,40 +16,43 @@
 }
 
 .page-title {
-  font-family: 'Poppins', sans-serif;
-  font-size: 28px;
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
   font-weight: 700;
-  color: white;
+  color: #111827;
   margin: 0;
+  border-bottom: 1px solid #E2E8F0;
+  padding-bottom: 16px;
 }
 
 .tabs-container {
   display: flex;
-  gap: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 8px;
+  border-bottom: 1px solid #E2E8F0;
   margin-bottom: 8px;
 }
 
 .tab-btn {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: #6B7280;
   font-family: 'Inter', sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   padding: 12px 16px;
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .tab-btn:hover {
-  color: white;
+  color: #111827;
 }
 
 .tab-btn.active {
-  color: white;
-  border-bottom: 2px solid #3b82f6;
+  color: #1A56DB;
+  border-bottom: 2px solid #1A56DB;
+  font-weight: 600;
 }
 
 .exams-list {
@@ -58,16 +63,18 @@
 
 .exam-card {
   display: flex;
-  background-color: #1e293b;
-  border-radius: 16px;
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
   padding: 24px;
   align-items: center;
   gap: 24px;
-  transition: transform 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .exam-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 @media (max-width: 768px) {
@@ -78,9 +85,10 @@
 }
 
 .exam-date-block {
-  background-color: #3b82f6;
-  border-radius: 12px;
-  padding: 16px;
+  background-color: #EFF6FF;
+  border: 1px solid rgba(26, 86, 219, 0.15);
+  border-radius: 8px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -89,18 +97,18 @@
 }
 
 .date-day {
-  font-family: 'Poppins', sans-serif;
-  font-size: 28px;
-  font-weight: 700;
-  color: white;
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #1A56DB;
   line-height: 1;
 }
 
 .date-month {
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  color: white;
+  color: #1A56DB;
   text-transform: uppercase;
   margin-top: 4px;
 }
@@ -113,23 +121,24 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .exam-subject {
-  font-family: 'Poppins', sans-serif;
-  font-size: 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
   font-weight: 700;
-  color: white;
+  color: #111827;
   margin: 0;
 }
 
 .exam-code {
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  color: #94a3b8;
-  background-color: #0f172a;
-  padding: 4px 10px;
+  font-size: 12px;
+  color: #4B5563;
+  background-color: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  padding: 3px 10px;
   border-radius: 9999px;
 }
 
@@ -137,15 +146,22 @@
   display: flex;
   gap: 20px;
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  color: #cbd5e1;
+  font-size: 13px;
+  color: #6B7280;
+  align-items: center;
+}
+
+.exam-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .exam-actions {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 16px;
+  gap: 12px;
 }
 
 @media (max-width: 768px) {
@@ -159,27 +175,44 @@
 
 .days-badge {
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 6px 12px;
+  padding: 4px 10px;
   border-radius: 9999px;
+  text-transform: uppercase;
 }
 
-.green-badge { background-color: rgba(34, 197, 94, 0.1); color: #22c55e; }
-.yellow-badge{ background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-.red-badge   { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.green-badge { background-color: #DEF7EC; color: #03543F; }
+.yellow-badge{ background-color: #FEF3C7; color: #D97706; }
+.red-badge   { background-color: #FDE8E8; color: #9B1C1C; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-outline {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #374151;
+}
+
+.btn-outline:hover {
+  background-color: #F8F9FA;
+  border-color: #D1D5DB;
+}
 
 .download-btn {
   font-size: 13px;
   padding: 8px 16px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 48px;
-  color: #94a3b8;
-  font-family: 'Inter', sans-serif;
-  font-size: 16px;
-  background-color: #1e293b;
-  border-radius: 16px;
 }

@@ -162,3 +162,170 @@ h1, h2, h3, h4, h5, h6 {
   .chat-widget { bottom: 16px; right: 16px; }
   .modal { width: 100vw; height: 100vh; border-radius: 0; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   FINAL POLISH — Global Interaction + Accessibility States
+   ════════════════════════════════════════════════════════════ */
+
+/* Global transition: 150ms on all interactive elements */
+a, button, input, select, textarea,
+[role="button"], [tabindex] {
+  transition-timing-function: ease;
+  transition-duration: 150ms;
+}
+
+/* Focus ring — 2px solid #1A56DB on all focusable elements */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #1A56DB;
+  outline-offset: 2px;
+}
+/* Remove default outline only when focus-visible is supported */
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Disabled state — global */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* All-caps section badge label */
+.label-uppercase {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+}
+
+/* Error card — left red border */
+.error-card {
+  background: #FFFFFF;
+  border: 1px solid #FECACA;
+  border-left: 3px solid #DC2626;
+  border-radius: 0 6px 6px 0;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #374151;
+}
+
+/* Cap box-shadow globally — no blur above 4px */
+* { box-shadow: none; }
+.card,
+.ds-card,
+.ds-stat-card {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* Cap border-radius globally — max 12px on non-circular elements */
+*:not(.ds-avatar):not(.ds-bell-dot):not(.ds-status-dot):not(.ds-toggle-present):not(.ds-toggle-absent):not(.ai-send-btn) {
+  border-radius: inherit; /* let components define their own */
+}
+
+/* Ensure no dark backgrounds leak in */
+.modal-overlay,
+.modal-backdrop,
+[class*="modal"] {
+  /* override any accidental dark bg */
+  --modal-bg: #FFFFFF;
+}
+
+/* Mobile: modals go full screen */
+@media (max-width: 640px) {
+  .drive-modal,
+  [class*="modal-content"] {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+/* Tables: horizontally scroll on mobile, sticky first column */
+@media (max-width: 768px) {
+  .ds-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ds-table td:first-child,
+  .ds-table th:first-child {
+    position: sticky;
+    left: 0;
+    background: #FFFFFF;
+    z-index: 1;
+  }
+  .ds-table thead th:first-child { background: #F8F9FA; }
+}
+
+/* Minimum font-size enforcement */
+small, .ds-step-desc, .ai-msg-ts, .att-date, .ann-date { font-size: 12px; }
+
+/* Remove particle canvas / decorative elements if any remain */
+canvas:not([id]),
+[class*="particle"],
+[class*="blob"],
+[class*="orb"] {
+  display: none !important;
+}
+
+/* Mobile bottom tab bar for dashboards */
+.ds-mobile-tabbar {
+  display: none;
+}
+@media (max-width: 640px) {
+  .ds-main { margin-left: 0 !important; }
+  .ds-mobile-tabbar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: #FFFFFF;
+    border-top: 1px solid #E2E8F0;
+    z-index: 200;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 8px;
+  }
+  .ds-mobile-tabbar a,
+  .ds-mobile-tabbar button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    color: #6B7280;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.15s;
+    min-width: 48px;
+  }
+  .ds-mobile-tabbar a.active,
+  .ds-mobile-tabbar button.active {
+    color: #1A56DB;
+  }
+  /* Push content above tab bar */
+  .ds-content { padding-bottom: 72px; }
+}
+

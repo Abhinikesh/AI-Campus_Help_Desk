@@ -25,9 +25,9 @@
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: 12px;
-  padding: 40px;
+  padding: 36px;
   width: 100%;
-  max-width: 440px;
+  max-width: 400px;
   position: relative;
   animation: modalSlideUp 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -89,18 +89,18 @@
 /* ── Title & Subtitle ─────────────────────────────────────── */
 .modal-title {
   font-family: 'Inter', sans-serif;
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   color: #111827;
   margin-bottom: 6px;
   letter-spacing: -0.3px;
 }
 
 .modal-subtitle {
-  font-size: 14px;
+  font-size: 13px;
   color: #6B7280;
-  margin-bottom: 28px;
-  line-height: 1.55;
+  margin-bottom: 24px;
+  line-height: 1.5;
   font-weight: 400;
 }
 
@@ -359,3 +359,86 @@
   .modal-backdrop { padding: 12px; align-items: flex-end; }
   .modal-box { border-radius: 12px 12px 0 0; max-width: 100%; }
 }
+
+.modal-api-error-text {
+  font-size: 13px;
+  color: #DC2626;
+  text-align: center;
+  margin-top: 12px;
+  font-weight: 500;
+}
+
+.field-helper-text {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Student ID Focus Format Helper Card */
+.id-helper-card {
+  background-color: #F8F9FA;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-top: 8px;
+}
+
+.id-helper-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.id-helper-segment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.segment-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.segment-line {
+  font-size: 11px;
+  color: #9CA3AF;
+  line-height: 1;
+}
+
+.segment-label {
+  font-size: 11px;
+  color: #9CA3AF;
+}
+
+.segment-separator {
+  color: #9CA3AF;
+  font-size: 13px;
+  font-weight: 600;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+/* Reset Password Back Link */
+.modal-back-link {
+  background: none;
+  border: none;
+  color: #6B7280;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 10px;
+  text-align: center;
+  align-self: center;
+  transition: color 0.15s ease;
+}
+
+.modal-back-link:hover {
+  color: #374151;
+}
+
+

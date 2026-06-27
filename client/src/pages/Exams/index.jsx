@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar/Navbar';
 import { studentService } from '../../services/student.service';
-import { Loader2, Calendar, MapPin, Clock, Download, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, Clock, Download, AlertCircle } from 'lucide-react';
+import '../../styles/dashboard-shared.css';
 import './Exams.css';
 
 const Exams = () => {
@@ -27,14 +28,14 @@ const Exams = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0f172a] text-white">
-        <Loader2 className="animate-spin mr-2" /> Loading Exam Schedule...
+      <div className="ds-loading">
+        <div className="ds-spinner"></div>
+        <div className="ds-loading-text">Loading Exam Schedule...</div>
       </div>
     );
   }
 
   const upcomingExams = exams.filter(e => new Date(e.date) >= new Date() || !isNaN(Date.parse(e.date)));
-  const completedExams = exams.filter(e => new Date(e.date) < new Date() && !isNaN(Date.parse(e.date)));
 
   return (
     <div className="exams-layout">
@@ -96,18 +97,18 @@ const Exams = () => {
                 );
               })
             ) : (
-              <div className="empty-state">
-                <Calendar size={48} className="mx-auto mb-4 text-slate-600" />
-                <p className="text-slate-400">No upcoming exams scheduled at the moment.</p>
+              <div className="ds-empty">
+                <Calendar size={48} />
+                <p>No upcoming exams scheduled at the moment.</p>
               </div>
             )}
           </div>
         )}
 
         {activeTab === 'completed' && (
-          <div className="empty-state">
-             <AlertCircle size={48} className="mx-auto mb-4 text-slate-600" />
-            <p className="text-slate-400">No completed exams found for the current session.</p>
+          <div className="ds-empty">
+             <AlertCircle size={48} />
+             <p>No completed exams found for the current session.</p>
           </div>
         )}
 

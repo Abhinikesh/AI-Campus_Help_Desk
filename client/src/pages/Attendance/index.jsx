@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar/Navbar';
 import { studentService } from '../../services/student.service';
-import { Loader2, AlertCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { AlertCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import '../../styles/dashboard-shared.css';
 import './Attendance.css';
 
 const Attendance = () => {
@@ -41,8 +42,9 @@ const Attendance = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0f172a] text-white">
-        <Loader2 className="animate-spin mr-2" /> Loading Attendance Records...
+      <div className="ds-loading">
+        <div className="ds-spinner"></div>
+        <div className="ds-loading-text">Loading Attendance Records...</div>
       </div>
     );
   }
@@ -116,7 +118,7 @@ const Attendance = () => {
               );
             })
           ) : (
-            <div className="col-span-full text-center py-12 text-slate-400 bg-slate-800/20 rounded-xl">
+            <div className="col-span-full ds-empty">
               No attendance records found.
             </div>
           )}

@@ -63,7 +63,7 @@ const ChatWidget = () => {
         content: res?.reply || "Sorry, an error occurred.", 
         agent: res?.agent || 'academic' 
       }]);
-    } catch (error) {
+    } catch {
       setMessages(prev => [...prev, { id: Date.now() + 1, role: 'ai', content: "Connection error.", agent: 'academic' }]);
     } finally {
       setIsLoading(false);

@@ -16,5 +16,9 @@ export const authService = {
   admissionLogin: async (data) => {
     const response = await api.post('/api/auth/admission-login', data);
     return response.data;
-  }
+  },
+  admissionInquiry: async (data) => {
+    const response = await api.post('/api/auth/admission-inquiry', data);
+    return response.data;
+  },
 };

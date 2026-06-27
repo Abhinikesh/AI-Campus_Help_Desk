@@ -68,6 +68,17 @@
 
 ---
 
+### Demo Credentials
+| Role    | Login                          | Password    |
+|---------|-------------------------------|-------------|
+| Student | Roll: 20240001                | student123  |
+| Faculty | faculty@campus.edu            | faculty123  |
+| Admin   | admin@campus.edu              | admin1234   |
+| Parent  | parent@campus.edu             | parent123   |
+| Visitor | Name + Purpose (no password)  | -           |
+
+---
+
 ## 📜 License
 
 MIT License — feel free to use, modify and distribute.

@@ -1,0 +1,253 @@
+/* ═══════════════════════════════════════════════════════════
+   AdmissionInquiryModal.css — White Enterprise Design System
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Backdrop ─────────────────────────────────────────────── */
+.adm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: admBackdropIn 0.2s ease;
+}
+
+@keyframes admBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Modal Box ────────────────────────────────────────────── */
+.adm-box {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 36px;
+  width: 100%;
+  max-width: 440px;
+  position: relative;
+  animation: admModalSlideUp 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+  max-height: 95vh;
+  overflow-y: auto;
+}
+
+.adm-box.closing {
+  animation: admModalSlideDown 0.22s ease forwards;
+}
+
+@keyframes admModalSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes admModalSlideDown {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(12px) scale(0.97); }
+}
+
+/* ── Close Button ─────────────────────────────────────────── */
+.adm-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #9CA3AF;
+  transition: color 0.15s, background 0.15s;
+}
+.adm-close:hover {
+  color: #374151;
+  background: #F4F5F7;
+}
+
+/* ── Title & Subtitle ─────────────────────────────────────── */
+.adm-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+}
+
+.adm-subtitle {
+  font-size: 13px;
+  color: #6B7280;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+/* ── Success State ────────────────────────────────────────── */
+.adm-success {
+  text-align: center;
+  padding: 16px 0;
+}
+.adm-success-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #DCFCE7;
+  margin-bottom: 12px;
+}
+
+/* ── Forms and Inputs ─────────────────────────────────────── */
+.adm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.adm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.adm-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  justify-content: space-between;
+}
+
+.adm-optional {
+  font-weight: 400;
+  color: #9CA3AF;
+}
+
+.adm-input {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #111827;
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  padding: 10px 14px;
+  height: 42px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+  width: 100%;
+}
+
+.adm-input::placeholder {
+  color: #9CA3AF;
+}
+
+.adm-input:focus {
+  border-color: #1A56DB;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.15);
+}
+
+.adm-input.error {
+  border-color: #EF4444;
+  background: #FEF2F2;
+}
+
+.adm-input.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.adm-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 36px;
+}
+
+.adm-textarea {
+  height: auto;
+  min-height: 80px;
+  resize: vertical;
+}
+
+.adm-error {
+  font-size: 11px;
+  color: #EF4444;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+/* ── API Error ────────────────────────────────────────────── */
+.adm-api-error {
+  font-size: 13px;
+  color: #EF4444;
+  background: #FEF2F2;
+  border: 1px solid #FEE2E2;
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Submit Button ────────────────────────────────────────── */
+.adm-submit-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+  background: #1A56DB;
+  border: 1px solid #1A56DB;
+  border-radius: 6px;
+  height: 42px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.adm-submit-btn:hover {
+  background: #1E40AF;
+  border-color: #1E40AF;
+}
+
+.adm-submit-btn:disabled {
+  background: #93C5FD;
+  border-color: #93C5FD;
+  cursor: not-allowed;
+}
+
+.adm-note {
+  font-size: 11px;
+  color: #9CA3AF;
+  text-align: center;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ── Spinner ──────────────────────────────────────────────── */
+.adm-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: admSpin 0.8s linear infinite;
+}
+
+@keyframes admSpin {
+  to { transform: rotate(360deg); }
+}
