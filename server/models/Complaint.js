@@ -1,43 +1,52 @@
+/**
+ * server/models/Complaint.js
+ * Campus complaint raised by student or faculty.
+ */
+'use strict';
+
 const mongoose = require('mongoose');
 
-const complaintSchema = new mongoose.Schema({
-  raisedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
+const complaintSchema = new mongoose.Schema(
+  {
+    raisedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Complaint must have a raiser'],
+    },
+    category: {
+      type: String,
+      enum: ['academic', 'admin', 'hostel', 'infrastructure', 'other'],
+      required: [true, 'Category is required'],
+    },
+    title: {
+      type: String,
+      required: [true, 'Complaint title is required'],
+      trim: true,
+    },
+    description: {
+      type: String,
+      required: [true, 'Description is required'],
+      trim: true,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'in-progress', 'resolved'],
+      default: 'pending',
+    },
+    adminResponse: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    resolvedAt: {
+      type: Date,
+      default: null,
+    },
   },
-  role: {
-    type: String,
-    required: true,
-  },
-  title: {
-    type: String,
-    required: [true, 'Complaint title is required'],
-    trim: true,
-  },
-  description: {
-    type: String,
-    required: [true, 'Complaint description is required'],
-    trim: true,
-  },
-  category: {
-    type: String,
-    enum: ['academic', 'admin', 'hostel', 'other'],
-    required: [true, 'Category is required'],
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'in-progress', 'resolved'],
-    default: 'pending',
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  resolvedAt: {
-    type: Date,
-    default: null,
-  },
-});
+  { timestamps: true }
+);
+
+complaintSchema.index({ raisedBy: 1 });
+complaintSchema.index({ status: 1 });
 
 module.exports = mongoose.model('Complaint', complaintSchema);

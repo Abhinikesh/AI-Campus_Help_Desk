@@ -1,49 +1,60 @@
+/**
+ * server/models/User.js
+ * Core user document for all three roles: student | faculty | admin
+ */
+'use strict';
+
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Name is required'],
-    trim: true,
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Name is required'],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
+    },
+    /** Unique login identifier: roll number (student), employee ID (faculty), admin-style ID */
+    loginId: {
+      type: String,
+      required: [true, 'Login ID is required'],
+      unique: true,
+      trim: true,
+    },
+    passwordHash: {
+      type: String,
+      required: [true, 'Password is required'],
+      select: false, // never returned in queries by default
+    },
+    role: {
+      type: String,
+      enum: ['student', 'faculty', 'admin'],
+      required: [true, 'Role is required'],
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+    },
+    lastLoginAt: {
+      type: Date,
+      default: null,
+    },
   },
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,
-    lowercase: true,
-    trim: true,
-  },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-  },
-  role: {
-    type: String,
-    enum: ['student', 'faculty', 'parent', 'admission', 'admin'],
-    required: [true, 'Role is required'],
-  },
-  // Only populated for students
-  rollNumber: {
-    type: String,
-    match: [/^\d{8}$/, 'Roll number must be exactly 8 digits'],
-    default: null,
-  },
-  isActive: {
-    type: Boolean,
-    default: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { timestamps: true }
+);
 
-// Never return password in any query result
-userSchema.set('toJSON', {
-  transform: (doc, ret) => {
-    delete ret.password;
-    return ret;
-  },
-});
+// Compound text index for admin search
+userSchema.index({ name: 'text', email: 'text', loginId: 'text' });
 
 module.exports = mongoose.model('User', userSchema);
