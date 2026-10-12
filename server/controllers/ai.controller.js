@@ -1,90 +1,96 @@
+/**
+ * server/controllers/ai.controller.js
+ * Campus AI Help Desk — powered by Groq SDK (llama-3.1-8b-instant).
+ * Falls back to a polite demo response if GROQ_API_KEY is not set.
+ */
+'use strict';
+
 const Groq = require('groq-sdk');
+const asyncHandler = require('../utils/asyncHandler');
+const { GROQ_API_KEY } = require('../config/env');
 
 let groq = null;
-const apiKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY;
 
-if (apiKey) {
+if (GROQ_API_KEY) {
   try {
-    groq = new Groq({ apiKey });
-    console.log("🤖 Groq AI service initialized successfully.");
+    groq = new Groq({ apiKey: GROQ_API_KEY });
+    console.log('🤖 Groq AI service initialized.');
   } catch (err) {
-    console.error("❌ Failed to initialize Groq SDK:", err.message || err);
+    console.error('❌ Failed to initialize Groq SDK:', err.message);
   }
 } else {
-  console.warn("⚠️ Warning: Neither GROQ_API_KEY nor GEMINI_API_KEY is defined in environment variables. AI Help Desk will run in demo fallback mode.");
+  console.warn('⚠️  GROQ_API_KEY not set — AI Help Desk running in demo mode.');
 }
 
-function detectAgent(message) {
+const detectAgent = (message) => {
   const msg = message.toLowerCase();
-  const academic = ['timetable','result','marks','attendance','exam','subject','course','syllabus','grade','cgpa','semester','lecture'];
-  const admin = ['fee','id card','certificate','document','hostel','bus','library','payment','receipt','admission','card'];
-  const navigation = ['where','location','room','building','department','lab','office','canteen','direction','find','map','how to reach'];
-  const complaint = ['complaint','issue','problem','broken','not working','report','raise','grievance','request','fix'];
+  const academic  = ['timetable', 'result', 'marks', 'attendance', 'exam', 'subject', 'course', 'syllabus', 'grade', 'cgpa', 'semester', 'lecture'];
+  const admin     = ['fee', 'id card', 'certificate', 'document', 'hostel', 'bus', 'library', 'payment', 'receipt', 'card'];
+  const nav       = ['where', 'location', 'room', 'building', 'department', 'lab', 'office', 'canteen', 'direction', 'find', 'map'];
+  const complaint = ['complaint', 'issue', 'problem', 'broken', 'not working', 'report', 'raise', 'grievance'];
 
-  if (complaint.some(k => msg.includes(k))) return 'complaint';
-  if (navigation.some(k => msg.includes(k))) return 'navigation';
-  if (admin.some(k => msg.includes(k))) return 'admin';
-  if (academic.some(k => msg.includes(k))) return 'academic';
+  if (complaint.some((k) => msg.includes(k))) return 'complaint';
+  if (nav.some((k) => msg.includes(k)))       return 'navigation';
+  if (admin.some((k) => msg.includes(k)))     return 'admin';
+  if (academic.some((k) => msg.includes(k)))  return 'academic';
   return 'academic';
-}
+};
 
 const getSystemPrompt = (agent, role, name) => {
   const base = `Current user role: ${role}. User name: ${name}.`;
-  switch(agent) {
+  switch (agent) {
     case 'academic':
-      return `You are the Academic Agent of CampusSphere AI, a smart campus helpdesk. You help students and faculty with academic queries including timetables, results, attendance, exams, syllabus, CGPA, and course information. Always respond in a friendly, helpful, structured way. Use bullet points for lists. Keep responses concise and relevant to campus academics. ${base}`;
+      return `You are the Academic Agent of CampusSphere ERP. Help students and faculty with timetables, results, attendance, exams, syllabus, CGPA, and courses. Be concise and use bullet points. ${base}`;
     case 'admin':
-      return `You are the Admin Agent of CampusSphere AI. You assist with administrative queries including fee payment, ID cards, certificates, documents, hostel, library, bus pass, and general administration. Always respond helpfully and direct users to the right office when needed. ${base}`;
+      return `You are the Admin Agent of CampusSphere ERP. Assist with fee payment, ID cards, certificates, documents, hostel, library, and general administration. Direct users to the right office when needed. ${base}`;
     case 'navigation':
-      return `You are the Navigation Agent of CampusSphere AI. You help users find locations on campus including rooms, labs, departments, offices, canteen, library, hostels, and other facilities. Provide clear step-by-step directions. Campus layout: Main Gate -> Admin Block (left) -> Academic Block A (straight) -> Academic Block B (right) -> Library (far right) -> Labs (behind Academic A) -> Canteen (center) -> Hostels (back campus). ${base}`;
+      return `You are the Navigation Agent of CampusSphere ERP. Help users find locations on campus. Campus layout: Main Gate → Admin Block (left) → Academic Block A (straight) → Academic Block B (right) → Library (far right) → Labs (behind Academic A) → Canteen (center) → Hostels (back campus). ${base}`;
     case 'complaint':
-      return `You are the Complaint Agent of CampusSphere AI. You help users raise, track and resolve complaints. Guide users through the complaint process, collect complaint details, and provide expected resolution timelines. Categories: Academic, Administrative, Hostel, Infrastructure, Other. Always be empathetic and professional. ${base}`;
+      return `You are the Complaint Agent of CampusSphere ERP. Help users raise and track complaints. Categories: Academic, Administrative, Hostel, Infrastructure, Other. Be empathetic. ${base}`;
     default:
-      return `You are CampusSphere AI. Help the user. ${base}`;
+      return `You are CampusSphere ERP AI assistant. Help the user with campus-related queries. ${base}`;
   }
 };
 
-exports.chat = async (req, res) => {
-  try {
-    const { message, history = [], agent } = req.body;
-    const user = req.user || { role: 'student', name: 'User' };
+const DEMO_REPLIES = {
+  academic:  '[Demo Mode] Timetables, exams, and results are on your dashboard. Configure GROQ_API_KEY in server/.env for live AI responses.',
+  admin:     '[Demo Mode] Admin offices are in the Admin Block. Pay fees online through the Finance section. Configure GROQ_API_KEY for live support.',
+  navigation:'[Demo Mode] Main Gate → Admin Block (left) → Academic Blocks → Canteen (center) → Hostels (back). Configure GROQ_API_KEY for step-by-step guidance.',
+  complaint: '[Demo Mode] Raise and track complaints via the Complaints portal. Configure GROQ_API_KEY for live support.',
+};
 
-    const detectedAgent = agent || detectAgent(message);
+const chat = asyncHandler(async (req, res) => {
+  const { message, history = [], agent } = req.body;
+  if (!message || typeof message !== 'string') {
+    return res.status(400).json({ success: false, message: 'message is required' });
+  }
 
-    // If Groq is not initialized, return a simulated response from the appropriate agent
-    if (!groq) {
-      const mockReplies = {
-        academic: `[Demo Mode] As the Academic Agent: Timetables, exams, and attendance are fully loaded on your dashboard. Mid-Semester Exams begin on April 12, 2026. If you want real AI interactions, please specify a GROQ_API_KEY or GEMINI_API_KEY in the server/.env file.`,
-        admin: `[Demo Mode] As the Admin Agent: Admin offices are located in the Admin Block. You can pay fees directly online through the Finance section, or submit a request for physical document certificates at the main counter. Add your API key to server/.env for live AI help.`,
-        navigation: `[Demo Mode] As the Navigation Agent: The campus main blocks are Main Gate -> Admin Block (left) -> Academic Block A (straight ahead) -> Academic Block B (right) -> Canteen (center). Set your API key in server/.env to get step-by-step navigation instructions.`,
-        complaint: `[Demo Mode] As the Complaint Agent: You can raise, track and manage complaints through the Complaints portal. Once raised, issues are assigned to respective departments with standard 3-day turnaround. Add your API key to server/.env for live support.`
-      };
-      
-      const reply = mockReplies[detectedAgent] || `[Demo Mode] Hello! I can assist with Academics, Administration, Navigation, and Complaints. Please configure GROQ_API_KEY or GEMINI_API_KEY in server/.env to enable live AI assistance.`;
+  const user = req.user || { role: 'student', name: 'User' };
+  const detectedAgent = agent || detectAgent(message);
 
-      // Small delay to simulate response time
-      await new Promise(resolve => setTimeout(resolve, 600));
-      return res.json({ reply, agent: detectedAgent });
-    }
-
-    const systemPrompt = getSystemPrompt(detectedAgent, user.role, user.name);
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      ...history.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content })),
-      { role: 'user', content: message }
-    ];
-
-    const result = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
-      messages: messages,
-      max_tokens: 1000
+  if (!groq) {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    return res.json({
+      success: true,
+      data: { reply: DEMO_REPLIES[detectedAgent] || DEMO_REPLIES.academic, agent: detectedAgent },
     });
-
-    const responseText = result.choices[0].message.content;
-    res.json({ reply: responseText, agent: detectedAgent });
-
-  } catch (error) {
-    console.error("AI Chat Error:", error.message || error);
-    res.status(500).json({ error: "Failed to process chat message." });
   }
-};
+
+  const systemPrompt = getSystemPrompt(detectedAgent, user.role, user.name);
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    ...history.map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content })),
+    { role: 'user', content: message },
+  ];
+
+  const result = await groq.chat.completions.create({
+    model: 'llama-3.1-8b-instant',
+    messages,
+    max_tokens: 1000,
+  });
+
+  const reply = result.choices[0].message.content;
+  return res.json({ success: true, data: { reply, agent: detectedAgent } });
+});
+
+module.exports = { chat };

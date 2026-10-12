@@ -1,216 +1,226 @@
 /**
- * CampusSphere AI — Seed Script
+ * server/seed.js
+ * Development seed script.
  * Run: node server/seed.js
- * Seeds demo users + student profile data for testing
+ *
+ * Creates:
+ *   - 2 students, 1 faculty, 1 admin
+ *   - Sample subjects, fees, announcements, complaint
  */
+'use strict';
 
 require('dotenv').config();
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-
+const bcrypt   = require('bcryptjs');
 const connectDB = require('./config/db');
-const User = require('./models/User');
-const Student = require('./models/Student');
-const Faculty = require('./models/Faculty');
-const Parent = require('./models/Parent');
-const Complaint = require('./models/Complaint');
 
-const SALT_ROUNDS = 10;
+const User         = require('./models/User');
+const Student      = require('./models/Student');
+const Faculty      = require('./models/Faculty');
+const Subject      = require('./models/Subject');
+const Fee          = require('./models/Fee');
+const Complaint    = require('./models/Complaint');
+const Announcement = require('./models/Announcement');
 
-const seedUsers = [
-  {
-    name: 'Arjun Sharma',
-    email: 'student@campus.edu',
-    password: 'student123',
-    role: 'student',
-    rollNumber: '20240001',
-  },
-  {
-    name: 'Abhinikesh',
-    email: 'abhinikesh@campus.edu',
-    password: 'student123',
-    role: 'student',
-    rollNumber: '20240002',
-  },
-  {
-    name: 'Dr. Priya Mehta',
-    email: 'faculty@campus.edu',
-    password: 'faculty123',
-    role: 'faculty',
-  },
-  {
-    name: 'Admin User',
-    email: 'admin@campus.edu',
-    password: 'admin1234',
-    role: 'admin',
-  },
-  {
-    name: 'Ramesh Sharma',
-    email: 'parent@campus.edu',
-    password: 'parent123',
-    role: 'parent',
-  },
-];
-
-const studentAttendance = [
-  { subject: 'Data Structures', code: 'CS201', attended: 42, total: 50 },
-  { subject: 'Database Management', code: 'CS203', attended: 38, total: 50 },
-  { subject: 'Web Development', code: 'CS205', attended: 45, total: 50 },
-  { subject: 'Computer Networks', code: 'CS207', attended: 28, total: 50 },
-  { subject: 'Operating Systems', code: 'CS209', attended: 40, total: 50 }
-];
-
-const studentResults = [
-  { subject: 'Data Structures', code: 'CS201', marks: 88, maxMarks: 100, grade: 'A+' },
-  { subject: 'Database Management', code: 'CS203', marks: 74, maxMarks: 100, grade: 'B' },
-  { subject: 'Web Development', code: 'CS205', marks: 91, maxMarks: 100, grade: 'A+' },
-  { subject: 'Computer Networks', code: 'CS207', marks: 52, maxMarks: 100, grade: 'C' },
-  { subject: 'Operating Systems', code: 'CS209', marks: 79, maxMarks: 100, grade: 'A' }
-];
-
-const studentExams = [
-  { subject: 'Theoretical CS', code: 'CS401', date: 'Apr 12, 2026', time: '10:00 AM', room: 'Exam Hall A' },
-  { subject: 'Cloud Computing', code: 'CS403', date: 'Apr 15, 2026', time: '02:00 PM', room: 'Exam Hall B' },
-  { subject: 'Cyber Security', code: 'CS405', date: 'Apr 18, 2026', time: '10:00 AM', room: 'Exam Hall A' },
-];
+const SALT = 12;
 
 const seed = async (shouldExit = true) => {
   try {
-    // Only call connectDB if we are not already connected
     if (mongoose.connection.readyState === 0) {
       await connectDB();
     }
 
-    // ── Wipe existing data ────────────────────────────────────
     console.log('🗑️  Clearing existing data...');
-    await User.deleteMany({});
-    await Student.deleteMany({});
-    await Faculty.deleteMany({});
-    await Parent.deleteMany({});
-    await Complaint.deleteMany({});
+    await Promise.all([
+      User.deleteMany({}),
+      Student.deleteMany({}),
+      Faculty.deleteMany({}),
+      Subject.deleteMany({}),
+      Fee.deleteMany({}),
+      Complaint.deleteMany({}),
+      Announcement.deleteMany({}),
+    ]);
     console.log('✅ Collections cleared');
 
-    // ── Hash passwords and create users ───────────────────────
+    // ── Users ────────────────────────────────────────────────────────────────
     console.log('👤 Creating users...');
-    const createdUsers = {};
 
-    for (const userData of seedUsers) {
-      const hashed = await bcrypt.hash(userData.password, SALT_ROUNDS);
-      const user = await User.create({
-        name:       userData.name,
-        email:      userData.email,
-        password:   hashed,
-        role:       userData.role,
-        rollNumber: userData.rollNumber || null,
-      });
-      createdUsers[userData.email] = user;
-      console.log(`  ✅ Created [${userData.role}]: ${userData.email}`);
-    }
-
-    // ── Create Student profile for Arjun Sharma ───────────────
-    console.log('📚 Creating student profiles...');
-    await Student.create({
-      userId:     createdUsers['student@campus.edu']._id,
-      rollNumber: '20240001',
-      branch: 'Computer Science & Engineering',
-      semester: 4,
-      year: 2,
-      attendance: studentAttendance,
-      results: studentResults,
-      exams: studentExams,
-      fees: {
-        total: 120000,
-        paid: 80000,
-        due: 40000,
-        lastPaid: new Date('2026-02-15'),
-        dueDate: new Date('2026-04-20')
-      },
-      announcements: [
-        {
-          title: 'Mid-Semester Exams Begin',
-          body: 'Exams start from April 12, 2026. Check the exam timetable on the portal.',
-          date: new Date('2026-04-01')
-        },
-        {
-          title: 'Fee Payment Reminder',
-          body: 'Last date for semester fee payment is April 20, 2026. Late fee of ₹500 per day will be charged after deadline.',
-          date: new Date('2026-04-05')
-        }
-      ],
+    const adminHash = await bcrypt.hash('Admin@1234', SALT);
+    const admin = await User.create({
+      name: 'Campus Admin',
+      email: 'admin@campus.edu',
+      loginId: 'ADMIN001',
+      passwordHash: adminHash,
+      role: 'admin',
     });
-    console.log('  ✅ Student profile created for Arjun Sharma');
 
-    await Student.create({
-      userId:     createdUsers['abhinikesh@campus.edu']._id,
-      rollNumber: '20240002',
-      branch:     'Computer Science & Engineering',
-      semester:   4,
-      year:       2,
-      attendance: studentAttendance,
-      results:    studentResults,
-      exams:      studentExams,
-      fees: {
-        total: 120000,
-        paid: 120000,
-        due: 0,
-        lastPaid: new Date('2026-01-10'),
-        dueDate: new Date('2026-04-20')
-      },
-      announcements: []
+    const facultyHash = await bcrypt.hash('Faculty@123', SALT);
+    const facultyUser = await User.create({
+      name: 'Dr. Priya Mehta',
+      email: 'priya.mehta@campus.edu',
+      loginId: 'FAC001',
+      passwordHash: facultyHash,
+      role: 'faculty',
     });
-    console.log('  ✅ Student profile created for Abhinikesh');
 
-    // ── Create Parent record for Ramesh Sharma ────────────────
-    console.log('👨‍👩‍👧 Creating parent record...');
-    await Parent.create({
-      userId: createdUsers['parent@campus.edu']._id,
-      studentRollNumber: '20240001',
-      relation: 'Father'
+    const student1Hash = await bcrypt.hash('Student@123', SALT);
+    const student1User = await User.create({
+      name: 'Arjun Sharma',
+      email: 'arjun.sharma@campus.edu',
+      loginId: '20240001', // roll number is the loginId for students
+      passwordHash: student1Hash,
+      role: 'student',
     });
-    console.log('  ✅ Parent record created for Ramesh Sharma');
 
-    // ── Create Faculty profile for Dr. Priya Mehta ────────────
-    console.log('🏫 Creating faculty profile...');
-    await Faculty.create({
-      userId:     createdUsers['faculty@campus.edu']._id,
-      department: 'Computer Science',
+    const student2Hash = await bcrypt.hash('Student@123', SALT);
+    const student2User = await User.create({
+      name: 'Abhinikesh',
+      email: 'abhinikesh@campus.edu',
+      loginId: '20240002',
+      passwordHash: student2Hash,
+      role: 'student',
+    });
+
+    console.log('  ✅ 4 users created');
+
+    // ── Faculty profile ───────────────────────────────────────────────────────
+    const facultyProfile = await Faculty.create({
+      user: facultyUser._id,
       employeeId: 'FAC001',
-      subjects: [
-        { name: 'Data Structures', code: 'CS201', credits: 4, semester: 4 },
-        { name: 'Algorithm Design', code: 'CS202', credits: 4, semester: 4 },
-        { name: 'Database Management', code: 'CS203', credits: 3, semester: 4 }
-      ],
-      timetable: [
-        { day: 'Monday', startTime: '09:00 AM', endTime: '10:00 AM', subject: 'Data Structures', code: 'CS201', room: 'CS-101', batch: 'All' },
-        { day: 'Tuesday', startTime: '10:00 AM', endTime: '11:00 AM', subject: 'Data Structures', code: 'CS201', room: 'CS-101', batch: 'All' },
-        { day: 'Wednesday', startTime: '09:00 AM', endTime: '10:00 AM', subject: 'Algorithm Design', code: 'CS202', room: 'CS-102', batch: 'All' },
-      ],
+      department: 'Computer Science & Engineering',
+      designation: 'Associate Professor',
+      phone: '9876543210',
     });
-    console.log('  ✅ Faculty record created');
+    console.log('  ✅ Faculty profile created');
 
-    console.log('📝 Creating complaints...');
-    await Complaint.insertMany([
-      { title: 'Result not updated', raisedBy: createdUsers['student@campus.edu']._id, role: 'student', category: 'academic', status: 'pending', description: 'Data Structures mid-sem result not visible.', createdAt: new Date('2026-04-01') },
-      { title: 'ID card issue', raisedBy: createdUsers['student@campus.edu']._id, role: 'student', category: 'admin', status: 'in-progress', description: 'Applied for ID card 3 weeks ago.', createdAt: new Date('2026-03-28') },
-      { title: 'Water heater broken', raisedBy: createdUsers['student@campus.edu']._id, role: 'student', category: 'hostel', status: 'resolved', description: 'Hostel No. 2 Room 204 heater repaired.', createdAt: new Date('2026-03-25'), resolvedAt: new Date('2026-03-28') }
+    // ── Subjects ──────────────────────────────────────────────────────────────
+    const subjects = await Subject.insertMany([
+      { code: 'CS201', name: 'Data Structures',         credits: 4, branch: 'CSE', semester: 4, faculty: facultyUser._id },
+      { code: 'CS202', name: 'Algorithm Design',        credits: 4, branch: 'CSE', semester: 4, faculty: facultyUser._id },
+      { code: 'CS203', name: 'Database Management',     credits: 3, branch: 'CSE', semester: 4, faculty: facultyUser._id },
+      { code: 'CS205', name: 'Web Development',         credits: 3, branch: 'CSE', semester: 4, faculty: facultyUser._id },
+      { code: 'CS207', name: 'Computer Networks',       credits: 3, branch: 'CSE', semester: 4, faculty: facultyUser._id },
     ]);
-    console.log('  ✅ Complaints created');
+    console.log('  ✅ 5 subjects created');
 
-    console.log('\n🎉 Seeding complete! Demo credentials:');
-    console.log('Student: student@campus.edu / student123');
-    console.log('Faculty: faculty@campus.edu / faculty123');
-    console.log('Admin:   admin@campus.edu   / admin1234');
-    console.log('Parent:  parent@campus.edu  / parent123');
+    // ── Student profiles ──────────────────────────────────────────────────────
+    const student1 = await Student.create({
+      user: student1User._id,
+      rollNumber: '20240001',
+      fullName: 'Arjun Sharma',
+      email: 'arjun.sharma@campus.edu',
+      phone: '9000000001',
+      branch: 'Computer Science & Engineering',
+      program: 'B.Tech',
+      semester: 4,
+      section: 'A',
+      admissionYear: 2024,
+      gender: 'male',
+      guardianName: 'Ramesh Sharma',
+      guardianPhone: '9100000001',
+      address: '12, MG Road, Bangalore - 560001',
+      status: 'active',
+    });
 
-    if (shouldExit) {
-      process.exit(0);
-    }
-  } catch (error) {
-    console.error('❌ Seed failed:', error.message);
-    if (shouldExit) {
-      process.exit(1);
-    }
-    throw error;
+    const student2 = await Student.create({
+      user: student2User._id,
+      rollNumber: '20240002',
+      fullName: 'Abhinikesh',
+      email: 'abhinikesh@campus.edu',
+      phone: '9000000002',
+      branch: 'Computer Science & Engineering',
+      program: 'B.Tech',
+      semester: 4,
+      section: 'A',
+      admissionYear: 2024,
+      gender: 'male',
+      status: 'active',
+    });
+    console.log('  ✅ 2 student profiles created');
+
+    // ── Fees ──────────────────────────────────────────────────────────────────
+    await Fee.insertMany([
+      {
+        student: student1._id,
+        title: 'Semester 4 Tuition Fee',
+        amount: 75000,
+        dueDate: new Date('2026-04-20'),
+        payments: [
+          {
+            amount: 75000,
+            paidOn: new Date('2026-01-15'),
+            mode: 'online',
+            reference: 'TXN20260115001',
+            receiptNo: 'REC-2026-001',
+            recordedBy: admin._id,
+          },
+        ],
+      },
+      {
+        student: student2._id,
+        title: 'Semester 4 Tuition Fee',
+        amount: 75000,
+        dueDate: new Date('2026-04-20'),
+        payments: [
+          {
+            amount: 37500,
+            paidOn: new Date('2026-02-10'),
+            mode: 'online',
+            reference: 'TXN20260210002',
+            receiptNo: 'REC-2026-002',
+            recordedBy: admin._id,
+          },
+        ],
+      },
+    ]);
+    console.log('  ✅ Fee records created');
+
+    // ── Announcements ─────────────────────────────────────────────────────────
+    await Announcement.insertMany([
+      {
+        title: 'Mid-Semester Exams Begin April 12',
+        body: 'Mid-semester examinations commence on April 12, 2026. Students must carry their ID cards. Hall tickets available on the portal.',
+        audience: 'all',
+        createdBy: admin._id,
+      },
+      {
+        title: 'Fee Payment Deadline: April 20',
+        body: 'Last date for Semester 4 fee payment is April 20, 2026. A late fee of ₹500/day will be charged after the deadline.',
+        audience: 'student',
+        createdBy: admin._id,
+      },
+      {
+        title: 'Faculty Meeting — April 8',
+        body: 'Mandatory faculty meeting on April 8, 2026 at 11:00 AM in the Conference Hall, Admin Block.',
+        audience: 'faculty',
+        createdBy: admin._id,
+      },
+    ]);
+    console.log('  ✅ 3 announcements created');
+
+    // ── Sample complaint ──────────────────────────────────────────────────────
+    await Complaint.create({
+      raisedBy: student1User._id,
+      category: 'academic',
+      title: 'Result not updated',
+      description: 'Data Structures mid-semester result is not visible on the portal.',
+      status: 'pending',
+    });
+    console.log('  ✅ Sample complaint created');
+
+    console.log('\n🎉 Seeding complete!');
+    console.log('─────────────────────────────────────────────────');
+    console.log('Admin:   loginId=ADMIN001   password=Admin@1234');
+    console.log('Faculty: loginId=FAC001     password=Faculty@123');
+    console.log('Student: loginId=20240001   password=Student@123');
+    console.log('Student: loginId=20240002   password=Student@123');
+    console.log('─────────────────────────────────────────────────');
+
+    if (shouldExit) process.exit(0);
+  } catch (err) {
+    console.error('❌ Seed failed:', err.message);
+    if (shouldExit) process.exit(1);
+    throw err;
   }
 };
 

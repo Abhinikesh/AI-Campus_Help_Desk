@@ -1,7 +1,7 @@
 {
-  "name": "campussphere-ai-server",
-  "version": "1.0.0",
-  "description": "CampusSphere AI — Node.js + Express backend",
+  "name": "campussphere-erp-server",
+  "version": "2.0.0",
+  "description": "CampusSphere ERP — Node.js + Express + Mongoose backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,19 +9,20 @@
     "seed": "node seed.js"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
+    "express-rate-limit": "^7.5.0",
     "groq-sdk": "^1.1.2",
+    "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.3",
-    "mongodb-memory-server": "^11.0.1",
     "mongoose": "^8.23.0",
     "multer": "^2.1.1"
   },
   "devDependencies": {
+    "mongodb-memory-server": "^11.0.1",
     "nodemon": "^3.1.0"
   }
 }

@@ -1,105 +1,78 @@
+/**
+ * server/controllers/faculty.controller.js
+ */
+'use strict';
+
 const Faculty = require('../models/Faculty');
 const Announcement = require('../models/Announcement');
 const Student = require('../models/Student');
+const ApiError = require('../utils/ApiError');
+const asyncHandler = require('../utils/asyncHandler');
 
 // GET /api/faculty/profile
-const getProfile = async (req, res) => {
-  try {
-    const faculty = await Faculty.findOne({ userId: req.user.userId }).populate('userId', 'name email');
-    if (!faculty) return res.status(404).json({ success: false, message: 'Faculty profile not found' });
+const getProfile = asyncHandler(async (req, res) => {
+  const faculty = await Faculty.findOne({ user: req.user.userId })
+    .populate('user', 'name email loginId');
+  if (!faculty) throw new ApiError(404, 'Faculty profile not found');
 
-    console.log(`✅ Faculty profile fetched for userId: ${req.user.userId}`);
-    res.status(200).json({ success: true, data: faculty });
-  } catch (err) {
-    console.error('❌ Faculty getProfile error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
-
-// GET /api/faculty/timetable
-const getTimetable = async (req, res) => {
-  try {
-    const faculty = await Faculty.findOne({ userId: req.user.userId });
-    if (!faculty) return res.status(404).json({ success: false, message: 'Faculty not found' });
-
-    console.log(`✅ Timetable fetched for userId: ${req.user.userId}`);
-    res.status(200).json({ success: true, data: faculty.timetable });
-  } catch (err) {
-    console.error('❌ getTimetable error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
+  return res.status(200).json({ success: true, data: faculty, message: 'OK' });
+});
 
 // POST /api/faculty/announcements
-const createAnnouncement = async (req, res) => {
-  try {
-    const { title, body, targetRoles } = req.body;
-    if (!title || !body) {
-      return res.status(400).json({ success: false, message: 'Title and body are required' });
-    }
-
-    const announcement = await Announcement.create({
-      title,
-      body,
-      targetRoles: targetRoles || ['student'],
-      createdBy: req.user.userId,
-    });
-
-    console.log(`✅ Announcement created by faculty userId: ${req.user.userId}`);
-    res.status(201).json({ success: true, message: 'Announcement created', data: announcement });
-  } catch (err) {
-    console.error('❌ createAnnouncement error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error' });
+const createAnnouncement = asyncHandler(async (req, res) => {
+  const { title, body, audience } = req.body;
+  if (!title || !body) {
+    throw new ApiError(400, 'Title and body are required');
   }
-};
 
-// GET /api/faculty/students
-const getStudents = async (req, res) => {
-  try {
-    const students = await Student.find({}).populate('userId', 'name email');
-    res.status(200).json({ success: true, data: students });
-  } catch (err) {
-    console.error('❌ getStudents error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error' });
+  const validAudiences = ['all', 'student', 'faculty'];
+  const ann = await Announcement.create({
+    title,
+    body,
+    audience: validAudiences.includes(audience) ? audience : 'student',
+    createdBy: req.user.userId,
+  });
+
+  return res.status(201).json({ success: true, data: ann, message: 'Announcement created' });
+});
+
+// GET /api/faculty/announcements
+const getAnnouncements = asyncHandler(async (req, res) => {
+  const announcements = await Announcement.find({ audience: { $in: ['all', 'faculty'] } })
+    .sort({ createdAt: -1 });
+  return res.status(200).json({ success: true, data: announcements, message: 'OK' });
+});
+
+// GET /api/faculty/students — list students for faculty to view
+const getStudents = asyncHandler(async (req, res) => {
+  const { branch, semester } = req.query;
+  const filter = {};
+  if (branch) filter.branch = branch;
+  if (semester) filter.semester = Number(semester);
+
+  const students = await Student.find(filter)
+    .populate('user', 'name email loginId')
+    .sort({ rollNumber: 1 });
+
+  return res.status(200).json({ success: true, data: students, message: 'OK' });
+});
+
+// POST /api/faculty/complaints
+const raiseComplaint = asyncHandler(async (req, res) => {
+  const Complaint = require('../models/Complaint');
+  const { title, description, category } = req.body;
+  if (!title || !description || !category) {
+    throw new ApiError(400, 'title, description, and category are required');
   }
-};
 
-// POST /api/faculty/attendance
-const markAttendance = async (req, res) => {
-  try {
-    const { subjectCode, attendanceData } = req.body;
-    if (!subjectCode || !attendanceData || !Array.isArray(attendanceData)) {
-      return res.status(400).json({ success: false, message: 'Invalid payload' });
-    }
+  const complaint = await Complaint.create({
+    raisedBy: req.user.userId,
+    title,
+    description,
+    category,
+  });
 
-    let updatedCount = 0;
-    for (const record of attendanceData) {
-      if (record.status !== 'Present' && record.status !== 'Absent') continue;
+  return res.status(201).json({ success: true, data: complaint, message: 'Complaint submitted' });
+});
 
-      const student = await Student.findById(record.studentId);
-      if (student) {
-        // Find subject in attendance array or create one. Wait, let's just find and update.
-        let subjectAtt = student.attendance.find(a => a.code === subjectCode);
-        if (!subjectAtt) {
-          student.attendance.push({ subject: record.subjectName || subjectCode, code: subjectCode, attended: 0, total: 0 });
-          subjectAtt = student.attendance[student.attendance.length - 1];
-        }
-
-        subjectAtt.total += 1;
-        if (record.status === 'Present') {
-          subjectAtt.attended += 1;
-        }
-
-        await student.save();
-        updatedCount++;
-      }
-    }
-
-    res.status(200).json({ success: true, message: `Attendance updated for ${updatedCount} students` });
-  } catch (err) {
-    console.error('❌ markAttendance error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
-
-module.exports = { getProfile, getTimetable, createAnnouncement, getStudents, markAttendance };
+module.exports = { getProfile, createAnnouncement, getAnnouncements, getStudents, raiseComplaint };

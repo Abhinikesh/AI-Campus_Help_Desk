@@ -1,63 +1,99 @@
-const express = require('express');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
+/**
+ * server/server.js
+ * CampusSphere ERP — Express application entry point.
+ */
+'use strict';
+
+// Load .env first, then validate
 const dotenv = require('dotenv');
-const connectDB = require('./config/db');
-
-// Load env vars
 dotenv.config();
+const env = require('./config/env'); // exits if required vars are missing
 
-// Connect to MongoDB
+const express      = require('express');
+const cors         = require('cors');
+const helmet       = require('helmet');
+const cookieParser = require('cookie-parser');
+const rateLimit    = require('express-rate-limit');
+const path         = require('path');
+const mongoose     = require('mongoose');
+const connectDB    = require('./config/db');
+const errorHandler = require('./middleware/errorHandler');
+
+// ── Connect to MongoDB ───────────────────────────────────────────────────────
 connectDB();
 
 const app = express();
 
-// ── Middleware ──────────────────────────────────────────────
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true,               // allow cookies to be sent
-  exposedHeaders: ['Content-Disposition']
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ── Security headers (Helmet) ────────────────────────────────────────────────
+app.use(helmet());
+
+// ── CORS — only allow the configured client origin ───────────────────────────
+app.use(
+  cors({
+    origin: env.CLIENT_URL,
+    credentials: true,
+    exposedHeaders: ['Content-Disposition'],
+  })
+);
+
+// ── Body / cookie parsing — limit request size to 10 mb ─────────────────────
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// ── Routes ──────────────────────────────────────────────────
+// ── Global rate limiter (generous — per-route limits are stricter) ────────────
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 500,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many requests. Please slow down.' },
+  })
+);
+
+// ── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth',    require('./routes/auth.routes'));
 app.use('/api/student', require('./routes/student.routes'));
 app.use('/api/faculty', require('./routes/faculty.routes'));
 app.use('/api/admin',   require('./routes/admin.routes'));
-app.use('/api/parent',  require('./routes/parent.routes'));
 app.use('/api/ai',      require('./routes/ai.routes'));
 app.use('/api/drive',   require('./routes/drive.routes'));
 
-// Static serving for uploads
-const path = require('path');
-app.use('/uploads', express.static(
-  path.join(__dirname, 'uploads')
-));
+// ── Static file serving for uploads ──────────────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ── Health check ────────────────────────────────────────────
+// ── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'CampusSphere API is running 🚀', timestamp: new Date() });
+  const dbState = mongoose.connection.readyState;
+  const dbName  = mongoose.connection.db?.databaseName || 'not connected';
+  const states  = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+  res.json({
+    success: true,
+    data: {
+      status:    'OK',
+      database:  dbName,
+      dbState:   states[dbState] || 'unknown',
+      env:       env.NODE_ENV,
+      timestamp: new Date().toISOString(),
+    },
+    message: 'CampusSphere API is healthy 🚀',
+  });
 });
 
-// ── Global error handler ─────────────────────────────────────
-app.use((err, req, res, next) => {
-  console.error('❌ Unhandled error:', err.stack);
-  res.status(500).json({ success: false, message: 'Internal server error' });
-});
-
-if (process.env.NODE_ENV === 'production') {
-  const path = require('path');
+// ── Serve React build in production ──────────────────────────────────────────
+if (env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/dist')));
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
   });
 }
 
-// ── Start Server ─────────────────────────────────────────────
-const PORT = process.env.PORT || 5001;
+// ── Central error handler (must be LAST) ─────────────────────────────────────
+app.use(errorHandler);
+
+// ── Start Server ──────────────────────────────────────────────────────────────
+const PORT = env.PORT;
 app.listen(PORT, () => {
-  console.log(`🚀 CampusSphere server running on http://localhost:${PORT}`);
+  console.log(`🚀 CampusSphere ERP server running on http://localhost:${PORT} [${env.NODE_ENV}]`);
 });
