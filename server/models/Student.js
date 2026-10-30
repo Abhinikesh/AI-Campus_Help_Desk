@@ -96,7 +96,6 @@ const studentSchema = new mongoose.Schema(
 studentSchema.index({ fullName: 'text', rollNumber: 'text', email: 'text', phone: 'text' });
 
 // Standard lookup indexes
-studentSchema.index({ rollNumber: 1 });
 studentSchema.index({ phone: 1 });
 studentSchema.index({ email: 1 });
 studentSchema.index({ branch: 1, semester: 1 });

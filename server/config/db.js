@@ -29,16 +29,25 @@ const connectDB = async () => {
     const fs = require('fs');
     fs.mkdirSync(dbPath, { recursive: true });
 
-    const mongod = await MongoMemoryServer.create({
-      instance: {
-        port: 27018,
-        dbPath,
-        storageEngine: 'wiredTiger',
-      },
-    });
-    uri = mongod.getUri();
-    console.log(`⚠️  No MONGODB_URI set — using persistent in-memory server at ${uri}`);
-    console.log(`   Data stored in: ${dbPath}`);
+    try {
+      const mongod = await MongoMemoryServer.create({
+        instance: {
+          port: 27018,
+          dbPath,
+          storageEngine: 'wiredTiger',
+        },
+      });
+      uri = mongod.getUri();
+      console.log(`⚠️  No MONGODB_URI set — using persistent in-memory server at ${uri}`);
+      console.log(`   Data stored in: ${dbPath}`);
+    } catch (memErr) {
+      if (memErr.message && (memErr.message.includes('already in use') || memErr.message.includes('27018'))) {
+        uri = 'mongodb://127.0.0.1:27018/campus-erp';
+        console.log(`⚠️  Reusing already running MongoDB server on port 27018`);
+      } else {
+        throw memErr;
+      }
+    }
   }
 
   try {

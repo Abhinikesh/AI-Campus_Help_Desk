@@ -429,15 +429,48 @@ const getAttendanceReports = asyncHandler(async (req, res) => {
 
 // POST /api/faculty/attendance — Legacy Compatibility Mark
 const markAttendance = asyncHandler(async (req, res) => {
-  const { subjectId, date, period = 1, roster = {} } = req.body;
-  if (!subjectId) throw new ApiError(400, 'Subject is required');
-
+  const { subjectId, subjectCode, date, period = 1, roster = {}, attendanceData } = req.body;
   const recordDate = date || new Date().toISOString().split('T')[0];
 
+  let targetSubjectId = subjectId;
+  if (!targetSubjectId && subjectCode) {
+    const sub = await Subject.findOne({ code: subjectCode.toUpperCase() });
+    if (sub) targetSubjectId = sub._id;
+  }
+
+  if (!targetSubjectId) {
+    throw new ApiError(400, 'Subject is required');
+  }
+
+  // Handle array format from existing FacultyDashboard modal
+  if (Array.isArray(attendanceData)) {
+    for (const item of attendanceData) {
+      if (!item.studentId) continue;
+      const isPresent = item.status === 'present' || item.status === true;
+      await Attendance.findOneAndUpdate(
+        {
+          subject: targetSubjectId,
+          student: item.studentId,
+          date: recordDate,
+          period: Number(period),
+        },
+        {
+          status: isPresent ? 'present' : 'absent',
+          verificationMethod: 'manual',
+          markedBy: req.user.userId,
+          verifiedAt: new Date(),
+        },
+        { upsert: true, new: true }
+      );
+    }
+    return res.status(200).json({ success: true, message: 'Attendance marked successfully' });
+  }
+
+  // Handle dictionary roster format
   for (const [studentId, isPresent] of Object.entries(roster)) {
     await Attendance.findOneAndUpdate(
       {
-        subject: subjectId,
+        subject: targetSubjectId,
         student: studentId,
         date: recordDate,
         period: Number(period),

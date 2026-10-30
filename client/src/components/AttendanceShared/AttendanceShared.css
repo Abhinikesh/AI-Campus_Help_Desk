@@ -1,0 +1,294 @@
+/* ═══════════════════════════════════════════════════════════════
+   AttendanceShared.css — Smart Attendance Component Styles
+   Theme: CampusSphere Enterprise White & Royal Blue (#1A56DB)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Camera Preview Container ──────────────────────────────── */
+.camera-container {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  background: #0F172A;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+}
+
+.camera-feed-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #090D16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.camera-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror selfie view */
+}
+
+.camera-video.unmirrored {
+  transform: scaleX(1);
+}
+
+/* Face positioning overlay */
+.face-guide-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.face-oval {
+  width: 200px;
+  height: 260px;
+  border: 2px dashed rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.45);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.face-oval.detected {
+  border: 2.5px solid #10B981;
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.35), 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+.face-oval.verifying {
+  border: 2.5px solid #3B82F6;
+  animation: pulseScan 1.6s infinite ease-in-out;
+}
+
+.face-oval.error {
+  border: 2.5px solid #EF4444;
+}
+
+@keyframes pulseScan {
+  0% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.03); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.9; }
+}
+
+.scan-line {
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  width: 80%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #3B82F6, transparent);
+  box-shadow: 0 0 8px #3B82F6;
+  animation: scanMove 2s infinite ease-in-out;
+}
+
+@keyframes scanMove {
+  0% { top: 15%; opacity: 0.3; }
+  50% { top: 85%; opacity: 1; }
+  100% { top: 15%; opacity: 0.3; }
+}
+
+.camera-guide-text {
+  margin-top: 16px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  color: #F8FAFC;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Classroom camera detection box */
+.classroom-bbox {
+  position: absolute;
+  border: 2px solid #10B981;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 4px;
+}
+
+.bbox-label {
+  background: #10B981;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  align-self: flex-start;
+}
+
+/* Camera Bar / Controls */
+.camera-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #1E293B;
+  color: #94A3B8;
+  font-size: 12px;
+}
+
+.camera-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.camera-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.camera-status-dot.active { background: #10B981; box-shadow: 0 0 6px #10B981; }
+.camera-status-dot.busy   { background: #3B82F6; box-shadow: 0 0 6px #3B82F6; }
+.camera-status-dot.idle   { background: #94A3B8; }
+.camera-status-dot.error  { background: #EF4444; }
+
+.camera-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.camera-icon-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #E2E8F0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.camera-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+/* Permission or Error Fallback */
+.camera-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 20px;
+  color: #94A3B8;
+  gap: 12px;
+}
+
+.camera-placeholder h4 {
+  font-size: 15px;
+  color: #F8FAFC;
+  margin: 0;
+  font-weight: 600;
+}
+
+.camera-placeholder p {
+  font-size: 13px;
+  margin: 0;
+  max-width: 340px;
+  line-height: 1.5;
+}
+
+/* ── Live Recognized Student Card / Row ────────────────────── */
+.live-roster-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #F1F5F9;
+  transition: background 0.15s;
+}
+
+.live-roster-item:hover {
+  background: #F8FAFC;
+}
+
+.live-roster-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.live-roster-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #EFF6FF;
+  color: #1A56DB;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.live-roster-details h5 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 2px 0;
+}
+
+.live-roster-sub {
+  font-size: 11px;
+  color: #64748B;
+}
+
+/* ── Subject Progress Ring ─────────────────────────────────── */
+.progress-ring-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.6s ease;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* ── Responsive adjustments ────────────────────────────────── */
+@media (max-width: 768px) {
+  .camera-container {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+  .face-oval {
+    width: 160px;
+    height: 220px;
+  }
+}

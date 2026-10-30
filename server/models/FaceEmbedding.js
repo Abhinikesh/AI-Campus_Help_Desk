@@ -1,14 +1,14 @@
 /**
- * server/models/FaceEmbedding.js
- * Tracks face biometric enrollment status and consent.
- * NOTE: Raw embedding vectors or biometric data are handled through the internal service.
- * Never exposed directly to client UI.
+ * server/models/FaceEmbedding.js (FaceProfile)
+ * Biometric enrollment metadata model.
+ * Stores encrypted template references and explicit consent records.
+ * NEVER exposed directly through student or admin client APIs.
  */
 'use strict';
 
 const mongoose = require('mongoose');
 
-const faceEmbeddingSchema = new mongoose.Schema(
+const faceProfileSchema = new mongoose.Schema(
   {
     student: {
       type: mongoose.Schema.Types.ObjectId,
@@ -16,12 +16,38 @@ const faceEmbeddingSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    enrollmentStatus: {
+      type: String,
+      enum: ['not_enrolled', 'enrolled', 'revoked'],
+      default: 'not_enrolled',
+    },
+    status: {
+      type: String,
+      enum: ['not_enrolled', 'enrolled', 'revoked'],
+      default: 'not_enrolled',
+    },
+    consentStatus: {
+      type: String,
+      enum: ['active', 'withdrawn', 'none'],
+      default: 'none',
+    },
     consentGiven: {
       type: Boolean,
       default: false,
-      required: true,
+    },
+    consentVersion: {
+      type: String,
+      default: 'v1.0',
+    },
+    consentTimestamp: {
+      type: Date,
+      default: null,
     },
     consentDate: {
+      type: Date,
+      default: null,
+    },
+    enrollmentTimestamp: {
       type: Date,
       default: null,
     },
@@ -33,15 +59,13 @@ const faceEmbeddingSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    status: {
+    templateReference: {
       type: String,
-      enum: ['not_enrolled', 'enrolled', 'revoked'],
-      default: 'not_enrolled',
+      select: false, // excluded by default from queries for security
     },
-    enrolledBy: {
+    encryptedData: {
       type: String,
-      enum: ['self', 'admin'],
-      default: 'self',
+      select: false, // never exposed to browser
     },
     samplesCaptured: {
       type: Number,
@@ -49,10 +73,46 @@ const faceEmbeddingSchema = new mongoose.Schema(
     },
     imageQualityScore: {
       type: Number,
-      default: null, // 0-100
+      default: null,
+    },
+    deletionRequestedAt: {
+      type: Date,
+      default: null,
+    },
+    deletionCompletedAt: {
+      type: Date,
+      default: null,
+    },
+    enrolledBy: {
+      type: String,
+      enum: ['self', 'admin'],
+      default: 'self',
     },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model('FaceEmbedding', faceEmbeddingSchema);
+// Synchronize status aliases
+faceProfileSchema.pre('save', function (next) {
+  if (this.enrollmentStatus && !this.status) {
+    this.status = this.enrollmentStatus;
+  }
+  if (!this.enrollmentStatus && this.status) {
+    this.enrollmentStatus = this.status;
+  }
+  if (this.consentTimestamp && !this.consentDate) {
+    this.consentDate = this.consentTimestamp;
+  }
+  if (!this.consentTimestamp && this.consentDate) {
+    this.consentTimestamp = this.consentDate;
+  }
+  if (this.enrollmentTimestamp && !this.enrolledAt) {
+    this.enrolledAt = this.enrollmentTimestamp;
+  }
+  if (!this.enrollmentTimestamp && this.enrolledAt) {
+    this.enrollmentTimestamp = this.enrolledAt;
+  }
+  next();
+});
+
+module.exports = mongoose.model('FaceEmbedding', faceProfileSchema);

@@ -6,16 +6,16 @@ import { adminService } from '../../services/admin.service';
 import {
   LayoutDashboard, Users, UserCheck, AlertTriangle, CreditCard,
   Flag, Megaphone, Settings, MessageCircle, LogOut, Bell,
-  GraduationCap, Search, ExternalLink, RefreshCw
+  GraduationCap, Search, ExternalLink, RefreshCw, CalendarCheck
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Admin.css';
 
 const NAV = [
   { label: 'Dashboard',          icon: LayoutDashboard, to: '/admin/dashboard'  },
+  { label: 'Smart Attendance',   icon: CalendarCheck,   to: '/admin/attendance' },
   { label: 'Student Management', icon: Users,           to: '/admin/dashboard'  },
   { label: 'Faculty Management', icon: UserCheck,       to: '/admin/dashboard'  },
-  { label: 'Attendance Reports', icon: AlertTriangle,   to: '/admin/dashboard'  },
   { label: 'Fee Management',     icon: CreditCard,      to: '/admin/dashboard'  },
   { label: 'Complaints',         icon: Flag,            to: '/admin/dashboard'  },
   { label: 'Announcements',      icon: Megaphone,       to: '/admin/dashboard'  },
