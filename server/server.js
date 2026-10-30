@@ -53,12 +53,13 @@ app.use(
 );
 
 // ── API Routes ───────────────────────────────────────────────────────────────
-app.use('/api/auth',    require('./routes/auth.routes'));
-app.use('/api/student', require('./routes/student.routes'));
-app.use('/api/faculty', require('./routes/faculty.routes'));
-app.use('/api/admin',   require('./routes/admin.routes'));
-app.use('/api/ai',      require('./routes/ai.routes'));
-app.use('/api/drive',   require('./routes/drive.routes'));
+app.use('/api/auth',       require('./routes/auth.routes'));
+app.use('/api/student',    require('./routes/student.routes'));
+app.use('/api/faculty',    require('./routes/faculty.routes'));
+app.use('/api/admin',      require('./routes/admin.routes'));
+app.use('/api/attendance', require('./routes/attendance.routes'));
+app.use('/api/ai',         require('./routes/ai.routes'));
+app.use('/api/drive',      require('./routes/drive.routes'));
 
 // ── Static file serving for uploads ──────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

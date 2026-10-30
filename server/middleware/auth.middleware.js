@@ -2,7 +2,9 @@ const jwt = require('jsonwebtoken');
 
 const authMiddleware = (req, res, next) => {
   try {
-    const token = req.cookies?.campus_token;
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+    const token = req.cookies?.campus_token || bearerToken;
 
     if (!token) {
       return res.status(401).json({ success: false, message: 'No token. Please log in.' });
