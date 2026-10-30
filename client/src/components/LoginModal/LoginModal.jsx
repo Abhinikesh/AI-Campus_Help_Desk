@@ -288,7 +288,7 @@ const LoginModal = ({ role, onClose }) => {
 
           </form>
 
-        <>
+        </>
         )}
 
       </div>

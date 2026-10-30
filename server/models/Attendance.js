@@ -2,7 +2,7 @@
  * server/models/Attendance.js
  * Per-class attendance record.
  * One document = one student, one subject, one date, one period.
- * Unique compound index prevents double-marking.
+ * Extended with Smart Attendance session and face verification fields.
  */
 'use strict';
 
@@ -20,7 +20,12 @@ const attendanceSchema = new mongoose.Schema(
       ref: 'Student',
       required: [true, 'Student is required'],
     },
-    /** ISO date string, e.g. "2026-04-12" — stored as string for easy grouping */
+    session: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'AttendanceSession',
+      default: null,
+    },
+    /** ISO date string, e.g. "2026-04-12" */
     date: {
       type: String,
       required: [true, 'Date is required'],
@@ -33,13 +38,42 @@ const attendanceSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['present', 'absent'],
+      enum: ['present', 'absent', 'pending', 'review'],
       required: [true, 'Status is required'],
+      default: 'absent',
+    },
+    verificationMethod: {
+      type: String,
+      enum: ['face', 'manual', 'qr', 'system'],
+      default: 'manual',
+    },
+    confidence: {
+      type: Number,
+      default: null,
+      min: 0,
+      max: 1,
+    },
+    isManualOverride: {
+      type: Boolean,
+      default: false,
+    },
+    overrideBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    overrideNote: {
+      type: String,
+      default: '',
     },
     markedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
+    },
+    verifiedAt: {
+      type: Date,
+      default: Date.now,
     },
   },
   { timestamps: true }
@@ -50,5 +84,7 @@ attendanceSchema.index(
   { subject: 1, student: 1, date: 1, period: 1 },
   { unique: true }
 );
+
+attendanceSchema.index({ session: 1, student: 1 });
 
 module.exports = mongoose.model('Attendance', attendanceSchema);
