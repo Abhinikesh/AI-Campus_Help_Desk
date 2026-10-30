@@ -2,11 +2,9 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const ROLE_DASHBOARDS = {
-  student:   '/student/dashboard',
-  faculty:   '/faculty/dashboard',
-  parent:    '/parent/dashboard',
-  admission: '/admission/dashboard',
-  admin:     '/admin/dashboard',
+  student: '/student/dashboard',
+  faculty: '/faculty/dashboard',
+  admin:   '/admin/dashboard',
 };
 
 /**

@@ -1,17 +1,18 @@
+/**
+ * client/src/services/api.js
+ * Axios instance. baseURL is '' (relative) so the Vite proxy forwards
+ * all /api/* requests to the backend and cookies work without CORS issues.
+ */
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001',
+  baseURL: '',          // rely on Vite proxy → http://localhost:5001
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// NOTE: Do NOT add a 401 redirect here.
-// AuthContext.fetchUser() calls GET /api/auth/me which legitimately returns 401
-// when unauthenticated. A redirect here would cause an infinite reload loop.
-// ProtectedRoute handles unauthenticated state by redirecting to "/" declaratively.
+// Do NOT add a global 401 redirect here — ProtectedRoute handles unauthenticated
+// state declaratively. A redirect inside the interceptor causes reload loops.
 api.interceptors.response.use(
   (response) => response,
   (error) => Promise.reject(error)

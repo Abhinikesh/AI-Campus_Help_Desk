@@ -13,12 +13,8 @@ export const authService = {
     const response = await api.get('/api/auth/me');
     return response.data;
   },
-  admissionLogin: async (data) => {
-    const response = await api.post('/api/auth/admission-login', data);
-    return response.data;
-  },
-  admissionInquiry: async (data) => {
-    const response = await api.post('/api/auth/admission-inquiry', data);
+  changePassword: async (data) => {
+    const response = await api.post('/api/auth/change-password', data);
     return response.data;
   },
 };

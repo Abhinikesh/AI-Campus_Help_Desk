@@ -8,7 +8,6 @@ import {
   Folder, Flag, MessageCircle, LogOut, Bell, ChevronRight,
   GraduationCap, X, Loader2
 } from 'lucide-react';
-import ChatWidget from '../../components/ChatWidget/ChatWidget';
 import '../../styles/dashboard-shared.css';
 import './Faculty.css';
 
@@ -379,7 +378,7 @@ const FacultyDashboard = () => {
         </div>
       )}
 
-      <ChatWidget />
+      
     </div>
   );
 };

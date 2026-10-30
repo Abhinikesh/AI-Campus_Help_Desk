@@ -6,6 +6,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import './LoginModal.css';
 
+
 // ── Role metadata ────────────────────────────────────────────
 const ROLE_META = {
   student: {
@@ -31,23 +32,7 @@ const ROLE_META = {
   },
 };
 
-// ── Google SVG (official 4-color) ────────────────────────────
-const GoogleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M17.64 9.2045C17.64 8.5663 17.5827 7.9527 17.4764 7.3636H9V10.845H13.8436C13.635 11.97 13.0009 12.9231 12.0477 13.5613V15.8195H14.9564C16.6582 14.2527 17.64 11.9454 17.64 9.2045Z" fill="#4285F4"/>
-    <path d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5613C11.2418 14.1013 10.2109 14.4204 9 14.4204C6.65591 14.4204 4.67182 12.8372 3.96409 10.71H0.957275V13.0418C2.43818 15.9831 5.48182 18 9 18Z" fill="#34A853"/>
-    <path d="M3.96409 10.71C3.78409 10.17 3.68182 9.5931 3.68182 9C3.68182 8.4068 3.78409 7.8299 3.96409 7.2899V4.9581H0.957273C0.347727 6.1731 0 7.5477 0 9C0 10.4522 0.347727 11.8268 0.957273 13.0418L3.96409 10.71Z" fill="#FBBC05"/>
-    <path d="M9 3.5795C10.3214 3.5795 11.5077 4.0336 12.4405 4.9254L15.0218 2.344C13.4632 0.8918 11.4259 0 9 0C5.48182 0 2.43818 2.0168 0.957275 4.9581L3.96409 7.2899C4.67182 5.1627 6.65591 3.5795 9 3.5795Z" fill="#EA4335"/>
-  </svg>
-);
 
-// ── Reusable Google Sign-In Button ───────────────────────────
-const GoogleSignInButton = () => (
-  <button type="button" className="google-btn" onClick={() => {}}>
-    <GoogleIcon />
-    Continue with Google
-  </button>
-);
 
 // ── Reusable Password Field with toggle ──────────────────────
 const PasswordField = ({ label, value, onChange, error, placeholder, hint }) => {
@@ -101,8 +86,8 @@ const LoginModal = ({ role, onClose }) => {
   const [idFocused,    setIdFocused]    = useState(false);
 
   // ── Shared fields ──────────────────────────────────────────
-  const [identifier, setIdentifier] = useState(''); // roll / email
-  const [password,   setPassword]   = useState('');
+  const [loginId,   setLoginId]   = useState(''); // roll number (student) or employee/admin ID
+  const [password,  setPassword]  = useState('');
 
   // ── Forgot password field ──────────────────────────────────
   const [resetEmail, setResetEmail] = useState('');
@@ -122,7 +107,7 @@ const LoginModal = ({ role, onClose }) => {
     let ok = true;
     clearErrors();
 
-    if (!identifier.trim()) {
+    if (!loginId.trim()) {
       setIdError('Required'); ok = false;
     }
     if (!password) {
@@ -148,9 +133,10 @@ const LoginModal = ({ role, onClose }) => {
 
     setLoading(true);
     try {
-      const data = await login(identifier, password, activeRole);
+      const data = await login(loginId, password, activeRole);
       handleClose();
-      navigate(data.redirectTo);
+      // data.data.redirectTo from new consistent JSON shape
+      navigate(data?.data?.redirectTo || '/');
     } catch (err) {
       setApiError(
         err?.response?.data?.message ||
@@ -177,23 +163,20 @@ const LoginModal = ({ role, onClose }) => {
   }, []);
 
   // ── Identifier label / placeholder per role ─────────────────
+  // loginId is: roll number for students, employee ID for faculty, admin ID for admin
   const idLabel = isStudent
-    ? 'Student ID'
+    ? 'Roll Number'
     : activeRole === 'faculty'
-    ? 'Faculty ID / Email'
-    : activeRole === 'admin'
-    ? 'Admin Email'
-    : 'Email Address';
+    ? 'Employee ID'
+    : 'Admin ID';
 
   const idPlaceholder = isStudent
-    ? 'e.g. 1/24/SET/BCS/001'
+    ? 'e.g. 20240001'
     : activeRole === 'faculty'
-    ? 'faculty@campussphere.edu'
-    : activeRole === 'admin'
-    ? 'admin@campussphere.edu'
-    : 'Enter your ID or email';
+    ? 'e.g. FAC001'
+    : 'e.g. ADMIN001';
 
-  const idType = isStudent ? 'text' : 'email';
+  const idType = 'text'; // always text — IDs are not emails
 
   // ════════════════════════════════════════════════════════════
   // RENDER
@@ -256,60 +239,18 @@ const LoginModal = ({ role, onClose }) => {
 
           <form className="modal-form" onSubmit={handleSubmit} noValidate>
 
-            {/* Identifier field */}
+            {/* Login ID field */}
             <div className="modal-field">
               <label className="modal-label">{idLabel}</label>
               <input
                 className={`modal-input${idError ? ' error-input' : ''}`}
                 type={idType}
                 placeholder={idPlaceholder}
-                value={identifier}
-                onChange={(e) => { setIdentifier(e.target.value); setIdError(''); }}
-                onFocus={() => setIdFocused(true)}
-                onBlur={() => setIdFocused(false)}
+                value={loginId}
+                onChange={(e) => { setLoginId(e.target.value); setIdError(''); }}
                 autoComplete="username"
                 autoFocus
               />
-              {isStudent && (
-                <span className="field-helper-text">
-                  Format: Batch/Year/School/Branch/RollNo
-                </span>
-              )}
-              {isStudent && idFocused && (
-                <div className="id-helper-card">
-                  <div className="id-helper-row">
-                    <div className="id-helper-segment">
-                      <span className="segment-value">1</span>
-                      <span className="segment-line">|</span>
-                      <span className="segment-label">Div</span>
-                    </div>
-                    <span className="segment-separator">/</span>
-                    <div className="id-helper-segment">
-                      <span className="segment-value">24</span>
-                      <span className="segment-line">|</span>
-                      <span className="segment-label">Year</span>
-                    </div>
-                    <span className="segment-separator">/</span>
-                    <div className="id-helper-segment">
-                      <span className="segment-value">SET</span>
-                      <span className="segment-line">|</span>
-                      <span className="segment-label">School</span>
-                    </div>
-                    <span className="segment-separator">/</span>
-                    <div className="id-helper-segment">
-                      <span className="segment-value">BCS</span>
-                      <span className="segment-line">|</span>
-                      <span className="segment-label">Branch</span>
-                    </div>
-                    <span className="segment-separator">/</span>
-                    <div className="id-helper-segment">
-                      <span className="segment-value">001</span>
-                      <span className="segment-line">|</span>
-                      <span className="segment-label">Roll</span>
-                    </div>
-                  </div>
-                </div>
-              )}
               {idError && (
                 <span className="field-error">{idError}</span>
               )}
@@ -321,7 +262,6 @@ const LoginModal = ({ role, onClose }) => {
               value={password}
               onChange={(e) => { setPassword(e.target.value); setPwError(''); }}
               error={pwError}
-              hint={isStudent ? 'Default password is your Student ID' : undefined}
             />
 
             {/* Submit */}
@@ -348,14 +288,7 @@ const LoginModal = ({ role, onClose }) => {
 
           </form>
 
-          {/* Divider */}
-          <div className="modal-divider" style={{ marginTop: 20 }}>or</div>
-
-          {/* Google Sign-In */}
-          <div style={{ marginTop: 12 }}>
-            <GoogleSignInButton />
-          </div>
-        </>
+        <>
         )}
 
       </div>

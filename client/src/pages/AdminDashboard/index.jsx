@@ -8,7 +8,6 @@ import {
   Flag, Megaphone, Settings, MessageCircle, LogOut, Bell,
   GraduationCap, Search, ExternalLink, RefreshCw
 } from 'lucide-react';
-import ChatWidget from '../../components/ChatWidget/ChatWidget';
 import '../../styles/dashboard-shared.css';
 import './Admin.css';
 
@@ -361,7 +360,7 @@ const AdminDashboard = () => {
 
         </div>
       </div>
-      <ChatWidget />
+      
     </div>
   );
 };
