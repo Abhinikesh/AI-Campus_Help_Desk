@@ -1,33 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import AppSidebar from '../../components/AppSidebar/AppSidebar';
 import { studentService } from '../../services/student.service';
-import {
-  Calendar, MapPin, Clock, Download, AlertCircle,
-  LayoutDashboard, CalendarCheck, BookOpen,
-  BarChart2, Folder, Flag, MessageCircle, Menu, X
-} from 'lucide-react';
+import { Calendar, MapPin, Clock, Download, AlertCircle } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Exams.css';
 
-const sideNav = [
-  { label: 'Dashboard', to: '/student/dashboard', icon: LayoutDashboard },
-  { label: 'Attendance', to: '/student/attendance', icon: CalendarCheck },
-  { label: 'Exams', to: '/student/exams', icon: BookOpen },
-  { label: 'Results', to: '/student/results', icon: BarChart2 },
-  { label: 'Drive', to: '/student/drive', icon: Folder },
-  { label: 'Complaints', to: '/student/complaints', icon: Flag },
-  { label: 'AI Help', to: '/student/ai-help', icon: MessageCircle },
-];
-
 const Exams = () => {
-  const location = useLocation();
-  const [sideOpen, setSideOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exams, setExams] = useState([]);
   const [activeTab, setActiveTab] = useState('upcoming');
 
   useEffect(() => {
-    const fetchExams = async () => {
+    (async () => {
       try {
         setLoading(true);
         const res = await studentService.getExams();
@@ -37,9 +22,7 @@ const Exams = () => {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchExams();
+    })();
   }, []);
 
   if (loading) {
@@ -54,125 +37,116 @@ const Exams = () => {
   const upcomingExams = exams.filter(e => new Date(e.date) >= new Date() || !isNaN(Date.parse(e.date)));
 
   return (
-    <div className="exams-layout" style={{ marginLeft: 48 }}>
-      {/* Collapsible Floating Sidebar */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 200,
-        background: '#1E293B', width: sideOpen ? 220 : 48, transition: 'width 0.25s ease',
-        overflow: 'hidden', display: 'flex', flexDirection: 'column',
-        boxShadow: '2px 0 16px rgba(0,0,0,0.2)'
-      }}>
-        {/* Logo area */}
-        <div style={{ display: 'flex', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #334155', minHeight: 56 }}>
-          <button
-            onClick={() => setSideOpen(o => !o)}
-            style={{
-              background: 'none', border: 'none', color: '#94A3B8',
-              cursor: 'pointer', fontSize: 20, width: 48, display: 'flex',
-              alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}
-          >
-            {sideOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-          {sideOpen && (
-            <span style={{ color: '#F1F5F9', fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap', paddingRight: 12 }}>
-              CampusSphere
-            </span>
+    <div className="ds-shell">
+      <AppSidebar activeLabel="Exams" />
+
+      <div className="ds-main">
+        {/* Header */}
+        <header className="ds-topbar">
+          <div>
+            <h1 className="ds-page-title">Exam Schedule</h1>
+            <p style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>Your upcoming and completed examinations</p>
+          </div>
+        </header>
+
+        <main className="ds-content">
+          {/* Tabs */}
+          <div className="tabs-container" style={{ display: 'flex', gap: 4, marginBottom: 24 }}>
+            <button
+              className={`tab-btn ${activeTab === 'upcoming' ? 'active' : ''}`}
+              onClick={() => setActiveTab('upcoming')}
+              style={{
+                padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14,
+                background: activeTab === 'upcoming' ? '#1A56DB' : '#F3F4F6',
+                color: activeTab === 'upcoming' ? '#fff' : '#374151',
+              }}
+            >
+              Upcoming
+            </button>
+            <button
+              className={`tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
+              onClick={() => setActiveTab('completed')}
+              style={{
+                padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14,
+                background: activeTab === 'completed' ? '#1A56DB' : '#F3F4F6',
+                color: activeTab === 'completed' ? '#fff' : '#374151',
+              }}
+            >
+              Completed
+            </button>
+          </div>
+
+          {activeTab === 'upcoming' && (
+            <div className="exams-list">
+              {upcomingExams.length > 0 ? (
+                upcomingExams.map((exam, i) => {
+                  const dateObj = new Date(exam.date);
+                  const day = !isNaN(dateObj) ? dateObj.getDate() : exam.date?.split(' ')[1]?.replace(',', '') || '??';
+                  const month = !isNaN(dateObj) ? dateObj.toLocaleString('default', { month: 'short' }) : exam.date?.split(' ')[0] || '??';
+
+                  return (
+                    <div className="exam-card" key={i} style={{
+                      display: 'flex', alignItems: 'center', gap: 20,
+                      background: '#fff', border: '1px solid #E5E7EB',
+                      borderRadius: 12, padding: '18px 24px', marginBottom: 12,
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+                    }}>
+                      <div style={{
+                        minWidth: 60, textAlign: 'center', background: '#EFF6FF',
+                        borderRadius: 10, padding: '10px 8px',
+                      }}>
+                        <div style={{ fontSize: 22, fontWeight: 700, color: '#1A56DB', lineHeight: 1 }}>{day}</div>
+                        <div style={{ fontSize: 11, color: '#60A5FA', fontWeight: 600, textTransform: 'uppercase', marginTop: 2 }}>{month}</div>
+                      </div>
+
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                          <h3 style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: 0 }}>{exam.subject}</h3>
+                          <span style={{ fontSize: 11, background: '#F3F4F6', color: '#374151', padding: '2px 8px', borderRadius: 6, fontWeight: 600 }}>{exam.code}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#6B7280' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={13}/> {exam.time}</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={13}/> {exam.room}</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6,
+                          background: exam.type === 'final' ? '#FEF2F2' : '#FFFBEB',
+                          color: exam.type === 'final' ? '#DC2626' : '#D97706',
+                          textTransform: 'uppercase', letterSpacing: '0.5px',
+                        }}>
+                          {exam.type === 'final' ? 'End-Semester' : 'Mid-Semester'} Exam
+                        </span>
+                        <button style={{
+                          display: 'flex', alignItems: 'center', gap: 6, fontSize: 13,
+                          padding: '6px 14px', borderRadius: 8, border: '1px solid #D1D5DB',
+                          background: '#fff', cursor: 'pointer', color: '#374151', fontWeight: 500,
+                        }}>
+                          <Download size={14}/> Hall Ticket
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="ds-empty">
+                  <Calendar size={48} />
+                  <p>No upcoming exams scheduled at the moment.</p>
+                </div>
+              )}
+            </div>
           )}
-        </div>
 
-        {/* Nav Links */}
-        {sideNav.map(n => {
-          const Icon = n.icon;
-          const active = location.pathname === n.to;
-          return (
-            <Link key={n.to} to={n.to} style={{
-              display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px',
-              color: active ? '#60A5FA' : '#94A3B8',
-              textDecoration: 'none', fontSize: 13, whiteSpace: 'nowrap',
-              background: active ? 'rgba(96,165,250,0.12)' : 'transparent',
-              borderLeft: active ? '3px solid #60A5FA' : '3px solid transparent',
-              transition: 'background 0.15s',
-            }}>
-              <Icon size={18} style={{ flexShrink: 0 }} />
-              {sideOpen && <span>{n.label}</span>}
-            </Link>
-          );
-        })}
+          {activeTab === 'completed' && (
+            <div className="ds-empty">
+              <AlertCircle size={48} />
+              <p>No completed exams found for the current session.</p>
+            </div>
+          )}
+        </main>
       </div>
-
-      <main className="exams-content">
-        <h1 className="page-title">Exam Schedule</h1>
-
-        <div className="tabs-container">
-          <button 
-            className={`tab-btn ${activeTab === 'upcoming' ? 'active' : ''}`}
-            onClick={() => setActiveTab('upcoming')}
-          >
-            Upcoming
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
-            onClick={() => setActiveTab('completed')}
-          >
-            Completed
-          </button>
-        </div>
-
-        {activeTab === 'upcoming' && (
-          <div className="exams-list">
-            {upcomingExams.length > 0 ? (
-              upcomingExams.map((exam, i) => {
-                const dateObj = new Date(exam.date);
-                const day = !isNaN(dateObj) ? dateObj.getDate() : exam.date.split(' ')[1]?.replace(',', '') || '??';
-                const month = !isNaN(dateObj) ? dateObj.toLocaleString('default', { month: 'short' }) : exam.date.split(' ')[0] || '??';
-                
-                return (
-                  <div className="exam-card" key={i}>
-                    <div className="exam-date-block">
-                      <span className="date-day">{day}</span>
-                      <span className="date-month">{month}</span>
-                    </div>
-                    
-                    <div className="exam-details">
-                      <div className="exam-header">
-                        <h3 className="exam-subject">{exam.subject}</h3>
-                        <span className="exam-code">{exam.code}</span>
-                      </div>
-                      <div className="exam-meta">
-                        <span className="exam-time"><Clock size={14}/> {exam.time}</span>
-                        <span className="exam-room"><MapPin size={14}/> {exam.room}</span>
-                      </div>
-                    </div>
-
-                    <div className="exam-actions">
-                      <span className={`days-badge ${exam.type === 'final' ? 'red-badge' : 'yellow-badge'}`}>
-                        {exam.type?.toUpperCase()}
-                      </span>
-                      <button className="btn btn-outline download-btn flex items-center gap-2">
-                        <Download size={16}/> Hall Ticket
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="ds-empty">
-                <Calendar size={48} />
-                <p>No upcoming exams scheduled at the moment.</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'completed' && (
-          <div className="ds-empty">
-             <AlertCircle size={48} />
-             <p>No completed exams found for the current session.</p>
-          </div>
-        )}
-
-      </main>
     </div>
   );
 };

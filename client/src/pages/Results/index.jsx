@@ -1,41 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import AppSidebar from '../../components/AppSidebar/AppSidebar';
 import { studentService } from '../../services/student.service';
-import {
-  Download, CheckCircle, AlertCircle,
-  LayoutDashboard, CalendarCheck, BookOpen,
-  BarChart2, Folder, Flag, MessageCircle, Menu, X
-} from 'lucide-react';
+import { Download, CheckCircle, AlertCircle } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Results.css';
 
-const sideNav = [
-  { label: 'Dashboard', to: '/student/dashboard', icon: LayoutDashboard },
-  { label: 'Attendance', to: '/student/attendance', icon: CalendarCheck },
-  { label: 'Exams', to: '/student/exams', icon: BookOpen },
-  { label: 'Results', to: '/student/results', icon: BarChart2 },
-  { label: 'Drive', to: '/student/drive', icon: Folder },
-  { label: 'Complaints', to: '/student/complaints', icon: Flag },
-  { label: 'AI Help', to: '/student/ai-help', icon: MessageCircle },
-];
-
 const Results = () => {
-  const location = useLocation();
-  const [sideOpen, setSideOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState([]);
   const [profile, setProfile] = useState(null);
   const [activeTab, setActiveTab] = useState('');
 
   useEffect(() => {
-    const fetchData = async () => {
+    (async () => {
       try {
         setLoading(true);
         const [profRes, resRes] = await Promise.all([
           studentService.getProfile(),
           studentService.getResults()
         ]);
-
         if (profRes.success) {
           setProfile(profRes.data);
           setActiveTab(`Sem ${profRes.data.semester}`);
@@ -46,9 +29,7 @@ const Results = () => {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchData();
+    })();
   }, []);
 
   const calculateCGPA = () => {
@@ -59,12 +40,9 @@ const Results = () => {
 
   const calculateTotal = () => {
     const total = results.reduce((sum, r) => sum + (r.marks || 0), 0);
-    const max = results.reduce((sum, r) => sum + (r.maxMarks || 100), 0);
-    return { total, max };
+    const maxMarks = results.reduce((sum, r) => sum + (r.maxMarks || 100), 0);
+    return { total, max: maxMarks };
   };
-
-  const { total, max } = calculateTotal();
-  const cgpa = calculateCGPA();
 
   if (loading) {
     return (
@@ -75,102 +53,96 @@ const Results = () => {
     );
   }
 
+  const { total, max } = calculateTotal();
+  const cgpa = calculateCGPA();
   const semesterTabs = Array.from({ length: profile?.semester || 1 }, (_, i) => `Sem ${i + 1}`).reverse();
 
+  const getGradeColor = (grade) => {
+    if (['O', 'A+', 'A'].includes(grade)) return { bg: '#DCFCE7', color: '#16A34A' };
+    if (['B+', 'B'].includes(grade)) return { bg: '#DBEAFE', color: '#1A56DB' };
+    if (['C', 'D'].includes(grade)) return { bg: '#FEF9C3', color: '#CA8A04' };
+    return { bg: '#FEE2E2', color: '#DC2626' };
+  };
+
   return (
-    <div className="results-layout" style={{ marginLeft: 48 }}>
-      {/* Collapsible Floating Sidebar */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 200,
-        background: '#1E293B', width: sideOpen ? 220 : 48, transition: 'width 0.25s ease',
-        overflow: 'hidden', display: 'flex', flexDirection: 'column',
-        boxShadow: '2px 0 16px rgba(0,0,0,0.2)'
-      }}>
-        {/* Logo area */}
-        <div style={{ display: 'flex', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #334155', minHeight: 56 }}>
-          <button
-            onClick={() => setSideOpen(o => !o)}
-            style={{
-              background: 'none', border: 'none', color: '#94A3B8',
-              cursor: 'pointer', fontSize: 20, width: 48, display: 'flex',
-              alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}
-          >
-            {sideOpen ? <X size={20} /> : <Menu size={20} />}
+    <div className="ds-shell">
+      <AppSidebar activeLabel="Results" />
+
+      <div className="ds-main">
+        <header className="ds-topbar">
+          <div>
+            <h1 className="ds-page-title">My Results</h1>
+            <p style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>
+              Semester {profile?.semester} · {profile?.branch || 'CSE'}
+            </p>
+          </div>
+          <button style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '9px 18px',
+            background: '#1A56DB', color: '#fff', border: 'none', borderRadius: 8,
+            cursor: 'pointer', fontWeight: 600, fontSize: 14,
+          }}>
+            <Download size={16} /> Download Marksheet
           </button>
-          {sideOpen && (
-            <span style={{ color: '#F1F5F9', fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap', paddingRight: 12 }}>
-              CampusSphere
-            </span>
-          )}
-        </div>
+        </header>
 
-        {/* Nav Links */}
-        {sideNav.map(n => {
-          const Icon = n.icon;
-          const active = location.pathname === n.to;
-          return (
-            <Link key={n.to} to={n.to} style={{
-              display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px',
-              color: active ? '#60A5FA' : '#94A3B8',
-              textDecoration: 'none', fontSize: 13, whiteSpace: 'nowrap',
-              background: active ? 'rgba(96,165,250,0.12)' : 'transparent',
-              borderLeft: active ? '3px solid #60A5FA' : '3px solid transparent',
-              transition: 'background 0.15s',
-            }}>
-              <Icon size={18} style={{ flexShrink: 0 }} />
-              {sideOpen && <span>{n.label}</span>}
-            </Link>
-          );
-        })}
-      </div>
+        <main className="ds-content">
+          {/* Semester Tabs */}
+          <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid #E5E7EB', paddingBottom: 0 }}>
+            {semesterTabs.map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  padding: '10px 20px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14,
+                  background: 'transparent', borderBottom: activeTab === tab ? '2px solid #1A56DB' : '2px solid transparent',
+                  color: activeTab === tab ? '#1A56DB' : '#6B7280', marginBottom: -2, transition: 'all 0.15s',
+                }}
+              >
+                Semester {tab.split(' ')[1]}
+              </button>
+            ))}
+          </div>
 
-      <main className="results-content">
-        <h1 className="page-title">My Results</h1>
-        
-        <div className="tabs-container">
-          {semesterTabs.map(tab => (
-            <button 
-              key={tab}
-              className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              Semester {tab.split(' ')[1]}
-            </button>
-          ))}
-        </div>
+          {activeTab === `Sem ${profile?.semester}` ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-        {activeTab === `Sem ${profile?.semester}` ? (
-          <div className="semester-results-view">
-            
-            {/* CGPA Card */}
-            <div className="cgpa-card">
-              <div className="cgpa-graphic-container">
-                <svg className="cgpa-gauge" viewBox="0 0 100 50">
-                  <path className="gauge-bg" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" />
-                  <path 
-                    className="gauge-progress" 
-                    d="M 10 50 A 40 40 0 0 1 90 50" 
-                    fill="none" 
-                    strokeDasharray="125.6" 
-                    strokeDashoffset={125.6 * (1 - cgpa/10)} 
-                  />
-                </svg>
-                <div className="cgpa-value-container">
-                  <div className="cgpa-label">CGPA</div>
-                  <div className="cgpa-value">{cgpa}<span className="cgpa-max">/10</span></div>
+              {/* CGPA Card */}
+              <div style={{
+                background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: 28,
+                display: 'flex', alignItems: 'center', gap: 32,
+                boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+              }}>
+                <div style={{ textAlign: 'center', minWidth: 140 }}>
+                  <div style={{ fontSize: 13, color: '#6B7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>CGPA</div>
+                  <div style={{ fontSize: 52, fontWeight: 800, color: '#111827', lineHeight: 1 }}>{cgpa}</div>
+                  <div style={{ fontSize: 16, color: '#6B7280' }}>/10</div>
+                </div>
+                <div style={{ flex: 1, display: 'flex', gap: 32 }}>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4, fontWeight: 600 }}>TOTAL MARKS</div>
+                    <div style={{ fontSize: 24, fontWeight: 700, color: '#111827' }}>{total} <span style={{ fontSize: 14, color: '#6B7280' }}>/ {max}</span></div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4, fontWeight: 600 }}>PERCENTAGE</div>
+                    <div style={{ fontSize: 24, fontWeight: 700, color: '#111827' }}>{max > 0 ? ((total/max)*100).toFixed(1) : 0}%</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4, fontWeight: 600 }}>RESULT</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#16A34A', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <CheckCircle size={20} /> PASS
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Results Table */}
-            <div className="table-card">
-              <div className="table-wrapper">
-                <table className="results-table">
+              {/* Results Table */}
+              <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                <table className="ds-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       <th>Subject</th>
                       <th>Code</th>
+                      <th>Credits</th>
                       <th>Marks</th>
                       <th>Max</th>
                       <th>Grade</th>
@@ -179,61 +151,51 @@ const Results = () => {
                   </thead>
                   <tbody>
                     {results.length > 0 ? (
-                      results.map((res, i) => (
-                        <tr key={i}>
-                          <td>{res.subject}</td>
-                          <td><span className="code-badge">{res.code}</span></td>
-                          <td className="fw-bold">{res.marks}</td>
-                          <td>{res.maxMarks}</td>
-                          <td>
-                            <span className={`grade-pill grade-${res.grade?.toLowerCase().replace('+', 'plus')}`}>
-                              {res.grade}
-                            </span>
-                          </td>
-                          <td><span className="text-green flex items-center gap-1"><CheckCircle size={14}/> Pass</span></td>
-                        </tr>
-                      ))
+                      results.map((res, i) => {
+                        const gc = getGradeColor(res.grade);
+                        return (
+                          <tr key={i}>
+                            <td style={{ fontWeight: 500, color: '#111827' }}>{res.subject}</td>
+                            <td><span className="ds-code-badge">{res.code}</span></td>
+                            <td style={{ color: '#6B7280' }}>{res.credits || 3}</td>
+                            <td style={{ fontWeight: 700, color: '#111827' }}>{res.marks}</td>
+                            <td style={{ color: '#6B7280' }}>{res.maxMarks || 100}</td>
+                            <td>
+                              <span style={{
+                                display: 'inline-block', padding: '3px 10px', borderRadius: 6,
+                                background: gc.bg, color: gc.color, fontWeight: 700, fontSize: 13,
+                              }}>
+                                {res.grade}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#16A34A', fontWeight: 600, fontSize: 13 }}>
+                                <CheckCircle size={14} /> Pass
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
-                        <td colSpan="6" className="text-center py-8 text-slate-400">No results found for this semester.</td>
+                        <td colSpan="7" style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>
+                          No results found for this semester.
+                        </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
-            </div>
 
-            {/* Semester Summary Card */}
-            <div className="semester-summary-card">
-              <div className="summary-left">
-                <div className="summary-stat">
-                  <span className="stat-label">Total Marks</span>
-                  <span className="stat-val">{total} / {max}</span>
-                </div>
-                <div className="summary-stat">
-                  <span className="stat-label">Percentage</span>
-                  <span className="stat-val">{max > 0 ? ((total/max) * 100).toFixed(1) : 0}%</span>
-                </div>
-                <div className="summary-stat">
-                  <span className="stat-label">Result</span>
-                  <span className="stat-val text-green">PASS</span>
-                </div>
-              </div>
-              <div className="summary-right">
-                <button className="btn btn-primary flex items-center gap-2">
-                  <Download size={18} /> Download Marksheet
-                </button>
-              </div>
             </div>
-
-          </div>
-        ) : (
-          <div className="ds-empty">
-            <AlertCircle size={48} />
-            <p>Historical results for {activeTab} are currently being migrated to the new system.</p>
-          </div>
-        )}
-      </main>
+          ) : (
+            <div className="ds-empty">
+              <AlertCircle size={48} />
+              <p>Historical results for {activeTab} are being migrated to the new system.</p>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };
