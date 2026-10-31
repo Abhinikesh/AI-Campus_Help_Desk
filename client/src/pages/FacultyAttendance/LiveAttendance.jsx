@@ -36,11 +36,17 @@ const LiveAttendance = () => {
   const [selectedStudentDetail, setSelectedStudentDetail] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Simulated classroom face detection boxes on the live video stream
-  const [boundingBoxes, setBoundingBoxes] = useState([
-    { x: 22, y: 30, w: 20, h: 28, label: 'Arjun S. (94%)' },
-    { x: 58, y: 34, w: 20, h: 28, label: 'Abhinikesh (92%)' },
-  ]);
+  // QR Rotating Challenge state
+  const [qrChallenge, setQrChallenge] = useState(null);
+  const [qrLoading, setQrLoading] = useState(false);
+
+  // Manual Override Modal state with mandatory reason
+  const [overrideModal, setOverrideModal] = useState({
+    isOpen: false,
+    student: null,
+    targetStatus: 'present',
+    reason: '',
+  });
 
   const fetchSession = async () => {
     try {
@@ -57,14 +63,30 @@ const LiveAttendance = () => {
     }
   };
 
+  const fetchQrChallenge = async () => {
+    try {
+      setQrLoading(true);
+      const res = await attendanceService.getQrChallenge(sessionId);
+      if (res?.success && res.data) {
+        setQrChallenge(res.data);
+      }
+    } catch (err) {
+      console.warn('QR challenge fetch error:', err);
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchSession();
-    // Poll for live attendance updates every 5 seconds if session is open
+    fetchQrChallenge();
+
+    // Responsive polling for live attendance updates (every 2.5 seconds when session is open)
     const interval = setInterval(() => {
       if (session?.status === 'open') {
         fetchSession();
       }
-    }, 5000);
+    }, 2500);
 
     return () => clearInterval(interval);
   }, [sessionId, session?.status]);
@@ -83,14 +105,26 @@ const LiveAttendance = () => {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const handleManualToggle = async (attendanceId, newStatus) => {
+  const openOverrideModal = (student, targetStatus) => {
+    setOverrideModal({
+      isOpen: true,
+      student,
+      targetStatus,
+      reason: '',
+    });
+  };
+
+  const handleConfirmOverride = async () => {
+    if (!overrideModal.student) return;
     try {
       setActionLoading(true);
       await attendanceService.updateStudentAttendance({
-        attendanceId,
-        status: newStatus,
-        note: `Manual override by ${user?.name || 'Faculty'}`,
+        attendanceId: overrideModal.student._id,
+        status: overrideModal.targetStatus,
+        reason: overrideModal.reason || `Manual override by faculty: ${user?.name || 'Instructor'}`,
+        note: overrideModal.reason || `Manual override by faculty: ${user?.name || 'Instructor'}`,
       });
+      setOverrideModal({ isOpen: false, student: null, targetStatus: 'present', reason: '' });
       fetchSession();
     } catch (err) {
       console.error('Error updating status:', err);
@@ -252,28 +286,82 @@ const LiveAttendance = () => {
           </div>
         </div>
 
-        {/* Main Work Area: Left = Camera Stream, Right = Live Roster */}
+        {/* Main Work Area: Left = Command & Dynamic QR, Right = Live Roster */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 20 }}>
-          {/* Left: Classroom Camera Stream & Face Recognition Feed */}
+          {/* Left: Session Command & Rotating QR Challenge Console */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div className="ds-card" style={{ padding: '18px 20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h3 className="ds-section-title">Classroom Optical Feed</h3>
-                <span className="ds-pill blue">
-                  <ShieldCheck size={13} style={{ marginRight: 4 }} /> AI Sensor Live
+                <h3 className="ds-section-title">Live Session Command</h3>
+                <span className={`ds-pill ${isClosed ? 'gray' : 'blue'}`}>
+                  <Clock size={13} style={{ marginRight: 4 }} />
+                  {isClosed ? 'Session Closed' : `Running: ${formatTimer(secondsElapsed)}`}
                 </span>
               </div>
 
-              {/* Classroom Camera */}
-              <CameraPreview
-                status={isClosed ? 'ready' : 'verifying'}
-                isClassroomMode={true}
-                boundingBoxes={boundingBoxes}
-                guideMessage="Scanning classroom seating area…"
-              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 13, marginBottom: 14 }}>
+                <div style={{ background: '#F8FAFC', padding: 10, borderRadius: 6, border: '1px solid #E2E8F0' }}>
+                  <span style={{ color: '#64748B', display: 'block', fontSize: 11, fontWeight: 600 }}>CLASS & SECTION</span>
+                  <strong style={{ color: '#111827' }}>{session?.branch} Sem {session?.semester} ({session?.section || 'A'})</strong>
+                </div>
+                <div style={{ background: '#F8FAFC', padding: 10, borderRadius: 6, border: '1px solid #E2E8F0' }}>
+                  <span style={{ color: '#64748B', display: 'block', fontSize: 11, fontWeight: 600 }}>PERIOD & SCHEDULE</span>
+                  <strong style={{ color: '#111827' }}>Period {session?.period} • {session?.startTime}</strong>
+                </div>
+              </div>
 
-              <div style={{ marginTop: 14, background: '#F8FAFC', padding: 12, borderRadius: 8, fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
-                <strong>Continuous Scan Active:</strong> Facial recognition engine detects enrolled students in frame and streams verified matches to the roster ledger on the right.
+              {/* Rotating Session QR Challenge Display */}
+              <div style={{ background: '#EFF6FF', border: '1.5px solid #BFDBFE', borderRadius: 8, padding: 16, textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#1E40AF', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <ShieldCheck size={15} /> Dynamic Session QR Challenge
+                  </span>
+                  <button
+                    type="button"
+                    className="ds-btn ds-btn-secondary"
+                    onClick={fetchQrChallenge}
+                    disabled={qrLoading || isClosed}
+                    style={{ padding: '2px 8px', height: 26, fontSize: 12 }}
+                  >
+                    <RefreshCw size={12} className={qrLoading ? 'ds-spinner-inline' : ''} />
+                    <span>Regenerate</span>
+                  </button>
+                </div>
+
+                {qrChallenge?.challengeToken ? (
+                  <div>
+                    <div style={{
+                      fontFamily: 'monospace',
+                      fontSize: 16,
+                      fontWeight: 700,
+                      letterSpacing: 2,
+                      background: '#FFFFFF',
+                      padding: '10px 14px',
+                      borderRadius: 6,
+                      border: '1px dashed #93C5FD',
+                      color: '#1E3A8A',
+                      marginBottom: 8,
+                      userSelect: 'all',
+                    }}>
+                      {qrChallenge.challengeToken}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#1D4ED8' }}>
+                      Token expires in <strong>{qrChallenge.expiresInSeconds || 45}s</strong>. Students present in classroom scan or enter this token during check-in.
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 12, color: '#64748B', padding: '8px 0' }}>
+                    Click Regenerate to broadcast a live attendance challenge token.
+                  </div>
+                )}
+              </div>
+
+              {/* Privacy-Preserving Notice */}
+              <div style={{ marginTop: 14, background: '#F8FAFC', padding: 12, borderRadius: 8, fontSize: 12, color: '#475569', lineHeight: 1.5, border: '1px solid #E2E8F0' }}>
+                <strong style={{ color: '#1E293B', display: 'block', marginBottom: 2 }}>
+                  🔒 Ethical 1-to-1 Verification Architecture
+                </strong>
+                Students initiate voluntary face verification on their own devices. Raw photographs are never stored; only AES-256-GCM encrypted mathematical templates are verified.
               </div>
             </div>
           </div>

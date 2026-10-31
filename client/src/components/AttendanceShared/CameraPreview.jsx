@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Camera, CameraOff, RefreshCw, FlipHorizontal, CheckCircle, AlertTriangle, ShieldCheck } from 'lucide-react';
 import './AttendanceShared.css';
 
@@ -7,14 +7,14 @@ import './AttendanceShared.css';
  * Native HTML5 WebRTC camera capture component with face positioning overlay,
  * status states, and fallback handling.
  */
-export const CameraPreview = ({
+export const CameraPreview = forwardRef(({
   status = 'ready', // 'ready' | 'detecting' | 'verifying' | 'success' | 'error'
   guideMessage = 'Center your face within the guide',
   boundingBoxes = [], // For classroom camera view [{ x, y, w, h, label }]
   onStreamActive = null,
   showControls = true,
   isClassroomMode = false,
-}) => {
+}, ref) => {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
@@ -22,6 +22,35 @@ export const CameraPreview = ({
   const [errorMessage, setErrorMessage] = useState('');
   const [isMirrored, setIsMirrored] = useState(true);
   const [cameraActive, setCameraActive] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    captureFrame: () => {
+      if (!videoRef.current || !cameraActive) return null;
+      try {
+        const video = videoRef.current;
+        const width = video.videoWidth || 640;
+        const height = video.videoHeight || 480;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        if (isMirrored && !isClassroomMode) {
+          ctx.translate(width, 0);
+          ctx.scale(-1, 1);
+        }
+
+        ctx.drawImage(video, 0, 0, width, height);
+        return canvas.toDataURL('image/jpeg', 0.88);
+      } catch (err) {
+        console.warn('Frame capture error:', err);
+        return null;
+      }
+    },
+    isCameraActive: () => cameraActive,
+    hasCameraPermission: () => hasPermission === true,
+    restartCamera: startCamera,
+  }));
 
   const startCamera = async () => {
     setErrorMessage('');
@@ -215,6 +244,8 @@ export const CameraPreview = ({
       )}
     </div>
   );
-};
+});
+
+CameraPreview.displayName = 'CameraPreview';
 
 export default CameraPreview;

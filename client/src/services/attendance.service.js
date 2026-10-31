@@ -62,6 +62,11 @@ export const attendanceService = {
     return res.data;
   },
 
+  getQrChallenge: async (sessionId) => {
+    const res = await api.get(`/api/attendance/sessions/${sessionId}/qr-challenge`);
+    return res.data;
+  },
+
   closeSession: async (sessionId) => {
     const res = await api.patch(`/api/faculty/attendance/sessions/${sessionId}/close`);
     return res.data;

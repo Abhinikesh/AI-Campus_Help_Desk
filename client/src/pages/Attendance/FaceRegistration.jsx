@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import attendanceService from '../../services/attendance.service';
@@ -40,6 +40,7 @@ const FaceRegistration = () => {
   });
 
   // Enrollment workflow state
+  const cameraRef = useRef(null);
   const [activeStep, setActiveStep] = useState(1); // 1: Consent, 2: Camera Capture, 3: Completed
   const [consentChecked, setConsentChecked] = useState(false);
   const [capturing, setCapturing] = useState(false);
@@ -74,29 +75,41 @@ const FaceRegistration = () => {
     setCapturing(true);
     setErrorMsg('');
 
-    // Simulate multi-angle biometric sample capture
+    // Capture real frames from camera stream
+    const frames = [];
     setSampleCount(1);
-    await new Promise(r => setTimeout(r, 700));
+    const frame1 = cameraRef.current?.captureFrame();
+    if (frame1) frames.push(frame1);
+    await new Promise(r => setTimeout(r, 600));
+
     setSampleCount(2);
-    await new Promise(r => setTimeout(r, 700));
+    const frame2 = cameraRef.current?.captureFrame();
+    if (frame2) frames.push(frame2);
+    await new Promise(r => setTimeout(r, 600));
+
     setSampleCount(3);
-    setQualityScore(95);
+    const frame3 = cameraRef.current?.captureFrame();
+    if (frame3) frames.push(frame3);
+
+    const primaryImage = frames[frames.length - 1] || null;
 
     try {
       const enrollRes = await attendanceService.enrollFace({
         consentGiven: true,
-        samplesCount: 3,
-        qualityScore: 95,
+        samplesCount: frames.length || 3,
+        imageData: primaryImage,
+        imageSamples: frames.length > 0 ? frames : undefined,
       });
 
       if (enrollRes?.success) {
+        setQualityScore(enrollRes.data?.qualityScore || 95);
         setActiveStep(3);
         fetchStatus();
       } else {
-        setErrorMsg('Biometric registration could not be confirmed by the server.');
+        setErrorMsg(enrollRes?.message || 'Biometric registration could not be confirmed by the server.');
       }
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Enrollment submission failed. Please retry.');
+      setErrorMsg(err.response?.data?.message || 'Enrollment submission failed. Please ensure face is centered and lit.');
     } finally {
       setCapturing(false);
     }
@@ -340,6 +353,7 @@ const FaceRegistration = () => {
 
               <div style={{ maxWidth: 540, margin: '0 auto' }}>
                 <CameraPreview
+                  ref={cameraRef}
                   status={capturing ? 'verifying' : 'ready'}
                   guideMessage="Keep head still and center in oval"
                 />

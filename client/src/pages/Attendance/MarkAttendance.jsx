@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import attendanceService from '../../services/attendance.service';
@@ -17,9 +17,11 @@ const MarkAttendance = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const cameraRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [qrChallengeInput, setQrChallengeInput] = useState('');
 
   // Verification state: 'idle' | 'ready' | 'verifying' | 'success' | 'failed' | 'manual_fallback'
   const [verifyState, setVerifyState] = useState('ready');
@@ -61,23 +63,27 @@ const MarkAttendance = () => {
     setVerifyStatusText('Detecting face geometry and illumination…');
     setErrorMessage('');
 
+    // Capture real frame from camera
+    const liveImageData = cameraRef.current?.captureFrame() || null;
+
     // Step-by-step UI feedback
     setTimeout(() => {
       setVerifyProgress(45);
-      setVerifyStatusText('Checking biometric liveness & head alignment…');
-    }, 800);
+      setVerifyStatusText('Validating biometric liveness & head alignment…');
+    }, 600);
 
     setTimeout(() => {
       setVerifyProgress(75);
-      setVerifyStatusText('Comparing biometric signature against enrolled Face ID…');
-    }, 1600);
+      setVerifyStatusText('Matching biometric embedding against enrolled template…');
+    }, 1200);
 
     setTimeout(async () => {
       try {
         setVerifyProgress(90);
         const res = await attendanceService.joinAttendanceSession(selectedSession._id, {
           verificationMethod: 'face',
-          confidence: 0.95,
+          liveImageData,
+          qrChallengeToken: qrChallengeInput || undefined,
         });
 
         if (res?.success) {
@@ -91,9 +97,9 @@ const MarkAttendance = () => {
       } catch (err) {
         console.error('Attendance join error:', err);
         setVerifyState('failed');
-        setErrorMessage(err.response?.data?.message || 'Verification request failed. Please retry.');
+        setErrorMessage(err.response?.data?.message || 'Verification request failed. Please retry or request manual check-in.');
       }
-    }, 2400);
+    }, 1800);
   };
 
   const handleManualFallback = async () => {
@@ -314,9 +320,27 @@ const MarkAttendance = () => {
 
                 {/* Camera Component */}
                 <CameraPreview
+                  ref={cameraRef}
                   status={verifyState}
                   guideMessage={verifyStatusText}
                 />
+
+                {/* Optional QR Challenge Token Input */}
+                {selectedSession?.attendanceMethod === 'qr_face' && (
+                  <div style={{ marginTop: 14, background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                      Session QR Challenge Code (Shown on Faculty Screen)
+                    </label>
+                    <input
+                      type="text"
+                      className="ds-input"
+                      placeholder="Enter 45-second challenge code…"
+                      value={qrChallengeInput}
+                      onChange={(e) => setQrChallengeInput(e.target.value.trim())}
+                      style={{ width: '100%', height: 34, fontSize: 13 }}
+                    />
+                  </div>
+                )}
 
                 {/* Verification Progress Bar */}
                 {verifyState === 'verifying' && (

@@ -1,86 +1,160 @@
-"""Internal Biometric routes for quality check, enrollment & verification interfaces."""
+"""
+Internal Biometric Routes — legacy /api/internal/biometrics/* compatibility layer.
+
+These routes mirror the /api/ai/enrollment/* and /api/ai/verification/* endpoints
+but use the original URL paths that the Part 3 Node.js proxy was configured to call.
+
+They delegate directly to the real EnrollmentService and VerificationService,
+which use the deep-learning face_recognition engine (dlib ResNet-based).
+
+The old BiometricProcessor stub referenced in earlier versions has been replaced
+by the full production pipeline:
+  image → quality check → face detection → embedding → AES-256-GCM encryption
+"""
 from flask import Blueprint, request, jsonify, current_app
 from app.security.auth import require_internal_key
-from app.security.encryption import encrypt_biometric_template, decrypt_biometric_template
-from app.recognition.quality import BiometricProcessor
+from app.enrollment.enrollment_service import EnrollmentService
+from app.verification.verification_service import VerificationService
+from app.utils.exceptions import BiometricException
 
 biometric_bp = Blueprint("biometric_bp", __name__)
+
 
 @biometric_bp.route("/validate-quality", methods=["POST"])
 @require_internal_key
 def validate_quality():
+    """Validate image quality without enrollment — used by Node.js pre-flight checks."""
     data = request.get_json() or {}
-    image_data = data.get("imageData")
+    image_data = data.get("imageData") or data.get("liveImageData")
 
-    is_valid, msg, metrics = BiometricProcessor.validate_image_payload(image_data)
-    return jsonify({
-        "success": is_valid,
-        "message": msg,
-        "metrics": metrics
-    }), 200 if is_valid else 400
+    if not image_data:
+        return jsonify({"success": False, "message": "imageData is required"}), 400
+
+    try:
+        report = EnrollmentService.validate_enrollment_sample(image_data)
+        return jsonify({
+            "success": report["isValid"],
+            "message": report["message"],
+            "metrics": report["metrics"],
+            "faceCount": report.get("faceCount", 0)
+        }), 200 if report["isValid"] else 400
+    except BiometricException as e:
+        return jsonify({"success": False, "status": e.code, "message": e.message}), e.status_code
+    except Exception as e:
+        return jsonify({"success": False, "message": "Image quality validation failed"}), 500
+
 
 @biometric_bp.route("/enroll", methods=["POST"])
 @require_internal_key
 def enroll_template():
+    """
+    Enroll a face biometric template.
+
+    Accepts a single imageData or a list of imageSamples.
+    Returns AES-256-GCM encrypted template blob and SHA-256 fingerprint.
+    Never persists raw images.
+    """
     data = request.get_json() or {}
     student_id = data.get("studentId")
+    # Accept both legacy single-image and new multi-sample formats
     image_data = data.get("imageData")
+    image_samples = data.get("imageSamples") or (
+        [image_data] if image_data else None
+    )
+    consent_given = data.get("consentGiven", True)
 
-    if not student_id or not image_data:
-        return jsonify({"success": False, "message": "studentId and imageData are required"}), 400
+    if not student_id or not image_samples:
+        return jsonify({
+            "success": False,
+            "message": "studentId and imageData (or imageSamples) are required"
+        }), 400
 
-    is_valid, msg, metrics = BiometricProcessor.validate_image_payload(image_data)
-    if not is_valid:
-        return jsonify({"success": False, "message": f"Quality validation failed: {msg}"}), 400
-
-    template = BiometricProcessor.extract_template_signature(image_data)
     secret_key = current_app.config.get("BIOMETRIC_SECRET_KEY")
-    encrypted_blob = encrypt_biometric_template(template, secret_key)
 
-    return jsonify({
-        "success": True,
-        "message": "Biometric template generated and encrypted securely",
-        "data": {
-            "studentId": student_id,
-            "templateReference": template.get("hashFingerprint"),
-            "encryptedData": encrypted_blob,
-            "dimensions": template.get("dimensions"),
-            "qualityMetrics": metrics
-        }
-    }), 200
+    try:
+        result = EnrollmentService.process_enrollment(
+            student_id=student_id,
+            image_samples=image_samples,
+            consent_given=consent_given,
+            secret_key=secret_key,
+        )
+        # Expose result under a 'data' key for backward compatibility with Part 3 proxy
+        return jsonify({
+            "success": True,
+            "message": result.get("message", "Enrollment successful"),
+            "data": {
+                "studentId": result["studentId"],
+                "templateReference": result["templateReference"],
+                "encryptedData": result["encryptedData"],
+                "dimensions": result["dimensions"],
+                "sampleCount": result["sampleCount"],
+                "qualityMetrics": result.get("qualitySummary", {}),
+            }
+        }), 200
+    except BiometricException as e:
+        return jsonify({"success": False, "status": e.code, "message": e.message}), e.status_code
+    except Exception:
+        return jsonify({"success": False, "message": "Enrollment processing failed"}), 500
+
 
 @biometric_bp.route("/verify", methods=["POST"])
 @require_internal_key
 def verify_template():
+    """
+    One-to-one face verification.
+
+    Decrypts enrolled template (Node.js supplies the AES-GCM blob from MongoDB),
+    generates a live embedding, and returns match result with confidence score.
+    Never logs or persists the raw live image.
+    """
     data = request.get_json() or {}
     encrypted_enrolled_data = data.get("encryptedEnrolledData")
-    live_image_data = data.get("liveImageData")
+    live_image_data = data.get("liveImageData") or data.get("imageData")
+    has_consent = data.get("hasConsent", True)
+    session_challenge = data.get("sessionChallenge")
+    expected_challenge = data.get("expectedChallenge")
 
     if not encrypted_enrolled_data or not live_image_data:
-        return jsonify({"success": False, "message": "encryptedEnrolledData and liveImageData are required"}), 400
+        return jsonify({
+            "success": False,
+            "message": "encryptedEnrolledData and liveImageData are required"
+        }), 400
 
     secret_key = current_app.config.get("BIOMETRIC_SECRET_KEY")
-    try:
-        enrolled_template = decrypt_biometric_template(encrypted_enrolled_data, secret_key)
-    except Exception as e:
-        return jsonify({"success": False, "message": f"Failed to decrypt enrolled template: {str(e)}"}), 500
 
-    is_valid, msg, _ = BiometricProcessor.validate_image_payload(live_image_data)
-    if not is_valid:
+    try:
+        result = VerificationService.verify_live_face(
+            encrypted_enrolled_data=encrypted_enrolled_data,
+            live_image_payload=live_image_data,
+            has_consent=has_consent,
+            session_challenge=session_challenge,
+            expected_challenge=expected_challenge,
+            secret_key=secret_key,
+        )
+        return jsonify({
+            "success": result.get("isMatch", False),
+            "isMatch": result.get("isMatch", False),
+            "confidence": result.get("confidence", 0.0),
+            "verificationStatus": "verified" if result.get("isMatch") else result.get("status", "not_matched").lower(),
+            "euclideanDistance": result.get("euclideanDistance"),
+            "cosineSimilarity": result.get("cosineSimilarity"),
+            "status": result.get("status"),
+            "qualityMetrics": result.get("qualitySummary"),
+        }), 200
+    except BiometricException as e:
         return jsonify({
             "success": False,
             "isMatch": False,
             "confidence": 0.0,
             "verificationStatus": "rejected",
-            "message": f"Live image quality rejected: {msg}"
-        }), 400
-
-    live_template = BiometricProcessor.extract_template_signature(live_image_data)
-    is_match, confidence, status = BiometricProcessor.verify_templates(live_template, enrolled_template)
-
-    return jsonify({
-        "success": True,
-        "isMatch": is_match,
-        "confidence": confidence,
-        "verificationStatus": status
-    }), 200
+            "status": e.code,
+            "message": e.message,
+        }), e.status_code
+    except Exception:
+        return jsonify({
+            "success": False,
+            "isMatch": False,
+            "confidence": 0.0,
+            "verificationStatus": "error",
+            "message": "Verification processing failed",
+        }), 500
