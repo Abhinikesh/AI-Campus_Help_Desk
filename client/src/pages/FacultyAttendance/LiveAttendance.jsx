@@ -454,7 +454,7 @@ const LiveAttendance = () => {
                             <button
                               type="button"
                               className="ds-btn ds-btn-secondary"
-                              onClick={() => handleManualToggle(st._id, 'present')}
+                              onClick={() => openOverrideModal(st, 'present')}
                               title="Mark Present"
                               disabled={actionLoading}
                               style={{ padding: '4px 6px', height: 26, color: '#16A34A' }}
@@ -465,7 +465,7 @@ const LiveAttendance = () => {
                             <button
                               type="button"
                               className="ds-btn ds-btn-secondary"
-                              onClick={() => handleManualToggle(st._id, 'absent')}
+                              onClick={() => openOverrideModal(st, 'absent')}
                               title="Mark Absent"
                               disabled={actionLoading}
                               style={{ padding: '4px 6px', height: 26, color: '#DC2626' }}
@@ -492,6 +492,105 @@ const LiveAttendance = () => {
           </div>
         </div>
       </div>
+
+      {/* Manual Override Dialog with Mandatory Audit Reason */}
+      {overrideModal.isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(15, 23, 42, 0.45)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+          }}
+        >
+          <div
+            style={{
+              background: '#FFFFFF',
+              borderRadius: 10,
+              width: '100%',
+              maxWidth: 440,
+              border: '1px solid #E2E8F0',
+              overflow: 'hidden',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid #E2E8F0' }}>
+              <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>Manual Attendance Override</h4>
+              <button
+                type="button"
+                onClick={() => setOverrideModal({ isOpen: false, student: null, targetStatus: 'present', reason: '' })}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ padding: '16px 18px', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <span style={{ color: '#64748B', display: 'block', fontSize: 11, fontWeight: 600 }}>STUDENT</span>
+                <strong style={{ color: '#111827', fontSize: 14 }}>{overrideModal.student?.name}</strong> (Roll: {overrideModal.student?.rollNumber})
+              </div>
+
+              <div>
+                <span style={{ color: '#64748B', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>TARGET STATUS</span>
+                <select
+                  className="ds-select"
+                  value={overrideModal.targetStatus}
+                  onChange={(e) => setOverrideModal(prev => ({ ...prev, targetStatus: e.target.value }))}
+                  style={{ width: '100%', height: 34, fontSize: 13 }}
+                >
+                  <option value="present">Present</option>
+                  <option value="absent">Absent</option>
+                  <option value="late">Late</option>
+                  <option value="excused">Excused (Medical/Official)</option>
+                </select>
+              </div>
+
+              <div>
+                <span style={{ color: '#64748B', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>
+                  MANDATORY AUDIT REASON *
+                </span>
+                <input
+                  type="text"
+                  className="ds-input"
+                  placeholder="e.g. Valid medical pass, device camera failure, approved bus delay"
+                  value={overrideModal.reason}
+                  onChange={(e) => setOverrideModal(prev => ({ ...prev, reason: e.target.value }))}
+                  style={{ width: '100%', height: 34, fontSize: 13 }}
+                  required
+                />
+                <span style={{ fontSize: 11, color: '#64748B', marginTop: 4, display: 'block' }}>
+                  This reason will be permanently recorded in the institutional Attendance Audit Log.
+                </span>
+              </div>
+            </div>
+            <div style={{ padding: '12px 18px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button
+                type="button"
+                className="ds-btn ds-btn-secondary"
+                onClick={() => setOverrideModal({ isOpen: false, student: null, targetStatus: 'present', reason: '' })}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="ds-btn ds-btn-primary"
+                disabled={!overrideModal.reason.trim() || actionLoading}
+                onClick={handleConfirmOverride}
+              >
+                {actionLoading ? 'Recording…' : 'Confirm Override'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Student Details Inspection Modal */}
       {selectedStudentDetail && (

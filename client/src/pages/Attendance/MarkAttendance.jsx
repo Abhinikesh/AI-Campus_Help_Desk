@@ -167,10 +167,14 @@ const MarkAttendance = () => {
             </div>
 
             <h2 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 6px 0' }}>
-              Attendance Successfully Verified!
+              {confirmationData.status === 'pending'
+                ? 'Manual Verification Request Submitted'
+                : 'Attendance Successfully Verified!'}
             </h2>
             <p style={{ fontSize: 14, color: '#4B5563', margin: '0 0 24px 0' }}>
-              Your presence has been cryptographically recorded on the campus academic ledger.
+              {confirmationData.status === 'pending'
+                ? 'Your attendance request has been submitted to the faculty and is awaiting confirmation in the live session roster.'
+                : 'Your presence has been cryptographically recorded on the campus academic ledger.'}
             </p>
 
             <div
@@ -210,7 +214,7 @@ const MarkAttendance = () => {
               </div>
               <div>
                 <span style={{ color: '#64748B', display: 'block', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Status</span>
-                <AttendanceStatusBadge status="present" />
+                <AttendanceStatusBadge status={confirmationData.status || 'present'} />
               </div>
             </div>
 

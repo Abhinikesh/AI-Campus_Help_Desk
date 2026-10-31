@@ -716,18 +716,24 @@ const recordStudentAttendance = asyncHandler(async (req, res) => {
   // Biometric verification via Python AI service if liveImageData is provided
   let verificationStatus = 'verified';
   let verifiedConfidence = confidence;
+  const targetStatus = verificationMethod === 'manual' ? 'pending' : 'present';
+  const targetVerificationStatus = verificationMethod === 'manual' ? 'pending_review' : verificationStatus;
 
-  if (verificationMethod === 'face' && liveImageData) {
+  if (verificationMethod === 'face') {
     const faceProfile = await FaceEmbedding.findOne({ student: student._id }).select('+encryptedData');
-    if (faceProfile && faceProfile.encryptedData) {
+    if (!faceProfile || !faceProfile.isActive || !faceProfile.consentGiven || !faceProfile.encryptedData) {
+      throw new ApiError(403, 'Active biometric enrollment and consent required. Please enroll your face first or request manual verification.');
+    }
+
+    if (liveImageData) {
       const bioResult = await pythonAiService.verifyBiometricTemplate(faceProfile.encryptedData, liveImageData);
-      if (bioResult.success) {
-        verifiedConfidence = bioResult.confidence;
-        verificationStatus = bioResult.verificationStatus;
-        if (!bioResult.isMatch && bioResult.verificationStatus === 'rejected') {
-          throw new ApiError(400, 'Face verification failed: Biometric match confidence too low');
-        }
+      if (!bioResult || !bioResult.success || !bioResult.isMatch) {
+        throw new ApiError(400, `Biometric verification failed: ${bioResult?.message || 'Face does not match enrolled biometric template'}`);
       }
+      verifiedConfidence = bioResult.confidence || 0.95;
+      verificationStatus = bioResult.verificationStatus || 'verified';
+    } else if (process.env.NODE_ENV === 'production') {
+      throw new ApiError(400, 'Live camera image capture is required for face biometric verification');
     }
   }
 
@@ -754,11 +760,11 @@ const recordStudentAttendance = asyncHandler(async (req, res) => {
   }
 
   if (attendance) {
-    attendance.status = 'present';
-    attendance.attendanceStatus = 'present';
+    attendance.status = targetStatus;
+    attendance.attendanceStatus = targetStatus;
     attendance.verificationMethod = verificationMethod;
-    attendance.verificationStatus = verificationStatus;
-    attendance.confidence = verifiedConfidence;
+    attendance.verificationStatus = targetVerificationStatus;
+    attendance.confidence = verificationMethod === 'manual' ? null : verifiedConfidence;
     attendance.markedAt = new Date();
     attendance.verifiedAt = new Date();
     await attendance.save();
@@ -769,11 +775,11 @@ const recordStudentAttendance = asyncHandler(async (req, res) => {
       student: student._id,
       date: session.date,
       period: session.period,
-      status: 'present',
-      attendanceStatus: 'present',
+      status: targetStatus,
+      attendanceStatus: targetStatus,
       verificationMethod,
-      verificationStatus,
-      confidence: verifiedConfidence,
+      verificationStatus: targetVerificationStatus,
+      confidence: verificationMethod === 'manual' ? null : verifiedConfidence,
       markedAt: new Date(),
       verifiedAt: new Date()
     });
@@ -808,11 +814,13 @@ const recordStudentAttendance = asyncHandler(async (req, res) => {
       rollNumber: student.rollNumber,
       subject: session.subject?.name,
       code: session.subject?.code,
-      status: 'present',
+      status: attendance.status,
       verificationStatus,
       confidence: verifiedConfidence
     },
-    message: 'Attendance verified and marked successfully! 🎓'
+    message: verificationMethod === 'manual'
+      ? 'Non-biometric verification request submitted. Awaiting faculty confirmation.'
+      : 'Attendance verified and marked successfully! 🎓'
   });
 });
 

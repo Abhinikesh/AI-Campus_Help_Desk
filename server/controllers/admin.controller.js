@@ -13,6 +13,8 @@ const Attendance = require('../models/Attendance');
 const AttendanceSession = require('../models/AttendanceSession');
 const FaceEmbedding = require('../models/FaceEmbedding');
 const AttendanceSettings = require('../models/AttendanceSettings');
+const ConsentRecord = require('../models/ConsentRecord');
+const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -170,15 +172,23 @@ const getAttendanceOverview = asyncHandler(async (req, res) => {
   ]);
 
   const totalRecords = allAttendanceRecords.length;
-  const presentRecords = allAttendanceRecords.filter(r => r.status === 'present').length;
-  const overallAttendance = totalRecords > 0 ? Math.round((presentRecords / totalRecords) * 100) : 84;
+  const presentRecords = allAttendanceRecords.filter(r => ['present', 'late'].includes(r.status)).length;
+  const overallAttendance = totalRecords > 0 ? Math.round((presentRecords / totalRecords) * 100) : 0;
 
-  const departmentStats = [
-    { department: 'Computer Science & Engineering', sessions: totalSessions || 12, attendance: overallAttendance },
-    { department: 'Information Technology', sessions: 8, attendance: 81 },
-    { department: 'Electronics & Communication', sessions: 6, attendance: 76 },
-    { department: 'Mechanical Engineering', sessions: 5, attendance: 82 },
+  const branches = [
+    { code: 'CSE', name: 'Computer Science & Engineering' },
+    { code: 'IT', name: 'Information Technology' },
+    { code: 'ECE', name: 'Electronics & Communication' },
+    { code: 'MECH', name: 'Mechanical Engineering' },
   ];
+
+  const departmentStats = branches.map(b => {
+    return {
+      department: b.name,
+      sessions: allAttendanceRecords.filter(r => (r.branch || '').toUpperCase() === b.code).length,
+      attendance: overallAttendance,
+    };
+  });
 
   // Sessions requiring attention (sessions with low attendance or open for > 3 hours)
   const attentionSessions = await AttendanceSession.find({
@@ -364,51 +374,158 @@ const getFaceEnrollments = asyncHandler(async (req, res) => {
 // DELETE /api/admin/attendance/face-enrollments/:studentId — Delete Biometric Data
 const deleteFaceEnrollment = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
-  const face = await FaceEmbedding.findOne({ student: studentId });
+  const face = await FaceEmbedding.findOne({ student: studentId }).select('+encryptedData');
   if (face) {
+    face.encryptedData = null; // Cryptographically purge template
+    face.templateReference = null;
     face.isActive = false;
     face.status = 'revoked';
     face.consentGiven = false;
     face.samplesCaptured = 0;
+    face.deletionRequestedAt = new Date();
+    face.deletionCompletedAt = new Date();
     await face.save();
   }
 
+  // Revoke active consent record
+  await ConsentRecord.updateMany(
+    { student: studentId, consentStatus: 'active' },
+    { consentStatus: 'revoked', withdrawalTimestamp: new Date() }
+  );
+
+  // Record audit log
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: req.user.role,
+    action: 'delete_biometric',
+    affectedStudentId: studentId,
+    reason: 'Admin purged biometric profile and revoked active consent',
+    ipAddress: req.ip,
+  });
+
   return res.status(200).json({
     success: true,
-    message: 'Student biometric data safely revoked and deleted from active verification pool.',
+    message: 'Student biometric data safely revoked and cryptographically purged from verification pool.',
   });
 });
 
 // GET /api/admin/attendance/analytics — Comprehensive Attendance Analytics
 const getAttendanceAnalytics = asyncHandler(async (req, res) => {
-  const departmentStats = [
-    { department: 'Computer Science & Engineering', average: 84, totalStudents: 60, lowAttendanceCount: 3 },
-    { department: 'Information Technology', average: 81, totalStudents: 45, lowAttendanceCount: 4 },
-    { department: 'Electronics & Communication', average: 78, totalStudents: 50, lowAttendanceCount: 7 },
-    { department: 'Mechanical Engineering', average: 83, totalStudents: 40, lowAttendanceCount: 2 },
-  ];
+  const [allStudents, allSessions, allRecords] = await Promise.all([
+    Student.find({}, 'branch semester rollNumber fullName').lean(),
+    AttendanceSession.find({}, 'branch semester status date').lean(),
+    Attendance.find({}, 'status date student').lean(),
+  ]);
 
-  const classWiseStats = [
-    { className: 'CSE Semester 4 (Sec A)', average: 85, totalStudents: 30, below75: 2 },
-    { className: 'CSE Semester 4 (Sec B)', average: 82, totalStudents: 30, below75: 3 },
-    { className: 'CSE Semester 6 (Sec A)', average: 79, totalStudents: 28, below75: 4 },
-    { className: 'CSE Semester 8 (Sec A)', average: 88, totalStudents: 25, below75: 1 },
-  ];
+  const branches = ['CSE', 'IT', 'ECE', 'MECH'];
+  const departmentStats = branches.map((branch) => {
+    const branchStudents = allStudents.filter((s) => (s.branch || '').toUpperCase() === branch);
+    const branchStudentIds = new Set(branchStudents.map((s) => s._id.toString()));
+    const branchRecords = allRecords.filter((r) => branchStudentIds.has(r.student?.toString()));
+    const presentRecords = branchRecords.filter((r) => ['present', 'late'].includes(r.status));
+    const average = branchRecords.length > 0 ? Math.round((presentRecords.length / branchRecords.length) * 100) : 0;
+    const lowAttendanceCount = branchStudents.filter((s) => {
+      const studentRecs = branchRecords.filter((r) => r.student?.toString() === s._id.toString());
+      if (studentRecs.length === 0) return false;
+      const sPresent = studentRecs.filter((r) => ['present', 'late'].includes(r.status));
+      return (sPresent.length / studentRecs.length) * 100 < 75;
+    }).length;
 
-  const monthlyTrends = [
-    { month: 'Jan', rate: 89 },
-    { month: 'Feb', rate: 86 },
-    { month: 'Mar', rate: 81 },
-    { month: 'Apr', rate: 84 },
-  ];
+    const deptNames = {
+      CSE: 'Computer Science & Engineering',
+      IT: 'Information Technology',
+      ECE: 'Electronics & Communication',
+      MECH: 'Mechanical Engineering',
+    };
+
+    return {
+      department: deptNames[branch] || branch,
+      average,
+      totalStudents: branchStudents.length,
+      lowAttendanceCount,
+    };
+  });
+
+  // Dynamic class-wise stats from enrolled students & sessions
+  const classKeySet = new Set();
+  allStudents.forEach((s) => {
+    if (s.branch && s.semester) {
+      classKeySet.add(`${s.branch.toUpperCase()}-Sem${s.semester}`);
+    }
+  });
+
+  const classWiseStats = Array.from(classKeySet).map((classKey) => {
+    const [branch, semStr] = classKey.split('-Sem');
+    const sem = parseInt(semStr, 10);
+    const classStudents = allStudents.filter(
+      (s) => (s.branch || '').toUpperCase() === branch && s.semester === sem
+    );
+    const classStudentIds = new Set(classStudents.map((s) => s._id.toString()));
+    const classRecords = allRecords.filter((r) => classStudentIds.has(r.student?.toString()));
+    const presentRecs = classRecords.filter((r) => ['present', 'late'].includes(r.status));
+    const average = classRecords.length > 0 ? Math.round((presentRecs.length / classRecords.length) * 100) : 0;
+
+    let below75 = 0;
+    classStudents.forEach((st) => {
+      const stRecs = classRecords.filter((r) => r.student?.toString() === st._id.toString());
+      if (stRecs.length > 0) {
+        const stPresent = stRecs.filter((r) => ['present', 'late'].includes(r.status)).length;
+        if ((stPresent / stRecs.length) * 100 < 75) below75++;
+      }
+    });
+
+    return {
+      className: `${branch} Semester ${sem}`,
+      average,
+      totalStudents: classStudents.length,
+      below75,
+    };
+  });
+
+  // Dynamic monthly trends from actual Attendance records
+  const monthlyMap = {};
+  allRecords.forEach((r) => {
+    const dateStr = r.date || (r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : '');
+    if (dateStr && dateStr.length >= 7) {
+      const monthKey = dateStr.slice(0, 7); // e.g. "2026-04"
+      if (!monthlyMap[monthKey]) {
+        monthlyMap[monthKey] = { total: 0, present: 0 };
+      }
+      monthlyMap[monthKey].total++;
+      if (['present', 'late'].includes(r.status)) {
+        monthlyMap[monthKey].present++;
+      }
+    }
+  });
+
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthlyTrends = Object.keys(monthlyMap)
+    .sort()
+    .slice(-6)
+    .map((mKey) => {
+      const monthNum = parseInt(mKey.split('-')[1], 10);
+      const name = monthNames[monthNum - 1] || mKey;
+      const data = monthlyMap[mKey];
+      return {
+        month: name,
+        rate: data.total > 0 ? Math.round((data.present / data.total) * 100) : 0,
+      };
+    });
+
+  const totalPresent = allRecords.filter((r) => ['present', 'late'].includes(r.status)).length;
+  const overallCampusAttendance = allRecords.length > 0 ? Math.round((totalPresent / allRecords.length) * 100) : 0;
 
   return res.status(200).json({
     success: true,
     data: {
       departmentStats,
-      classWiseStats,
-      monthlyTrends,
-      overallCampusAttendance: 83,
+      classWiseStats: classWiseStats.length > 0 ? classWiseStats : [
+        { className: 'CSE Semester 4', average: 0, totalStudents: allStudents.filter(s => s.branch === 'CSE' && s.semester === 4).length, below75: 0 }
+      ],
+      monthlyTrends: monthlyTrends.length > 0 ? monthlyTrends : [
+        { month: 'Current', rate: overallCampusAttendance }
+      ],
+      overallCampusAttendance,
     },
     message: 'Attendance analytics loaded',
   });
@@ -447,6 +564,8 @@ const updateAttendanceSettings = asyncHandler(async (req, res) => {
     settings = new AttendanceSettings();
   }
 
+  const previousValue = settings.toObject();
+
   if (minAttendancePercent !== undefined) settings.minAttendancePercent = Number(minAttendancePercent);
   if (defaultSessionDurationMinutes !== undefined) settings.defaultSessionDurationMinutes = Number(defaultSessionDurationMinutes);
   if (verificationRetryLimit !== undefined) settings.verificationRetryLimit = Number(verificationRetryLimit);
@@ -455,6 +574,17 @@ const updateAttendanceSettings = asyncHandler(async (req, res) => {
   if (biometricRetentionDays !== undefined) settings.biometricRetentionDays = Number(biometricRetentionDays);
 
   await settings.save();
+
+  // Audit log for administrative settings modification
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: req.user.role,
+    action: 'settings_update',
+    previousValue,
+    newValue: settings.toObject(),
+    reason: 'Admin modified smart attendance configuration settings',
+    ipAddress: req.ip,
+  });
 
   return res.status(200).json({ success: true, data: settings, message: 'Attendance settings updated successfully' });
 });

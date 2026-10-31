@@ -10,6 +10,7 @@ const Subject = require('../models/Subject');
 const Timetable = require('../models/Timetable');
 const Attendance = require('../models/Attendance');
 const AttendanceSession = require('../models/AttendanceSession');
+const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const AttendanceSettings = require('../models/AttendanceSettings');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
@@ -215,19 +216,48 @@ const getSessionDetails = asyncHandler(async (req, res) => {
     overrideNote: r.overrideNote,
   }));
 
+  // Ensure all enrolled students in class are represented
+  const allStudents = await Student.find({
+    semester: session.semester,
+    branch: { $regex: new RegExp(session.branch, 'i') }
+  }).populate('user', 'name email');
+
+  const recordedStudentIds = new Set(
+    records.filter(r => r.student).map(r => r.student._id.toString())
+  );
+
+  const pendingItems = allStudents
+    .filter(st => !recordedStudentIds.has(st._id.toString()))
+    .map(st => ({
+      _id: `pending-${st._id}`,
+      studentId: st._id,
+      rollNumber: st.rollNumber || 'N/A',
+      name: st.fullName || st.user?.name || 'Student',
+      branch: st.branch || session.branch,
+      section: st.section || session.section,
+      status: 'pending',
+      verificationMethod: session.attendanceMethod || 'face',
+      confidence: null,
+      verifiedAt: null,
+      isManualOverride: false,
+      overrideNote: null,
+    }));
+
+  const fullRoster = [...roster, ...pendingItems];
+
   const stats = {
-    totalStudents: session.totalStudents || roster.length,
-    present: roster.filter(s => s.status === 'present').length,
-    pending: roster.filter(s => s.status === 'pending').length,
-    absent: roster.filter(s => s.status === 'absent').length,
-    needsReview: roster.filter(s => s.status === 'review').length,
+    totalStudents: allStudents.length || session.totalStudents || fullRoster.length,
+    present: fullRoster.filter(s => ['present', 'late'].includes(s.status)).length,
+    pending: fullRoster.filter(s => s.status === 'pending').length,
+    absent: fullRoster.filter(s => s.status === 'absent').length,
+    needsReview: fullRoster.filter(s => s.status === 'review').length,
   };
 
   return res.status(200).json({
     success: true,
     data: {
       session,
-      roster,
+      roster: fullRoster,
       stats,
     },
     message: 'Session details loaded',
@@ -256,6 +286,15 @@ const closeAttendanceSession = asyncHandler(async (req, res) => {
   session.presentCount = presentCount;
   await session.save();
 
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: 'faculty',
+    action: 'close_session',
+    sessionId: session._id,
+    reason: 'Faculty closed session',
+    ipAddress: req.ip
+  });
+
   return res.status(200).json({ success: true, data: session, message: 'Session closed' });
 });
 
@@ -281,6 +320,15 @@ const finalizeAttendanceSession = asyncHandler(async (req, res) => {
   if (!session.closedAt) session.closedAt = new Date();
   await session.save();
 
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: 'faculty',
+    action: 'finalize_session',
+    sessionId: session._id,
+    reason: 'Faculty finalized session attendance',
+    ipAddress: req.ip
+  });
+
   return res.status(200).json({
     success: true,
     data: session,
@@ -290,7 +338,7 @@ const finalizeAttendanceSession = asyncHandler(async (req, res) => {
 
 // POST /api/faculty/attendance/mark-student — Manual toggle/correction
 const markAttendanceStudent = asyncHandler(async (req, res) => {
-  const { attendanceId, status, note = '' } = req.body;
+  const { attendanceId, status, note = '', reason = '' } = req.body;
   if (!attendanceId || !status) {
     throw new ApiError(400, 'attendanceId and status are required');
   }
@@ -298,10 +346,13 @@ const markAttendanceStudent = asyncHandler(async (req, res) => {
   const attendance = await Attendance.findById(attendanceId);
   if (!attendance) throw new ApiError(404, 'Attendance record not found');
 
+  const previousStatus = attendance.status;
+  const finalReason = reason || note || 'Faculty manual adjustment';
+
   attendance.status = status;
   attendance.isManualOverride = true;
   attendance.overrideBy = req.user.userId;
-  attendance.overrideNote = note || 'Faculty manual adjustment';
+  attendance.overrideNote = finalReason;
   attendance.verifiedAt = new Date();
   await attendance.save();
 
@@ -313,6 +364,19 @@ const markAttendanceStudent = asyncHandler(async (req, res) => {
     });
     await AttendanceSession.findByIdAndUpdate(attendance.session, { presentCount });
   }
+
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: 'faculty',
+    action: 'manual_correction',
+    attendanceId: attendance._id,
+    sessionId: attendance.session,
+    affectedStudentId: attendance.student,
+    previousValue: { status: previousStatus },
+    newValue: { status },
+    reason: finalReason,
+    ipAddress: req.ip
+  });
 
   return res.status(200).json({
     success: true,

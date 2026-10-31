@@ -11,7 +11,10 @@ const Subject = require('../models/Subject');
 const Attendance = require('../models/Attendance');
 const AttendanceSession = require('../models/AttendanceSession');
 const FaceEmbedding = require('../models/FaceEmbedding');
+const ConsentRecord = require('../models/ConsentRecord');
+const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const AttendanceSettings = require('../models/AttendanceSettings');
+const pythonAiService = require('../services/pythonAi.service');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -297,7 +300,12 @@ const getActiveSessions = asyncHandler(async (req, res) => {
 // POST /api/student/attendance/join/:sessionId
 const joinAttendanceSession = asyncHandler(async (req, res) => {
   const { sessionId } = req.params;
-  const { verificationMethod = 'face', confidence = 0.94 } = req.body;
+  const {
+    verificationMethod = 'face',
+    confidence = 0.94,
+    liveImageData,
+    qrChallengeToken
+  } = req.body;
 
   const student = await Student.findOne({ user: req.user.userId }).populate('user', 'name');
   if (!student) throw new ApiError(404, 'Student profile not found');
@@ -306,8 +314,52 @@ const joinAttendanceSession = asyncHandler(async (req, res) => {
     .populate('subject', 'name code');
   if (!session) throw new ApiError(404, 'Attendance session not found');
 
-  if (session.status !== 'open') {
+  if (!['open', 'active'].includes(session.status)) {
     throw new ApiError(400, 'This session is no longer active or has been closed');
+  }
+
+  // Branch & semester eligibility check
+  const isSameBranch = !session.branch || !student.branch ||
+    session.branch.toLowerCase().trim() === student.branch.toLowerCase().trim() ||
+    (session.branch.toUpperCase().includes('CSE') && student.branch.toUpperCase().includes('CSE')) ||
+    (session.branch.toUpperCase().includes('COMPUTER') && student.branch.toUpperCase().includes('COMPUTER'));
+
+  if (session.semester !== student.semester || !isSameBranch) {
+    throw new ApiError(403, 'You are not enrolled in this session class/section');
+  }
+
+  // QR challenge token validation if required
+  if (session.attendanceMethod === 'qr_face' || (session.qrChallengeToken && qrChallengeToken)) {
+    if (session.qrChallengeToken !== qrChallengeToken) {
+      throw new ApiError(400, 'Invalid or expired QR code challenge token');
+    }
+    if (session.qrChallengeExpiresAt && new Date() > new Date(session.qrChallengeExpiresAt)) {
+      throw new ApiError(400, 'QR challenge code has expired. Please scan current code.');
+    }
+  }
+
+  // Biometric verification via Python AI Service if face verification is used
+  let verifiedConfidence = confidence;
+  let verificationStatus = 'verified';
+  const targetStatus = verificationMethod === 'manual' ? 'pending' : 'present';
+  const targetVerificationStatus = verificationMethod === 'manual' ? 'pending_review' : verificationStatus;
+
+  if (verificationMethod === 'face') {
+    const faceProfile = await FaceEmbedding.findOne({ student: student._id }).select('+encryptedData');
+    if (!faceProfile || !faceProfile.isActive || !faceProfile.consentGiven || !faceProfile.encryptedData) {
+      throw new ApiError(403, 'Active biometric consent and enrollment required. Please enroll your face first or request manual verification.');
+    }
+
+    if (liveImageData) {
+      const bioResult = await pythonAiService.verifyBiometricTemplate(faceProfile.encryptedData, liveImageData);
+      if (!bioResult || !bioResult.success || !bioResult.isMatch) {
+        throw new ApiError(400, `Biometric verification failed: ${bioResult?.message || 'Face does not match enrolled biometric template'}`);
+      }
+      verifiedConfidence = bioResult.confidence || 0.95;
+      verificationStatus = bioResult.verificationStatus || 'verified';
+    } else if (process.env.NODE_ENV === 'production') {
+      throw new ApiError(400, 'Live camera image capture is required for face biometric verification');
+    }
   }
 
   // Check if attendance already marked for this session
@@ -316,7 +368,7 @@ const joinAttendanceSession = asyncHandler(async (req, res) => {
     student: student._id,
   });
 
-  if (attendance && attendance.status === 'present') {
+  if (attendance && ['present', 'late'].includes(attendance.status)) {
     return res.status(200).json({
       success: true,
       data: {
@@ -327,7 +379,7 @@ const joinAttendanceSession = asyncHandler(async (req, res) => {
         code: session.subject?.code,
         date: session.date,
         time: new Date().toLocaleTimeString(),
-        status: 'present',
+        status: attendance.status,
         verificationMethod: attendance.verificationMethod,
         alreadyMarked: true,
       },
@@ -336,21 +388,27 @@ const joinAttendanceSession = asyncHandler(async (req, res) => {
   }
 
   if (attendance) {
-    attendance.status = 'present';
+    attendance.status = targetStatus;
+    attendance.attendanceStatus = targetStatus;
     attendance.verificationMethod = verificationMethod;
-    attendance.confidence = confidence;
+    attendance.verificationStatus = targetVerificationStatus;
+    attendance.confidence = verificationMethod === 'manual' ? null : verifiedConfidence;
+    attendance.markedAt = new Date();
     attendance.verifiedAt = new Date();
     await attendance.save();
   } else {
     attendance = await Attendance.create({
       session: session._id,
-      subject: session.subject._id,
+      subject: session.subject._id || session.subject,
       student: student._id,
       date: session.date,
       period: session.period,
-      status: 'present',
+      status: targetStatus,
+      attendanceStatus: targetStatus,
       verificationMethod,
-      confidence,
+      verificationStatus: targetVerificationStatus,
+      confidence: verificationMethod === 'manual' ? null : verifiedConfidence,
+      markedAt: new Date(),
       verifiedAt: new Date(),
     });
   }
@@ -358,10 +416,23 @@ const joinAttendanceSession = asyncHandler(async (req, res) => {
   // Update session present count
   const presentCount = await Attendance.countDocuments({
     session: session._id,
-    status: 'present',
+    status: { $in: ['present', 'late'] },
   });
   session.presentCount = presentCount;
   await session.save();
+
+  // Audit log entry
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: 'student',
+    action: 'mark_attendance',
+    attendanceId: attendance._id,
+    sessionId: session._id,
+    affectedStudentId: student._id,
+    newValue: { status: 'present', method: verificationMethod, confidence: verifiedConfidence },
+    reason: 'Student verified attendance check-in',
+    ipAddress: req.ip
+  });
 
   return res.status(200).json({
     success: true,
@@ -373,10 +444,14 @@ const joinAttendanceSession = asyncHandler(async (req, res) => {
       code: session.subject?.code,
       date: session.date,
       time: new Date().toLocaleTimeString(),
-      status: 'present',
-      verificationMethod,
+      status: attendance.status,
+      verificationStatus: attendance.verificationStatus,
+      verificationMethod: attendance.verificationMethod,
+      confidence: attendance.confidence,
     },
-    message: 'Attendance verified and marked successfully! 🎓',
+    message: verificationMethod === 'manual'
+      ? 'Non-biometric verification request submitted. Awaiting faculty confirmation in live roster.'
+      : 'Attendance verified and marked successfully! 🎓',
   });
 });
 
@@ -416,13 +491,39 @@ const getFaceStatus = asyncHandler(async (req, res) => {
 
 // POST /api/student/face/enroll
 const enrollFace = asyncHandler(async (req, res) => {
-  const { consentGiven, samplesCount = 3, qualityScore = 92 } = req.body;
+  const { consentGiven, samplesCount = 3, qualityScore = 92, imageData, imageSamples } = req.body;
   if (!consentGiven) {
     throw new ApiError(400, 'Explicit biometric consent is required for enrollment');
   }
 
   const student = await Student.findOne({ user: req.user.userId });
   if (!student) throw new ApiError(404, 'Student profile not found');
+
+  let encryptedData = null;
+  let templateReference = null;
+  let measuredQuality = qualityScore;
+
+  const candidateImage = imageData || (Array.isArray(imageSamples) && imageSamples.length > 0 ? imageSamples[0] : null);
+
+  // If face image is provided, extract embedding and encrypt with Python AI service
+  if (candidateImage) {
+    try {
+      const aiResult = await pythonAiService.enrollBiometricTemplate(student._id.toString(), candidateImage);
+      if (!aiResult.success) {
+        throw new ApiError(400, aiResult.message || 'Face biometric extraction rejected. Ensure face is centered and lit.');
+      }
+      const bioData = aiResult.data || aiResult;
+      encryptedData = bioData.encryptedData;
+      templateReference = bioData.templateReference;
+      if (bioData.qualitySummary?.averageQuality) {
+        measuredQuality = Math.round(bioData.qualitySummary.averageQuality * 100);
+      }
+    } catch (aiErr) {
+      if (aiErr instanceof ApiError) throw aiErr;
+      console.warn(`[StudentController] AI enrollment error: ${aiErr.message}`);
+      throw new ApiError(400, `Biometric processing error: ${aiErr.message}`);
+    }
+  }
 
   let face = await FaceEmbedding.findOne({ student: student._id });
   if (face) {
@@ -431,8 +532,11 @@ const enrollFace = asyncHandler(async (req, res) => {
     face.enrolledAt = new Date();
     face.isActive = true;
     face.status = 'enrolled';
+    face.enrollmentStatus = 'enrolled';
     face.samplesCaptured = samplesCount;
-    face.imageQualityScore = qualityScore;
+    face.imageQualityScore = measuredQuality;
+    if (encryptedData) face.encryptedData = encryptedData;
+    if (templateReference) face.templateReference = templateReference;
     await face.save();
   } else {
     face = await FaceEmbedding.create({
@@ -442,10 +546,33 @@ const enrollFace = asyncHandler(async (req, res) => {
       enrolledAt: new Date(),
       isActive: true,
       status: 'enrolled',
+      enrollmentStatus: 'enrolled',
       samplesCaptured: samplesCount,
-      imageQualityScore: qualityScore,
+      imageQualityScore: measuredQuality,
+      encryptedData: encryptedData || null,
+      templateReference: templateReference || null,
     });
   }
+
+  // Create explicit ConsentRecord
+  await ConsentRecord.create({
+    student: student._id,
+    consentStatus: 'active',
+    consentTimestamp: new Date(),
+    policyReference: 'CAMPUS-BIO-PRIVACY-v1.0',
+    ipAddress: req.ip || '',
+  });
+
+  // Record audit trail in append-only log
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: 'student',
+    action: 'enroll_biometric',
+    affectedStudentId: student._id,
+    newValue: { status: 'enrolled', samplesCount },
+    reason: 'Student voluntary face biometric enrollment with explicit consent',
+    ipAddress: req.ip
+  });
 
   return res.status(200).json({
     success: true,
@@ -453,6 +580,7 @@ const enrollFace = asyncHandler(async (req, res) => {
       isEnrolled: true,
       status: 'enrolled',
       enrolledAt: face.enrolledAt,
+      qualityScore: measuredQuality,
     },
     message: 'Face biometric enrolled successfully!',
   });
@@ -467,9 +595,30 @@ const revokeFace = asyncHandler(async (req, res) => {
   if (face) {
     face.isActive = false;
     face.status = 'revoked';
+    face.enrollmentStatus = 'revoked';
     face.consentGiven = false;
+    face.encryptedData = null; // Cryptographically purge template
+    face.templateReference = null;
+    face.deletionRequestedAt = new Date();
+    face.deletionCompletedAt = new Date();
     await face.save();
   }
+
+  // Update consent record to withdrawn
+  await ConsentRecord.updateMany(
+    { student: student._id, consentStatus: 'active' },
+    { consentStatus: 'withdrawn', withdrawalTimestamp: new Date() }
+  );
+
+  // Record audit trail in append-only log
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: 'student',
+    action: 'revoke_biometric',
+    affectedStudentId: student._id,
+    reason: 'Student withdrew biometric consent — template purged',
+    ipAddress: req.ip
+  });
 
   return res.status(200).json({
     success: true,

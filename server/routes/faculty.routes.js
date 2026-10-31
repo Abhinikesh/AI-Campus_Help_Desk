@@ -22,6 +22,7 @@ const {
   getStudents,
   raiseComplaint,
 } = require('../controllers/faculty.controller');
+const { getQrChallenge } = require('../controllers/attendance.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 const { allowRoles } = require('../middleware/role.middleware');
 
@@ -39,6 +40,7 @@ router.post('/complaints',          raiseComplaint);
 router.post('/attendance/sessions', createAttendanceSession);
 router.get('/attendance/sessions',  getAttendanceSessions);
 router.get('/attendance/sessions/:id', getSessionDetails);
+router.get('/attendance/sessions/:sessionId/qr-challenge', getQrChallenge);
 router.patch('/attendance/sessions/:id/close', closeAttendanceSession);
 router.patch('/attendance/sessions/:id/finalize', finalizeAttendanceSession);
 router.post('/attendance/mark-student', markAttendanceStudent);
