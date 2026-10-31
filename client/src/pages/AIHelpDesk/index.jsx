@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { aiService } from '../../services/ai.service';
 import {
-  Send, Trash2, Plus, BookOpen, Building2, Map, Flag, Cpu
+  Send, Trash2, Plus, BookOpen, Building2, Map, Flag, Cpu, ArrowLeft
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './AIHelpDesk.css';
@@ -45,6 +47,9 @@ const TypingDots = () => (
    Main component
 ════════════════════════════════════════════════════════════ */
 const AIHelpDesk = () => {
+  const { user } = useAuth();
+  const dashboardLink = user?.role === 'faculty' ? '/faculty/dashboard' : user?.role === 'admin' ? '/admin/dashboard' : '/student/dashboard';
+
   /* chat sessions: [{ id, agentKey, messages[] }] */
   const [sessions,    setSessions]    = useState([]);
   const [activeId,    setActiveId]    = useState(null);
@@ -162,8 +167,26 @@ const AIHelpDesk = () => {
 
       {/* ── LEFT: Session history ── */}
       <aside className="ai-history-panel">
-        <div className="ai-history-header">
+        <div className="ai-history-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="ai-history-title">Recent Chats</span>
+          <Link
+            to={dashboardLink}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '12px',
+              color: '#1E293B',
+              textDecoration: 'none',
+              fontWeight: 600,
+              padding: '4px 8px',
+              borderRadius: '6px',
+              background: '#F1F5F9',
+              border: '1px solid #E2E8F0',
+            }}
+          >
+            <ArrowLeft size={13} /> Dashboard
+          </Link>
         </div>
 
         <div className="ai-history-list">

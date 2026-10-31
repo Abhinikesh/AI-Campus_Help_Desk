@@ -31,6 +31,17 @@ export const AuthProvider = ({ children }) => {
   const login = async (loginId, password, role) => {
     const data = await authService.login({ loginId, password, role });
     if (data.success) {
+      if (data.data?.token) {
+        localStorage.setItem('campus_token', data.data.token);
+      }
+      if (data.data) {
+        setUser({
+          id: data.data.id || data.data.userId,
+          name: data.data.name,
+          role: data.data.role,
+          mustChangePassword: data.data.mustChangePassword,
+        });
+      }
       await fetchUser();
       return data;
     }
@@ -39,6 +50,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async (navigate) => {
     try { await authService.logout(); } catch { /* ignore */ }
+    localStorage.removeItem('campus_token');
     setUser(null);
     if (navigate) navigate('/');
   };

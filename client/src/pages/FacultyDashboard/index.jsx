@@ -85,12 +85,14 @@ const FacultyDashboard = () => {
   const submitAttendance = async () => {
     setSubmitting(true);
     try {
+      const subName = selClass.subject?.name || (typeof selClass.subject === 'string' ? selClass.subject : 'Class');
+      const subCode = selClass.subject?.code || selClass.code || 'CS301';
       const data = students.map(s => ({
         studentId: s._id,
         status: roster[s._id],
-        subjectName: selClass.subject,
+        subjectName: subName,
       }));
-      const res = await facultyService.markAttendance({ subjectCode: selClass.code, attendanceData: data });
+      const res = await facultyService.markAttendance({ subjectCode: subCode, attendanceData: data });
       if (res.success) { setShowModal(false); setSelClass(null); }
     } finally { setSubmitting(false); }
   };
@@ -126,8 +128,8 @@ const FacultyDashboard = () => {
       {/* ── SIDEBAR ── */}
       <aside className="ds-sidebar">
         <Link to="/" className="ds-sidebar-logo">
-          <GraduationCap size={20} color="#1A56DB" strokeWidth={1.75} />
-          <span className="ds-logo-text">CampusSphere <span className="ds-logo-ai">AI</span></span>
+          <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+          <span className="ds-logo-text">CampusSphere</span>
         </Link>
         <div className="ds-user-block">
           <div className="ds-user-name">{facultyName}</div>
@@ -205,23 +207,27 @@ const FacultyDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {timetable.length > 0 ? timetable.map((slot, i) => (
-                    <tr key={i}>
-                      <td>{slot.startTime} – {slot.endTime}</td>
-                      <td className="bold">{slot.subject}</td>
-                      <td><span className="ds-code-badge">{slot.code}</span></td>
-                      <td>{slot.room}</td>
-                      <td>{slot.batch || 'All'}</td>
-                      <td>
-                        <button
-                          className="ds-btn primary sm"
-                          onClick={() => openAttendance(slot)}
-                        >
-                          Mark Attendance
-                        </button>
-                      </td>
-                    </tr>
-                  )) : (
+                  {timetable.length > 0 ? timetable.map((slot, i) => {
+                    const subName = slot.subject?.name || (typeof slot.subject === 'string' ? slot.subject : 'Subject');
+                    const subCode = slot.subject?.code || slot.code || 'N/A';
+                    return (
+                      <tr key={slot._id || i}>
+                        <td>{slot.time || `${slot.startTime} – ${slot.endTime}`}</td>
+                        <td className="bold">{subName}</td>
+                        <td><span className="ds-code-badge">{subCode}</span></td>
+                        <td>{slot.room}</td>
+                        <td>{slot.batch || 'All'}</td>
+                        <td>
+                          <button
+                            className="ds-btn primary sm"
+                            onClick={() => openAttendance(slot)}
+                          >
+                            Mark Attendance
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  }) : (
                     [
                       { time: '9:00–10:00', subject: 'Data Structures', code: 'CS301', room: 'A101', batch: 'CS-3A' },
                       { time: '10:00–11:00', subject: 'Algorithms',      code: 'CS302', room: 'A102', batch: 'CS-3B' },
@@ -336,8 +342,12 @@ const FacultyDashboard = () => {
             {/* Modal header */}
             <div style={{ padding: '20px 24px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Mark Attendance — {selClass.subject}</div>
-                <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>{selClass.code} · Batch: {selClass.batch || 'All'}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>
+                  Mark Attendance — {selClass.subject?.name || (typeof selClass.subject === 'string' ? selClass.subject : 'Class')}
+                </div>
+                <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>
+                  {selClass.subject?.code || selClass.code || ''} · Batch: {selClass.batch || 'All'}
+                </div>
               </div>
               <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: 4 }} onClick={() => setShowModal(false)}>
                 <X size={18} />

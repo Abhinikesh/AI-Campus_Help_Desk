@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { studentService } from '../../services/student.service';
 import {
   Plus, X, CheckCircle, Clock, AlertCircle, Loader2,
-  ChevronDown, Paperclip
+  ChevronDown, Paperclip, ArrowLeft
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Complaints.css';
@@ -86,6 +88,7 @@ const DetailDrawer = ({ complaint, onClose }) => {
 
 /* ════════════════════════════════════════════════════════════ */
 const Complaints = () => {
+  const { user } = useAuth();
   const [complaints,   setComplaints]   = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [showForm,     setShowForm]     = useState(false);
@@ -148,10 +151,19 @@ const Complaints = () => {
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* Page header */}
-      <div className="comp-page-header">
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>Complaints & Grievances</h1>
-          <p style={{ fontSize: 14, color: '#6B7280', margin: '4px 0 0' }}>Raise, track and resolve your campus issues</p>
+      <div className="comp-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <Link
+            to={user?.role === 'faculty' ? '/faculty/dashboard' : user?.role === 'admin' ? '/admin/dashboard' : '/student/dashboard'}
+            className="ds-btn ds-btn-secondary"
+            style={{ height: 32, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <ArrowLeft size={14} /> Dashboard
+          </Link>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>Complaints & Grievances</h1>
+            <p style={{ fontSize: 13, color: '#6B7280', margin: '2px 0 0' }}>Raise, track and resolve your campus issues</p>
+          </div>
         </div>
         <button className="ds-btn primary" onClick={() => setShowForm(true)}>
           <Plus size={15} /> Raise New Complaint

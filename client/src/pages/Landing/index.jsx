@@ -319,9 +319,9 @@ const Landing = () => {
           {/* Left: text */}
           <div>
             <div className="section-label">ABOUT</div>
-            <h2 className="about-title">About CampusSphere AI</h2>
+            <h2 className="about-title">About CampusSphere</h2>
             <p className="about-text">
-              CampusSphere AI is a next-generation smart campus platform built to simplify
+              CampusSphere is a next-generation smart campus platform built to simplify
               every aspect of institutional life. From real-time attendance tracking to an
               AI-powered helpdesk, we bring all campus operations under one roof.
             </p>
@@ -420,7 +420,7 @@ const Landing = () => {
         </div>
 
         <div className="footer-bottom">
-          &copy; 2026 CampusSphere AI. All rights reserved.
+          &copy; 2026 CampusSphere. All rights reserved.
         </div>
       </footer>
 

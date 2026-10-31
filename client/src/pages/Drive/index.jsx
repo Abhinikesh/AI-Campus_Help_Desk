@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { getFiles, uploadFile, downloadFile, shareFile, deleteFile } from '../../services/drive.service';
 import {
   Search, Upload, Download, Share2, Trash2, Grid, List,
-  ChevronRight, ChevronDown, FileText, Folder, X, Loader2
+  ChevronRight, ChevronDown, FileText, Folder, X, Loader2, ArrowLeft
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Drive.css';
@@ -144,7 +145,27 @@ const Drive = () => {
 
       {/* ── LEFT: Folder tree ── */}
       <aside className="drive-sidebar">
-        <div className="drive-sidebar-header">Academic Drive</div>
+        <div className="drive-sidebar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Academic Drive</span>
+          <Link
+            to={user?.role === 'faculty' ? '/faculty/dashboard' : '/student/dashboard'}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '12px',
+              color: '#1E293B',
+              textDecoration: 'none',
+              fontWeight: 600,
+              padding: '3px 8px',
+              borderRadius: '6px',
+              background: '#F1F5F9',
+              border: '1px solid #E2E8F0',
+            }}
+          >
+            <ArrowLeft size={12} /> Exit
+          </Link>
+        </div>
         <nav style={{ padding: '8px 8px' }}>
           {FOLDERS.map(({ key, label }) => (
             <button

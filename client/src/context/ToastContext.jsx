@@ -10,31 +10,51 @@ export const ToastProvider = ({ children }) => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type }]);
     
-    // Auto remove after 3s
+    // Auto remove after 3.5s
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3000);
+    }, 3500);
   }, []);
 
   const removeToast = useCallback((id) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
+  // Provide both addToast and showToast so any component works cleanly
   return (
-    <ToastContext.Provider value={{ addToast }}>
+    <ToastContext.Provider value={{ addToast, showToast: addToast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+      <div style={{
+        position: 'fixed',
+        bottom: 20,
+        right: 20,
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        pointerEvents: 'none',
+      }}>
         {toasts.map(t => (
-          <Toast 
-            key={t.id} 
-            message={t.message} 
-            type={t.type} 
-            onClose={() => removeToast(t.id)} 
-          />
+          <div key={t.id} style={{ pointerEvents: 'auto' }}>
+            <Toast 
+              message={t.message} 
+              type={t.type} 
+              onClose={() => removeToast(t.id)} 
+            />
+          </div>
         ))}
       </div>
     </ToastContext.Provider>
   );
 };
 
-export const useToast = () => useContext(ToastContext);
+export const useToast = () => {
+  const ctx = useContext(ToastContext);
+  if (!ctx) {
+    return {
+      addToast: (msg) => console.log('[Toast fallback]:', msg),
+      showToast: (msg) => console.log('[Toast fallback]:', msg),
+    };
+  }
+  return ctx;
+};

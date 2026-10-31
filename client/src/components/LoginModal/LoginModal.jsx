@@ -275,7 +275,7 @@ const LoginModal = ({ role, onClose }) => {
 
             {apiError && (
               <div className="modal-api-error-text">
-                Incorrect ID or password
+                {apiError}
               </div>
             )}
 

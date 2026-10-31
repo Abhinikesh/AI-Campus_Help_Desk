@@ -11,6 +11,15 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Attach Bearer token from localStorage for resilient authentication across reloads
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('campus_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Do NOT add a global 401 redirect here — ProtectedRoute handles unauthenticated
 // state declaratively. A redirect inside the interceptor causes reload loops.
 api.interceptors.response.use(

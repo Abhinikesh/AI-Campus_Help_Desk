@@ -35,7 +35,24 @@ const LoginPage = () => {
   const { user, loading, getDashboard } = useAuth();
   const [selectedRole, setSelectedRole] = useState(null);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        background: '#0B0F19',
+        gap: '14px',
+        flexDirection: 'column',
+      }}>
+        <div className="spinner" style={{ width: 36, height: 36, borderWidth: 3 }} />
+        <p style={{ color: '#94A3B8', fontFamily: 'Inter, sans-serif', fontSize: 14 }}>
+          Verifying session…
+        </p>
+      </div>
+    );
+  }
   if (user) return <Navigate to={getDashboard(user.role)} replace />;
 
   return (
@@ -48,7 +65,7 @@ const LoginPage = () => {
         {/* Logo + heading */}
         <div className="lp-header">
           <div className="lp-logo-ring">
-            <GraduationCap size={36} strokeWidth={1.5} />
+            <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 48, height: 48, objectFit: 'contain' }} />
           </div>
           <h1 className="lp-title">CampusSphere ERP</h1>
           <p className="lp-subtitle">Choose your role to sign in</p>

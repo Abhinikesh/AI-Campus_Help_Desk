@@ -48,6 +48,7 @@ const setCookieToken = (res, token) => {
  */
 const login = asyncHandler(async (req, res) => {
   const { loginId, password, role } = req.body;
+  console.log(`👉 Login attempt received: loginId="${loginId}", role="${role}", passwordLength=${password?.length}`);
 
   if (!loginId || !password || !role) {
     throw new ApiError(400, 'loginId, password, and role are required');
@@ -61,16 +62,25 @@ const login = asyncHandler(async (req, res) => {
   const user = await User.findOne({ loginId: loginId.trim(), role }).select('+passwordHash');
 
   if (!user) {
+    console.log(`❌ Login failed: User not found for loginId="${loginId}", role="${role}"`);
     throw new ApiError(401, 'Invalid credentials');
   }
 
   if (!user.isActive) {
+    console.log(`❌ Login failed: Account deactivated for loginId="${loginId}"`);
     throw new ApiError(403, 'Your account has been deactivated. Please contact admin.');
   }
 
   const isMatch = await bcrypt.compare(password, user.passwordHash);
   if (!isMatch) {
-    throw new ApiError(401, 'Invalid credentials');
+    // Check if trimmed password matches (common autocomplete/paste issue)
+    const isTrimmedMatch = await bcrypt.compare(password.trim(), user.passwordHash);
+    if (isTrimmedMatch) {
+      console.log(`⚠️ Password matched after trimming trailing/leading whitespace!`);
+    } else {
+      console.log(`❌ Login failed: Password mismatch for user ${user.loginId}`);
+      throw new ApiError(401, 'Invalid credentials');
+    }
   }
 
   // Update last login timestamp
@@ -85,6 +95,7 @@ const login = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     data: {
+      token,
       role:       user.role,
       name:       user.name,
       redirectTo: ROLE_REDIRECTS[user.role],

@@ -110,8 +110,8 @@ const AdminDashboard = () => {
       {/* SIDEBAR */}
       <aside className="ds-sidebar">
         <Link to="/" className="ds-sidebar-logo">
-          <GraduationCap size={20} color="#1A56DB" strokeWidth={1.75} />
-          <span className="ds-logo-text">CampusSphere <span className="ds-logo-ai">AI</span></span>
+          <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+          <span className="ds-logo-text">CampusSphere</span>
         </Link>
         <div className="ds-user-block">
           <div className="ds-user-name">{adminName}</div>

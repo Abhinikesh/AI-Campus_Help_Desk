@@ -32,48 +32,38 @@ const Navbar = () => {
     switch (role) {
       case 'student':
         links = [
-          { name: 'Home', path: '/student/dashboard' },
+          { name: 'Dashboard', path: '/student/dashboard' },
           { name: 'Attendance', path: '/student/attendance' },
           { name: 'Exams', path: '/student/exams' },
           { name: 'Results', path: '/student/results' },
-          { name: 'AI Help Desk', path: '/student/ai-help' },
-          { name: 'Virtual Tour', path: '/student/virtual-tour' },
-          { name: 'Drive', path: '/student/drive' },
-          { name: 'Complaints', path: '/student/complaints' }
+          { name: 'Academic Drive', path: '/student/drive' },
+          { name: 'Complaints', path: '/student/complaints' },
+          { name: 'AI Help Desk', path: '/student/ai-help' }
         ];
         break;
       case 'faculty':
         links = [
-          { name: 'Home', path: '/faculty/dashboard' },
-          { name: 'AI Help Desk', path: '/faculty/ai-help' },
-          { name: 'Virtual Tour', path: '/faculty/virtual-tour' },
-          { name: 'Drive', path: '/faculty/drive' },
-          { name: 'Complaints', path: '/faculty/complaints' }
+          { name: 'Dashboard', path: '/faculty/dashboard' },
+          { name: 'Attendance Mgmt', path: '/faculty/attendance' },
+          { name: 'Timetable', path: '/faculty/timetable' },
+          { name: 'Student Results', path: '/faculty/results' },
+          { name: 'Academic Drive', path: '/faculty/drive' },
+          { name: 'Complaints', path: '/faculty/complaints' },
+          { name: 'AI Help Desk', path: '/faculty/ai-help' }
         ];
         break;
       case 'admin':
         links = [
-          { name: 'Home', path: '/admin/dashboard' },
-          { name: 'Analytics', path: '/admin/analytics' },
+          { name: 'Dashboard', path: '/admin/dashboard' },
+          { name: 'Smart Attendance', path: '/admin/attendance' },
           { name: 'Complaints', path: '/admin/complaints' },
-          { name: 'Announcements', path: '/admin/announcements' }
-        ];
-        break;
-      case 'parent':
-        links = [
-          { name: 'Home', path: '/parent/dashboard' },
-          { name: 'AI Help Desk', path: '/parent/ai-help' },
-          { name: 'Virtual Tour', path: '/parent/virtual-tour' }
-        ];
-        break;
-      case 'admission':
-        links = [
-          { name: 'Home', path: '/admission/dashboard' },
-          { name: 'AI Help Desk', path: '/admission/ai-help' },
-          { name: 'Virtual Tour', path: '/admission/virtual-tour' }
+          { name: 'AI Help Desk', path: '/admin/ai-help' }
         ];
         break;
       default:
+        links = [
+          { name: 'Home', path: '/' }
+        ];
         break;
     }
 
@@ -100,8 +90,8 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-logo-section" onClick={() => window.location.href = '/'}>
-          <GraduationCap className="logo-icon" size={24} color="#1A56DB" />
-          <span className="logo-text">CampusSphere <span className="logo-ai">AI</span></span>
+          <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+          <span className="logo-text">CampusSphere</span>
           <span className={`role-badge ${getRoleBadgeColor(role)}`}>
             {role === 'admission' ? 'NEW ADMISSION' : role.toUpperCase()}
           </span>

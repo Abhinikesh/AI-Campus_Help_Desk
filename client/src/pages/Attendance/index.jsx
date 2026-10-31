@@ -81,8 +81,8 @@ const AttendanceOverview = () => {
       {/* ── Sidebar ── */}
       <aside className="ds-sidebar">
         <Link to="/student/dashboard" className="ds-sidebar-logo">
-          <GraduationCap size={24} color="#1A56DB" />
-          <span className="ds-logo-text">CampusSphere <span className="ds-logo-ai">AI</span></span>
+          <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+          <span className="ds-logo-text">CampusSphere</span>
         </Link>
 
         <div className="ds-user-block">

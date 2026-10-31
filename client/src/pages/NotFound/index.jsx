@@ -18,8 +18,8 @@ const NotFound = () => {
   return (
     <div className="nf-page">
       <div className="nf-logo">
-        <GraduationCap size={20} color="#1A56DB" strokeWidth={1.75} />
-        <span className="nf-logo-text">CampusSphere <span className="nf-logo-ai">AI</span></span>
+        <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+        <span className="nf-logo-text">CampusSphere</span>
       </div>
 
       <div className="nf-body">
