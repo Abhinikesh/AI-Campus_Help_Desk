@@ -1,96 +1,85 @@
-"""Face Quality Validation and Biometric Template Processor."""
-import base64
-import hashlib
-import binascii
+"""Face quality analysis and positioning evaluation."""
 from typing import Dict, Any, Tuple
+import cv2
+import numpy as np
 
-class BiometricProcessor:
-    @staticmethod
-    def validate_image_payload(image_data: str) -> Tuple[bool, str, Dict[str, Any]]:
-        """
-        Validate image format, size, and basic quality metrics.
-        Accepts data URI or raw base64.
-        """
-        if not image_data or not isinstance(image_data, str):
-            return False, "Missing or invalid image payload", {}
+from app.config import Config
+from app.utils.image_utils import compute_image_quality
+from app.recognition.detector import detect_faces, validate_single_face
 
-        clean_b64 = image_data
-        if "base64," in image_data:
-            clean_b64 = image_data.split("base64,")[1]
+def analyze_face_quality(image: np.ndarray) -> Dict[str, Any]:
+    """
+    Comprehensive quality check for biometric enrollment and verification:
+    1. Overall photometric quality (brightness, blur, contrast).
+    2. Single-face detection validation.
+    3. Face bounding box size and centering.
+    """
+    # 1. Photometric check
+    photo_metrics = compute_image_quality(image)
 
-        try:
-            raw_bytes = base64.b64decode(clean_b64)
-        except (binascii.Error, ValueError):
-            return False, "Malformed base64 image data", {}
+    # 2. Face detection
+    boxes = detect_faces(image)
+    face_count = len(boxes)
 
-        byte_length = len(raw_bytes)
-        # Minimum 5KB, Maximum 5MB
-        if byte_length < 5000:
-            return False, "Image size too small or low quality (< 5KB)", {"byteLength": byte_length}
-        if byte_length > 5 * 1024 * 1024:
-            return False, "Image size exceeds limit (> 5MB)", {"byteLength": byte_length}
-
-        # Basic synthetic quality scores for Part 3 service contract
-        quality_score = 0.94
-        illumination_score = 0.91
-        sharpness_score = 0.95
-
-        return True, "Image quality acceptable", {
-            "byteLength": byte_length,
-            "qualityScore": quality_score,
-            "illuminationScore": illumination_score,
-            "sharpnessScore": sharpness_score,
-            "isSuitableForEnrollment": True
-        }
-
-    @staticmethod
-    def extract_template_signature(image_data: str) -> Dict[str, Any]:
-        """
-        Generate feature vector representation signature for Part 3 biometric contract.
-        (Full deep learning facial embedding model is integrated in Part 4).
-        """
-        clean_b64 = image_data.split("base64,")[1] if "base64," in image_data else image_data
-        raw_bytes = base64.b64decode(clean_b64)
-        digest = hashlib.sha3_256(raw_bytes).hexdigest()
-
-        # Simulated 128-dimensional normalized unit vector from deterministic hash seed
-        # for architectural validation before Part 4
-        features = [round(float(int(digest[i:i+2], 16)) / 255.0, 4) for i in range(0, min(64, len(digest)-1), 2)]
-
+    if face_count == 0:
         return {
-            "templateVersion": "v1.0-sha3",
-            "dimensions": len(features),
-            "vector": features,
-            "hashFingerprint": digest[:32]
+            "isValid": False,
+            "status": "NO_FACE_DETECTED",
+            "message": "No face detected in the frame. Please look directly at the camera.",
+            "metrics": photo_metrics,
+            "faceCount": 0
         }
 
-    @staticmethod
-    def verify_templates(live_template: Dict[str, Any], enrolled_template: Dict[str, Any]) -> Tuple[bool, float, str]:
-        """
-        Verify live capture against enrolled template.
-        Returns (is_match, confidence_score, status).
-        """
-        live_vec = live_template.get("vector", [])
-        enrolled_vec = enrolled_template.get("vector", [])
+    if face_count > 1:
+        return {
+            "isValid": False,
+            "status": "MULTIPLE_FACES_DETECTED",
+            "message": f"Multiple faces ({face_count}) detected. Ensure only one person is visible.",
+            "metrics": photo_metrics,
+            "faceCount": face_count
+        }
 
-        if not live_vec or not enrolled_vec or len(live_vec) != len(enrolled_vec):
-            return False, 0.0, "rejected"
+    top, right, bottom, left = boxes[0]
+    face_w = right - left
+    face_h = bottom - top
+    img_h, img_w = image.shape[:2]
 
-        # Cosine / Euclidean distance calculation
-        dot_product = sum(a * b for a, b in zip(live_vec, enrolled_vec))
-        norm_a = sum(a * a for a in live_vec) ** 0.5
-        norm_b = sum(b * b for b in enrolled_vec) ** 0.5
+    # Face size check
+    if face_w < Config.MIN_FACE_SIZE or face_h < Config.MIN_FACE_SIZE:
+        return {
+            "isValid": False,
+            "status": "FACE_TOO_SMALL",
+            "message": f"Face is too small ({face_w}x{face_h}px). Please move closer to the camera.",
+            "metrics": photo_metrics,
+            "faceCount": 1,
+            "faceBox": {"top": top, "right": right, "bottom": bottom, "left": left}
+        }
 
-        if norm_a == 0 or norm_b == 0:
-            return False, 0.0, "rejected"
+    # Face centering check (face center should be within middle 70% of frame)
+    face_center_x = (left + right) / 2.0
+    face_center_y = (top + bottom) / 2.0
 
-        similarity = dot_product / (norm_a * norm_b)
-        confidence = round(max(0.0, min(1.0, similarity)), 4)
+    margin_x = img_w * 0.15
+    margin_y = img_h * 0.15
 
-        # Thresholds
-        if confidence >= 0.82:
-            return True, confidence, "verified"
-        elif confidence >= 0.65:
-            return False, confidence, "pending_review"
-        else:
-            return False, confidence, "rejected"
+    is_centered = (margin_x <= face_center_x <= img_w - margin_x) and (margin_y <= face_center_y <= img_h - margin_y)
+
+    if not photo_metrics["isSuitable"]:
+        return {
+            "isValid": False,
+            "status": "POOR_IMAGE_QUALITY",
+            "message": photo_metrics["feedback"],
+            "metrics": photo_metrics,
+            "faceCount": 1,
+            "faceBox": {"top": top, "right": right, "bottom": bottom, "left": left}
+        }
+
+    return {
+        "isValid": True,
+        "status": "ACCEPTABLE",
+        "message": "Face image is suitable for biometric processing.",
+        "metrics": photo_metrics,
+        "faceCount": 1,
+        "isCentered": is_centered,
+        "faceBox": {"top": top, "right": right, "bottom": bottom, "left": left}
+    }

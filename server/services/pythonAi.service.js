@@ -79,7 +79,7 @@ class PythonAiService {
    */
   async validateImageQuality(imageData) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/internal/biometrics/validate-quality`, {
+      const response = await fetch(`${this.baseUrl}/api/ai/enrollment/validate`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify({ imageData }),
@@ -96,10 +96,10 @@ class PythonAiService {
    * Biometric Enrollment Processing
    */
   async enrollBiometricTemplate(studentId, imageData) {
-    const response = await fetch(`${this.baseUrl}/api/internal/biometrics/enroll`, {
+    const response = await fetch(`${this.baseUrl}/api/ai/enrollment/submit`, {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify({ studentId, imageData }),
+      body: JSON.stringify({ studentId, imageSamples: [imageData], consentGiven: true }),
       signal: AbortSignal.timeout(8000)
     });
 
@@ -110,10 +110,10 @@ class PythonAiService {
    * Biometric Verification Processing
    */
   async verifyBiometricTemplate(encryptedEnrolledData, liveImageData) {
-    const response = await fetch(`${this.baseUrl}/api/internal/biometrics/verify`, {
+    const response = await fetch(`${this.baseUrl}/api/ai/verification/verify`, {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify({ encryptedEnrolledData, liveImageData }),
+      body: JSON.stringify({ encryptedEnrolledData, liveImageData, hasConsent: true }),
       signal: AbortSignal.timeout(8000)
     });
 

@@ -1,31 +1,36 @@
-"""CampusSphere AI - Python Microservice for Attendance Analytics & Biometrics."""
+"""CampusSphere AI - Python Microservice for Attendance Analytics & Face Recognition."""
 import os
 from flask import Flask, jsonify
+from app.config import Config
 
 def create_app(test_config=None):
     app = Flask(__name__)
-    app.config.from_mapping(
-        SECRET_KEY=os.getenv("SECRET_KEY", "campussphere-ai-internal-key-2026"),
-        INTERNAL_API_KEY=os.getenv("INTERNAL_API_KEY", "campussphere-internal-secret-2026"),
-        BIOMETRIC_SECRET_KEY=os.getenv("BIOMETRIC_SECRET_KEY", "campussphere-bio-aes-key-32bytes!!")
-    )
+    app.config.from_object(Config)
 
     if test_config:
         app.config.update(test_config)
 
     # Register Blueprints
+    from app.routes.health_routes import health_bp
+    from app.routes.enrollment_routes import enrollment_bp
+    from app.routes.verification_routes import verification_bp
     from app.routes.analytics_routes import analytics_bp
-    from app.routes.biometric_routes import biometric_bp
 
+    app.register_blueprint(health_bp)
+    app.register_blueprint(enrollment_bp, url_prefix="/api/ai/enrollment")
+    app.register_blueprint(verification_bp, url_prefix="/api/ai/verification")
     app.register_blueprint(analytics_bp, url_prefix="/api/internal/analytics")
-    app.register_blueprint(biometric_bp, url_prefix="/api/internal/biometrics")
 
-    @app.route("/health", methods=["GET"])
-    def health():
-        return jsonify({
-            "status": "healthy",
-            "service": "campussphere-ai-service",
-            "version": "1.0.0"
-        }), 200
+    # Compatibility aliases for Part 3 internal routes
+    app.register_blueprint(enrollment_bp, url_prefix="/api/internal/biometrics", name="compat_biometrics_enroll")
+    app.register_blueprint(verification_bp, url_prefix="/api/internal/biometrics", name="compat_biometrics_verify")
+
+    @app.errorhandler(404)
+    def not_found(e):
+        return jsonify({"success": False, "message": "Endpoint not found"}), 404
+
+    @app.errorhandler(500)
+    def server_error(e):
+        return jsonify({"success": False, "message": "Internal AI service error"}), 500
 
     return app
