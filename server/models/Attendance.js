@@ -40,6 +40,17 @@ const attendanceSchema = new mongoose.Schema(
       default: 1,
       min: 1,
     },
+    /** Multi-period credit for laboratory and combined blocks */
+    periods: {
+      type: [Number],
+      default: undefined,
+    },
+    periodCount: {
+      type: Number,
+      default: 1,
+      min: 1,
+      max: 6,
+    },
     status: {
       type: String,
       enum: ['present', 'absent', 'late', 'excused', 'pending', 'review'],
@@ -126,16 +137,32 @@ attendanceSchema.pre('save', function (next) {
   if (this.overrideReason && !this.correctionReason) {
     this.correctionReason = this.overrideReason;
   }
+
+  // Multi-period array synchronization
+  if (this.periods && Array.isArray(this.periods) && this.periods.length > 0) {
+    this.periodCount = this.periods.length;
+    this.period = this.periods[0];
+  } else if (this.period) {
+    this.periods = [this.period];
+    this.periodCount = 1;
+  }
+
   next();
 });
 
 // Compound unique indexes preventing duplicate marking
+// 1. Period-level timetable uniqueness
 attendanceSchema.index(
   { subject: 1, student: 1, date: 1, period: 1 },
   { unique: true }
 );
 
-attendanceSchema.index({ session: 1, student: 1 });
+// 2. Session-level atomic uniqueness (one record per student per live session)
+attendanceSchema.index(
+  { session: 1, student: 1 },
+  { unique: true, sparse: true }
+);
+
 attendanceSchema.index({ student: 1, status: 1 });
 attendanceSchema.index({ session: 1, status: 1 });
 

@@ -40,7 +40,8 @@ test('Smart Attendance Backend & API Test Suite', async (t) => {
   // Setup: Connect & load fixture identities
   await t.test('Setup: Connect & load fixture identities', async () => {
     if (mongoose.connection.readyState === 0) {
-      await mongoose.connect('mongodb://127.0.0.1:27018/campus-erp');
+      const dbUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27018/test';
+      await mongoose.connect(dbUri);
     }
 
     adminUser = await User.findOne({ role: 'admin' });

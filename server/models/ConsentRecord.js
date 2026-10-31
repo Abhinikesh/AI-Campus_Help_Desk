@@ -47,5 +47,6 @@ const consentRecordSchema = new mongoose.Schema(
 );
 
 consentRecordSchema.index({ student: 1, consentStatus: 1 });
+consentRecordSchema.index({ student: 1, consentTimestamp: -1 });
 
 module.exports = mongoose.model('ConsentRecord', consentRecordSchema);

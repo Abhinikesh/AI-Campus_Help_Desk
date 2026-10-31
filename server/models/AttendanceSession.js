@@ -39,6 +39,23 @@ const attendanceSessionSchema = new mongoose.Schema(
       max: 10,
       default: 1,
     },
+    /** Multi-period support for laboratory and combined block sessions (e.g. [3, 4]) */
+    periods: {
+      type: [Number],
+      default: undefined,
+    },
+    periodCount: {
+      type: Number,
+      default: 1,
+      min: 1,
+      max: 6,
+    },
+    /** Linkage to authoritative weekly timetable entry */
+    timetableEntry: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Timetable',
+      default: null,
+    },
     startTime: {
       type: String,
       default: '09:00 AM',
@@ -46,6 +63,14 @@ const attendanceSessionSchema = new mongoose.Schema(
     endTime: {
       type: String,
       default: '10:00 AM',
+    },
+    actualStartTime: {
+      type: Date,
+      default: null,
+    },
+    actualEndTime: {
+      type: Date,
+      default: null,
     },
     academicYear: {
       type: String,
@@ -117,7 +142,16 @@ const attendanceSessionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Synchronize sessionDate with date, and sessionStatus with status
+// Track original status on document load or after save for transition validation
+attendanceSessionSchema.post('init', function () {
+  this._originalStatus = this.status;
+});
+
+attendanceSessionSchema.post('save', function () {
+  this._originalStatus = this.status;
+});
+
+// Synchronize sessionDate with date, sessionStatus with status, and enforce multi-period / state-machine rules
 attendanceSessionSchema.pre('save', function (next) {
   if (this.date && !this.sessionDate) {
     this.sessionDate = this.date;
@@ -134,6 +168,34 @@ attendanceSessionSchema.pre('save', function (next) {
   if (!this.sessionId) {
     this.sessionId = this._id.toString();
   }
+
+  // Multi-period array synchronization
+  if (this.periods && Array.isArray(this.periods) && this.periods.length > 0) {
+    this.periodCount = this.periods.length;
+    this.period = this.periods[0];
+  } else if (this.period) {
+    this.periods = [this.period];
+    this.periodCount = 1;
+  }
+
+  // Session state transition validation
+  if (!this.isNew && this.isModified('status') && this._originalStatus && this._originalStatus !== this.status) {
+    const allowedTransitions = {
+      scheduled: ['open', 'active', 'cancelled'],
+      open: ['active', 'paused', 'closed', 'finalized', 'cancelled'],
+      active: ['paused', 'closed', 'finalized', 'cancelled'],
+      paused: ['open', 'active', 'closed', 'cancelled'],
+      closed: ['finalized', 'cancelled'],
+      finalized: [], // terminal
+      cancelled: [], // terminal
+      expired: ['closed', 'finalized', 'cancelled'],
+    };
+    const allowed = allowedTransitions[this._originalStatus] || [];
+    if (!allowed.includes(this.status)) {
+      return next(new Error(`Invalid session state transition from "${this._originalStatus}" to "${this.status}"`));
+    }
+  }
+
   next();
 });
 

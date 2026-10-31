@@ -290,66 +290,6 @@ const AttendanceOverview = () => {
                 </div>
               )}
             </div>
-
-            {/* Visual Subject Progress Cards (Circular Gauge) */}
-            {subjects.length > 0 && (
-              <div>
-                <h3 className="ds-section-title" style={{ marginBottom: 14 }}>
-                  Course Progress Rings
-                </h3>
-                <div className="attendance-grid">
-                  {subjects.map((sub) => {
-                    const pct = sub.percentage;
-                    const isLow = sub.total > 0 && pct < minThreshold;
-                    const ringColor = sub.total === 0 ? '#9CA3AF' : isLow ? '#DC2626' : '#16A34A';
-
-                    return (
-                      <div key={sub._id} className={`attendance-card ${isLow ? 'warning-card' : ''}`}>
-                        <div className="att-card-header">
-                          <h4 className="att-subject-name">{sub.subject}</h4>
-                          <span className="att-subject-code">{sub.code}</span>
-                        </div>
-
-                        <div className="progress-ring-container-large">
-                          <svg className="progress-ring-large" viewBox="0 0 100 100">
-                            <circle className="ring-bg" cx="50" cy="50" r="40" />
-                            <circle
-                              className="ring-progress"
-                              style={{ stroke: ringColor }}
-                              cx="50"
-                              cy="50"
-                              r="40"
-                              strokeDasharray="251.2"
-                              strokeDashoffset={sub.total === 0 ? 251.2 : 251.2 * (1 - pct / 100)}
-                            />
-                            <text x="50" y="55" className="ring-text-large">
-                              {sub.total === 0 ? 'N/A' : `${pct}%`}
-                            </text>
-                          </svg>
-                        </div>
-
-                        <div className="att-stats">
-                          <p className="att-ratio">
-                            {sub.attended} attended of {sub.total} conducted
-                          </p>
-                          {isLow && (
-                            <div className="att-classes-needed">
-                              ⚠️ Need next {Math.max(1, Math.ceil((minThreshold * sub.total - 100 * sub.attended) / (100 - minThreshold)))} classes to reach {minThreshold}%
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="att-trend">
-                          <span style={{ color: ringColor, fontWeight: 600 }}>
-                            {sub.total === 0 ? 'No sessions conducted' : pct >= minThreshold ? '✓ On Track' : '⚠️ Attention Required'}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </main>
         )}
       </div>

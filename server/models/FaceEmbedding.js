@@ -67,6 +67,14 @@ const faceProfileSchema = new mongoose.Schema(
       type: String,
       select: false, // never exposed to browser
     },
+    encryptionKeyVersion: {
+      type: String,
+      default: 'v1.0',
+    },
+    algorithm: {
+      type: String,
+      default: 'AES-256-GCM',
+    },
     samplesCaptured: {
       type: Number,
       default: 0,
@@ -114,5 +122,7 @@ faceProfileSchema.pre('save', function (next) {
   }
   next();
 });
+
+faceProfileSchema.index({ student: 1, enrollmentStatus: 1 });
 
 module.exports = mongoose.model('FaceEmbedding', faceProfileSchema);
