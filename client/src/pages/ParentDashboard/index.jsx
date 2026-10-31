@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
+import Sidebar from '../../components/Sidebar/Sidebar';
 import { parentService } from '../../services/parent.service';
 import {
   LayoutDashboard, Users, CalendarCheck, BarChart2, CreditCard,
@@ -62,40 +64,28 @@ const ParentDashboard = () => {
   const attendanceData = studentData?.attendance?.length
     ? studentData.attendance
     : [
-        { subject: 'Data Structures',   total: 42, attended: 38 },
-        { subject: 'Operating Systems', total: 40, attended: 28 },
-        { subject: 'DBMS',              total: 38, attended: 36 },
-        { subject: 'Mathematics',       total: 36, attended: 25 },
+        { subject: 'Design Analysis of Algorithms (DAA)', total: 15, attended: 15 },
+        { subject: 'Formal Languages and Automata Theory (FLAT)', total: 15, attended: 14 },
+        { subject: 'AI Concepts & Applications (AICA)', total: 15, attended: 15 },
+        { subject: 'Computer Graphics (CG)', total: 15, attended: 13 },
+        { subject: 'Software Development Processes (SDP)', total: 15, attended: 14 },
       ];
+
+  const { isCollapsed } = useSidebar();
 
   return (
     <div className="ds-shell">
-      {/* SIDEBAR */}
-      <aside className="ds-sidebar">
-        <Link to="/" className="ds-sidebar-logo">
-          <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          <span className="ds-logo-text">CampusSphere</span>
-        </Link>
-        <div className="ds-user-block">
-          <div className="ds-user-name">{parentName}</div>
-          <span className="ds-role-pill">Parent</span>
-        </div>
-        <nav className="ds-nav">
-          {NAV.map(({ label, icon: Icon, to }) => (
-            <Link key={label} to={to} className={`ds-nav-item${activeNav === label ? ' active' : ''}`} onClick={() => setActiveNav(label)}>
-              <Icon size={16} strokeWidth={1.75} /><span>{label}</span>
-            </Link>
-          ))}
-        </nav>
-        <div className="ds-sidebar-footer">
-          <button className="ds-logout-btn" onClick={() => logout(navigate)}>
-            <LogOut size={16} strokeWidth={1.75} /><span>Logout</span>
-          </button>
-        </div>
-      </aside>
+      {/* ── UNIFIED COLLAPSIBLE SIDEBAR ── */}
+      <Sidebar />
 
       {/* MAIN */}
-      <div className="ds-main">
+      <div
+        className="ds-main"
+        style={{
+          marginLeft: isCollapsed ? 64 : 240,
+          transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
         <header className="ds-header">
           <span className="ds-header-title">Monitoring: {studentName}</span>
           <div className="ds-header-right">

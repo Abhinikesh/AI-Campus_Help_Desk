@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
+import Sidebar from '../../components/Sidebar/Sidebar';
 import {
   FileText, Upload, CreditCard, Award, Phone,
   LogOut, Bell, GraduationCap, CheckCircle, Loader2
@@ -49,39 +51,21 @@ const AdmissionDashboard = () => {
   const [activeNav, setActiveNav] = useState('Application Status');
 
   const applicantName = user?.name || 'Applicant';
+  const { isCollapsed } = useSidebar();
 
   return (
     <div className="ds-shell">
-      {/* SIDEBAR */}
-      <aside className="ds-sidebar">
-        <Link to="/" className="ds-sidebar-logo">
-          <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          <span className="ds-logo-text">CampusSphere</span>
-        </Link>
-        <div className="ds-user-block">
-          <div className="ds-user-name">{applicantName}</div>
-          <span className="ds-role-pill">New Applicant</span>
-        </div>
-        <nav className="ds-nav">
-          {NAV.map(({ label, icon: Icon, to }) => (
-            <Link
-              key={label} to={to}
-              className={`ds-nav-item${activeNav === label ? ' active' : ''}`}
-              onClick={() => setActiveNav(label)}
-            >
-              <Icon size={16} strokeWidth={1.75} /><span>{label}</span>
-            </Link>
-          ))}
-        </nav>
-        <div className="ds-sidebar-footer">
-          <button className="ds-logout-btn" onClick={() => logout(navigate)}>
-            <LogOut size={16} strokeWidth={1.75} /><span>Logout</span>
-          </button>
-        </div>
-      </aside>
+      {/* ── UNIFIED COLLAPSIBLE SIDEBAR ── */}
+      <Sidebar />
 
       {/* MAIN */}
-      <div className="ds-main">
+      <div
+        className="ds-main"
+        style={{
+          marginLeft: isCollapsed ? 64 : 240,
+          transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
         <header className="ds-header">
           <span className="ds-header-title">{activeNav}</span>
           <div className="ds-header-right">

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import AppSidebar from '../../components/AppSidebar/AppSidebar';
+import Sidebar from '../../components/Sidebar/Sidebar';
+import { useSidebar } from '../../context/SidebarContext';
 import { studentService } from '../../services/student.service';
 import { Download, CheckCircle, AlertCircle } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Results.css';
 
 const Results = () => {
+  const { isCollapsed } = useSidebar();
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState([]);
   const [profile, setProfile] = useState(null);
@@ -66,22 +68,26 @@ const Results = () => {
 
   return (
     <div className="ds-shell">
-      <AppSidebar activeLabel="Results" />
+      <Sidebar />
 
-      <div className="ds-main">
-        <header className="ds-topbar">
-          <div>
-            <h1 className="ds-page-title">My Results</h1>
-            <p style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>
-              Semester {profile?.semester} · {profile?.branch || 'CSE'}
-            </p>
+      <div
+        className="ds-main"
+        style={{
+          marginLeft: isCollapsed ? 64 : 240,
+          transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+        <header className="ds-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1 className="ds-header-title">My Results & Grades</h1>
+            <span className="ds-pill blue">Semester {profile?.semester || 5} (2026–2027)</span>
           </div>
           <button style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '9px 18px',
+            display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px',
             background: '#1A56DB', color: '#fff', border: 'none', borderRadius: 8,
-            cursor: 'pointer', fontWeight: 600, fontSize: 14,
+            cursor: 'pointer', fontWeight: 600, fontSize: 13,
           }}>
-            <Download size={16} /> Download Marksheet
+            <Download size={15} /> Download Marksheet
           </button>
         </header>
 

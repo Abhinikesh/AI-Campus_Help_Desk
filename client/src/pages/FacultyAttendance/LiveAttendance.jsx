@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
+import Sidebar from '../../components/Sidebar/Sidebar';
 import attendanceService from '../../services/attendance.service';
 import CameraPreview from '../../components/AttendanceShared/CameraPreview';
 import AttendanceStatusBadge from '../../components/AttendanceShared/AttendanceStatusBadge';
@@ -171,10 +173,12 @@ const LiveAttendance = () => {
 
   const isFinalized = session?.status === 'finalized';
   const isClosed = session?.status === 'closed' || isFinalized;
+  const { isCollapsed } = useSidebar();
 
   return (
     <div className="ds-shell" style={{ background: '#F8FAFC' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '20px 24px' }}>
+      <Sidebar />
+      <div style={{ marginLeft: isCollapsed ? 64 : 240, transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)', width: '100%', padding: '20px 24px' }}>
         {/* Top Control Bar */}
         <div
           style={{
@@ -208,7 +212,7 @@ const LiveAttendance = () => {
                 <AttendanceStatusBadge status={session?.status || 'open'} />
               </div>
               <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                Class: <strong>{session?.branch || 'CSE'}-{session?.semester || 4} ({session?.section || 'A'})</strong> • Period {session?.period} • {session?.date}
+                Class: <strong>{session?.branch || 'CSE'}-{session?.semester || 5} ({session?.section || 'A'})</strong> • Period {session?.period} • {session?.date}
               </div>
             </div>
           </div>

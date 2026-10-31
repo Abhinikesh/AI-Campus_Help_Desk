@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
+import Sidebar from '../../components/Sidebar/Sidebar';
 import { facultyService } from '../../services/faculty.service';
 import {
   LayoutDashboard, BookOpen, CalendarCheck, Users, Megaphone,
@@ -121,42 +123,26 @@ const FacultyDashboard = () => {
   }
 
   const facultyName = profile?.userId?.name || user?.name || 'Faculty';
+  const { isCollapsed } = useSidebar();
 
   return (
     <div className="ds-shell">
-
-      {/* ── SIDEBAR ── */}
-      <aside className="ds-sidebar">
-        <Link to="/" className="ds-sidebar-logo">
-          <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          <span className="ds-logo-text">CampusSphere</span>
-        </Link>
-        <div className="ds-user-block">
-          <div className="ds-user-name">{facultyName}</div>
-          <span className="ds-role-pill">Faculty</span>
-        </div>
-        <nav className="ds-nav">
-          {NAV.map(({ label, icon: Icon, to }) => (
-            <Link
-              key={label} to={to}
-              className={`ds-nav-item${activeNav === label ? ' active' : ''}`}
-              onClick={() => setActiveNav(label)}
-            >
-              <Icon size={16} strokeWidth={1.75} /><span>{label}</span>
-            </Link>
-          ))}
-        </nav>
-        <div className="ds-sidebar-footer">
-          <button className="ds-logout-btn" onClick={() => logout(navigate)}>
-            <LogOut size={16} strokeWidth={1.75} /><span>Logout</span>
-          </button>
-        </div>
-      </aside>
+      {/* ── UNIFIED COLLAPSIBLE SIDEBAR ── */}
+      <Sidebar />
 
       {/* ── MAIN ── */}
-      <div className="ds-main">
+      <div
+        className="ds-main"
+        style={{
+          marginLeft: isCollapsed ? 64 : 240,
+          transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
         <header className="ds-header">
-          <span className="ds-header-title">{activeNav}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span className="ds-header-title">Faculty Portal</span>
+            <span className="ds-pill blue">Semester 5 (2026–2027)</span>
+          </div>
           <div className="ds-header-right">
             <button className="ds-bell-btn"><Bell size={18} /><span className="ds-bell-dot" /></button>
             <div className="ds-avatar">{initials(facultyName)}</div>
@@ -229,10 +215,11 @@ const FacultyDashboard = () => {
                     );
                   }) : (
                     [
-                      { time: '9:00–10:00', subject: 'Data Structures', code: 'CS301', room: 'A101', batch: 'CS-3A' },
-                      { time: '10:00–11:00', subject: 'Algorithms',      code: 'CS302', room: 'A102', batch: 'CS-3B' },
-                      { time: '12:00–1:00',  subject: 'DBMS Lab',        code: 'CS303L', room: 'Lab 2', batch: 'CS-3A' },
-                      { time: '2:00–3:00',   subject: 'OS Theory',       code: 'CS304', room: 'A105', batch: 'CS-3A' },
+                      { time: '08:10–09:00', subject: 'Design Analysis of Algorithms (DAA)', code: 'CS501', room: 'AS17', batch: '5 CSE-A' },
+                      { time: '09:00–09:50', subject: 'Formal Languages & Automata Theory (FLAT)', code: 'CS502', room: 'AS17', batch: '5 CSE-A' },
+                      { time: '09:50–10:40', subject: 'AI Concepts & Applications (AICA)', code: 'CS503', room: 'AS17', batch: '5 CSE-A' },
+                      { time: '11:30–12:20', subject: 'Computer Graphics (CG)', code: 'CS504', room: 'AS17', batch: '5 CSE-A' },
+                      { time: '13:10–14:00', subject: 'Software Development Processes (SDP)', code: 'CS505', room: 'AS17', batch: '5 CSE-A' },
                     ].map((s, i) => (
                       <tr key={i}>
                         <td>{s.time}</td>
@@ -261,9 +248,10 @@ const FacultyDashboard = () => {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {(profile?.subjects?.length ? profile.subjects : [
-                  { name: 'Data Structures', code: 'CS301', credits: 4, semester: '5th' },
-                  { name: 'Algorithms',       code: 'CS302', credits: 4, semester: '5th' },
-                  { name: 'DBMS',             code: 'CS303', credits: 3, semester: '5th' },
+                  { name: 'Design Analysis of Algorithms', code: 'CS501', credits: 4, semester: '5th' },
+                  { name: 'Formal Languages and Automata Theory', code: 'CS502', credits: 4, semester: '5th' },
+                  { name: 'AI Concepts & Applications', code: 'CS503', credits: 4, semester: '5th' },
+                  { name: 'Computer Graphics', code: 'CS504', credits: 3, semester: '5th' },
                 ]).map((s, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #F4F5F7' }}>
                     <div>

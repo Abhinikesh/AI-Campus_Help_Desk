@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
+import Sidebar from '../../components/Sidebar/Sidebar';
 import { facultyService } from '../../services/faculty.service';
 import EmptyState from '../../components/AttendanceShared/EmptyState';
 import {
@@ -67,47 +69,21 @@ const FacultyResults = () => {
     ) : true
   );
 
+  const { isCollapsed } = useSidebar();
+
   return (
     <div className="ds-shell">
-      {/* ── Sidebar ── */}
-      <aside className="ds-sidebar">
-        <Link to="/faculty/dashboard" className="ds-sidebar-logo">
-          <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          <span className="ds-logo-text">CampusSphere</span>
-        </Link>
-
-        <div className="ds-user-block">
-          <div className="ds-user-name">{facultyName}</div>
-          <span className="ds-role-pill">Academic Assessment</span>
-        </div>
-
-        <nav className="ds-nav">
-          {NAV.map((item) => {
-            const Icon = item.icon;
-            const active = item.to === '/faculty/results';
-            return (
-              <Link
-                key={item.label}
-                to={item.to}
-                className={`ds-nav-item ${active ? 'active' : ''}`}
-              >
-                <Icon size={16} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="ds-sidebar-footer">
-          <button type="button" className="ds-logout-btn" onClick={logout}>
-            <LogOut size={16} />
-            <span>Sign Out</span>
-          </button>
-        </div>
-      </aside>
+      {/* ── UNIFIED COLLAPSIBLE SIDEBAR ── */}
+      <Sidebar />
 
       {/* ── Main Content ── */}
-      <div className="ds-main">
+      <div
+        className="ds-main"
+        style={{
+          marginLeft: isCollapsed ? 64 : 240,
+          transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
         <header className="ds-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link to="/faculty/dashboard" className="ds-btn ds-btn-secondary" style={{ padding: '4px 8px', height: 30 }}>
@@ -117,7 +93,7 @@ const FacultyResults = () => {
           </div>
 
           <div className="ds-header-right">
-            <span className="ds-pill blue">CSE Dept • Semester 4</span>
+            <span className="ds-pill blue">CSE Dept • Semester 5</span>
             <div className="ds-avatar">{initials(facultyName)}</div>
           </div>
         </header>
@@ -162,11 +138,11 @@ const FacultyResults = () => {
                       <th>Roll Number</th>
                       <th>Student Name</th>
                       <th>Branch & Section</th>
-                      <th style={{ textAlign: 'center' }}>CS201 (DSA)</th>
-                      <th style={{ textAlign: 'center' }}>CS202 (DBMS)</th>
-                      <th style={{ textAlign: 'center' }}>CS203 (OS)</th>
-                      <th style={{ textAlign: 'center' }}>CS205 (Networks)</th>
-                      <th style={{ textAlign: 'center' }}>CS207 (Web)</th>
+                      <th style={{ textAlign: 'center' }}>CS501 (DAA)</th>
+                      <th style={{ textAlign: 'center' }}>CS502 (FLAT)</th>
+                      <th style={{ textAlign: 'center' }}>CS503 (AICA)</th>
+                      <th style={{ textAlign: 'center' }}>CS504 (CG)</th>
+                      <th style={{ textAlign: 'center' }}>CS505 (SDP)</th>
                       <th style={{ textAlign: 'center' }}>Average</th>
                     </tr>
                   </thead>

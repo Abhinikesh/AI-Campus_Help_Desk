@@ -2,7 +2,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
 import { studentService } from '../../services/student.service';
+import attendanceService from '../../services/attendance.service';
+import Sidebar from '../../components/Sidebar/Sidebar';
 import {
   LayoutDashboard, BookOpen, CalendarCheck, BarChart2,
   Folder, Flag, MessageCircle, LogOut, Bell, ChevronRight,
@@ -10,17 +13,6 @@ import {
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Student.css';
-
-// ── Nav items ─────────────────────────────────────────────────
-const NAV = [
-  { label: 'Dashboard',       icon: LayoutDashboard, to: '/student/dashboard' },
-  { label: 'My Courses',      icon: BookOpen,         to: '/student/results'   },
-  { label: 'Attendance',      icon: CalendarCheck,    to: '/student/attendance' },
-  { label: 'Results & Grades',icon: BarChart2,        to: '/student/results'   },
-  { label: 'Academic Drive',  icon: Folder,           to: '/student/drive'     },
-  { label: 'Complaints',      icon: Flag,             to: '/student/complaints' },
-  { label: 'AI Help Desk',    icon: MessageCircle,    to: '/student/ai-help'   },
-];
 
 // ── Initials helper ───────────────────────────────────────────
 const initials = (name = '') =>
@@ -47,30 +39,37 @@ const gradePill = (grade = '') => {
 // ══════════════════════════════════════════════════════════════
 const StudentDashboard = () => {
   const { user, logout } = useAuth();
+  const { isCollapsed } = useSidebar();
   const navigate = useNavigate();
 
   const [loading,       setLoading]       = useState(true);
   const [profile,       setProfile]       = useState(null);
   const [announcements, setAnnouncements] = useState([]);
   const [complaints,    setComplaints]    = useState([]);
-  const [activeNav,     setActiveNav]     = useState('Dashboard');
+  const [attendance,    setAttendance]    = useState([]);
+  const [results,       setResults]       = useState([]);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
       try {
         setLoading(true);
-        const [profRes, annRes, compRes] = await Promise.all([
-          studentService.getProfile(),
-          studentService.getAnnouncements(),
-          studentService.getComplaints(),
+        const [profRes, annRes, compRes, attRes, resRes] = await Promise.all([
+          studentService.getProfile().catch(() => ({ success: false })),
+          studentService.getAnnouncements().catch(() => ({ success: false })),
+          studentService.getComplaints().catch(() => ({ success: false })),
+          attendanceService.getStudentAttendance().catch(() => ({ success: false })),
+          studentService.getResults().catch(() => ({ success: false })),
         ]);
+
         if (profRes.success)  setProfile(profRes.data);
         if (annRes.success && annRes.data.length > 0)
           setAnnouncements(annRes.data.slice(0, 4));
-        else if (profRes.success && profRes.data.announcements?.length)
-          setAnnouncements(profRes.data.announcements.slice(0, 4));
         if (compRes.success)  setComplaints(compRes.data);
+        if (attRes.success && attRes.data?.length > 0)
+          setAttendance(attRes.data);
+        if (resRes.success && resRes.data?.length > 0)
+          setResults(resRes.data);
       } finally {
         setLoading(false);
       }
@@ -86,74 +85,65 @@ const StudentDashboard = () => {
     );
   }
 
-  const studentName  = profile?.userId?.name || user?.name || 'Student';
-  const attendanceAvg = profile?.attendance?.length
+  const studentName = profile?.fullName || profile?.userId?.name || user?.name || 'Student';
+  const semester = profile?.semester || 5;
+  const branch = profile?.branch || 'CSE';
+
+  // 5th Sem real subjects attendance average
+  const attendanceAvg = attendance.length
     ? Math.round(
-        profile.attendance.reduce((acc, s) =>
+        attendance.reduce((acc, s) =>
           acc + (s.total > 0 ? (s.attended / s.total) * 100 : 0), 0
-        ) / profile.attendance.length
+        ) / attendance.length
       )
-    : 84;
+    : 88;
 
-  const cgpa = profile?.results?.length
-    ? (profile.results.reduce((s, r) => s + (r.marks || 0), 0) /
-       profile.results.length / 10).toFixed(1)
-    : '8.4';
+  const cgpa = results.length
+    ? (results.reduce((s, r) => s + (r.marks || 0), 0) / results.length / 10).toFixed(1)
+    : '8.6';
 
-  // sample courses if none from API
-  const SAMPLE_COURSES = [
-    { code: 'CS301', name: 'Data Structures', faculty: 'Dr. Sharma', next: 'Mon 9:00 AM', progress: 68 },
-    { code: 'CS302', name: 'Operating Systems', faculty: 'Prof. Mehta', next: 'Mon 11:00 AM', progress: 52 },
-    { code: 'CS303', name: 'DBMS', faculty: 'Dr. Iyer', next: 'Tue 10:00 AM', progress: 80 },
+  // 5th Sem Courses
+  const coursesList = [
+    { code: 'CS501', name: 'Design Analysis of Algorithms (DAA)', faculty: 'Prof. Neha Singh', next: 'Mon 08:10 AM', progress: 85 },
+    { code: 'CS502', name: 'Formal Languages and Automata Theory (FLAT)', faculty: 'Prof. Poonam Nandal', next: 'Mon 09:00 AM', progress: 80 },
+    { code: 'CS503', name: 'AI Concepts & Applications (AICA)', faculty: 'Prof. Meeta Singh', next: 'Tue 08:10 AM', progress: 90 },
+    { code: 'CS504', name: 'Computer Graphics (CG)', faculty: 'Prof. Ginni Sehgal', next: 'Tue 09:50 AM', progress: 75 },
+    { code: 'CS505', name: 'Software Development Processes (SDP)', faculty: 'Prof. Swati Hans', next: 'Wed 08:10 AM', progress: 88 },
   ];
+
+  const fallbackAttendance = [
+    { subject: 'Design Analysis of Algorithms', code: 'CS501', total: 15, attended: 15 },
+    { subject: 'Formal Languages and Automata Theory', code: 'CS502', total: 15, attended: 14 },
+    { subject: 'Artificial Intelligence Concepts & Apps', code: 'CS503', total: 15, attended: 15 },
+    { subject: 'Computer Graphics', code: 'CS504', total: 15, attended: 13 },
+    { subject: 'Software Development Processes', code: 'CS505', total: 15, attended: 14 },
+    { subject: 'Design Thinking & Innovation - III', code: 'CS506', total: 15, attended: 15 },
+    { subject: 'Entrepreneurship & Startups', code: 'CS507', total: 15, attended: 14 },
+  ];
+
+  const displayAttendance = attendance.length > 0 ? attendance : fallbackAttendance;
 
   return (
     <div className="ds-shell">
+      {/* ── UNIFIED COLLAPSIBLE SIDEBAR ── */}
+      <Sidebar />
 
-      {/* ── SIDEBAR ── */}
-      <aside className="ds-sidebar">
-        <Link to="/" className="ds-sidebar-logo">
-          <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          <span className="ds-logo-text">
-            CampusSphere
-          </span>
-        </Link>
-
-        <div className="ds-user-block">
-          <div className="ds-user-name">{studentName}</div>
-          <span className="ds-role-pill">Student</span>
-        </div>
-
-        <nav className="ds-nav">
-          {NAV.map(({ label, icon: Icon, to }) => (
-            <Link
-              key={label}
-              to={to}
-              className={`ds-nav-item${activeNav === label ? ' active' : ''}`}
-              onClick={() => setActiveNav(label)}
-            >
-              <Icon size={16} strokeWidth={1.75} />
-              <span>{label}</span>
-            </Link>
-          ))}
-        </nav>
-
-        <div className="ds-sidebar-footer">
-          <button className="ds-logout-btn" onClick={() => logout(navigate)}>
-            <LogOut size={16} strokeWidth={1.75} />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* ── MAIN ── */}
-      <div className="ds-main">
-
+      {/* ── MAIN CONTENT ── */}
+      <div
+        className="ds-main"
+        style={{
+          marginLeft: isCollapsed ? 64 : 240,
+          transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
         {/* Top header */}
         <header className="ds-header">
-          <span className="ds-header-title">{activeNav}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span className="ds-header-title">Student Dashboard</span>
+            <span className="ds-pill blue">Semester {semester} • {branch}</span>
+          </div>
           <div className="ds-header-right">
-            <button className="ds-bell-btn" aria-label="Notifications">
+            <button className="ds-bell-btn" aria-label="Notifications" title="Notifications">
               <Bell size={18} />
               <span className="ds-bell-dot" />
             </button>
@@ -174,34 +164,40 @@ const StudentDashboard = () => {
             </div>
             <div className="ds-stat-card">
               <div className="ds-stat-label">Courses Enrolled</div>
-              <div className="ds-stat-value">{profile?.attendance?.length || 6}</div>
-              <div className="ds-stat-trend neu">This semester</div>
+              <div className="ds-stat-value">{displayAttendance.length}</div>
+              <div className="ds-stat-trend neu">Semester {semester}</div>
             </div>
             <div className="ds-stat-card">
-              <div className="ds-stat-label">Pending Assignments</div>
-              <div className="ds-stat-value">3</div>
-              <div className="ds-stat-trend down">▼ 2 due this week</div>
+              <div className="ds-stat-label">Active Grievances</div>
+              <div className="ds-stat-value">{complaints.length}</div>
+              <div className="ds-stat-trend neu">Campus Issues</div>
             </div>
             <div className="ds-stat-card">
               <div className="ds-stat-label">CGPA</div>
               <div className="ds-stat-value">{cgpa}</div>
-              <div className="ds-stat-trend up">▲ +0.2 this semester</div>
+              <div className="ds-stat-trend up">▲ Current Semester</div>
             </div>
           </div>
 
           {/* ── ATTENDANCE OVERVIEW ── */}
           <div className="ds-card">
             <div className="ds-card-header">
-              <span className="ds-section-title">Attendance Overview</span>
+              <div>
+                <span className="ds-section-title">Attendance Overview (Semester {semester})</span>
+                <p style={{ margin: '3px 0 0', fontSize: 13, color: '#6B7280' }}>
+                  Real-time lecture presence and biometric logs
+                </p>
+              </div>
               <Link to="/student/attendance" className="ds-view-all">View All →</Link>
             </div>
 
             {/* Table */}
-            <div className="ds-table-wrap" style={{ marginBottom: 20 }}>
+            <div className="ds-table-wrap">
               <table className="ds-table">
                 <thead>
                   <tr>
                     <th>Subject</th>
+                    <th>Code</th>
                     <th>Total Classes</th>
                     <th>Attended</th>
                     <th>Percentage</th>
@@ -209,20 +205,15 @@ const StudentDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {(profile?.attendance?.length ? profile.attendance : [
-                    { subject: 'Data Structures',   code: 'CS301', total: 42, attended: 38 },
-                    { subject: 'Operating Systems', code: 'CS302', total: 40, attended: 30 },
-                    { subject: 'DBMS',              code: 'CS303', total: 38, attended: 36 },
-                    { subject: 'Computer Networks', code: 'CS304', total: 36, attended: 20 },
-                    { subject: 'Software Engg.',    code: 'CS305', total: 30, attended: 24 },
-                  ]).map((s, i) => {
-                    const pct = s.total > 0 ? Math.round((s.attended / s.total) * 100) : 0;
+                  {displayAttendance.slice(0, 7).map((s, i) => {
+                    const pct = s.total > 0 ? Math.round((s.attended / s.total) * 100) : 100;
                     return (
                       <tr key={i}>
                         <td className="bold">{s.subject}</td>
+                        <td><span className="ds-code-badge">{s.code || `CS50${i+1}`}</span></td>
                         <td>{s.total}</td>
                         <td>{s.attended}</td>
-                        <td>{pct}%</td>
+                        <td style={{ fontWeight: 600 }}>{pct}%</td>
                         <td><span className={`ds-pill ${pillClass(pct)}`}>{pillLabel(pct)}</span></td>
                       </tr>
                     );
@@ -230,40 +221,21 @@ const StudentDashboard = () => {
                 </tbody>
               </table>
             </div>
-
-            {/* Progress bars */}
-            <div>
-              {(profile?.attendance?.length ? profile.attendance : [
-                { subject: 'Data Structures',   total: 42, attended: 38 },
-                { subject: 'Operating Systems', total: 40, attended: 30 },
-                { subject: 'DBMS',              total: 38, attended: 36 },
-                { subject: 'Computer Networks', total: 36, attended: 20 },
-                { subject: 'Software Engg.',    total: 30, attended: 24 },
-              ]).slice(0, 5).map((s, i) => {
-                const pct = s.total > 0 ? Math.round((s.attended / s.total) * 100) : 0;
-                return (
-                  <div key={i} className="att-subject-row">
-                    <div className="att-subject-name">{s.subject}</div>
-                    <div className="att-bar-wrap">
-                      <div className="ds-bar-track">
-                        <div className={`ds-bar-fill ${barClass(pct)}`} style={{ width: `${pct}%` }} />
-                      </div>
-                    </div>
-                    <div className="att-pct">{pct}%</div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
 
-          {/* ── MY COURSES ── */}
+          {/* ── 5TH SEM COURSES ── */}
           <div className="ds-card">
             <div className="ds-card-header">
-              <span className="ds-section-title">My Courses</span>
-              <Link to="/student/results" className="ds-view-all">View All →</Link>
+              <div>
+                <span className="ds-section-title">Enrolled Courses (Semester {semester} CSE-A)</span>
+                <p style={{ margin: '3px 0 0', fontSize: 13, color: '#6B7280' }}>
+                  Official college timetable subjects and instructors
+                </p>
+              </div>
+              <Link to="/student/results" className="ds-view-all">View Syllabus →</Link>
             </div>
             <div className="courses-grid">
-              {SAMPLE_COURSES.map((c, i) => (
+              {coursesList.map((c, i) => (
                 <div key={i} className="course-card">
                   <div className="course-code">{c.code}</div>
                   <div className="course-name">{c.name}</div>
@@ -271,7 +243,7 @@ const StudentDashboard = () => {
                   <div className="course-next">{c.next}</div>
                   <div>
                     <div className="course-prog-label">
-                      <span>Progress</span><span>{c.progress}%</span>
+                      <span>Course Progress</span><span>{c.progress}%</span>
                     </div>
                     <div className="ds-bar-track" style={{ height: 6 }}>
                       <div className="ds-bar-fill" style={{ width: `${c.progress}%` }} />
@@ -282,44 +254,54 @@ const StudentDashboard = () => {
             </div>
           </div>
 
-          {/* ── RESULTS TABLE ── */}
+          {/* ── RESULTS & GRADES ── */}
           <div className="ds-card">
             <div className="ds-card-header">
-              <span className="ds-section-title">Results & Grades</span>
-              <Link to="/student/results" className="ds-view-all">View All →</Link>
+              <span className="ds-section-title">Academic Results & Grades (Semester {semester})</span>
+              <Link to="/student/results" className="ds-view-all">Full Marksheet →</Link>
             </div>
             <div className="ds-table-wrap">
               <table className="ds-table">
                 <thead>
                   <tr>
                     <th>Subject</th>
-                    <th>Internal</th>
-                    <th>External</th>
-                    <th>Total</th>
+                    <th>Code</th>
+                    <th>Credits</th>
+                    <th>Marks</th>
                     <th>Grade</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(profile?.results?.length ? profile.results.slice(0, 5) : [
-                    { subject: 'Data Structures',   internal: 28, external: 68, total: 96,  grade: 'O'  },
-                    { subject: 'Operating Systems', internal: 24, external: 55, total: 79,  grade: 'B+' },
-                    { subject: 'DBMS',              internal: 30, external: 72, total: 102, grade: 'O'  },
-                    { subject: 'Computer Networks', internal: 20, external: 48, total: 68,  grade: 'C'  },
-                    { subject: 'Software Engg.',    internal: 26, external: 60, total: 86,  grade: 'A'  },
+                  {(results.length > 0 ? results.slice(0, 5) : [
+                    { subject: 'Design Analysis of Algorithms', code: 'CS501', credits: 4, marks: 88, grade: 'A' },
+                    { subject: 'Formal Languages and Automata Theory', code: 'CS502', credits: 4, marks: 76, grade: 'B+' },
+                    { subject: 'Artificial Intelligence Concepts & Apps', code: 'CS503', credits: 4, marks: 92, grade: 'A+' },
+                    { subject: 'Computer Graphics', code: 'CS504', credits: 3, marks: 84, grade: 'A' },
+                    { subject: 'Software Development Processes', code: 'CS505', credits: 3, marks: 80, grade: 'A' },
                   ]).map((r, i) => (
                     <tr key={i}>
                       <td className="bold">{r.subject}</td>
-                      <td>{r.internal ?? Math.round((r.marks||0) * 0.3)}</td>
-                      <td>{r.external ?? Math.round((r.marks||0) * 0.7)}</td>
-                      <td>{r.total ?? r.marks}</td>
-                      <td><span className={`ds-pill ${gradePill(r.grade)}`}>{r.grade}</span></td>
+                      <td><span className="ds-code-badge">{r.code}</span></td>
+                      <td>{r.credits || 3}</td>
+                      <td style={{ fontWeight: 600 }}>{r.marks} / 100</td>
+                      <td>
+                        <span className={`ds-pill ${gradePill(r.grade)}`}>
+                          {r.grade}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ color: '#16A34A', fontWeight: 600, fontSize: 13 }}>
+                          Pass
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
             <div style={{ textAlign: 'right', marginTop: 14, fontSize: 15, fontWeight: 700, color: '#111827' }}>
-              CGPA: {cgpa}
+              Cumulative CGPA: {cgpa} / 10
             </div>
           </div>
 
@@ -328,7 +310,7 @@ const StudentDashboard = () => {
             {/* Announcements */}
             <div className="ds-card">
               <div className="ds-card-header">
-                <span className="ds-section-title">Announcements</span>
+                <span className="ds-section-title">Campus Announcements</span>
               </div>
               {announcements.length > 0 ? announcements.map((ann, i) => (
                 <div key={ann._id || i} className="ann-item">
@@ -339,22 +321,23 @@ const StudentDashboard = () => {
                   <div className="ann-body">{ann.body}</div>
                 </div>
               )) : (
-                <div className="ds-empty">No recent announcements.</div>
+                <div className="ds-empty">No new announcements at this time.</div>
               )}
             </div>
 
             {/* Quick Links */}
             <div className="ds-card">
               <div className="ds-card-header">
-                <span className="ds-section-title">Quick Links</span>
+                <span className="ds-section-title">Quick Portals</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
-                  { label: 'My Timetable',    to: '/student/exams',      icon: CalendarCheck },
-                  { label: 'Academic Drive',  to: '/student/drive',      icon: Folder        },
-                  { label: 'AI Help Desk',    to: '/student/ai-help',    icon: MessageCircle },
-                  { label: 'Raise Complaint', to: '/student/complaints', icon: Flag          },
-                  { label: 'Results',         to: '/student/results',    icon: BarChart2     },
+                  { label: 'Smart Attendance', to: '/student/attendance', icon: CalendarCheck },
+                  { label: 'Semester Exams',   to: '/student/exams',      icon: GraduationCap },
+                  { label: 'Marks & Results',  to: '/student/results',    icon: BarChart2     },
+                  { label: 'Academic Drive',   to: '/student/drive',      icon: Folder        },
+                  { label: 'Campus Grievance', to: '/student/complaints', icon: Flag          },
+                  { label: 'AI Help Desk',     to: '/student/ai-help',    icon: MessageCircle },
                 ].map(({ label, to, icon: Icon }) => (
                   <Link key={label} to={to} className="ds-quicklink">
                     <div className="ds-quicklink-left">
@@ -370,7 +353,6 @@ const StudentDashboard = () => {
 
         </div>
       </div>
-      
     </div>
   );
 };

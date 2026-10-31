@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
 import attendanceService from '../../services/attendance.service';
+import Sidebar from '../../components/Sidebar/Sidebar';
 import CameraPreview from '../../components/AttendanceShared/CameraPreview';
 import AttendanceStatusBadge from '../../components/AttendanceShared/AttendanceStatusBadge';
 import ConfirmationDialog from '../../components/AttendanceShared/ConfirmationDialog';
@@ -134,48 +136,21 @@ const FaceRegistration = () => {
   };
 
   const studentName = user?.name || 'Student';
+  const { isCollapsed } = useSidebar();
 
   return (
     <div className="ds-shell">
-      {/* ── Sidebar ── */}
-      <aside className="ds-sidebar">
-        <Link to="/student/dashboard" className="ds-sidebar-logo">
-          <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          <span className="ds-logo-text">CampusSphere</span>
-        </Link>
-
-        <div className="ds-user-block">
-          <div className="ds-user-name">{studentName}</div>
-          <span className="ds-role-pill">Biometric Security</span>
-        </div>
-
-        <nav className="ds-nav">
-          {NAV.map((item) => {
-            const Icon = item.icon;
-            const active = item.to === '/student/attendance';
-            return (
-              <Link
-                key={item.label}
-                to={item.to}
-                className={`ds-nav-item ${active ? 'active' : ''}`}
-              >
-                <Icon size={16} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="ds-sidebar-footer">
-          <button type="button" className="ds-logout-btn" onClick={logout}>
-            <LogOut size={16} />
-            <span>Sign Out</span>
-          </button>
-        </div>
-      </aside>
+      {/* ── UNIFIED COLLAPSIBLE SIDEBAR ── */}
+      <Sidebar />
 
       {/* ── Main Content ── */}
-      <div className="ds-main">
+      <div
+        className="ds-main"
+        style={{
+          marginLeft: isCollapsed ? 64 : 240,
+          transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
         <header className="ds-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link to="/student/attendance" className="ds-btn ds-btn-secondary" style={{ padding: '4px 8px', height: 30 }}>

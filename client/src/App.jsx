@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { SidebarProvider } from './context/SidebarContext';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
@@ -40,9 +41,10 @@ const NotFound                  = React.lazy(() => import('./pages/NotFound/inde
 const App = () => (
   <AuthProvider>
     <ToastProvider>
-      <ErrorBoundary>
-        <Suspense fallback={<LoadingSpinner size="lg" text="Loading CampusSphere…" />}>
-          <Routes>
+      <SidebarProvider>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner size="lg" text="Loading CampusSphere…" />}>
+            <Routes>
           {/* ── Public ── */}
           <Route path="/" element={<LoginPage />} />
 
@@ -107,6 +109,7 @@ const App = () => (
         </Routes>
       </Suspense>
       </ErrorBoundary>
+      </SidebarProvider>
     </ToastProvider>
   </AuthProvider>
 );

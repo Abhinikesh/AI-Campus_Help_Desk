@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
+import Sidebar from '../../components/Sidebar/Sidebar';
 import { aiService } from '../../services/ai.service';
 import {
   Send, Trash2, Plus, BookOpen, Building2, Map, Flag, Cpu, ArrowLeft
@@ -156,6 +158,7 @@ const AIHelpDesk = () => {
   };
 
   const now = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const { isCollapsed } = useSidebar();
 
   const preview = (msgs) => {
     const last = [...msgs].reverse().find(m => m.role === 'user');
@@ -163,31 +166,46 @@ const AIHelpDesk = () => {
   };
 
   return (
-    <div className="ai-page">
+    <div className="ds-shell">
+      <Sidebar />
 
-      {/* ── LEFT: Session history ── */}
-      <aside className="ai-history-panel">
-        <div className="ai-history-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className="ai-history-title">Recent Chats</span>
-          <Link
-            to={dashboardLink}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: '12px',
-              color: '#1E293B',
-              textDecoration: 'none',
-              fontWeight: 600,
-              padding: '4px 8px',
-              borderRadius: '6px',
-              background: '#F1F5F9',
-              border: '1px solid #E2E8F0',
-            }}
-          >
-            <ArrowLeft size={13} /> Dashboard
-          </Link>
-        </div>
+      <div
+        className="ds-main"
+        style={{
+          marginLeft: isCollapsed ? 64 : 240,
+          transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+          height: '100vh',
+          overflow: 'hidden',
+        }}
+      >
+        <header className="ds-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1 className="ds-header-title">AI Help Desk</h1>
+            <span className="ds-pill blue">Campus Assistant</span>
+          </div>
+          <div className="ai-chat-controls" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <select
+              className="ai-agent-select"
+              value={agentKey}
+              onChange={e => { setAgentKey(e.target.value); setAutoDetect(e.target.value === 'auto'); }}
+            >
+              {Object.entries(AGENTS).map(([k, a]) => (
+                <option key={k} value={k}>{a.label}</option>
+              ))}
+            </select>
+            <button className="ds-btn ghost sm" onClick={clearChat} title="Clear chat">
+              <Trash2 size={15} />
+            </button>
+          </div>
+        </header>
+
+        <div className="ai-page">
+
+          {/* ── LEFT: Session history ── */}
+          <aside className="ai-history-panel">
+            <div className="ai-history-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="ai-history-title">Recent Chats</span>
+            </div>
 
         <div className="ai-history-list">
           {sessions.length === 0 ? (
@@ -321,6 +339,8 @@ const AIHelpDesk = () => {
         </div>
       </div>
     </div>
+    </div>
+  </div>
   );
 };
 

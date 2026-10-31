@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AppSidebar from '../../components/AppSidebar/AppSidebar';
+import Sidebar from '../../components/Sidebar/Sidebar';
+import { useSidebar } from '../../context/SidebarContext';
 import { studentService } from '../../services/student.service';
 import { Calendar, MapPin, Clock, Download, AlertCircle } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Exams.css';
 
 const Exams = () => {
+  const { isCollapsed } = useSidebar();
   const [loading, setLoading] = useState(true);
   const [exams, setExams] = useState([]);
   const [activeTab, setActiveTab] = useState('upcoming');
@@ -38,14 +40,20 @@ const Exams = () => {
 
   return (
     <div className="ds-shell">
-      <AppSidebar activeLabel="Exams" />
+      <Sidebar />
 
-      <div className="ds-main">
+      <div
+        className="ds-main"
+        style={{
+          marginLeft: isCollapsed ? 64 : 240,
+          transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
         {/* Header */}
-        <header className="ds-topbar">
-          <div>
-            <h1 className="ds-page-title">Exam Schedule</h1>
-            <p style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>Your upcoming and completed examinations</p>
+        <header className="ds-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1 className="ds-header-title">Exam Schedule</h1>
+            <span className="ds-pill blue">Semester 5 (2026–2027)</span>
           </div>
         </header>
 

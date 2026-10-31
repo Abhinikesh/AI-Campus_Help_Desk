@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
 import { useToast } from '../../context/ToastContext';
+import Sidebar from '../../components/Sidebar/Sidebar';
 import { getFiles, uploadFile, downloadFile, shareFile, deleteFile } from '../../services/drive.service';
 import {
   Search, Upload, Download, Share2, Trash2, Grid, List,
@@ -51,12 +53,12 @@ const formatDate = (d) => new Date(d).toLocaleDateString('en-IN', { day: 'numeri
 
 /* ── Dummy fallback ───────────────────────────────────────── */
 const DUMMY = [
-  { _id:'1', name:'Data_Structures_Unit1.pdf',    subject:'CS201', category:'notes',   semester:'Sem 3', size:2411724, type:'PDF', downloads:24, createdAt:'2026-04-01', uploaderName:'Dr. Sharma' },
-  { _id:'2', name:'DBMS_Complete_Notes.pdf',      subject:'CS203', category:'notes',   semester:'Sem 3', size:4300800, type:'PDF', downloads:18, createdAt:'2026-03-28', uploaderName:'Dr. Iyer'   },
-  { _id:'3', name:'Web_Dev_React_Guide.pdf',      subject:'CS205', category:'notes',   semester:'Sem 3', size:1887437, type:'PDF', downloads:31, createdAt:'2026-03-25', uploaderName:'Prof. Mehta' },
-  { _id:'4', name:'OS_Memory_Management.pdf',     subject:'CS209', category:'notes',   semester:'Sem 4', size:3355443, type:'PDF', downloads:12, createdAt:'2026-03-20', uploaderName:'Dr. Sharma' },
-  { _id:'5', name:'DS_MidSem_2025.pdf',           subject:'CS201', category:'papers',  semester:'Sem 3', size:913408,  type:'PDF', downloads:45, createdAt:'2026-03-15', uploaderName:'Admin'      },
-  { _id:'6', name:'DBMS_EndSem_2024.pdf',         subject:'CS203', category:'papers',  semester:'Sem 3', size:1153434, type:'PDF', downloads:38, createdAt:'2026-03-10', uploaderName:'Admin'      },
+  { _id:'1', name:'DAA_Unit1_Algorithm_Complexity.pdf', subject:'CS501', category:'notes', semester:'Sem 5', size:2411724, type:'PDF', downloads:34, createdAt:'2026-10-15', uploaderName:'Prof. Neha Singh' },
+  { _id:'2', name:'FLAT_Automata_Turing_Machines.pdf',  subject:'CS502', category:'notes', semester:'Sem 5', size:3300800, type:'PDF', downloads:28, createdAt:'2026-10-18', uploaderName:'Prof. Poonam Nandal' },
+  { _id:'3', name:'AICA_Neural_Networks_Intro.pdf',     subject:'CS503', category:'notes', semester:'Sem 5', size:2887437, type:'PDF', downloads:41, createdAt:'2026-10-20', uploaderName:'Prof. Meeta Singh' },
+  { _id:'4', name:'CG_Clipping_Transformations.pdf',    subject:'CS504', category:'notes', semester:'Sem 5', size:3155443, type:'PDF', downloads:22, createdAt:'2026-10-22', uploaderName:'Prof. Ginni Sehgal' },
+  { _id:'5', name:'SDP_Agile_Scrum_Processes.pdf',      subject:'CS505', category:'notes', semester:'Sem 5', size:1913408, type:'PDF', downloads:35, createdAt:'2026-10-25', uploaderName:'Prof. Swati Hans' },
+  { _id:'6', name:'DAA_MidSem_Paper_2025.pdf',          subject:'CS501', category:'papers', semester:'Sem 5', size:1153434, type:'PDF', downloads:50, createdAt:'2026-10-28', uploaderName:'Admin' },
 ];
 
 /* ════════════════════════════════════════════════════════════ */
@@ -136,36 +138,41 @@ const Drive = () => {
   const totalGB   = (files.reduce((a, f) => a + (f.size||0), 0) / 1073741824).toFixed(2);
   const usedPct   = Math.min((totalGB / 5) * 100, 100).toFixed(0);
   const canDelete = (f) => user?.name === f.uploaderName || user?.role === 'admin' || user?.role === 'faculty';
+  const { isCollapsed } = useSidebar();
 
   /* Breadcrumb */
   const folderLabel = FOLDERS.find(f => f.key === category)?.label || 'All Files';
 
   return (
-    <div className="drive-page">
+    <div className="ds-shell">
+      <Sidebar />
 
-      {/* ── LEFT: Folder tree ── */}
-      <aside className="drive-sidebar">
-        <div className="drive-sidebar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>Academic Drive</span>
-          <Link
-            to={user?.role === 'faculty' ? '/faculty/dashboard' : '/student/dashboard'}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: '12px',
-              color: '#1E293B',
-              textDecoration: 'none',
-              fontWeight: 600,
-              padding: '3px 8px',
-              borderRadius: '6px',
-              background: '#F1F5F9',
-              border: '1px solid #E2E8F0',
-            }}
-          >
-            <ArrowLeft size={12} /> Exit
-          </Link>
-        </div>
+      <div
+        className="ds-main"
+        style={{
+          marginLeft: isCollapsed ? 64 : 240,
+          transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+          height: '100vh',
+          overflow: 'hidden',
+        }}
+      >
+        <header className="ds-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1 className="ds-header-title">Academic Drive</h1>
+            <span className="ds-pill blue">Semester 5 Repository</span>
+          </div>
+          <button className="ds-btn primary" onClick={() => setShowUpload(true)}>
+            <Upload size={14} /> Upload Material
+          </button>
+        </header>
+
+        <div className="drive-page" style={{ height: 'calc(100vh - 56px)' }}>
+
+          {/* ── LEFT: Folder tree ── */}
+          <aside className="drive-sidebar">
+            <div className="drive-sidebar-header">
+              <span>Categories & Notes</span>
+            </div>
         <nav style={{ padding: '8px 8px' }}>
           {FOLDERS.map(({ key, label }) => (
             <button
@@ -396,6 +403,8 @@ const Drive = () => {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
+import Sidebar from '../../components/Sidebar/Sidebar';
 import attendanceService from '../../services/attendance.service';
 import CameraPreview from '../../components/AttendanceShared/CameraPreview';
 import AttendanceStatusBadge from '../../components/AttendanceShared/AttendanceStatusBadge';
@@ -127,10 +129,13 @@ const MarkAttendance = () => {
     setVerifyStatusText('Camera active — Center your face in the oval');
     setErrorMessage('');
   };
+  const { isCollapsed } = useSidebar();
 
   return (
     <div className="ds-shell" style={{ background: '#F8FAFC' }}>
-      <div style={{ maxWidth: 900, margin: '0 auto', width: '100%', padding: '24px 20px' }}>
+      <Sidebar />
+      <div style={{ marginLeft: isCollapsed ? 64 : 240, transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)', width: '100%', padding: '24px 20px' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {/* Top Breadcrumb Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <button
@@ -430,6 +435,7 @@ const MarkAttendance = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

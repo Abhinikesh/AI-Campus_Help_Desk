@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
 import { studentService } from '../../services/student.service';
 import attendanceService from '../../services/attendance.service';
+import Sidebar from '../../components/Sidebar/Sidebar';
 import AttendanceStatusBadge from '../../components/AttendanceShared/AttendanceStatusBadge';
 import AttendanceSummaryCard from '../../components/AttendanceShared/AttendanceSummaryCard';
 import EmptyState from '../../components/AttendanceShared/EmptyState';
@@ -71,57 +73,30 @@ const AttendanceOverview = () => {
   }, []);
 
   const studentName = profile?.fullName || profile?.user?.name || user?.name || 'Student';
-  const semester = profile?.semester || 4;
+  const { isCollapsed } = useSidebar();
+  const semester = profile?.semester || 5;
   const overall = summary.overall || 0;
   const minThreshold = summary.minThreshold || 75;
   const isLowAttendance = summary.hasRecords && overall < minThreshold;
 
   return (
     <div className="ds-shell">
-      {/* ── Sidebar ── */}
-      <aside className="ds-sidebar">
-        <Link to="/student/dashboard" className="ds-sidebar-logo">
-          <img src="/campussphere-logo.png" alt="CampusSphere" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          <span className="ds-logo-text">CampusSphere</span>
-        </Link>
-
-        <div className="ds-user-block">
-          <div className="ds-user-name">{studentName}</div>
-          <span className="ds-role-pill">Student • Sem {semester}</span>
-        </div>
-
-        <nav className="ds-nav">
-          {NAV.map((item) => {
-            const Icon = item.icon;
-            const active = item.to === '/student/attendance';
-            return (
-              <Link
-                key={item.label}
-                to={item.to}
-                className={`ds-nav-item ${active ? 'active' : ''}`}
-              >
-                <Icon size={16} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="ds-sidebar-footer">
-          <button type="button" className="ds-logout-btn" onClick={logout}>
-            <LogOut size={16} />
-            <span>Sign Out</span>
-          </button>
-        </div>
-      </aside>
+      {/* ── UNIFIED COLLAPSIBLE SIDEBAR ── */}
+      <Sidebar />
 
       {/* ── Main Content Area ── */}
-      <div className="ds-main">
+      <div
+        className="ds-main"
+        style={{
+          marginLeft: isCollapsed ? 64 : 240,
+          transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
         {/* Header Bar */}
         <header className="ds-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h1 className="ds-header-title">Smart Attendance</h1>
-            <span className="ds-pill blue">Semester {semester} (2025–2026)</span>
+            <span className="ds-pill blue">Semester {semester} (2026–2027)</span>
           </div>
 
           <div className="ds-header-right">
