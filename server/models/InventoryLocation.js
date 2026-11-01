@@ -69,3 +69,4 @@ const inventoryLocationSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('InventoryLocation', inventoryLocationSchema);
+

@@ -87,3 +87,4 @@ const inventoryAuditSchema = new mongoose.Schema({
 inventoryAuditSchema.index({ status: 1, plannedDate: -1 });
 
 module.exports = mongoose.model('InventoryAudit', inventoryAuditSchema);
+

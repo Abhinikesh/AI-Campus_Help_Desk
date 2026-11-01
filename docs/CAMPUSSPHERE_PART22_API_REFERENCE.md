@@ -123,3 +123,4 @@ All endpoints are mounted at `/api/inventory` (with `/api/procurement` as an ope
 
 #### `POST /api/inventory/audits` | `POST /api/inventory/audits/:auditId/items/:itemId/count` | `POST /api/inventory/audits/:id/reconcile`
 - **Description**: Full physical stocktaking workflow and automated ledger reconciliation.
+

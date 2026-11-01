@@ -38,3 +38,4 @@ sanitizeCsvValue(val) {
 
 #### 2.3 Vendor Confidentiality Protection
 Vendor profit margins and supplier negotiation notes (`internalRemarks`) are protected with Mongoose `{ select: false }`. Non-procurement users (faculty, storekeepers) never receive these confidential remarks in response payloads.
+

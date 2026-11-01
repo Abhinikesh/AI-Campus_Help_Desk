@@ -30,3 +30,4 @@ When equipment moves between campus laboratories or buildings (e.g. from Central
 1. An `AssetTransfer` record is logged capturing `transferNumber`, `fromLocation`, `toLocation`, `fromDepartment`, `toDepartment`, `requestedBy`, and `reason`.
 2. The `currentLocation` pointer on the `Asset` document is atomically updated.
 3. The historical location audit trail remains permanently queryable.
+

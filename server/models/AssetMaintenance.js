@@ -131,3 +131,4 @@ assetMaintenanceSchema.index({ asset: 1, status: 1 });
 assetMaintenanceSchema.index({ scheduledDate: -1 });
 
 module.exports = mongoose.model('AssetMaintenance', assetMaintenanceSchema);
+

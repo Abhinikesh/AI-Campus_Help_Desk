@@ -76,3 +76,4 @@ inventoryAuditItemSchema.index({ audit: 1, itemType: 1 });
 inventoryAuditItemSchema.index({ audit: 1, status: 1 });
 
 module.exports = mongoose.model('InventoryAuditItem', inventoryAuditItemSchema);
+

@@ -167,3 +167,4 @@ erDiagram
 #### 2.11 `InventoryAudit` & `InventoryAuditItem`
 - `InventoryAudit`: Tracks planned physical counts, locations, lead auditors, and summary discrepancy counts.
 - `InventoryAuditItem`: Tracks line item physical verification (expectedQuantity vs countedQuantity, variance, expectedCondition vs countedCondition, status: `pending`, `matched`, `discrepancy`, `reconciled`).
+

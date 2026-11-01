@@ -40,3 +40,4 @@ if (purchaseRequest.requestingEmployee.toString() === req.user._id.toString()) {
 
 ### 3. Rejection & Cancellation Protocol
 Any reviewer in the workflow chain can reject a requisition with a mandatory written justification (`minlength: 5 chars`). The requisition transitions immediately to `'rejected'`, preventing further approvals or conversion to a Purchase Order.
+

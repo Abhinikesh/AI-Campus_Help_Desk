@@ -49,3 +49,4 @@ const inventoryCategorySchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('InventoryCategory', inventoryCategorySchema);
+

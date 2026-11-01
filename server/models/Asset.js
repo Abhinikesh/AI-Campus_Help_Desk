@@ -144,3 +144,4 @@ assetSchema.index({ status: 1, department: 1 });
 assetSchema.index({ name: 'text', model: 'text', manufacturer: 'text', description: 'text' });
 
 module.exports = mongoose.model('Asset', assetSchema);
+

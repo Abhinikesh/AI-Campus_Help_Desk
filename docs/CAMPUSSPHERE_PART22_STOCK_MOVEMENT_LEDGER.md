@@ -46,3 +46,4 @@ $$\text{Suggested Reorder Quantity} = \max(\text{ReorderQuantity}, \text{Deficit
 $$\text{Estimated Restocking Cost (Paise)} = \text{Suggested Reorder Quantity} \times \text{UnitPrice}$$
 
 When breached, asynchronous notifications are dispatched to storekeepers and inventory managers, and reorder suggestions appear on the dashboard.
+

@@ -90,3 +90,4 @@ stockItemSchema.index({ currentQuantity: 1, reorderThreshold: 1 });
 stockItemSchema.index({ name: 'text', sku: 'text' });
 
 module.exports = mongoose.model('StockItem', stockItemSchema);
+

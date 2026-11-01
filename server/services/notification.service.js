@@ -146,6 +146,8 @@ class NotificationService {
         'placement',
         'event',
         'inventory',
+        'hr',
+        'leave',
         'administrative',
       ];
 

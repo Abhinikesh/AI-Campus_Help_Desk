@@ -77,3 +77,4 @@ const assetTransferSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('AssetTransfer', assetTransferSchema);
+

@@ -592,3 +592,4 @@ const FacultyInventory = () => {
 };
 
 export default FacultyInventory;
+

@@ -25,3 +25,4 @@ Upon delivery by the supplier, the shipment is received and inspected at a regis
 - For line items with `itemType === 'asset'`: The fulfillment engine creates individual `Asset` records for each accepted unit, assigning sequential `AssetId`s and linking provided serial numbers.
 - For line items with `itemType === 'consumable'`: The fulfillment engine atomically increments `StockItem.currentQuantity` and logs a `purchase_receipt` `StockMovement`.
 - When all PO line items are fully accepted, the PO status transitions automatically to `'fulfilled'`.
+

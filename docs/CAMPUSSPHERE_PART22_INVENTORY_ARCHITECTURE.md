@@ -59,3 +59,4 @@ flowchart TD
    Purchase Order commitments link to the institution's existing finance subsystem without creating disjoint accounting balances.
 6. **Student Barrier**:
    Students are strictly blocked (`403 Forbidden`) from viewing or executing inventory administrative mutations.
+

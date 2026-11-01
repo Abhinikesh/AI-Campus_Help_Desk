@@ -141,3 +141,4 @@ const goodsReceiptSchema = new mongoose.Schema({
 goodsReceiptSchema.index({ receivedDate: -1 });
 
 module.exports = mongoose.model('GoodsReceipt', goodsReceiptSchema);
+

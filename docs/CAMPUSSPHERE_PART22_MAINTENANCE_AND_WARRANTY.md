@@ -29,3 +29,4 @@ stateDiagram-v2
    When a service task is logged, the engine checks whether `asset.warrantyExpiry > new Date()`. If true, `isUnderWarranty` is set to `true`, indicating that the institution should pursue OEM claims rather than incurring out-of-pocket costs.
 2. **Integer Paise Repair Cost**:
    Labor and spare part expenses (`costPaise`) are recorded strictly as integer paise, integrating seamlessly with institutional expenditure analytics.
+

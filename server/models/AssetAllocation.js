@@ -85,3 +85,4 @@ const assetAllocationSchema = new mongoose.Schema(
 assetAllocationSchema.index({ asset: 1, status: 1 });
 
 module.exports = mongoose.model('AssetAllocation', assetAllocationSchema);
+

@@ -57,3 +57,4 @@ const inventoryAuditLogSchema = new mongoose.Schema({
 inventoryAuditLogSchema.index({ entityType: 1, entityId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('InventoryAuditLog', inventoryAuditLogSchema);
+

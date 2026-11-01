@@ -46,3 +46,4 @@
 5. Click **Issue PO** for the approved PR.
 6. Click **Process GRN** on the issued PO. Enter serial numbers `ARDU-01, ARDU-02`.
 7. Accept delivery. Verify PO becomes `fulfilled` and 2 new assets appear on the Asset Register automatically.
+

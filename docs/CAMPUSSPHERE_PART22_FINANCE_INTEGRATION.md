@@ -24,3 +24,4 @@ All procurement financial liabilities are anchored to:
 | `AssetMaintenance.costPaise` | Integer | Indian Paise | Actual service cost |
 
 By adhering to integer paise across 100% of the inventory data model, financial aggregation queries return exact sums matching general ledger auditing standards.
+
