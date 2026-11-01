@@ -73,3 +73,4 @@ If an approved leave is subsequently cancelled by the applicant or revoked by HR
 1. Calls `hrService.refundLeaveBalance`, creating a `CREDIT` ledger entry (`reason: 'cancellation_refund'`) and incrementing available balance.
 2. Calls `hrService.revertApprovedLeaveAttendance`, clearing the approved leave assignment from the employee's attendance roster.
 3. Sets application status to `'cancelled'`.
+

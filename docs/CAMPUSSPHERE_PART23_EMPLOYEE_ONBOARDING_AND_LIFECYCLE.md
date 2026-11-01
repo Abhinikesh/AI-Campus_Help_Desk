@@ -78,3 +78,4 @@ Offboarding transitions (`resigned`, `retired`, `terminated`) follow strict gove
 - **Status Mutation**: Updates `employee.employmentStatus` to the terminal state and sets `separationDetails` (`date`, `reason`, `separationType`, `approvedBy`).
 - **Employment History**: Records `changeType: 'separation'` or specific terminal change type.
 - **Access Revocation**: User account status is updated to prevent further administrative actions.
+

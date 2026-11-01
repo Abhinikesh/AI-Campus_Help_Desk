@@ -134,3 +134,4 @@
 3. **Confidential HR Information Leakage**: Sensitive attributes (emergency contacts, disciplinary remarks, personal identity documents) must never be returned in public employee directory endpoints.
 4. **CWE-1236 CSV Formula Injection**: Exported workforce lists and leave records must sanitize `=`, `+`, `-`, `@` characters.
 5. **Path Traversal in Employee Document Downloads**: File retrieval must sanitize document paths using `path.basename` and verify root directory confinement.
+

@@ -131,3 +131,4 @@ sequenceDiagram
 | **Storage Security** | Multer disk storage restricted to `server/uploads/hr`. File names are sanitized (`path.basename`), and downloads verify absolute path boundaries preventing directory traversal (`../`). |
 | **Export Security** | All CSV exports pass through formula injection sanitizer neutralizing `=`, `+`, `-`, `@`, `\t`, `\r` per OWASP CWE-1236. |
 | **Payroll Boundary** | Complete structural isolation: no mock payslips, no salary calculations, no mutations on student fee accounts. |
+

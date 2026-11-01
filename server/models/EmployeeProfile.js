@@ -174,3 +174,4 @@ employeeProfileSchema.index({ department: 1, employmentStatus: 1 });
 employeeProfileSchema.index({ firstName: 'text', lastName: 'text', officialEmail: 'text', employeeId: 'text' });
 
 module.exports = mongoose.model('EmployeeProfile', employeeProfileSchema);
+

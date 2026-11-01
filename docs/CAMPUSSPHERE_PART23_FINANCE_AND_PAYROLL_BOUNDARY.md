@@ -47,3 +47,4 @@ All exportable reports and ledger entries strictly implement:
 - **Immutable Historical Audits**: No retro-active deletion of past attendance or leave transactions.
 - **CWE-1236 Defense**: All exported salary inputs and personnel spreadsheets neutralize formula injections.
 - **Audit Trails**: All balance adjustments, compensation modifications, and designations changes are captured with actor IDs and timestamps in `HRAuditLog` and `EmploymentHistory`.
+

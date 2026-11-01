@@ -71,3 +71,4 @@ if (!updatedBalance) {
 }
 ```
 If two administrators attempt to approve overlapping requests simultaneously, MongoDB's document-level locking ensures only the transaction that satisfies `currentBalance >= days` succeeds, while the second fails cleanly with an explanatory error.
+

@@ -188,3 +188,4 @@ Downloads sanitized employee directory CSV.
 ### `GET /api/hr/export/leaves`
 Downloads sanitized leave applications CSV.
 - **Response**: `text/csv` attachment
+

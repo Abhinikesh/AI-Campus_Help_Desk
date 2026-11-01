@@ -765,3 +765,4 @@ const FacultyHR = () => {
 };
 
 export default FacultyHR;
+

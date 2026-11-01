@@ -92,3 +92,4 @@ To ensure employment compliance:
 2. An authorized HR Administrator reviews the physical credential or digital copy.
 3. Upon satisfaction, HR executes `PATCH /api/hr/documents/:id/verify`.
 4. The system records `isVerified: true`, stamps `verifiedBy: req.user.userId`, and records `verifiedAt: new Date()`.
+

@@ -77,3 +77,4 @@ Department Heads and HR Administrators may correct erroneous attendance entries 
 - **Mandatory Reason**: Requires non-empty `reason` parameter. Missing reasons are rejected with `400 Bad Request`.
 - **History Snapshot**: Pushes previous status, new status, reviewer ID, timestamp, and explanation into `correctionHistory`.
 - **Administrative Audit**: Commits an immutable event `ATTENDANCE_CORRECTED` to `HRAuditLog`.
+

@@ -146,3 +146,4 @@ erDiagram
 | `isCorrected` | Boolean | Default: false | Administrative correction flag |
 | `correctionHistory` | Array | Previous status, new status, reason, correctedBy, correctedAt | Correction audit trail |
 *Compound Unique Index*: `{ employee: 1, date: 1 }`
+

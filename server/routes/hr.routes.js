@@ -105,3 +105,4 @@ router.get('/training/employee/:employeeId', hrController.getTrainingRecords);
 router.post('/training', allowRoles(...HR_MANAGERS), hrController.createTrainingRecord);
 
 module.exports = router;
+
