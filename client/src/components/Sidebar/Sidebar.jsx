@@ -6,7 +6,7 @@ import {
   LayoutDashboard, BookOpen, CalendarCheck, BarChart2,
   Folder, Flag, MessageCircle, LogOut, Clock,
   ChevronLeft, ChevronRight, Menu, GraduationCap, UserCheck, Bell, CreditCard, Library,
-  Building
+  Building, Bus, Briefcase
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -18,6 +18,8 @@ const NAV_CONFIG = {
     { label: 'Assignments',      icon: BookOpen,        to: '/student/assignments' },
     { label: 'Fees & Payments',  icon: CreditCard,      to: '/student/fees'        },
     { label: 'Hostel & Housing', icon: Building,        to: '/student/hostel'      },
+    { label: 'Campus Transport', icon: Bus,             to: '/student/transport'   },
+    { label: 'Placement Cell',   icon: Briefcase,       to: '/student/placement'   },
     { label: 'Library & Books',  icon: Library,         to: '/student/library'     },
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Results & Grades', icon: BarChart2,       to: '/student/results'     },
@@ -43,9 +45,39 @@ const NAV_CONFIG = {
     { label: 'Scheduling & Cal', icon: Clock,           to: '/admin/timetable'     },
     { label: 'Finance & Fees',   icon: CreditCard,      to: '/admin/finance'       },
     { label: 'Hostel Desk',      icon: Building,        to: '/admin/hostel'        },
+    { label: 'Transport Desk',   icon: Bus,             to: '/admin/transport'     },
+    { label: 'Placement Desk',   icon: Briefcase,       to: '/admin/placement'     },
     { label: 'Library Desk',     icon: Library,         to: '/admin/library'       },
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  transport_manager: [
+    { label: 'Transport Desk',   icon: Bus,             to: '/admin/transport'     },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  placement_officer: [
+    { label: 'Placement Desk',   icon: Briefcase,       to: '/admin/placement'     },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  placement_coordinator: [
+    { label: 'Placement Desk',   icon: Briefcase,       to: '/admin/placement'     },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  driver: [
+    { label: 'My Route & Trips', icon: Bus,             to: '/admin/transport'     },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  attendant: [
+    { label: 'My Route & Trips', icon: Bus,             to: '/admin/transport'     },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
   ],
   warden: [

@@ -19,6 +19,8 @@ const StudentTimetable          = lazyWithRetry(() => import('./pages/StudentTim
 const StudentFees               = lazyWithRetry(() => import('./pages/StudentFees/index'));
 const StudentLibrary            = lazyWithRetry(() => import('./pages/StudentLibrary/index'));
 const StudentHostel             = lazyWithRetry(() => import('./pages/StudentHostel/index'));
+const StudentTransport          = lazyWithRetry(() => import('./pages/StudentTransport/index'));
+const StudentPlacement          = lazyWithRetry(() => import('./pages/StudentPlacement/index'));
 const AttendanceOverview        = lazyWithRetry(() => import('./pages/Attendance/index'));
 const MarkAttendance            = lazyWithRetry(() => import('./pages/Attendance/MarkAttendance'));
 const AttendanceHistory         = lazyWithRetry(() => import('./pages/Attendance/AttendanceHistory'));
@@ -46,6 +48,8 @@ const AdminTimetable            = lazyWithRetry(() => import('./pages/AdminTimet
 const AdminFinance              = lazyWithRetry(() => import('./pages/AdminFinance/index'));
 const AdminLibrary              = lazyWithRetry(() => import('./pages/AdminLibrary/index'));
 const AdminHostel               = lazyWithRetry(() => import('./pages/AdminHostel/index'));
+const AdminTransport            = lazyWithRetry(() => import('./pages/AdminTransport/index'));
+const AdminPlacement            = lazyWithRetry(() => import('./pages/AdminPlacement/index'));
 
 // Shared Authenticated Pages
 const NotificationsPage         = lazyWithRetry(() => import('./pages/Notifications/index'));
@@ -79,6 +83,10 @@ const App = () => (
             element={<ProtectedRoute role="student"><StudentFees /></ProtectedRoute>} />
           <Route path="/student/hostel"
             element={<ProtectedRoute role="student"><StudentHostel /></ProtectedRoute>} />
+          <Route path="/student/transport"
+            element={<ProtectedRoute role="student"><StudentTransport /></ProtectedRoute>} />
+          <Route path="/student/placement"
+            element={<ProtectedRoute role="student"><StudentPlacement /></ProtectedRoute>} />
           <Route path="/student/library"
             element={<ProtectedRoute role="student"><StudentLibrary /></ProtectedRoute>} />
           <Route path="/student/attendance"
@@ -135,6 +143,10 @@ const App = () => (
             element={<ProtectedRoute role="admin"><AdminFinance /></ProtectedRoute>} />
           <Route path="/admin/hostel"
             element={<ProtectedRoute role={['admin', 'warden']}><AdminHostel /></ProtectedRoute>} />
+          <Route path="/admin/transport"
+            element={<ProtectedRoute role={['admin', 'transport_manager', 'driver', 'attendant']}><AdminTransport /></ProtectedRoute>} />
+          <Route path="/admin/placement"
+            element={<ProtectedRoute role={['admin', 'placement_officer', 'placement_coordinator']}><AdminPlacement /></ProtectedRoute>} />
           <Route path="/admin/library"
             element={<ProtectedRoute role={['admin', 'librarian']}><AdminLibrary /></ProtectedRoute>} />
           <Route path="/admin/attendance"

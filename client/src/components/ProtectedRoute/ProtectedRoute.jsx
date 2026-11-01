@@ -7,6 +7,11 @@ const ROLE_DASHBOARDS = {
   admin:   '/admin/dashboard',
   warden:  '/admin/hostel',
   librarian: '/admin/library',
+  transport_manager: '/admin/transport',
+  driver:  '/admin/transport',
+  attendant: '/admin/transport',
+  placement_officer: '/admin/placement',
+  placement_coordinator: '/admin/placement',
 };
 
 /**

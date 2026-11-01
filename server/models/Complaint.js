@@ -15,7 +15,7 @@ const complaintSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['academic', 'admin', 'hostel', 'infrastructure', 'other'],
+      enum: ['academic', 'admin', 'hostel', 'transport', 'placement', 'infrastructure', 'other'],
       required: [true, 'Category is required'],
     },
     title: {
@@ -53,6 +53,40 @@ const complaintSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'HostelBed',
       default: null,
+    },
+    vehicle: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TransportVehicle',
+      default: null,
+      index: true,
+    },
+    route: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TransportRoute',
+      default: null,
+      index: true,
+    },
+    stop: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TransportStop',
+      default: null,
+    },
+    driver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      default: null,
+      index: true,
+    },
+    drive: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'PlacementDrive',
+      default: null,
+      index: true,
     },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,

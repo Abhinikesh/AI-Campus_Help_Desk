@@ -38,6 +38,8 @@ const notificationSchema = new mongoose.Schema(
         'fee',
         'library',
         'hostel',
+        'transport',
+        'placement',
         'administrative',
         'system',
       ],
