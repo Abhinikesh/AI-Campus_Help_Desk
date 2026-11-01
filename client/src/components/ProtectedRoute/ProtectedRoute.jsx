@@ -5,11 +5,13 @@ const ROLE_DASHBOARDS = {
   student: '/student/dashboard',
   faculty: '/faculty/dashboard',
   admin:   '/admin/dashboard',
+  warden:  '/admin/hostel',
+  librarian: '/admin/library',
 };
 
 /**
  * ProtectedRoute
- * @param {string} role   - required role string (e.g. 'student')
+ * @param {string|string[]} role   - required role string or array (e.g. 'student', ['admin', 'warden'])
  * @param {React.Node} children
  *
  * Logic:
@@ -47,8 +49,11 @@ const ProtectedRoute = ({ role, children }) => {
   }
 
   // Wrong role → redirect to their own dashboard
-  if (role && user.role !== role) {
-    return <Navigate to={ROLE_DASHBOARDS[user.role] || '/'} replace />;
+  if (role) {
+    const allowed = Array.isArray(role) ? role : role.split(',').map(r => r.trim());
+    if (!allowed.includes(user.role)) {
+      return <Navigate to={ROLE_DASHBOARDS[user.role] || '/'} replace />;
+    }
   }
 
   return children;

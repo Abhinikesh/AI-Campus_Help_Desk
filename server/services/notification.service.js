@@ -141,6 +141,7 @@ class NotificationService {
         'announcement',
         'fee',
         'library',
+        'hostel',
         'administrative',
       ];
 

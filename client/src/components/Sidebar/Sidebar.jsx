@@ -5,7 +5,8 @@ import { useSidebar } from '../../context/SidebarContext';
 import {
   LayoutDashboard, BookOpen, CalendarCheck, BarChart2,
   Folder, Flag, MessageCircle, LogOut, Clock,
-  ChevronLeft, ChevronRight, Menu, GraduationCap, UserCheck, Bell, CreditCard, Library
+  ChevronLeft, ChevronRight, Menu, GraduationCap, UserCheck, Bell, CreditCard, Library,
+  Building
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -16,6 +17,7 @@ const NAV_CONFIG = {
     { label: 'Timetable & Cal',  icon: Clock,           to: '/student/timetable'   },
     { label: 'Assignments',      icon: BookOpen,        to: '/student/assignments' },
     { label: 'Fees & Payments',  icon: CreditCard,      to: '/student/fees'        },
+    { label: 'Hostel & Housing', icon: Building,        to: '/student/hostel'      },
     { label: 'Library & Books',  icon: Library,         to: '/student/library'     },
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Results & Grades', icon: BarChart2,       to: '/student/results'     },
@@ -40,6 +42,19 @@ const NAV_CONFIG = {
     { label: 'Smart Attendance', icon: UserCheck,       to: '/admin/attendance'    },
     { label: 'Scheduling & Cal', icon: Clock,           to: '/admin/timetable'     },
     { label: 'Finance & Fees',   icon: CreditCard,      to: '/admin/finance'       },
+    { label: 'Hostel Desk',      icon: Building,        to: '/admin/hostel'        },
+    { label: 'Library Desk',     icon: Library,         to: '/admin/library'       },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  warden: [
+    { label: 'Hostel Desk',      icon: Building,        to: '/admin/hostel'        },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  librarian: [
     { label: 'Library Desk',     icon: Library,         to: '/admin/library'       },
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },

@@ -37,6 +37,7 @@ const notificationSchema = new mongoose.Schema(
         'announcement',
         'fee',
         'library',
+        'hostel',
         'administrative',
         'system',
       ],

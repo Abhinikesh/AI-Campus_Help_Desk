@@ -69,6 +69,7 @@ app.use('/api/timetable',     require('./routes/timetable.routes'));
 app.use('/api/calendar',      require('./routes/calendar.routes'));
 app.use('/api/fees',          require('./routes/fee.routes'));
 app.use('/api/library',       require('./routes/library.routes'));
+app.use('/api/hostel',        require('./routes/hostel.routes'));
 
 // ── Static file serving for uploads ──────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

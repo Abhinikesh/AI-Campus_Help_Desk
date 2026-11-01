@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['student', 'faculty', 'admin', 'librarian'],
+      enum: ['student', 'faculty', 'admin', 'librarian', 'warden'],
       required: [true, 'Role is required'],
     },
     isActive: {

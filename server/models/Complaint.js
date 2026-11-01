@@ -30,10 +30,41 @@ const complaintSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'in-progress', 'resolved'],
+      enum: ['pending', 'in-progress', 'resolved', 'closed', 'rejected'],
       default: 'pending',
     },
+    priority: {
+      type: String,
+      enum: ['low', 'normal', 'high', 'urgent'],
+      default: 'normal',
+    },
+    hostel: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hostel',
+      default: null,
+      index: true,
+    },
+    room: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'HostelRoom',
+      default: null,
+    },
+    bed: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'HostelBed',
+      default: null,
+    },
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
     adminResponse: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    closureNotes: {
       type: String,
       default: '',
       trim: true,
