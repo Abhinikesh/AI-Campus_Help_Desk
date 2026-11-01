@@ -69,6 +69,11 @@ test('Part 9.1 End-to-End Stabilization & Security Suite', async (t) => {
     await mongoose.connect(TEST_DB_URI);
     assert.equal(mongoose.connection.readyState, 1);
 
+    // Ensure collection indexes are present
+    await Attendance.syncIndexes();
+    await FaceEmbedding.syncIndexes();
+    await ConsentRecord.syncIndexes();
+
     // Clean test collection artifacts
     await User.deleteMany({ email: { $in: ['e2e_student@college.edu', 'e2e_faculty@college.edu'] } });
     await Student.deleteMany({ rollNumber: 'E2E-CSE-001' });

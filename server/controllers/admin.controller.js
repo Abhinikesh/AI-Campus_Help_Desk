@@ -16,6 +16,7 @@ const AttendanceSettings = require('../models/AttendanceSettings');
 const ConsentRecord = require('../models/ConsentRecord');
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const attendanceCalculationService = require('../services/attendanceCalculation.service');
+const notificationService = require('../services/notification.service');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -116,6 +117,23 @@ const updateComplaintStatus = asyncHandler(async (req, res) => {
 
   const complaint = await Complaint.findByIdAndUpdate(req.params.id, update, { new: true });
   if (!complaint) throw new ApiError(404, 'Complaint not found');
+
+  if (complaint.raisedBy) {
+    notificationService.createNotification({
+      recipient: complaint.raisedBy,
+      title: `Complaint Status: ${complaint.title}`,
+      message: `Your complaint status has been updated to "${status.toUpperCase()}". ${adminResponse ? `Response: ${adminResponse}` : ''}`,
+      category: 'administrative',
+      priority: status === 'resolved' ? 'normal' : 'high',
+      relatedEntityType: 'Complaint',
+      relatedEntityId: complaint._id,
+      targetRoute: '/student/complaints',
+      actor: req.user.userId,
+      actorName: req.user.name || 'Campus Admin',
+      actorRole: 'admin',
+      eventId: `complaint_upd_${complaint._id}_${Date.now()}`
+    }).catch(() => {});
+  }
 
   return res.status(200).json({ success: true, data: complaint, message: 'Complaint updated' });
 });

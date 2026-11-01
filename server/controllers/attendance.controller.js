@@ -26,6 +26,7 @@ const attendanceExportService = require('../services/attendanceExport.service');
 const { transitionSessionState } = require('../services/sessionStateMachine.service');
 const sessionSchedulerService = require('../services/sessionScheduler.service');
 const qrChallengeService = require('../services/qrChallenge.service');
+const notificationService = require('../services/notification.service');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -389,10 +390,21 @@ const finalizeSession = asyncHandler(async (req, res) => {
     }
   }
 
-  // Ensure all enrolled students who were not marked present have absent records
+  // 1. Transition session state to 'finalized' FIRST
+  // This verifies authorization and state machine rules (e.g. rejects cancelled or illegal transitions)
+  const updatedSession = await transitionSessionState({
+    sessionId,
+    targetState: 'finalized',
+    actorId: req.user.userId,
+    actorRole: req.user.role,
+    reason: 'Finalized attendance roster and marked absentees',
+    ipAddress: req.ip,
+  });
+
+  // 2. Only after authoritative state finalization, mark absentees and generate notifications
   const enrolledStudents = await Student.find({
     semester: session.semester,
-    branch: session.branch
+    branch: session.branch,
   });
 
   const sessionPeriods = session.periods && session.periods.length > 0 ? session.periods : [session.period];
@@ -401,7 +413,7 @@ const finalizeSession = asyncHandler(async (req, res) => {
   for (const st of enrolledStudents) {
     const existing = await Attendance.findOne({
       session: session._id,
-      student: st._id
+      student: st._id,
     });
 
     if (!existing) {
@@ -418,8 +430,27 @@ const finalizeSession = asyncHandler(async (req, res) => {
           attendanceStatus: 'absent',
           verificationMethod: 'system',
           verificationStatus: 'verified',
-          markedAt: new Date()
+          markedAt: new Date(),
         });
+
+        if (st.user) {
+          notificationService
+            .createNotification({
+              recipient: st.user,
+              title: `Absence Recorded: ${session.subject?.name || 'Class'}`,
+              message: `You were recorded as Absent in ${session.subject?.name || 'Class'} on ${session.date} (Period ${session.period}).`,
+              category: 'attendance',
+              priority: 'normal',
+              relatedEntityType: 'AttendanceSession',
+              relatedEntityId: session._id,
+              targetRoute: '/student/attendance',
+              actor: req.user.userId,
+              actorName: req.user.name || 'Faculty',
+              actorRole: 'faculty',
+              eventId: `sess_abs_${session._id}_${st._id}`,
+            })
+            .catch(() => {});
+        }
       } catch (dupErr) {
         // Concurrency safeguard: ignore duplicate key error if created simultaneously
       }
@@ -428,23 +459,14 @@ const finalizeSession = asyncHandler(async (req, res) => {
 
   const presentCount = await Attendance.countDocuments({
     session: session._id,
-    status: { $in: ['present', 'late'] }
+    status: { $in: ['present', 'late'] },
   });
-
-  const updatedSession = await transitionSessionState({
-    sessionId,
-    targetState: 'finalized',
-    actorId: req.user.userId,
-    actorRole: req.user.role,
-    reason: 'Finalized attendance roster and marked absentees',
-    ipAddress: req.ip,
-    extraFields: { presentCount }
-  });
+  await AttendanceSession.findByIdAndUpdate(session._id, { presentCount });
 
   return res.status(200).json({
     success: true,
     data: updatedSession,
-    message: 'Attendance session finalized successfully'
+    message: 'Attendance session finalized successfully',
   });
 });
 
@@ -1129,6 +1151,30 @@ const correctAttendanceRecord = asyncHandler(async (req, res) => {
       status: { $in: ['present', 'late'] }
     });
     await AttendanceSession.findByIdAndUpdate(record.session._id, { presentCount });
+  }
+
+  // Notify student of manual adjustment
+  try {
+    const studentDoc = await Student.findById(record.student).select('user');
+    if (studentDoc && studentDoc.user) {
+      const subjectName = record.session?.subject?.name || 'Class';
+      notificationService.createNotification({
+        recipient: studentDoc.user,
+        title: 'Attendance Record Updated',
+        message: `Your attendance record for date ${record.date} (Period ${record.period}) was adjusted to ${status.toUpperCase()} by ${req.user.name || 'Faculty'}. Reason: ${reason.trim()}`,
+        category: 'attendance',
+        priority: 'normal',
+        relatedEntityType: 'AttendanceRecord',
+        relatedEntityId: record._id,
+        targetRoute: '/student/attendance',
+        actor: req.user.userId,
+        actorName: req.user.name || 'Faculty',
+        actorRole: req.user.role,
+        eventId: `att_adj_${record._id}_${Date.now()}`
+      }).catch(() => {});
+    }
+  } catch (notifErr) {
+    // Non-blocking notification
   }
 
   return res.status(200).json({

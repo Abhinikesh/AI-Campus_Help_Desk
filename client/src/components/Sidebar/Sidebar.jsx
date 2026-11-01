@@ -5,7 +5,7 @@ import { useSidebar } from '../../context/SidebarContext';
 import {
   LayoutDashboard, BookOpen, CalendarCheck, BarChart2,
   Folder, Flag, MessageCircle, LogOut, Clock,
-  ChevronLeft, ChevronRight, Menu, GraduationCap, UserCheck
+  ChevronLeft, ChevronRight, Menu, GraduationCap, UserCheck, Bell
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -13,6 +13,8 @@ const NAV_CONFIG = {
   student: [
     { label: 'Dashboard',        icon: LayoutDashboard, to: '/student/dashboard'   },
     { label: 'Attendance',       icon: CalendarCheck,   to: '/student/attendance'  },
+    { label: 'Assignments',      icon: BookOpen,        to: '/student/assignments' },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Results & Grades', icon: BarChart2,       to: '/student/results'     },
     { label: 'Exam Schedule',    icon: GraduationCap,   to: '/student/exams'       },
     { label: 'Academic Drive',   icon: Folder,          to: '/student/drive'       },
@@ -22,6 +24,8 @@ const NAV_CONFIG = {
   faculty: [
     { label: 'Dashboard',        icon: LayoutDashboard, to: '/faculty/dashboard'   },
     { label: 'Smart Attendance', icon: CalendarCheck,   to: '/faculty/attendance'  },
+    { label: 'Assignments',      icon: BookOpen,        to: '/faculty/assignments' },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Weekly Timetable', icon: Clock,           to: '/faculty/timetable'   },
     { label: 'Student Results',  icon: BarChart2,       to: '/faculty/results'     },
     { label: 'Academic Drive',   icon: Folder,          to: '/faculty/drive'       },
@@ -30,7 +34,8 @@ const NAV_CONFIG = {
   ],
   admin: [
     { label: 'Dashboard',        icon: LayoutDashboard, to: '/admin/dashboard'     },
-    { label: 'Attendance Hub',   icon: UserCheck,       to: '/admin/attendance'    },
+    { label: 'Smart Attendance', icon: UserCheck,       to: '/admin/attendance'    },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
   ],

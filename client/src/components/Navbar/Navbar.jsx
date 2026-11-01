@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { GraduationCap, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import NotificationBell from '../NotificationBell/NotificationBell';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -100,12 +101,18 @@ const Navbar = () => {
         {/* Desktop Navigation */}
         <div className="navbar-links desktop">
           {renderNavLinks()}
+          <NotificationBell />
         </div>
 
-        {/* Mobile Menu Toggle */}
-        <button className="mobile-menu-btn" onClick={toggleMenu}>
-          {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
+        {/* Mobile Menu & Notification Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div className="mobile-bell-wrapper">
+            <NotificationBell />
+          </div>
+          <button className="mobile-menu-btn" onClick={toggleMenu}>
+            {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Navigation Dropdown */}

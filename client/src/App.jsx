@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { SidebarProvider } from './context/SidebarContext';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
@@ -13,6 +14,7 @@ const LoginPage                 = lazyWithRetry(() => import('./pages/LoginPage/
 
 // Student Pages
 const StudentDashboard          = lazyWithRetry(() => import('./pages/StudentDashboard/index'));
+const StudentAssignments        = lazyWithRetry(() => import('./pages/StudentAssignments/index'));
 const AttendanceOverview        = lazyWithRetry(() => import('./pages/Attendance/index'));
 const MarkAttendance            = lazyWithRetry(() => import('./pages/Attendance/MarkAttendance'));
 const AttendanceHistory         = lazyWithRetry(() => import('./pages/Attendance/AttendanceHistory'));
@@ -25,6 +27,7 @@ const AIHelpDesk                = lazyWithRetry(() => import('./pages/AIHelpDesk
 
 // Faculty Pages
 const FacultyDashboard          = lazyWithRetry(() => import('./pages/FacultyDashboard/index'));
+const FacultyAssignments        = lazyWithRetry(() => import('./pages/FacultyAssignments/index'));
 const FacultyAttendanceOverview = lazyWithRetry(() => import('./pages/FacultyAttendance/index'));
 const LiveAttendance            = lazyWithRetry(() => import('./pages/FacultyAttendance/LiveAttendance'));
 const FacultyAttendanceRecords  = lazyWithRetry(() => import('./pages/FacultyAttendance/AttendanceRecords'));
@@ -36,22 +39,32 @@ const FacultyResults            = lazyWithRetry(() => import('./pages/FacultyRes
 const AdminDashboard            = lazyWithRetry(() => import('./pages/AdminDashboard/index'));
 const AdminAttendanceHub        = lazyWithRetry(() => import('./pages/AdminAttendance/index'));
 
+// Shared Authenticated Pages
+const NotificationsPage         = lazyWithRetry(() => import('./pages/Notifications/index'));
+
 // 404
 const NotFound                  = lazyWithRetry(() => import('./pages/NotFound/index'));
 
 const App = () => (
   <AuthProvider>
     <ToastProvider>
-      <SidebarProvider>
-        <ErrorBoundary>
-          <Suspense fallback={<LoadingSpinner size="lg" text="Loading CampusSphere…" />}>
-            <Routes>
-          {/* ── Public ── */}
-          <Route path="/" element={<LoginPage />} />
+      <NotificationProvider>
+        <SidebarProvider>
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner size="lg" text="Loading CampusSphere…" />}>
+              <Routes>
+            {/* ── Public ── */}
+            <Route path="/" element={<LoginPage />} />
+
+            {/* ── Shared Authenticated ── */}
+            <Route path="/notifications"
+              element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
 
           {/* ── Student ── */}
           <Route path="/student/dashboard"
             element={<ProtectedRoute role="student"><StudentDashboard /></ProtectedRoute>} />
+          <Route path="/student/assignments"
+            element={<ProtectedRoute role="student"><StudentAssignments /></ProtectedRoute>} />
           <Route path="/student/attendance"
             element={<ProtectedRoute role="student"><AttendanceOverview /></ProtectedRoute>} />
           <Route path="/student/attendance/mark"
@@ -76,6 +89,8 @@ const App = () => (
           {/* ── Faculty ── */}
           <Route path="/faculty/dashboard"
             element={<ProtectedRoute role="faculty"><FacultyDashboard /></ProtectedRoute>} />
+          <Route path="/faculty/assignments"
+            element={<ProtectedRoute role="faculty"><FacultyAssignments /></ProtectedRoute>} />
           <Route path="/faculty/attendance"
             element={<ProtectedRoute role="faculty"><FacultyAttendanceOverview /></ProtectedRoute>} />
           <Route path="/faculty/attendance/live/:sessionId"
@@ -110,7 +125,8 @@ const App = () => (
         </Routes>
       </Suspense>
       </ErrorBoundary>
-      </SidebarProvider>
+        </SidebarProvider>
+      </NotificationProvider>
     </ToastProvider>
   </AuthProvider>
 );

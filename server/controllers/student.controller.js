@@ -17,6 +17,8 @@ const AttendanceSettings = require('../models/AttendanceSettings');
 const pythonAiService = require('../services/pythonAi.service');
 const qrChallengeService = require('../services/qrChallenge.service');
 const attendanceCalculationService = require('../services/attendanceCalculation.service');
+const notificationService = require('../services/notification.service');
+const examController = require('./exam.controller');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -677,6 +679,21 @@ const enrollFace = asyncHandler(async (req, res) => {
     ipAddress: req.ip
   });
 
+  notificationService.createNotification({
+    recipient: req.user.userId,
+    title: 'Biometric Enrollment Confirmed',
+    message: 'Your facial biometric template has been captured, verified, and securely encrypted (AES-256-GCM).',
+    category: 'system',
+    priority: 'normal',
+    relatedEntityType: 'FaceEmbedding',
+    relatedEntityId: face._id,
+    targetRoute: '/student/attendance',
+    actor: req.user.userId,
+    actorName: 'Security System',
+    actorRole: 'system',
+    eventId: `bio_enrolled_${req.user.userId}_${Date.now()}`
+  }).catch(() => {});
+
   return res.status(200).json({
     success: true,
     data: {
@@ -736,6 +753,19 @@ const revokeFace = asyncHandler(async (req, res) => {
       ipAddress: req.ip
     });
 
+    notificationService.createNotification({
+      recipient: req.user.userId,
+      title: 'Biometric Consent Revoked',
+      message: 'Your biometric consent has been withdrawn and facial templates permanently purged.',
+      category: 'system',
+      priority: 'normal',
+      targetRoute: '/student/attendance',
+      actor: req.user.userId,
+      actorName: 'Security System',
+      actorRole: 'system',
+      eventId: `bio_revoked_${req.user.userId}_${Date.now()}`
+    }).catch(() => {});
+
     return res.status(200).json({
       success: true,
       message: 'Biometric consent withdrawn and face profile successfully purged.',
@@ -755,45 +785,12 @@ const revokeFace = asyncHandler(async (req, res) => {
 
 // GET /api/student/exams
 const getExams = asyncHandler(async (req, res) => {
-  const student = await Student.findOne({ user: req.user.userId });
-  if (!student) throw new ApiError(404, 'Student profile not found');
-
-  const subjects = await Subject.find({ semester: student.semester });
-  const exams = subjects.map((sub, i) => ({
-    _id: `exam-${sub._id}`,
-    subject: sub.name,
-    code: sub.code,
-    type: i % 2 === 0 ? 'Mid-Semester Examination' : 'End-Semester Examination',
-    date: `2026-05-${10 + i * 2}`,
-    time: '10:00 AM - 01:00 PM',
-    room: `Hall ${101 + i}`,
-    credits: sub.credits,
-  }));
-
-  return res.status(200).json({ success: true, data: exams, message: 'Exams schedule loaded' });
+  return examController.getStudentExamSchedule(req, res);
 });
 
 // GET /api/student/results
 const getResults = asyncHandler(async (req, res) => {
-  const student = await Student.findOne({ user: req.user.userId });
-  if (!student) throw new ApiError(404, 'Student profile not found');
-
-  const subjects = await Subject.find({ semester: student.semester });
-  const results = subjects.map((sub, i) => {
-    const marks = [88, 76, 92, 84, 80][i % 5];
-    const grade = marks >= 90 ? 'A+' : marks >= 80 ? 'A' : marks >= 70 ? 'B+' : 'B';
-    return {
-      _id: `res-${sub._id}`,
-      subject: sub.name,
-      code: sub.code,
-      credits: sub.credits,
-      marks,
-      grade,
-      semester: student.semester,
-    };
-  });
-
-  return res.status(200).json({ success: true, data: results, message: 'Results loaded' });
+  return examController.getStudentResults(req, res);
 });
 
 module.exports = {
