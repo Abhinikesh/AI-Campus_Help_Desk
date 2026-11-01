@@ -167,6 +167,7 @@ attendanceSchema.index(
 );
 
 attendanceSchema.index({ student: 1, status: 1 });
+attendanceSchema.index({ student: 1, date: -1 });
 attendanceSchema.index({ session: 1, status: 1 });
 
 module.exports = mongoose.model('Attendance', attendanceSchema);

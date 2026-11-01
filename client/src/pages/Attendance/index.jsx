@@ -12,7 +12,7 @@ import {
   LayoutDashboard, BookOpen, CalendarCheck, BarChart2,
   Folder, Flag, MessageCircle, LogOut, Bell, ChevronRight,
   GraduationCap, AlertCircle, CheckCircle2, Clock, Camera,
-  History, ScanFace, ArrowRight
+  History, ScanFace, ArrowRight, Download, TrendingUp
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Attendance.css';
@@ -47,6 +47,9 @@ const AttendanceOverview = () => {
     activeSessions: [],
     recentHistory: [],
   });
+  const [trends, setTrends] = useState([]);
+  const [trendInterval, setTrendInterval] = useState('weekly');
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,6 +74,32 @@ const AttendanceOverview = () => {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const fetchTrends = async () => {
+      try {
+        const res = await attendanceService.getStudentTrends({ interval: trendInterval });
+        if (res?.success && res.data?.trends) {
+          setTrends(res.data.trends);
+        }
+      } catch (err) {
+        console.error('Error fetching attendance trends:', err);
+      }
+    };
+
+    fetchTrends();
+  }, [trendInterval]);
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      await attendanceService.downloadReportCsv('student_report');
+    } catch (err) {
+      console.error('Export failed:', err);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const studentName = profile?.fullName || profile?.user?.name || user?.name || 'Student';
   const { isCollapsed } = useSidebar();
@@ -101,6 +130,16 @@ const AttendanceOverview = () => {
 
           <div className="ds-header-right">
             <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                className="ds-btn ds-btn-secondary"
+                onClick={handleExport}
+                disabled={exporting}
+                title="Download verified student attendance report as sanitized CSV"
+                style={{ height: 32, fontSize: 13 }}
+              >
+                <Download size={14} /> {exporting ? 'Exporting…' : 'Export Report'}
+              </button>
               <Link to="/student/attendance/history" className="ds-btn ds-btn-secondary" style={{ height: 32, fontSize: 13 }}>
                 <History size={14} /> History
               </Link>
@@ -219,6 +258,99 @@ const AttendanceOverview = () => {
               </div>
             )}
 
+            {/* Attendance Trend Visualization (Weekly / Monthly) */}
+            <div className="ds-card">
+              <div className="ds-card-header">
+                <div>
+                  <h3 className="ds-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <TrendingUp size={18} color="#1A56DB" />
+                    <span>Attendance Trajectory & Trends</span>
+                  </h3>
+                  <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#6B7280' }}>
+                    Finalized academic attendance progression tracked in Indian Standard Time (Asia/Kolkata).
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', background: '#F1F5F9', padding: 2, borderRadius: 6 }}>
+                    <button
+                      type="button"
+                      className={`ds-btn ${trendInterval === 'weekly' ? 'ds-btn-primary' : 'ds-btn-secondary'}`}
+                      onClick={() => setTrendInterval('weekly')}
+                      style={{ height: 28, fontSize: 12, padding: '0 10px', borderRadius: 4 }}
+                    >
+                      Weekly
+                    </button>
+                    <button
+                      type="button"
+                      className={`ds-btn ${trendInterval === 'monthly' ? 'ds-btn-primary' : 'ds-btn-secondary'}`}
+                      onClick={() => setTrendInterval('monthly')}
+                      style={{ height: 28, fontSize: 12, padding: '0 10px', borderRadius: 4 }}
+                    >
+                      Monthly
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {trends.length === 0 ? (
+                <div style={{ padding: '24px 16px', textAlign: 'center', color: '#6B7280', background: '#F8FAFC', borderRadius: 8 }}>
+                  <p style={{ margin: 0, fontSize: 13 }}>No finalized attendance sessions recorded yet for this semester.</p>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ height: 160, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', borderBottom: '1px solid #E2E8F0', paddingBottom: 10, marginTop: 10 }}>
+                    {trends.map((t) => {
+                      const hasData = t.hasData;
+                      const pct = t.percentage ?? 0;
+                      const barColor = !hasData
+                        ? '#E2E8F0'
+                        : pct >= minThreshold
+                        ? 'linear-gradient(180deg, #16A34A 0%, #4ADE80 100%)'
+                        : pct >= 60
+                        ? 'linear-gradient(180deg, #D97706 0%, #FBBF24 100%)'
+                        : 'linear-gradient(180deg, #DC2626 0%, #F87171 100%)';
+
+                      return (
+                        <div key={t.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: hasData ? (pct >= minThreshold ? '#16A34A' : '#DC2626') : '#94A3B8' }}>
+                            {hasData ? `${pct}%` : '—'}
+                          </span>
+                          <div
+                            style={{
+                              width: 38,
+                              height: hasData ? `${Math.max(12, (pct / 100) * 110)}px` : '6px',
+                              background: barColor,
+                              borderRadius: '4px 4px 0 0',
+                              transition: 'height 0.3s ease',
+                            }}
+                            title={hasData ? `${t.label}: ${pct}% (${t.attendedUnits} of ${t.heldUnits} units attended)` : `${t.label}: No classes held`}
+                          />
+                          <span style={{ fontSize: 11, fontWeight: 500, color: '#64748B', whiteSpace: 'nowrap' }}>
+                            {t.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, fontSize: 12, color: '#64748B' }}>
+                    <div style={{ display: 'flex', gap: 14 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16A34A' }} /> Meets {minThreshold}%
+                      </span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#D97706' }} /> Warning (&lt;{minThreshold}%)
+                      </span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#DC2626' }} /> Critical (&lt;60%)
+                      </span>
+                    </div>
+                    <span>Finalized Sessions Only</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Subject-Wise Attendance Table */}
             <div className="ds-card">
               <div className="ds-card-header">
@@ -251,6 +383,7 @@ const AttendanceOverview = () => {
                         <th style={{ textAlign: 'center' }}>Missed</th>
                         <th style={{ width: 140 }}>Progress</th>
                         <th style={{ textAlign: 'center' }}>Percentage</th>
+                        <th style={{ textAlign: 'center' }}>Requirement</th>
                         <th style={{ textAlign: 'center' }}>Status</th>
                       </tr>
                     </thead>
@@ -278,6 +411,9 @@ const AttendanceOverview = () => {
                             </td>
                             <td style={{ textAlign: 'center', fontWeight: 700, color: isNoClass ? '#6B7280' : pct >= minThreshold ? '#16A34A' : '#DC2626' }}>
                               {isNoClass ? '—' : `${pct}%`}
+                            </td>
+                            <td style={{ textAlign: 'center', color: '#4B5563', fontWeight: 600 }}>
+                              {minThreshold}%
                             </td>
                             <td style={{ textAlign: 'center' }}>
                               <AttendanceStatusBadge status={sub.status} />

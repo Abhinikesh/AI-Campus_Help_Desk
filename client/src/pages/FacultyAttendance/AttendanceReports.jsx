@@ -10,7 +10,7 @@ import EmptyState from '../../components/AttendanceShared/EmptyState';
 import {
   GraduationCap, LayoutDashboard, BookOpen, CalendarCheck, Users,
   Megaphone, Folder, Flag, MessageCircle, LogOut, ArrowLeft,
-  AlertTriangle, CheckCircle2, TrendingUp, BarChart2
+  AlertTriangle, CheckCircle2, TrendingUp, BarChart2, Download, Filter, ShieldCheck
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 
@@ -33,30 +33,48 @@ const AttendanceReports = () => {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [exporting, setExporting] = useState(false);
   const [reportData, setReportData] = useState({
     subjectStats: [],
     lowAttendanceList: [],
     monthlyTrends: [],
+    manualAdjustments: [],
     classAverage: 83,
   });
 
-  useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        setLoading(true);
-        const res = await attendanceService.getFacultyReports();
-        if (res?.success && res.data) {
-          setReportData(res.data);
-        }
-      } catch (err) {
-        console.error('Error fetching reports:', err);
-      } finally {
-        setLoading(false);
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const params = {};
+      if (selectedSubject) params.subjectId = selectedSubject;
+      const res = await attendanceService.getFacultyReports(params);
+      if (res?.success && res.data) {
+        setReportData(res.data);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching reports:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchReports();
-  }, []);
+  }, [selectedSubject]);
+
+  const handleExportCsv = async (reportType = 'faculty_report') => {
+    try {
+      setExporting(true);
+      const filters = {};
+      if (selectedSubject) filters.subjectId = selectedSubject;
+      await attendanceService.downloadReportCsv(reportType, filters);
+    } catch (err) {
+      console.error('Failed to export CSV report:', err);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const facultyName = user?.name || 'Professor';
   const { isCollapsed } = useSidebar();
@@ -83,7 +101,16 @@ const AttendanceReports = () => {
           </div>
 
           <div className="ds-header-right">
-            <span className="ds-pill green">CSE Dept • Active Term</span>
+            <button
+              type="button"
+              className="ds-btn ds-btn-secondary"
+              onClick={() => handleExportCsv('faculty_report')}
+              disabled={exporting}
+              title="Download verified faculty report as CSV"
+              style={{ height: 32, fontSize: 13 }}
+            >
+              <Download size={14} /> {exporting ? 'Exporting…' : 'Export CSV'}
+            </button>
             <div className="ds-avatar">{initials(facultyName)}</div>
           </div>
         </header>
@@ -95,6 +122,30 @@ const AttendanceReports = () => {
           </div>
         ) : (
           <main className="ds-content">
+            {/* Subject Filter Bar */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Filter size={16} color="#4B5563" />
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Filter by Subject:</span>
+                <select
+                  className="ds-select"
+                  value={selectedSubject}
+                  onChange={(e) => setSelectedSubject(e.target.value)}
+                  style={{ height: 32, fontSize: 13, minWidth: 220 }}
+                >
+                  <option value="">All Authorized Subjects</option>
+                  {reportData.subjectStats?.map((s) => (
+                    <option key={s.subjectId} value={s.subjectId}>
+                      {s.name} ({s.code}) — Sem {s.semester}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ fontSize: 12, color: '#6B7280' }}>
+                Showing statistics for <strong>{reportData.assignedStudentsCount || 0}</strong> assigned students
+              </div>
+            </div>
             {/* Top Metric Cards */}
             <div className="ds-stat-row">
               <AttendanceSummaryCard
@@ -199,6 +250,18 @@ const AttendanceReports = () => {
                     Students requiring immediate counseling and recovery classes before university exam lock.
                   </p>
                 </div>
+
+                {reportData.lowAttendanceList.length > 0 && (
+                  <button
+                    type="button"
+                    className="ds-btn ds-btn-secondary"
+                    onClick={() => handleExportCsv('low_attendance_report')}
+                    disabled={exporting}
+                    style={{ height: 28, fontSize: 12 }}
+                  >
+                    <Download size={13} /> Export Risk Register
+                  </button>
+                )}
               </div>
 
               {reportData.lowAttendanceList.length === 0 ? (
@@ -216,6 +279,7 @@ const AttendanceReports = () => {
                         <th style={{ textAlign: 'center' }}>Total Classes</th>
                         <th style={{ textAlign: 'center' }}>Attended</th>
                         <th style={{ textAlign: 'center' }}>Current Percentage</th>
+                        <th style={{ textAlign: 'center' }}>Deficit Units</th>
                         <th style={{ textAlign: 'center' }}>Status</th>
                       </tr>
                     </thead>
@@ -227,6 +291,9 @@ const AttendanceReports = () => {
                           <td style={{ textAlign: 'center' }}>{st.totalClasses}</td>
                           <td style={{ textAlign: 'center', color: '#DC2626', fontWeight: 600 }}>{st.attended}</td>
                           <td style={{ textAlign: 'center', fontWeight: 700, color: '#DC2626' }}>{st.percentage}%</td>
+                          <td style={{ textAlign: 'center', fontWeight: 700, color: '#DC2626' }}>
+                            +{st.deficitUnits || 0}
+                          </td>
                           <td style={{ textAlign: 'center' }}>
                             <AttendanceStatusBadge status={st.status} />
                           </td>
@@ -237,6 +304,66 @@ const AttendanceReports = () => {
                 </div>
               )}
             </div>
+
+            {/* Manual Attendance Adjustment Transparency Ledger */}
+            {reportData.manualAdjustments && reportData.manualAdjustments.length > 0 && (
+              <div className="ds-card">
+                <div className="ds-card-header">
+                  <div>
+                    <h3 className="ds-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <ShieldCheck size={18} color="#1A56DB" />
+                      <span>Manual Attendance Correction Audit History</span>
+                    </h3>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#6B7280' }}>
+                      Complete transparency ledger of overrides with authorized actor and mandatory justification.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="ds-btn ds-btn-secondary"
+                    onClick={() => handleExportCsv('manual_adjustment_report')}
+                    disabled={exporting}
+                    style={{ height: 28, fontSize: 12 }}
+                  >
+                    <Download size={13} /> Export Adjustments
+                  </button>
+                </div>
+
+                <div className="ds-table-wrap">
+                  <table className="ds-table">
+                    <thead>
+                      <tr>
+                        <th>Timestamp (IST)</th>
+                        <th>Student Roll No</th>
+                        <th>Student Name</th>
+                        <th style={{ textAlign: 'center' }}>Previous Status</th>
+                        <th style={{ textAlign: 'center' }}>Updated Status</th>
+                        <th>Authorized Actor</th>
+                        <th>Mandatory Reason</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.manualAdjustments.map((adj) => (
+                        <tr key={adj._id}>
+                          <td>{adj.timestamp}</td>
+                          <td className="bold">{adj.rollNumber}</td>
+                          <td>{adj.studentName}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <AttendanceStatusBadge status={adj.previousStatus} />
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <AttendanceStatusBadge status={adj.updatedStatus} />
+                          </td>
+                          <td>{adj.actorName}</td>
+                          <td style={{ color: '#4B5563', fontStyle: 'italic' }}>"{adj.reason}"</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </main>
         )}
       </div>

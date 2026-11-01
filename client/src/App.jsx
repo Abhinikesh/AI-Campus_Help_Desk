@@ -6,37 +6,38 @@ import { SidebarProvider } from './context/SidebarContext';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
+import lazyWithRetry from './utils/lazyWithRetry';
 
 // ── Lazy Pages ────────────────────────────────────────────────
-const LoginPage                 = React.lazy(() => import('./pages/LoginPage/index'));
+const LoginPage                 = lazyWithRetry(() => import('./pages/LoginPage/index'));
 
 // Student Pages
-const StudentDashboard          = React.lazy(() => import('./pages/StudentDashboard/index'));
-const AttendanceOverview        = React.lazy(() => import('./pages/Attendance/index'));
-const MarkAttendance            = React.lazy(() => import('./pages/Attendance/MarkAttendance'));
-const AttendanceHistory         = React.lazy(() => import('./pages/Attendance/AttendanceHistory'));
-const FaceRegistration          = React.lazy(() => import('./pages/Attendance/FaceRegistration'));
-const Exams                     = React.lazy(() => import('./pages/Exams/index'));
-const Results                   = React.lazy(() => import('./pages/Results/index'));
-const StudentDrive              = React.lazy(() => import('./pages/Drive/index'));
-const Complaints                = React.lazy(() => import('./pages/Complaints/index'));
-const AIHelpDesk                = React.lazy(() => import('./pages/AIHelpDesk/index'));
+const StudentDashboard          = lazyWithRetry(() => import('./pages/StudentDashboard/index'));
+const AttendanceOverview        = lazyWithRetry(() => import('./pages/Attendance/index'));
+const MarkAttendance            = lazyWithRetry(() => import('./pages/Attendance/MarkAttendance'));
+const AttendanceHistory         = lazyWithRetry(() => import('./pages/Attendance/AttendanceHistory'));
+const FaceRegistration          = lazyWithRetry(() => import('./pages/Attendance/FaceRegistration'));
+const Exams                     = lazyWithRetry(() => import('./pages/Exams/index'));
+const Results                   = lazyWithRetry(() => import('./pages/Results/index'));
+const StudentDrive              = lazyWithRetry(() => import('./pages/Drive/index'));
+const Complaints                = lazyWithRetry(() => import('./pages/Complaints/index'));
+const AIHelpDesk                = lazyWithRetry(() => import('./pages/AIHelpDesk/index'));
 
 // Faculty Pages
-const FacultyDashboard          = React.lazy(() => import('./pages/FacultyDashboard/index'));
-const FacultyAttendanceOverview = React.lazy(() => import('./pages/FacultyAttendance/index'));
-const LiveAttendance            = React.lazy(() => import('./pages/FacultyAttendance/LiveAttendance'));
-const FacultyAttendanceRecords  = React.lazy(() => import('./pages/FacultyAttendance/AttendanceRecords'));
-const FacultyAttendanceReports  = React.lazy(() => import('./pages/FacultyAttendance/AttendanceReports'));
-const FacultyTimetable          = React.lazy(() => import('./pages/FacultyTimetable/index'));
-const FacultyResults            = React.lazy(() => import('./pages/FacultyResults/index'));
+const FacultyDashboard          = lazyWithRetry(() => import('./pages/FacultyDashboard/index'));
+const FacultyAttendanceOverview = lazyWithRetry(() => import('./pages/FacultyAttendance/index'));
+const LiveAttendance            = lazyWithRetry(() => import('./pages/FacultyAttendance/LiveAttendance'));
+const FacultyAttendanceRecords  = lazyWithRetry(() => import('./pages/FacultyAttendance/AttendanceRecords'));
+const FacultyAttendanceReports  = lazyWithRetry(() => import('./pages/FacultyAttendance/AttendanceReports'));
+const FacultyTimetable          = lazyWithRetry(() => import('./pages/FacultyTimetable/index'));
+const FacultyResults            = lazyWithRetry(() => import('./pages/FacultyResults/index'));
 
 // Admin Pages
-const AdminDashboard            = React.lazy(() => import('./pages/AdminDashboard/index'));
-const AdminAttendanceHub        = React.lazy(() => import('./pages/AdminAttendance/index'));
+const AdminDashboard            = lazyWithRetry(() => import('./pages/AdminDashboard/index'));
+const AdminAttendanceHub        = lazyWithRetry(() => import('./pages/AdminAttendance/index'));
 
 // 404
-const NotFound                  = React.lazy(() => import('./pages/NotFound/index'));
+const NotFound                  = lazyWithRetry(() => import('./pages/NotFound/index'));
 
 const App = () => (
   <AuthProvider>

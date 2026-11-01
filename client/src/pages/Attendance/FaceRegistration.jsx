@@ -73,6 +73,46 @@ const FaceRegistration = () => {
     fetchStatus();
   }, []);
 
+  const handleProceedFromConsent = async () => {
+    try {
+      setLoading(true);
+      setErrorMsg('');
+      const res = await attendanceService.grantConsent({
+        policyVersion: 'v1.0.0',
+        acceptedPurposes: ['smart_attendance_verification']
+      });
+      if (res?.success) {
+        setActiveStep(2);
+      } else {
+        setErrorMsg(res?.message || 'Failed to record biometric consent on the server.');
+      }
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || 'Failed to record consent. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInitiateReEnrollment = async () => {
+    try {
+      setLoading(true);
+      setErrorMsg('');
+      const res = await attendanceService.requestReEnrollment({
+        reason: 'Student initiated face template re-registration'
+      });
+      if (res?.success) {
+        setActiveStep(2);
+        setSampleCount(0);
+      } else {
+        setErrorMsg(res?.message || 'Unable to authorize re-enrollment.');
+      }
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || 'Re-enrollment authorization failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCaptureSamples = async () => {
     setCapturing(true);
     setErrorMsg('');
@@ -97,7 +137,6 @@ const FaceRegistration = () => {
 
     try {
       const enrollRes = await attendanceService.enrollFace({
-        consentGiven: true,
         isReEnrollment: faceStatus.isEnrolled,
         samplesCount: frames.length || 3,
         imageData: primaryImage,
@@ -281,7 +320,7 @@ const FaceRegistration = () => {
               <div style={{ background: '#F8FAFC', padding: 18, borderRadius: 8, border: '1px solid #E2E8F0', marginBottom: 20, fontSize: 13, color: '#334155', lineHeight: 1.6 }}>
                 <p><strong>1. Data Minimization:</strong> No raw photographs or video recordings are stored permanently. Your face is converted into an encrypted 128-dimensional mathematical vector.</p>
                 <p><strong>2. Purpose Limitation:</strong> Your biometric embedding is used exclusively for classroom attendance verification. It is never sold, shared, or matched against external law enforcement databases.</p>
-                <p><strong>3. Right to Revoke:</strong> You retain the full legal right to withdraw consent and delete your biometric template at any point. When consent is withdrawn, manual QR or faculty roster check-in remains fully available without academic penalty.</p>
+                <p><strong>3. Right to Revoke:</strong> You retain the full legal right to withdraw consent and delete your biometric template at any point. Institutional policies govern alternative attendance methods (such as instructor roll-call) if biometric consent is declined or withdrawn.</p>
               </div>
 
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 13, color: '#111827', fontWeight: 500, marginBottom: 24 }}>
@@ -299,8 +338,8 @@ const FaceRegistration = () => {
               <button
                 type="button"
                 className="ds-btn ds-btn-primary"
-                disabled={!consentChecked}
-                onClick={() => setActiveStep(2)}
+                disabled={!consentChecked || loading}
+                onClick={handleProceedFromConsent}
                 style={{ padding: '0 24px' }}
               >
                 Proceed to Camera Capture →
@@ -404,7 +443,8 @@ const FaceRegistration = () => {
                 <button
                   type="button"
                   className="ds-btn ds-btn-secondary"
-                  onClick={() => setActiveStep(2)}
+                  disabled={loading}
+                  onClick={handleInitiateReEnrollment}
                 >
                   <RefreshCw size={14} /> Re-Enroll Face Samples
                 </button>

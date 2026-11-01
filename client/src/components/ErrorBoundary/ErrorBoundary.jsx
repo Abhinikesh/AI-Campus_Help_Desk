@@ -15,16 +15,35 @@ class ErrorBoundary extends React.Component {
     console.error('ErrorBoundary caught an unhandled error:', error, errorInfo);
   }
 
+  isChunkLoadError(error) {
+    if (!error) return false;
+    const msg = error.message || error.toString();
+    return (
+      error.name === 'ChunkLoadError' ||
+      msg.includes('Importing a module script failed') ||
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('error loading dynamically imported module')
+    );
+  }
+
   handleReload = () => {
+    try {
+      window.sessionStorage.removeItem('campussphere_chunk_retry');
+    } catch (_) {}
     window.location.reload();
   };
 
   handleHome = () => {
+    try {
+      window.sessionStorage.removeItem('campussphere_chunk_retry');
+    } catch (_) {}
     window.location.href = '/';
   };
 
   render() {
     if (this.state.hasError) {
+      const isChunkError = this.isChunkLoadError(this.state.error);
+
       return (
         <div style={{
           minHeight: '100vh',
@@ -50,21 +69,23 @@ class ErrorBoundary extends React.Component {
               width: '64px',
               height: '64px',
               borderRadius: '50%',
-              background: 'rgba(239, 68, 68, 0.15)',
-              color: '#EF4444',
+              background: isChunkError ? 'rgba(59, 130, 246, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              color: isChunkError ? '#3B82F6' : '#EF4444',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '20px',
             }}>
-              <AlertCircle size={36} />
+              {isChunkError ? <RefreshCw size={36} /> : <AlertCircle size={36} />}
             </div>
 
             <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 8px', color: '#FFFFFF' }}>
-              Oops! Something went wrong
+              {isChunkError ? 'New Version Available' : 'Oops! Something went wrong'}
             </h2>
             <p style={{ fontSize: '14px', color: '#94A3B8', margin: '0 0 24px', lineHeight: 1.6 }}>
-              A technical error occurred while displaying this page. Your academic data is secure.
+              {isChunkError
+                ? 'A newer application bundle has been deployed or network connectivity was refreshed. Reload to fetch the latest assets.'
+                : 'A technical error occurred while displaying this page. Your academic data is secure.'}
             </p>
 
             {this.state.error && (
@@ -73,7 +94,7 @@ class ErrorBoundary extends React.Component {
                 borderRadius: '8px',
                 padding: '12px 14px',
                 fontSize: '12px',
-                color: '#EF4444',
+                color: isChunkError ? '#93C5FD' : '#EF4444',
                 fontFamily: 'monospace',
                 textAlign: 'left',
                 marginBottom: '24px',
@@ -103,7 +124,7 @@ class ErrorBoundary extends React.Component {
                   transition: 'background 0.2s',
                 }}
               >
-                <RefreshCw size={16} /> Reload Page
+                <RefreshCw size={16} /> {isChunkError ? 'Update & Reload' : 'Reload Page'}
               </button>
               <button
                 type="button"

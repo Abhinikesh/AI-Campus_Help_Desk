@@ -22,6 +22,7 @@ const Subject = require('../models/Subject');
 const User = require('../models/User');
 const pythonAiService = require('../services/pythonAi.service');
 const attendanceCalculationService = require('../services/attendanceCalculation.service');
+const attendanceExportService = require('../services/attendanceExport.service');
 const { transitionSessionState } = require('../services/sessionStateMachine.service');
 const sessionSchedulerService = require('../services/sessionScheduler.service');
 const qrChallengeService = require('../services/qrChallenge.service');
@@ -502,29 +503,6 @@ const getQrChallenge = asyncHandler(async (req, res) => {
     }
   });
 });
-  if (!session) throw new ApiError(404, 'Session not found');
-
-  if (req.user.role === 'faculty' && session.faculty.toString() !== req.user.userId) {
-    throw new ApiError(403, 'Unauthorized');
-  }
-
-  const token = crypto.randomBytes(24).toString('hex');
-  const expiresAt = new Date(Date.now() + 45 * 1000); // 45 seconds validity
-
-  session.qrChallengeToken = token;
-  session.qrChallengeExpiresAt = expiresAt;
-  await session.save();
-
-  return res.status(200).json({
-    success: true,
-    data: {
-      sessionId: session._id,
-      challengeToken: token,
-      expiresAt: expiresAt.toISOString(),
-      expiresInSeconds: 45
-    }
-  });
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2. STUDENT ATTENDANCE CONTROLLERS
@@ -655,6 +633,28 @@ const getStudentHistory = asyncHandler(async (req, res) => {
 });
 
 /**
+ * GET /api/attendance/student/trends
+ * Calculate weekly or monthly finalized attendance trajectory in Asia/Kolkata timezone
+ */
+const getStudentTrends = asyncHandler(async (req, res) => {
+  const student = await getStudentForUser(req.user.userId);
+  const { interval = 'weekly', semester, branch } = req.query;
+
+  const data = await attendanceCalculationService.calculateStudentAttendanceTrends({
+    studentId: student._id,
+    semester: semester ? Number(semester) : student.semester,
+    branch: branch || student.branch,
+    interval: interval === 'monthly' ? 'monthly' : 'weekly',
+  });
+
+  return res.status(200).json({
+    success: true,
+    data,
+    message: 'Student attendance trends loaded',
+  });
+});
+
+/**
  * POST /api/attendance/student/:sessionId/join
  * Validate student enrollment and eligibility to join an active session
  */
@@ -753,7 +753,14 @@ const recordStudentAttendance = asyncHandler(async (req, res) => {
 
   if (verificationMethod === 'face') {
     const faceProfile = await FaceEmbedding.findOne({ student: student._id }).select('+encryptedData');
-    if (!faceProfile || !faceProfile.isActive || !faceProfile.consentGiven || !faceProfile.encryptedData) {
+    if (
+      !faceProfile ||
+      !faceProfile.isActive ||
+      faceProfile.status !== 'enrolled' ||
+      faceProfile.enrollmentStatus !== 'enrolled' ||
+      !faceProfile.consentGiven ||
+      !faceProfile.encryptedData
+    ) {
       throw new ApiError(403, 'Active biometric enrollment and consent required. Please enroll your face first or request manual verification.');
     }
 
@@ -1133,32 +1140,116 @@ const correctAttendanceRecord = asyncHandler(async (req, res) => {
 
 /**
  * GET /api/attendance/faculty/reports
- * Return authorized class-wise and subject-wise reports via Python engine
+ * Return authorized class-wise and subject-wise reports via authoritative calculation engine
  */
 const getFacultyReports = asyncHandler(async (req, res) => {
-  const { semester = 4, branch = 'CSE' } = req.query;
-  const faculty = await getFacultyForUser(req.user.userId);
+  const { subjectId, semester, section, startDate, endDate } = req.query;
 
-  const sessions = await AttendanceSession.find({
-    faculty: req.user.userId,
-    semester: Number(semester),
-    branch: branch.toUpperCase(),
-    status: { $in: ['completed', 'finalized'] }
+  const report = await attendanceCalculationService.calculateFacultyDetailedReport({
+    facultyUserId: req.user.userId,
+    subjectId,
+    semester,
+    section,
+    startDate,
+    endDate,
   });
-
-  const sessionIds = sessions.map(s => s._id);
-  const records = await Attendance.find({ session: { $in: sessionIds } });
-  const students = await Student.find({
-    semester: Number(semester),
-    branch: branch.toUpperCase()
-  }).populate('user', 'name email');
-
-  const report = await pythonAiService.calculateFacultyReport(sessions, records, students);
 
   return res.status(200).json({
     success: true,
     data: report,
-    message: 'Faculty attendance report generated'
+    message: 'Faculty attendance report generated',
+  });
+});
+
+/**
+ * GET /api/attendance/reports
+ * Preview one of 8 practical attendance reports in structured JSON
+ */
+const getAttendanceReport = asyncHandler(async (req, res) => {
+  const { reportType = 'student_report', ...filters } = req.query;
+
+  const report = await attendanceCalculationService.generateAttendanceReport({
+    reportType,
+    userRole: req.user.role,
+    userId: req.user.userId,
+    filters,
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: report,
+    message: 'Attendance report generated successfully',
+  });
+});
+
+/**
+ * GET /api/attendance/reports/export
+ * Download CSV or JSON export with strict formula injection defense
+ */
+const exportAttendanceReport = asyncHandler(async (req, res) => {
+  const { reportType = 'student_report', format = 'csv', ...filters } = req.query;
+
+  const report = await attendanceCalculationService.generateAttendanceReport({
+    reportType,
+    userRole: req.user.role,
+    userId: req.user.userId,
+    filters,
+  });
+
+  if (format.toLowerCase() === 'json') {
+    const jsonPayload = attendanceExportService.generateJson(report);
+    return res.status(200).json(jsonPayload);
+  }
+
+  const csvContent = attendanceExportService.generateCsv(report);
+  const safeFilename = `CampusSphere_${reportType}_${new Date().toISOString().split('T')[0]}.csv`;
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+  return res.status(200).send(csvContent);
+});
+
+/**
+ * GET /api/attendance/audit-logs/adjustments
+ * Retrieve audit history of manual attendance corrections with authorized actors and reasons
+ */
+const getAdjustmentLogs = asyncHandler(async (req, res) => {
+  const facultyUserId = req.user.role === 'faculty' ? req.user.userId : undefined;
+  const { studentId, sessionId, page = 1, limit = 50 } = req.query;
+
+  const result = await attendanceCalculationService.getManualAdjustmentLogs({
+    facultyUserId,
+    studentId,
+    sessionId,
+    page: Number(page),
+    limit: Number(limit),
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: result.logs,
+    pagination: result.pagination,
+  });
+});
+
+/**
+ * GET /api/attendance/admin/risk-register
+ * Academic Risk Monitoring: Identify students whose attendance falls below minimum requirement with deficit calculation
+ */
+const getAdminRiskRegister = asyncHandler(async (req, res) => {
+  const { branch, semester, threshold } = req.query;
+
+  const register = await attendanceCalculationService.calculateLowAttendanceRegister({
+    branch,
+    semester: semester ? Number(semester) : undefined,
+    threshold: threshold ? Number(threshold) : undefined,
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: register,
+    totalAtRisk: register.length,
+    message: 'Academic risk register generated',
   });
 });
 
@@ -1168,31 +1259,59 @@ const getFacultyReports = asyncHandler(async (req, res) => {
 
 /**
  * GET /api/attendance/admin/overview
+ * Real-time institutional attendance overview using authoritative calculation service
  */
 const getAdminOverview = asyncHandler(async (req, res) => {
-  const totalSessions = await AttendanceSession.countDocuments();
-  const totalRecords = await Attendance.countDocuments();
-  const enrolledFaces = await FaceEmbedding.countDocuments({
-    status: { $in: ['active', 'enrolled'] }
+  const institution = await attendanceCalculationService.calculateAdminInstitutionOverview();
+
+  const activeSessionsCount = await AttendanceSession.countDocuments({
+    status: { $in: ['open', 'active'] },
   });
-  const totalStudents = await Student.countDocuments();
+
+  const enrolledFaces = await FaceEmbedding.countDocuments({
+    status: { $in: ['active', 'enrolled'] },
+  });
 
   const recentSessions = await AttendanceSession.find()
     .populate('subject', 'name code')
     .populate('faculty', 'name')
     .sort({ createdAt: -1 })
-    .limit(5);
+    .limit(5)
+    .lean();
 
   return res.status(200).json({
     success: true,
     data: {
-      totalSessions,
-      totalRecords,
+      totalSessions: institution.finalizedSessions,
+      activeSessions: activeSessionsCount,
+      totalStudents: institution.totalActiveStudents,
+      totalStudentsEnrolled: enrolledFaces,
       enrolledFaces,
-      totalStudents,
-      biometricEnrollmentRate: totalStudents > 0 ? Math.round((enrolledFaces / totalStudents) * 100) : 0,
-      recentSessions
-    }
+      biometricEnrollmentRate: institution.totalActiveStudents > 0
+        ? Math.round((enrolledFaces / institution.totalActiveStudents) * 100)
+        : 0,
+      overallAttendance: institution.overallAttendancePercentage,
+      studentsBelowThresholdCount: institution.studentsBelowThresholdCount,
+      minAttendanceThreshold: institution.minAttendanceThreshold,
+      totalHeldAcademicUnits: institution.totalHeldAcademicUnits,
+      totalSubjects: institution.totalSubjects,
+      departmentStats: institution.departmentStats.map((d) => ({
+        department: d.department,
+        attendance: d.overallAttendanceRate,
+        sessions: d.totalSessionsConducted,
+        heldUnits: d.totalHeldAcademicUnits,
+        activeStudents: d.activeStudentCount,
+      })),
+      recentSessions: recentSessions.map((s) => ({
+        _id: s._id,
+        date: s.date,
+        subject: s.subject?.name || 'Class',
+        faculty: s.faculty?.name || 'Faculty',
+        present: s.presentCount || 0,
+        total: s.totalStudents || 0,
+        status: s.status,
+      })),
+    },
   });
 });
 
@@ -1331,6 +1450,7 @@ module.exports = {
   getQrChallenge,
   getStudentOverview,
   getStudentHistory,
+  getStudentTrends,
   joinSession,
   recordStudentAttendance,
   getStudentAttendanceRecord,
@@ -1341,6 +1461,10 @@ module.exports = {
   getSessionStudents,
   correctAttendanceRecord,
   getFacultyReports,
+  getAttendanceReport,
+  exportAttendanceReport,
+  getAdjustmentLogs,
+  getAdminRiskRegister,
   getAdminOverview,
   getAdminAuditLogs,
   getAdminFaceProfiles,

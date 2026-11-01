@@ -21,6 +21,7 @@ const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const FaceEmbedding = require('../models/FaceEmbedding');
 const ConsentRecord = require('../models/ConsentRecord');
 const AttendanceSettings = require('../models/AttendanceSettings');
+const { verifyTestDatabaseIsolation } = require('./helpers/testDatabase');
 
 const ISOLATED_TEST_DB = 'mongodb://127.0.0.1:27018/campus-erp-test-isolated';
 
@@ -30,6 +31,8 @@ test('Part 4 Database Integrity & Schema Verification Suite', async (t) => {
 
   // Setup: Connect to isolated test database and clear collections
   await t.test('Setup: Connect to isolated database and seed fixtures', async () => {
+    verifyTestDatabaseIsolation(ISOLATED_TEST_DB);
+
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
     }
@@ -388,6 +391,31 @@ test('Part 4 Database Integrity & Schema Verification Suite', async (t) => {
     assert.ok(log._id);
     assert.equal(log.action, 'manual_correction');
     assert.equal(log.reason, 'Verified in person; camera hardware fault');
+  });
+
+  // Test 12: Database Isolation Guard Verification
+  await t.test('12. verifyTestDatabaseIsolation rejects production, development, and non-test database URIs', () => {
+    const dangerousUris = [
+      'mongodb://localhost:27018/campus-erp',
+      'mongodb://localhost:27018/production',
+      'mongodb://localhost:27018/prod',
+      'mongodb://localhost:27018/development',
+      'mongodb://localhost:27018/test',
+      'mongodb://localhost:27018/admin',
+      'mongodb://localhost:27018/live-college-db'
+    ];
+
+    for (const uri of dangerousUris) {
+      assert.throws(
+        () => verifyTestDatabaseIsolation(uri),
+        /TEST SAFETY VIOLATION/,
+        `Should reject forbidden URI: ${uri}`
+      );
+    }
+
+    // Valid test URIs must succeed
+    assert.equal(verifyTestDatabaseIsolation('mongodb://localhost:27018/campus-erp-test-isolated'), true);
+    assert.equal(verifyTestDatabaseIsolation('mongodb://127.0.0.1:27018/ci-test-db'), true);
   });
 
   // Teardown: Clean up isolated test database

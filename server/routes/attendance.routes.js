@@ -21,6 +21,7 @@ const {
   getQrChallenge,
   getStudentOverview,
   getStudentHistory,
+  getStudentTrends,
   joinSession,
   recordStudentAttendance,
   getStudentAttendanceRecord,
@@ -31,6 +32,10 @@ const {
   getSessionStudents,
   correctAttendanceRecord,
   getFacultyReports,
+  getAttendanceReport,
+  exportAttendanceReport,
+  getAdjustmentLogs,
+  getAdminRiskRegister,
   getAdminOverview,
   getAdminAuditLogs,
   getAdminFaceProfiles,
@@ -58,6 +63,7 @@ router.get('/sessions/:sessionId/qr-challenge', authMiddleware, allowRoles('facu
 // ── 2. Student Attendance APIs ────────────────────────────────────────────────
 router.get('/student/overview',               authMiddleware, allowRoles('student'), getStudentOverview);
 router.get('/student/history',                authMiddleware, allowRoles('student'), getStudentHistory);
+router.get('/student/trends',                 authMiddleware, allowRoles('student'), getStudentTrends);
 router.get('/student/active-sessions',        authMiddleware, allowRoles('student'), getActiveSessions);
 router.post('/student/:sessionId/join',       authMiddleware, allowRoles('student'), joinSession);
 router.post('/student/:sessionId/attendance', authMiddleware, allowRoles('student'), recordStudentAttendance);
@@ -72,8 +78,14 @@ router.get('/faculty/sessions/:sessionId/students', authMiddleware, allowRoles('
 router.patch('/faculty/records/:attendanceId',authMiddleware, allowRoles('faculty', 'admin'), correctAttendanceRecord);
 router.get('/faculty/reports',                authMiddleware, allowRoles('faculty', 'admin'), getFacultyReports);
 
-// ── 4. Admin Attendance APIs ──────────────────────────────────────────────────
+// ── 4. Unified Practical Reports & Exports (8 Practical Report Types) ─────────
+router.get('/reports',                        authMiddleware, allowRoles('student', 'faculty', 'admin'), getAttendanceReport);
+router.get('/reports/export',                 authMiddleware, allowRoles('student', 'faculty', 'admin'), exportAttendanceReport);
+router.get('/audit-logs/adjustments',         authMiddleware, allowRoles('faculty', 'admin'), getAdjustmentLogs);
+
+// ── 5. Admin Attendance APIs ──────────────────────────────────────────────────
 router.get('/admin/overview',                 authMiddleware, allowRoles('admin'), getAdminOverview);
+router.get('/admin/risk-register',            authMiddleware, allowRoles('admin'), getAdminRiskRegister);
 router.get('/admin/sessions',                 authMiddleware, allowRoles('admin'), getSessions);
 router.get('/admin/records',                  authMiddleware, allowRoles('admin'), getFacultyRecords);
 router.get('/admin/audit-logs',               authMiddleware, allowRoles('admin'), getAdminAuditLogs);

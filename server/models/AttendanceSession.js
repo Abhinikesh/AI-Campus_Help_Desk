@@ -206,6 +206,8 @@ attendanceSessionSchema.pre('save', function (next) {
 
 attendanceSessionSchema.index({ subject: 1, date: 1, period: 1 });
 attendanceSessionSchema.index({ faculty: 1, date: 1 });
+attendanceSessionSchema.index({ faculty: 1, status: 1, date: -1 });
 attendanceSessionSchema.index({ branch: 1, semester: 1, status: 1 });
+attendanceSessionSchema.index({ date: -1 });
 
 module.exports = mongoose.model('AttendanceSession', attendanceSessionSchema);

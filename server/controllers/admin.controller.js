@@ -15,6 +15,7 @@ const FaceEmbedding = require('../models/FaceEmbedding');
 const AttendanceSettings = require('../models/AttendanceSettings');
 const ConsentRecord = require('../models/ConsentRecord');
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
+const attendanceCalculationService = require('../services/attendanceCalculation.service');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -374,39 +375,58 @@ const getFaceEnrollments = asyncHandler(async (req, res) => {
 // DELETE /api/admin/attendance/face-enrollments/:studentId — Delete Biometric Data
 const deleteFaceEnrollment = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
-  const face = await FaceEmbedding.findOne({ student: studentId }).select('+encryptedData');
-  if (face) {
-    face.encryptedData = null; // Cryptographically purge template
-    face.templateReference = null;
-    face.isActive = false;
-    face.status = 'revoked';
-    face.consentGiven = false;
-    face.samplesCaptured = 0;
-    face.deletionRequestedAt = new Date();
-    face.deletionCompletedAt = new Date();
-    await face.save();
+  const reason = (req.body?.reason || req.query?.reason || '').trim();
+  if (!reason || reason.length < 3) {
+    throw new ApiError(400, 'A valid administrative justification reason is required to purge student biometric data');
   }
 
-  // Revoke active consent record
-  await ConsentRecord.updateMany(
-    { student: studentId, consentStatus: 'active' },
-    { consentStatus: 'revoked', withdrawalTimestamp: new Date() }
-  );
+  try {
+    const face = await FaceEmbedding.findOne({ student: studentId }).select('+encryptedData');
+    if (face) {
+      face.encryptedData = null; // Cryptographically purge template
+      face.templateReference = null;
+      face.isActive = false;
+      face.status = 'deleted';
+      face.enrollmentStatus = 'deleted';
+      face.consentGiven = false;
+      face.consentStatus = 'revoked';
+      face.samplesCaptured = 0;
+      face.deletionRequestedAt = new Date();
+      face.deletionCompletedAt = new Date();
+      await face.save();
+    }
 
-  // Record audit log
-  await AttendanceAuditLog.record({
-    actorId: req.user.userId,
-    actorRole: req.user.role,
-    action: 'delete_biometric',
-    affectedStudentId: studentId,
-    reason: 'Admin purged biometric profile and revoked active consent',
-    ipAddress: req.ip,
-  });
+    // Revoke active consent record
+    await ConsentRecord.updateMany(
+      { student: studentId, consentStatus: 'active' },
+      { consentStatus: 'revoked', withdrawalTimestamp: new Date() }
+    );
 
-  return res.status(200).json({
-    success: true,
-    message: 'Student biometric data safely revoked and cryptographically purged from verification pool.',
-  });
+    // Record audit log
+    await AttendanceAuditLog.record({
+      actorId: req.user.userId,
+      actorRole: req.user.role,
+      action: 'delete_biometric',
+      affectedStudentId: studentId,
+      reason: `Admin purged biometric profile: ${reason}`,
+      ipAddress: req.ip,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Student biometric data safely revoked and cryptographically purged from verification pool.',
+    });
+  } catch (err) {
+    await AttendanceAuditLog.record({
+      actorId: req.user.userId,
+      actorRole: req.user.role,
+      action: 'deletion_failed',
+      affectedStudentId: studentId,
+      reason: `Admin purge failed: ${err.message}`,
+      ipAddress: req.ip,
+    });
+    throw err;
+  }
 });
 
 // POST /api/admin/attendance/face-enrollments/purge-bulk
@@ -470,38 +490,42 @@ const purgeBulkEnrollments = asyncHandler(async (req, res) => {
 
 // GET /api/admin/attendance/analytics — Comprehensive Attendance Analytics
 const getAttendanceAnalytics = asyncHandler(async (req, res) => {
-  const [allStudents, allSessions, allRecords] = await Promise.all([
+  const { minAttendancePercent } = await attendanceCalculationService.resolveSettings();
+
+  const [institutionOverview, riskRegister, allStudents, allSessions, allRecords] = await Promise.all([
+    attendanceCalculationService.calculateAdminInstitutionOverview(),
+    attendanceCalculationService.calculateLowAttendanceRegister({ threshold: minAttendancePercent }),
     Student.find({}, 'branch semester rollNumber fullName').lean(),
-    AttendanceSession.find({}, 'branch semester status date').lean(),
-    Attendance.find({}, 'status date student').lean(),
+    AttendanceSession.find({ status: { $in: ['completed', 'finalized'] } }, 'branch semester status date period periodCount').lean(),
+    Attendance.find({ status: { $in: ['present', 'late', 'absent', 'excused'] } }, 'status date student session periodCount').lean(),
   ]);
 
-  const branches = ['CSE', 'IT', 'ECE', 'MECH'];
-  const departmentStats = branches.map((branch) => {
-    const branchStudents = allStudents.filter((s) => (s.branch || '').toUpperCase() === branch);
+  // Dynamic departments from database
+  const distinctBranches = [...new Set(allStudents.map((s) => s.branch).filter(Boolean))];
+  const deptNames = {
+    CSE: 'Computer Science & Engineering',
+    IT: 'Information Technology',
+    ECE: 'Electronics & Communication',
+    MECH: 'Mechanical Engineering',
+    CIVIL: 'Civil Engineering',
+    EE: 'Electrical Engineering',
+  };
+
+  const departmentStats = distinctBranches.map((branch) => {
+    const branchUpper = (branch || '').toUpperCase();
+    const branchStudents = allStudents.filter((s) => (s.branch || '').toUpperCase() === branchUpper);
     const branchStudentIds = new Set(branchStudents.map((s) => s._id.toString()));
     const branchRecords = allRecords.filter((r) => branchStudentIds.has(r.student?.toString()));
     const presentRecords = branchRecords.filter((r) => ['present', 'late'].includes(r.status));
     const average = branchRecords.length > 0 ? Math.round((presentRecords.length / branchRecords.length) * 100) : 0;
-    const lowAttendanceCount = branchStudents.filter((s) => {
-      const studentRecs = branchRecords.filter((r) => r.student?.toString() === s._id.toString());
-      if (studentRecs.length === 0) return false;
-      const sPresent = studentRecs.filter((r) => ['present', 'late'].includes(r.status));
-      return (sPresent.length / studentRecs.length) * 100 < 75;
-    }).length;
-
-    const deptNames = {
-      CSE: 'Computer Science & Engineering',
-      IT: 'Information Technology',
-      ECE: 'Electronics & Communication',
-      MECH: 'Mechanical Engineering',
-    };
+    const lowCount = riskRegister.filter((r) => (r.department || '').toUpperCase() === branchUpper).length;
 
     return {
-      department: deptNames[branch] || branch,
+      department: deptNames[branchUpper] || branch,
+      branch: branchUpper,
       average,
       totalStudents: branchStudents.length,
-      lowAttendanceCount,
+      lowAttendanceCount: lowCount,
     };
   });
 
@@ -524,24 +548,21 @@ const getAttendanceAnalytics = asyncHandler(async (req, res) => {
     const presentRecs = classRecords.filter((r) => ['present', 'late'].includes(r.status));
     const average = classRecords.length > 0 ? Math.round((presentRecs.length / classRecords.length) * 100) : 0;
 
-    let below75 = 0;
-    classStudents.forEach((st) => {
-      const stRecs = classRecords.filter((r) => r.student?.toString() === st._id.toString());
-      if (stRecs.length > 0) {
-        const stPresent = stRecs.filter((r) => ['present', 'late'].includes(r.status)).length;
-        if ((stPresent / stRecs.length) * 100 < 75) below75++;
-      }
-    });
+    const classRisk = riskRegister.filter(
+      (r) => (r.department || '').toUpperCase() === branch && Number(r.semester) === sem
+    );
 
     return {
       className: `${branch} Semester ${sem}`,
+      branch,
+      semester: sem,
       average,
       totalStudents: classStudents.length,
-      below75,
+      below75: classRisk.length,
     };
   });
 
-  // Dynamic monthly trends from actual Attendance records
+  // Dynamic monthly trends from actual Attendance records in Asia/Kolkata timezone
   const monthlyMap = {};
   allRecords.forEach((r) => {
     const dateStr = r.date || (r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : '');
@@ -567,12 +588,10 @@ const getAttendanceAnalytics = asyncHandler(async (req, res) => {
       const data = monthlyMap[mKey];
       return {
         month: name,
+        monthKey: mKey,
         rate: data.total > 0 ? Math.round((data.present / data.total) * 100) : 0,
       };
     });
-
-  const totalPresent = allRecords.filter((r) => ['present', 'late'].includes(r.status)).length;
-  const overallCampusAttendance = allRecords.length > 0 ? Math.round((totalPresent / allRecords.length) * 100) : 0;
 
   return res.status(200).json({
     success: true,
@@ -582,9 +601,13 @@ const getAttendanceAnalytics = asyncHandler(async (req, res) => {
         { className: 'CSE Semester 4', average: 0, totalStudents: allStudents.filter(s => s.branch === 'CSE' && s.semester === 4).length, below75: 0 }
       ],
       monthlyTrends: monthlyTrends.length > 0 ? monthlyTrends : [
-        { month: 'Current', rate: overallCampusAttendance }
+        { month: 'Current', rate: institutionOverview.overallAttendancePercentage }
       ],
-      overallCampusAttendance,
+      overallCampusAttendance: institutionOverview.overallAttendancePercentage,
+      minAttendanceThreshold: minAttendancePercent,
+      academicRiskRegister: riskRegister,
+      totalStudentsAtRisk: riskRegister.length,
+      institutionOverview,
     },
     message: 'Attendance analytics loaded',
   });

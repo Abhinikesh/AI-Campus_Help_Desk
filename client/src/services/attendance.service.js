@@ -16,6 +16,11 @@ export const attendanceService = {
     return res.data;
   },
 
+  getStudentTrends: async (params = {}) => {
+    const res = await api.get('/api/attendance/student/trends', { params });
+    return res.data;
+  },
+
   getStudentActiveSessions: async () => {
     const res = await api.get('/api/student/attendance/sessions');
     return res.data;
@@ -132,8 +137,40 @@ export const attendanceService = {
     return res.data;
   },
 
-  getFacultyReports: async () => {
-    const res = await api.get('/api/faculty/attendance/reports');
+  getFacultyReports: async (params = {}) => {
+    const res = await api.get('/api/attendance/faculty/reports', { params });
+    return res.data;
+  },
+
+  // ── Unified Practical Reports & Exports (8 Practical Report Types) ─────────
+  getAttendanceReport: async (reportType, filters = {}) => {
+    const res = await api.get('/api/attendance/reports', { params: { reportType, ...filters } });
+    return res.data;
+  },
+
+  downloadReportCsv: async (reportType, filters = {}) => {
+    const res = await api.get('/api/attendance/reports/export', {
+      params: { reportType, format: 'csv', ...filters },
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `CampusSphere_${reportType}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    return true;
+  },
+
+  getAdjustmentLogs: async (params = {}) => {
+    const res = await api.get('/api/attendance/audit-logs/adjustments', { params });
+    return res.data;
+  },
+
+  getRiskRegister: async (params = {}) => {
+    const res = await api.get('/api/attendance/admin/risk-register', { params });
     return res.data;
   },
 

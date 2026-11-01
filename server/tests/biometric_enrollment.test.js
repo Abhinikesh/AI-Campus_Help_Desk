@@ -29,18 +29,8 @@ const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const pythonAiService = require('../services/pythonAi.service');
 
 // Strict test database isolation
-const TEST_DB_URI = process.env.TEST_MONGODB_URI || 'mongodb://127.0.0.1:27018/campus-erp-test-isolated';
+const { verifyTestDatabaseIsolation, TEST_DB_URI } = require('./helpers/testDatabase');
 const TEST_SECRET_KEY = process.env.BIOMETRIC_SECRET_KEY || 'campus-sphere-test-biometric-key-2026';
-
-function verifyTestDatabaseIsolation(uri) {
-  const dbName = uri.split('/').pop().split('?')[0];
-  const forbiddenNames = ['campus-erp', 'test', 'production', 'prod', 'development'];
-  if (forbiddenNames.includes(dbName.toLowerCase())) {
-    throw new Error(
-      `TEST SAFETY VIOLATION: Refusing to run tests against '${dbName}'. Tests must use an isolated test database.`
-    );
-  }
-}
 
 // AES-256-GCM helper functions matching Python implementation exactly
 function encryptTemplate(data, secretKey = TEST_SECRET_KEY) {

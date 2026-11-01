@@ -30,17 +30,7 @@ const attendanceCalculationService = require('../services/attendanceCalculation.
 const pythonAiService = require('../services/pythonAi.service');
 
 // Strict test database isolation
-const TEST_DB_URI = process.env.TEST_MONGODB_URI || 'mongodb://127.0.0.1:27018/campus-erp-test-isolated';
-
-function verifyTestDatabaseIsolation(uri) {
-  const dbName = uri.split('/').pop().split('?')[0];
-  const forbiddenNames = ['campus-erp', 'test', 'production', 'prod', 'development'];
-  if (forbiddenNames.includes(dbName.toLowerCase())) {
-    throw new Error(
-      `TEST SAFETY VIOLATION: Refusing to run tests against '${dbName}'. Tests must use an isolated test database (e.g. campus-erp-test-isolated).`
-    );
-  }
-}
+const { verifyTestDatabaseIsolation, TEST_DB_URI } = require('./helpers/testDatabase');
 
 test('Part 8 Attendance Accuracy, Academic Calculations & Consistency Suite', async (t) => {
   verifyTestDatabaseIsolation(TEST_DB_URI);

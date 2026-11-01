@@ -394,5 +394,9 @@ test('Smart Attendance Backend & API Test Suite', async (t) => {
     await Attendance.deleteOne({ _id: createdAttendanceId });
     await AttendanceSession.deleteOne({ _id: createdSessionId });
     await AttendanceAuditLog.deleteMany({ sessionId: createdSessionId });
+
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
   });
 });

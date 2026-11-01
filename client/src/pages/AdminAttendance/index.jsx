@@ -43,6 +43,9 @@ const AdminAttendanceHub = () => {
   const [records, setRecords] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
   const [analytics, setAnalytics] = useState(null);
+  const [adjustmentLogs, setAdjustmentLogs] = useState([]);
+  const [selectedReportType, setSelectedReportType] = useState('department_report');
+  const [exportingReport, setExportingReport] = useState(false);
   const [settings, setSettings] = useState({
     minAttendancePercent: 75,
     defaultSessionDurationMinutes: 60,
@@ -87,8 +90,12 @@ const AdminAttendanceHub = () => {
         const res = await attendanceService.getAdminFaceEnrollments();
         if (res?.success) setEnrollments(res.data);
       } else if (tab === 'analytics') {
-        const res = await attendanceService.getAdminAnalytics();
-        if (res?.success) setAnalytics(res.data);
+        const [analyticsRes, adjRes] = await Promise.all([
+          attendanceService.getAdminAnalytics(),
+          attendanceService.getAdjustmentLogs({ limit: 50 }).catch(() => ({ success: false })),
+        ]);
+        if (analyticsRes?.success) setAnalytics(analyticsRes.data);
+        if (adjRes?.success && adjRes.data) setAdjustmentLogs(adjRes.data);
       } else if (tab === 'settings') {
         const res = await attendanceService.getAdminSettings();
         if (res?.success) setSettings(res.data);
@@ -158,6 +165,17 @@ const AdminAttendanceHub = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleExportReport = async () => {
+    try {
+      setExportingReport(true);
+      await attendanceService.downloadReportCsv(selectedReportType);
+    } catch (err) {
+      console.error('Failed to export admin report:', err);
+    } finally {
+      setExportingReport(false);
+    }
   };
 
   const adminName = user?.name || 'Administrator';
@@ -610,6 +628,50 @@ const AdminAttendanceHub = () => {
               {/* ── TAB 5: ANALYTICS ── */}
               {activeTab === 'analytics' && analytics && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  {/* Executive 8-in-1 Institutional Report Export Control */}
+                  <div className="ds-card" style={{ background: '#F8FAFC', border: '1px solid #CBD5E1' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
+                      <div>
+                        <h4 style={{ margin: '0 0 4px 0', fontSize: 15, fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Download size={18} color="#2563EB" />
+                          <span>Official Academic Attendance Report Center</span>
+                        </h4>
+                        <p style={{ margin: 0, fontSize: 13, color: '#64748B' }}>
+                          Export authoritative, audit-ready reports in CSV format with strict spreadsheet formula injection protection.
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <select
+                          className="ds-select"
+                          value={selectedReportType}
+                          onChange={(e) => setSelectedReportType(e.target.value)}
+                          style={{ height: 36, fontSize: 13, minWidth: 260 }}
+                        >
+                          <option value="department_report">1. Department-Wise Attendance Report</option>
+                          <option value="low_attendance_report">2. Low Attendance Student Risk Report</option>
+                          <option value="faculty_report">3. Faculty Performance Report</option>
+                          <option value="semester_section_report">4. Semester / Section Report</option>
+                          <option value="manual_adjustment_report">5. Manual Adjustment Audit Report</option>
+                          <option value="subject_wise_report">6. Subject-Wise Attendance Report</option>
+                          <option value="session_wise_report">7. Session-Wise Attendance Report</option>
+                          <option value="student_report">8. Student Attendance Report</option>
+                        </select>
+
+                        <button
+                          type="button"
+                          className="ds-btn ds-btn-primary"
+                          onClick={handleExportReport}
+                          disabled={exportingReport}
+                          style={{ height: 36, padding: '0 16px', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                        >
+                          <Download size={14} />
+                          <span>{exportingReport ? 'Generating…' : 'Export CSV Report'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="ds-two-col">
                     <div className="ds-card">
                       <h3 className="ds-section-title" style={{ marginBottom: 14 }}>
@@ -620,10 +682,15 @@ const AdminAttendanceHub = () => {
                           <div key={c.className}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
                               <span style={{ fontWeight: 600, color: '#111827' }}>{c.className}</span>
-                              <strong style={{ color: '#16A34A' }}>{c.average}%</strong>
+                              <strong style={{ color: c.average >= (analytics.minAttendanceThreshold || 75) ? '#16A34A' : '#DC2626' }}>
+                                {c.average}%
+                              </strong>
                             </div>
                             <div className="ds-bar-track">
-                              <div className="ds-bar-fill" style={{ width: `${c.average}%` }} />
+                              <div
+                                className={`ds-bar-fill ${c.average < 60 ? 'crit' : c.average < (analytics.minAttendanceThreshold || 75) ? 'warn' : ''}`}
+                                style={{ width: `${Math.min(c.average, 100)}%` }}
+                              />
                             </div>
                             <div style={{ fontSize: 11, color: '#6B7280', marginTop: 3 }}>
                               {c.totalStudents} enrolled • {c.below75} students below threshold
@@ -654,9 +721,145 @@ const AdminAttendanceHub = () => {
                         ))}
                       </div>
                       <p style={{ fontSize: 12, color: '#6B7280', textAlign: 'center', marginTop: 14 }}>
-                        University-wide average attendance across all 4 engineering colleges is <strong>83%</strong>.
+                        University-wide average attendance across all colleges is <strong>{analytics.overallCampusAttendance || 0}%</strong>.
                       </p>
                     </div>
+                  </div>
+
+                  {/* Academic Risk Monitoring Register (Students < 75%) */}
+                  <div className="ds-card">
+                    <div className="ds-card-header">
+                      <div>
+                        <h3 className="ds-section-title" style={{ color: '#DC2626', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <AlertTriangle size={18} />
+                          <span>Campus Academic Risk Register (&lt; {analytics.minAttendanceThreshold || 75}% Threshold)</span>
+                        </h3>
+                        <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#6B7280' }}>
+                          Real-time deficit monitoring: calculated units required for examination eligibility.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="ds-btn ds-btn-secondary"
+                        onClick={() => attendanceService.downloadReportCsv('low_attendance_report')}
+                        style={{ height: 28, fontSize: 12 }}
+                      >
+                        <Download size={13} /> Export Risk Register
+                      </button>
+                    </div>
+
+                    {(!analytics.academicRiskRegister || analytics.academicRiskRegister.length === 0) ? (
+                      <div style={{ padding: '24px 16px', textAlign: 'center', color: '#16A34A', background: '#F0FDF4', borderRadius: 8, border: '1px solid #BBF7D0' }}>
+                        <CheckCircle2 size={24} style={{ display: 'inline-block', marginBottom: 6 }} />
+                        <p style={{ margin: 0, fontWeight: 600 }}>All active students campus-wide currently satisfy the minimum {analytics.minAttendanceThreshold || 75}% attendance threshold.</p>
+                      </div>
+                    ) : (
+                      <div className="ds-table-wrap">
+                        <table className="ds-table">
+                          <thead>
+                            <tr>
+                              <th>Roll Number</th>
+                              <th>Student Name</th>
+                              <th>Department</th>
+                              <th>Class</th>
+                              <th style={{ textAlign: 'center' }}>Units Held</th>
+                              <th style={{ textAlign: 'center' }}>Attended</th>
+                              <th style={{ textAlign: 'center' }}>Percentage</th>
+                              <th style={{ textAlign: 'center' }}>Deficit Units</th>
+                              <th style={{ textAlign: 'center' }}>Risk Level</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {analytics.academicRiskRegister.map((st) => (
+                              <tr key={st.studentId}>
+                                <td className="bold">{st.rollNumber}</td>
+                                <td className="bold">{st.name}</td>
+                                <td>{st.department}</td>
+                                <td>Sem {st.semester} - {st.section}</td>
+                                <td style={{ textAlign: 'center' }}>{st.heldAcademicUnits}</td>
+                                <td style={{ textAlign: 'center', color: '#16A34A', fontWeight: 600 }}>{st.attendedAcademicUnits}</td>
+                                <td style={{ textAlign: 'center', fontWeight: 700, color: '#DC2626' }}>{st.percentage}%</td>
+                                <td style={{ textAlign: 'center', fontWeight: 700, color: '#DC2626' }}>
+                                  +{st.deficitUnits}
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <AttendanceStatusBadge status={st.complianceStatus} />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Manual Attendance Adjustment Transparency Table */}
+                  <div className="ds-card">
+                    <div className="ds-card-header">
+                      <div>
+                        <h3 className="ds-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <ShieldCheck size={18} color="#1A56DB" />
+                          <span>Manual Attendance Override Audit Trail</span>
+                        </h3>
+                        <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#6B7280' }}>
+                          Immutable log of authorized faculty and administrator corrections with mandatory rationale.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="ds-btn ds-btn-secondary"
+                        onClick={() => attendanceService.downloadReportCsv('manual_adjustment_report')}
+                        style={{ height: 28, fontSize: 12 }}
+                      >
+                        <Download size={13} /> Export Audit Log
+                      </button>
+                    </div>
+
+                    {(!adjustmentLogs || adjustmentLogs.length === 0) ? (
+                      <div style={{ padding: '24px 16px', textAlign: 'center', color: '#6B7280', background: '#F8FAFC', borderRadius: 8 }}>
+                        <p style={{ margin: 0 }}>No manual attendance corrections have been executed in the system.</p>
+                      </div>
+                    ) : (
+                      <div className="ds-table-wrap">
+                        <table className="ds-table">
+                          <thead>
+                            <tr>
+                              <th>Timestamp (IST)</th>
+                              <th>Student</th>
+                              <th>Subject</th>
+                              <th>Date & Period</th>
+                              <th style={{ textAlign: 'center' }}>Previous Status</th>
+                              <th style={{ textAlign: 'center' }}>Updated Status</th>
+                              <th>Authorized Actor</th>
+                              <th>Mandatory Reason</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {adjustmentLogs.slice(0, 25).map((log) => (
+                              <tr key={log._id}>
+                                <td style={{ fontSize: 12 }}>{log.timestamp}</td>
+                                <td className="bold">{log.studentName} ({log.rollNumber})</td>
+                                <td>{log.subjectName}</td>
+                                <td>{log.sessionDate} (P{log.sessionPeriod})</td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <AttendanceStatusBadge status={log.previousStatus} />
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <AttendanceStatusBadge status={log.updatedStatus} />
+                                </td>
+                                <td>
+                                  <span style={{ fontWeight: 600 }}>{log.actorName}</span>
+                                  <span style={{ fontSize: 11, color: '#6B7280', display: 'block' }}>{log.actorRole}</span>
+                                </td>
+                                <td style={{ fontStyle: 'italic', color: '#374151' }}>"{log.reason}"</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
