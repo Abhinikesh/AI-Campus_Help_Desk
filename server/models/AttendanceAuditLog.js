@@ -23,7 +23,10 @@ const attendanceAuditLogSchema = new mongoose.Schema(
       enum: [
         'create_session',
         'start_session',
+        'pause_session',
+        'resume_session',
         'close_session',
+        'auto_expire_session',
         'finalize_session',
         'cancel_session',
         'mark_attendance',

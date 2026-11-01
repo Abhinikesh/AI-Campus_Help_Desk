@@ -32,19 +32,33 @@ def decrypt_biometric_template(encrypted_base64: str, secret_key: str) -> dict:
     Returns original dictionary payload.
     Raises BiometricDecryptionError if key is incorrect or data is tampered with.
     """
+    if not encrypted_base64:
+        raise BiometricDecryptionError("Encrypted payload is missing or empty")
+
     if not secret_key:
         raise BiometricDecryptionError("Decryption secret key is missing")
 
     try:
-        key = get_cipher_key(secret_key)
         raw_data = base64.b64decode(encrypted_base64.encode("utf-8"))
-        if len(raw_data) < 28: # 12 bytes nonce + 16 bytes auth tag minimum
-            raise BiometricDecryptionError("Encrypted payload length is invalid")
+    except Exception as e:
+        raise BiometricDecryptionError(f"Malformed base64 ciphertext: {str(e)}")
 
-        nonce = raw_data[:12]
-        ciphertext = raw_data[12:]
-        aesgcm = AESGCM(key)
+    if len(raw_data) < 28: # 12 bytes nonce + 16 bytes auth tag minimum
+        raise BiometricDecryptionError("Encrypted payload length is invalid (minimum 28 bytes required)")
+
+    nonce = raw_data[:12]
+    ciphertext = raw_data[12:]
+    key = get_cipher_key(secret_key)
+    aesgcm = AESGCM(key)
+
+    try:
         decrypted_bytes = aesgcm.decrypt(nonce, ciphertext, None)
+    except InvalidTag:
+        raise BiometricDecryptionError("Decryption authentication failed: Invalid authentication tag (tampered ciphertext or invalid secret key)")
+    except Exception as e:
+        raise BiometricDecryptionError(f"Decryption failure: {str(e)}")
+
+    try:
         return json.loads(decrypted_bytes.decode("utf-8"))
-    except (InvalidTag, ValueError, Exception) as e:
-        raise BiometricDecryptionError(f"Decryption authentication failed: {str(e)}")
+    except Exception as e:
+        raise BiometricDecryptionError(f"Decrypted payload serialization error: {str(e)}")

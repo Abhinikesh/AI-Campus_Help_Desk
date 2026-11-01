@@ -1,0 +1,58 @@
+{
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "cpu": "arm",
+  "python": "3.12.13",
+  "runs": 50,
+  "imageDimensions": "640x480",
+  "results": {
+    "decode_b64": {
+      "samples": 50,
+      "mean_ms": 0.89,
+      "median_ms": 0.88,
+      "p95_ms": 0.95
+    },
+    "quality_analysis": {
+      "samples": 50,
+      "mean_ms": 1.16,
+      "median_ms": 1.13,
+      "p95_ms": 1.3
+    },
+    "normalize_lighting": {
+      "samples": 50,
+      "mean_ms": 0.97,
+      "median_ms": 0.96,
+      "p95_ms": 1.06
+    },
+    "face_detection": {
+      "samples": 50,
+      "mean_ms": 81.72,
+      "median_ms": 81.74,
+      "p95_ms": 82.28
+    },
+    "template_encryption": {
+      "samples": 50,
+      "mean_ms": 0.08,
+      "median_ms": 0.08,
+      "p95_ms": 0.09
+    },
+    "template_decryption": {
+      "samples": 50,
+      "mean_ms": 0.03,
+      "median_ms": 0.03,
+      "p95_ms": 0.04
+    },
+    "distance_matching": {
+      "samples": 50,
+      "mean_ms": 0.06,
+      "median_ms": 0.06,
+      "p95_ms": 0.07
+    },
+    "embedding_extraction": {
+      "samples": 25,
+      "mean_ms": 8.11,
+      "median_ms": 8.17,
+      "p95_ms": 8.36
+    }
+  },
+  "totalMeanMs": 93.02
+}

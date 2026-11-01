@@ -6,9 +6,12 @@ import face_recognition
 
 from app.config import Config
 from app.utils.exceptions import (
+    BiometricException,
     NoFaceDetectedError,
     MultipleFacesDetectedError,
     FaceTooSmallError,
+    FacePositionInvalidError,
+    FaceDetectionFailedError,
 )
 
 # Load Haar cascade as secondary validator / fallback
@@ -20,25 +23,31 @@ def detect_faces(image: np.ndarray) -> List[Tuple[int, int, int, int]]:
     Detect faces in an in-memory BGR image.
     Returns list of bounding boxes in (top, right, bottom, left) format.
     """
-    # Convert BGR to RGB for face_recognition
-    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    if image is None or image.size == 0:
+        return []
 
-    # Primary detector: dlib HOG (fast and reliable on CPU)
-    boxes = face_recognition.face_locations(rgb_image, number_of_times_to_upsample=1, model="hog")
+    try:
+        # Convert BGR to RGB for face_recognition
+        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    # If dlib finds nothing on extreme lighting, try OpenCV Haar as fallback
-    if len(boxes) == 0 and not _haar_cascade.empty():
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        haar_faces = _haar_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(60, 60))
-        for (x, y, w, h) in haar_faces:
-            boxes.append((y, x + w, y + h, x))
+        # Primary detector: dlib HOG (fast and reliable on CPU)
+        boxes = face_recognition.face_locations(rgb_image, number_of_times_to_upsample=1, model="hog")
 
-    return boxes
+        # If dlib finds nothing on extreme lighting, try OpenCV Haar as fallback
+        if len(boxes) == 0 and not _haar_cascade.empty():
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            haar_faces = _haar_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(60, 60))
+            for (x, y, w, h) in haar_faces:
+                boxes.append((y, x + w, y + h, x))
+
+        return boxes
+    except Exception as e:
+        raise FaceDetectionFailedError(f"Face detection engine encountered an error: {str(e)}")
 
 def validate_single_face(image: np.ndarray) -> Tuple[int, int, int, int]:
     """
-    Ensures that EXACTLY ONE face is present and meets size requirements.
-    Raises domain exceptions if 0, >1, or face is too small.
+    Ensures that EXACTLY ONE face is present and meets size and positioning requirements.
+    Raises domain exceptions if 0, >1, face is too small, or face is positioned invalidly.
     """
     boxes = detect_faces(image)
 
@@ -51,10 +60,32 @@ def validate_single_face(image: np.ndarray) -> Tuple[int, int, int, int]:
     top, right, bottom, left = boxes[0]
     face_width = right - left
     face_height = bottom - top
+    img_h, img_w = image.shape[:2]
 
     if face_width < Config.MIN_FACE_SIZE or face_height < Config.MIN_FACE_SIZE:
         raise FaceTooSmallError(
             f"Face is too small ({face_width}x{face_height}px). Minimum required is {Config.MIN_FACE_SIZE}x{Config.MIN_FACE_SIZE}px."
+        )
+
+    # Face positioning validation: ensure the face is centered and not clipped by the frame border
+    face_cx = (left + right) / 2.0
+    face_cy = (top + bottom) / 2.0
+    margin_x = img_w * 0.10
+    margin_y = img_h * 0.10
+
+    # Reject if face center is outside 10% margins or truncated directly against the image boundary
+    if (
+        face_cx < margin_x
+        or face_cx > (img_w - margin_x)
+        or face_cy < margin_y
+        or face_cy > (img_h - margin_y)
+        or top <= 0
+        or left <= 0
+        or bottom >= img_h
+        or right >= img_w
+    ):
+        raise FacePositionInvalidError(
+            "Face is positioned too close to the frame boundary. Please center your face in the camera view."
         )
 
     return (top, right, bottom, left)

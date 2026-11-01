@@ -82,6 +82,14 @@ def compute_image_quality(image: np.ndarray) -> Dict[str, Any]:
     is_blurry = laplacian_var < MIN_LAPLACIAN_VAR
     is_low_contrast = contrast < 20.0
 
+    # Blur classification (distinguish sharp, mild blur, severe blur)
+    if laplacian_var >= 60.0:
+        blur_level = "sharp"
+    elif laplacian_var >= MIN_LAPLACIAN_VAR:
+        blur_level = "mild_blur"
+    else:
+        blur_level = "severe_blur"
+
     is_suitable = not (is_too_dark or is_too_bright or is_blurry or is_low_contrast)
 
     quality_score = min(1.0, max(0.0, (laplacian_var / 200.0) * 0.5 + (1.0 - abs(brightness - 128) / 128.0) * 0.5))
@@ -92,7 +100,7 @@ def compute_image_quality(image: np.ndarray) -> Dict[str, Any]:
     if is_too_bright:
         reasons.append("Image is overexposed/glare detected.")
     if is_blurry:
-        reasons.append("Image is blurry. Keep device steady.")
+        reasons.append("The image is blurry. Hold the camera steady and try again.")
     if is_low_contrast:
         reasons.append("Low contrast detected between face and background.")
 
@@ -102,6 +110,11 @@ def compute_image_quality(image: np.ndarray) -> Dict[str, Any]:
         "brightness": round(brightness, 1),
         "sharpness": round(laplacian_var, 1),
         "contrast": round(contrast, 1),
+        "blurLevel": blur_level,
+        "isTooDark": is_too_dark,
+        "isTooBright": is_too_bright,
+        "isBlurry": is_blurry,
+        "isLowContrast": is_low_contrast,
         "dimensions": {"width": image.shape[1], "height": image.shape[0]},
         "feedback": " ".join(reasons) if reasons else "Quality is good for biometric verification."
     }

@@ -15,6 +15,7 @@ const ConsentRecord = require('../models/ConsentRecord');
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const AttendanceSettings = require('../models/AttendanceSettings');
 const pythonAiService = require('../services/pythonAi.service');
+const qrChallengeService = require('../services/qrChallenge.service');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -330,12 +331,10 @@ const joinAttendanceSession = asyncHandler(async (req, res) => {
 
   // QR challenge token validation if required
   if (session.attendanceMethod === 'qr_face' || (session.qrChallengeToken && qrChallengeToken)) {
-    if (session.qrChallengeToken !== qrChallengeToken) {
-      throw new ApiError(400, 'Invalid or expired QR code challenge token');
+    if (!qrChallengeToken) {
+      throw new ApiError(400, 'QR challenge token is required for this session');
     }
-    if (session.qrChallengeExpiresAt && new Date() > new Date(session.qrChallengeExpiresAt)) {
-      throw new ApiError(400, 'QR challenge code has expired. Please scan current code.');
-    }
+    qrChallengeService.validateChallenge(session, qrChallengeToken);
   }
 
   // Biometric verification via Python AI Service if face verification is used

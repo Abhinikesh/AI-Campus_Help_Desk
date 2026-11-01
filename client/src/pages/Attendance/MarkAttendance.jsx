@@ -20,12 +20,13 @@ const MarkAttendance = () => {
   const navigate = useNavigate();
 
   const cameraRef = useRef(null);
+  const isSubmittingRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
   const [qrChallengeInput, setQrChallengeInput] = useState('');
 
-  // Verification state: 'idle' | 'ready' | 'verifying' | 'success' | 'failed' | 'manual_fallback'
+  // Verification state: 'idle' | 'ready' | 'capturing' | 'compressing' | 'submitting' | 'verifying' | 'success' | 'failed'
   const [verifyState, setVerifyState] = useState('ready');
   const [verifyProgress, setVerifyProgress] = useState(0);
   const [verifyStatusText, setVerifyStatusText] = useState('Camera active — Center your face in the oval');
@@ -58,54 +59,71 @@ const MarkAttendance = () => {
   }, [routeSessionId]);
 
   const handleStartVerification = async () => {
-    if (!selectedSession) return;
+    if (!selectedSession || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
 
-    setVerifyState('verifying');
-    setVerifyProgress(15);
-    setVerifyStatusText('Detecting face geometry and illumination…');
     setErrorMessage('');
+    setVerifyState('capturing');
+    setVerifyProgress(20);
+    setVerifyStatusText('Capturing high-resolution camera frame…');
 
-    // Capture real frame from camera
-    const liveImageData = cameraRef.current?.captureFrame() || null;
+    // 1. Capture normalized frame with aspect-ratio preservation
+    const frameMetrics = cameraRef.current?.captureNormalizedFrame();
+    if (!frameMetrics || !frameMetrics.dataUrl) {
+      setVerifyState('failed');
+      setErrorMessage('Unable to capture camera frame. Please ensure camera is active and well-lit.');
+      isSubmittingRef.current = false;
+      return;
+    }
 
-    // Step-by-step UI feedback
-    setTimeout(() => {
-      setVerifyProgress(45);
-      setVerifyStatusText('Validating biometric liveness & head alignment…');
-    }, 600);
+    if (!frameMetrics.isValid) {
+      setVerifyState('failed');
+      setErrorMessage(frameMetrics.validationReason || 'Captured image failed validation checks.');
+      isSubmittingRef.current = false;
+      return;
+    }
 
-    setTimeout(() => {
-      setVerifyProgress(75);
-      setVerifyStatusText('Matching biometric embedding against enrolled template…');
-    }, 1200);
+    // 2. Normalization & compression feedback
+    setVerifyState('compressing');
+    setVerifyProgress(45);
+    setVerifyStatusText(`Optimizing frame (${frameMetrics.width}×${frameMetrics.height}, ${frameMetrics.sizeKb} KB)…`);
 
-    setTimeout(async () => {
-      try {
-        setVerifyProgress(90);
-        const res = await attendanceService.joinAttendanceSession(selectedSession._id, {
-          verificationMethod: 'face',
-          liveImageData,
-          qrChallengeToken: qrChallengeInput || undefined,
-        });
+    // Short yield for smooth render
+    await new Promise((r) => setTimeout(r, 200));
 
-        if (res?.success) {
-          setVerifyProgress(100);
-          setVerifyState('success');
-          setConfirmationData(res.data);
-        } else {
-          setVerifyState('failed');
-          setErrorMessage(res?.message || 'Verification could not be confirmed by the server.');
-        }
-      } catch (err) {
-        console.error('Attendance join error:', err);
+    // 3. Submitting verification
+    setVerifyState('submitting');
+    setVerifyProgress(75);
+    setVerifyStatusText('Verifying biometric facial match on secure attendance gateway…');
+
+    try {
+      const res = await attendanceService.joinAttendanceSession(selectedSession._id, {
+        verificationMethod: 'face',
+        liveImageData: frameMetrics.dataUrl,
+        qrChallengeToken: qrChallengeInput || undefined,
+      });
+
+      if (res?.success) {
+        setVerifyProgress(100);
+        setVerifyState('success');
+        setConfirmationData(res.data);
+      } else {
         setVerifyState('failed');
-        setErrorMessage(err.response?.data?.message || 'Verification request failed. Please retry or request manual check-in.');
+        setErrorMessage(res?.message || 'Verification could not be confirmed by the server.');
       }
-    }, 1800);
+    } catch (err) {
+      console.warn('[MarkAttendance] Attendance join error:', err);
+      setVerifyState('failed');
+      const backendMsg = err.response?.data?.message || err.message || 'Verification request failed.';
+      setErrorMessage(backendMsg);
+    } finally {
+      isSubmittingRef.current = false;
+    }
   };
 
   const handleManualFallback = async () => {
-    if (!selectedSession) return;
+    if (!selectedSession || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     try {
       setLoading(true);
       const res = await attendanceService.joinAttendanceSession(selectedSession._id, {
@@ -120,10 +138,12 @@ const MarkAttendance = () => {
       setErrorMessage(err.response?.data?.message || 'Manual verification failed.');
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
   const handleRetry = () => {
+    isSubmittingRef.current = false;
     setVerifyState('ready');
     setVerifyProgress(0);
     setVerifyStatusText('Camera active — Center your face in the oval');
@@ -352,7 +372,7 @@ const MarkAttendance = () => {
                 )}
 
                 {/* Verification Progress Bar */}
-                {verifyState === 'verifying' && (
+                {['capturing', 'compressing', 'submitting', 'verifying'].includes(verifyState) && (
                   <div style={{ marginTop: 16 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
                       <span style={{ color: '#1A56DB', fontWeight: 600 }}>{verifyStatusText}</span>
@@ -387,7 +407,7 @@ const MarkAttendance = () => {
 
                 {/* Action Buttons */}
                 <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {verifyState !== 'verifying' ? (
+                  {!['capturing', 'compressing', 'submitting', 'verifying'].includes(verifyState) ? (
                     <button
                       type="button"
                       className="ds-btn ds-btn-primary"
@@ -406,7 +426,7 @@ const MarkAttendance = () => {
                       style={{ height: 42, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                     >
                       <RefreshCw size={16} className="ds-spinner-inline" />
-                      <span>Verifying Biometric Match…</span>
+                      <span>{verifyStatusText}</span>
                     </button>
                   )}
 

@@ -21,6 +21,9 @@ const Faculty = require('../models/Faculty');
 const Subject = require('../models/Subject');
 const User = require('../models/User');
 const pythonAiService = require('../services/pythonAi.service');
+const { transitionSessionState } = require('../services/sessionStateMachine.service');
+const sessionSchedulerService = require('../services/sessionScheduler.service');
+const qrChallengeService = require('../services/qrChallenge.service');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -81,16 +84,30 @@ const createSession = asyncHandler(async (req, res) => {
     }
   }
 
-  // Prevent conflicting active session for same subject, date, and period
+  // Multi-period array validation
+  let sessionPeriods = [Number(period)];
+  if (req.body.periods && Array.isArray(req.body.periods) && req.body.periods.length > 0) {
+    sessionPeriods = [...new Set(req.body.periods.map(Number))].sort((a, b) => a - b);
+    for (const p of sessionPeriods) {
+      if (isNaN(p) || p < 1 || p > 10) {
+        throw new ApiError(400, `Invalid period number ${p}. Periods must be integers between 1 and 10.`);
+      }
+    }
+  }
+
+  // Prevent conflicting active session for same subject, date, and any covered period
   const conflict = await AttendanceSession.findOne({
     subject: subjectId,
     date,
-    period,
+    $or: [
+      { period: { $in: sessionPeriods } },
+      { periods: { $in: sessionPeriods } }
+    ],
     status: { $in: ['open', 'active', 'scheduled'] }
   });
 
   if (conflict) {
-    throw new ApiError(409, `An active or scheduled session already exists for Period ${period} on ${date}`);
+    throw new ApiError(409, `An active or scheduled session already exists covering Period(s) ${sessionPeriods.join(', ')} on ${date}`);
   }
 
   // Count total enrolled students in this branch/semester/section
@@ -104,7 +121,10 @@ const createSession = asyncHandler(async (req, res) => {
     faculty: req.user.userId,
     date,
     sessionDate: date,
-    period: Number(period),
+    period: sessionPeriods[0],
+    periods: sessionPeriods,
+    periodCount: sessionPeriods.length,
+    timetableEntry: req.body.timetableEntry || null,
     startTime,
     endTime,
     sessionType,
@@ -269,30 +289,11 @@ const getSessionById = asyncHandler(async (req, res) => {
  */
 const startSession = asyncHandler(async (req, res) => {
   const { sessionId } = req.params;
-  const session = await AttendanceSession.findById(sessionId);
-  if (!session) throw new ApiError(404, 'Attendance session not found');
-
-  if (req.user.role === 'faculty' && session.faculty.toString() !== req.user.userId) {
-    throw new ApiError(403, 'You are not authorized to start this session');
-  }
-
-  if (['completed', 'finalized', 'cancelled'].includes(session.status)) {
-    throw new ApiError(400, `Cannot start session that is already ${session.status}`);
-  }
-
-  const prevStatus = session.status;
-  session.status = 'open';
-  session.sessionStatus = 'open';
-  session.openedAt = new Date();
-  await session.save();
-
-  await AttendanceAuditLog.record({
+  const session = await transitionSessionState({
+    sessionId,
+    targetState: 'open',
     actorId: req.user.userId,
     actorRole: req.user.role,
-    action: 'start_session',
-    sessionId: session._id,
-    previousValue: { status: prevStatus },
-    newValue: { status: 'open' },
     reason: 'Session opened for student verification',
     ipAddress: req.ip
   });
@@ -305,31 +306,60 @@ const startSession = asyncHandler(async (req, res) => {
 });
 
 /**
+ * POST /api/attendance/sessions/:sessionId/pause
+ * Pause an active session
+ */
+const pauseSession = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params;
+  const session = await transitionSessionState({
+    sessionId,
+    targetState: 'paused',
+    actorId: req.user.userId,
+    actorRole: req.user.role,
+    reason: req.body.reason || 'Session paused by faculty',
+    ipAddress: req.ip
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: session,
+    message: 'Attendance session has been paused'
+  });
+});
+
+/**
+ * POST /api/attendance/sessions/:sessionId/resume
+ * Resume a paused session back to active
+ */
+const resumeSession = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params;
+  const session = await transitionSessionState({
+    sessionId,
+    targetState: 'active',
+    actorId: req.user.userId,
+    actorRole: req.user.role,
+    reason: 'Session resumed by faculty',
+    ipAddress: req.ip
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: session,
+    message: 'Attendance session has been resumed'
+  });
+});
+
+/**
  * POST /api/attendance/sessions/:sessionId/end
  * End / close an authorized session
  */
 const endSession = asyncHandler(async (req, res) => {
   const { sessionId } = req.params;
-  const session = await AttendanceSession.findById(sessionId);
-  if (!session) throw new ApiError(404, 'Attendance session not found');
-
-  if (req.user.role === 'faculty' && session.faculty.toString() !== req.user.userId) {
-    throw new ApiError(403, 'You are not authorized to end this session');
-  }
-
-  const prevStatus = session.status;
-  session.status = 'completed';
-  session.sessionStatus = 'completed';
-  session.closedAt = new Date();
-  await session.save();
-
-  await AttendanceAuditLog.record({
+  const session = await transitionSessionState({
+    sessionId,
+    targetState: 'completed',
     actorId: req.user.userId,
     actorRole: req.user.role,
-    action: 'close_session',
-    sessionId: session._id,
-    previousValue: { status: prevStatus },
-    newValue: { status: 'completed' },
     reason: 'Session ended by faculty',
     ipAddress: req.ip
   });
@@ -350,21 +380,21 @@ const finalizeSession = asyncHandler(async (req, res) => {
   const session = await AttendanceSession.findById(sessionId).populate('subject', 'name code');
   if (!session) throw new ApiError(404, 'Attendance session not found');
 
-  if (req.user.role === 'faculty' && session.faculty.toString() !== req.user.userId) {
-    throw new ApiError(403, 'You are not authorized to finalize this session');
+  if (req.user.role === 'faculty') {
+    const facultyId = session.faculty?._id ? session.faculty._id.toString() : session.faculty.toString();
+    if (facultyId !== req.user.userId) {
+      throw new ApiError(403, 'You are not authorized to finalize this session');
+    }
   }
-
-  const prevStatus = session.status;
-  session.status = 'finalized';
-  session.sessionStatus = 'finalized';
-  session.finalizedAt = new Date();
-  if (!session.closedAt) session.closedAt = new Date();
 
   // Ensure all enrolled students who were not marked present have absent records
   const enrolledStudents = await Student.find({
     semester: session.semester,
     branch: session.branch
   });
+
+  const sessionPeriods = session.periods && session.periods.length > 0 ? session.periods : [session.period];
+  const sessionPeriodCount = session.periodCount || sessionPeriods.length;
 
   for (const st of enrolledStudents) {
     const existing = await Attendance.findOne({
@@ -373,18 +403,24 @@ const finalizeSession = asyncHandler(async (req, res) => {
     });
 
     if (!existing) {
-      await Attendance.create({
-        session: session._id,
-        subject: session.subject._id || session.subject,
-        student: st._id,
-        date: session.date,
-        period: session.period,
-        status: 'absent',
-        attendanceStatus: 'absent',
-        verificationMethod: 'system',
-        verificationStatus: 'verified',
-        markedAt: new Date()
-      });
+      try {
+        await Attendance.create({
+          session: session._id,
+          subject: session.subject._id || session.subject,
+          student: st._id,
+          date: session.date,
+          period: session.period,
+          periods: sessionPeriods,
+          periodCount: sessionPeriodCount,
+          status: 'absent',
+          attendanceStatus: 'absent',
+          verificationMethod: 'system',
+          verificationStatus: 'verified',
+          markedAt: new Date()
+        });
+      } catch (dupErr) {
+        // Concurrency safeguard: ignore duplicate key error if created simultaneously
+      }
     }
   }
 
@@ -392,23 +428,20 @@ const finalizeSession = asyncHandler(async (req, res) => {
     session: session._id,
     status: { $in: ['present', 'late'] }
   });
-  session.presentCount = presentCount;
-  await session.save();
 
-  await AttendanceAuditLog.record({
+  const updatedSession = await transitionSessionState({
+    sessionId,
+    targetState: 'finalized',
     actorId: req.user.userId,
     actorRole: req.user.role,
-    action: 'finalize_session',
-    sessionId: session._id,
-    previousValue: { status: prevStatus },
-    newValue: { status: 'finalized', presentCount },
     reason: 'Finalized attendance roster and marked absentees',
-    ipAddress: req.ip
+    ipAddress: req.ip,
+    extraFields: { presentCount }
   });
 
   return res.status(200).json({
     success: true,
-    data: session,
+    data: updatedSession,
     message: 'Attendance session finalized successfully'
   });
 });
@@ -421,25 +454,11 @@ const cancelSession = asyncHandler(async (req, res) => {
   const { sessionId } = req.params;
   const { reason = 'Session cancelled by faculty' } = req.body;
 
-  const session = await AttendanceSession.findById(sessionId);
-  if (!session) throw new ApiError(404, 'Attendance session not found');
-
-  if (req.user.role === 'faculty' && session.faculty.toString() !== req.user.userId) {
-    throw new ApiError(403, 'You are not authorized to cancel this session');
-  }
-
-  const prevStatus = session.status;
-  session.status = 'cancelled';
-  session.sessionStatus = 'cancelled';
-  await session.save();
-
-  await AttendanceAuditLog.record({
+  const session = await transitionSessionState({
+    sessionId,
+    targetState: 'cancelled',
     actorId: req.user.userId,
     actorRole: req.user.role,
-    action: 'cancel_session',
-    sessionId: session._id,
-    previousValue: { status: prevStatus },
-    newValue: { status: 'cancelled' },
     reason,
     ipAddress: req.ip
   });
@@ -458,6 +477,30 @@ const cancelSession = asyncHandler(async (req, res) => {
 const getQrChallenge = asyncHandler(async (req, res) => {
   const { sessionId } = req.params;
   const session = await AttendanceSession.findById(sessionId);
+  if (!session) throw new ApiError(404, 'Session not found');
+
+  if (req.user.role === 'faculty') {
+    const facultyId = session.faculty?._id ? session.faculty._id.toString() : session.faculty.toString();
+    if (facultyId !== req.user.userId) {
+      throw new ApiError(403, 'Unauthorized');
+    }
+  }
+
+  const challenge = qrChallengeService.generateChallenge(session._id, 45);
+  session.qrChallengeToken = challenge.token;
+  session.qrChallengeExpiresAt = challenge.expiresAt;
+  await session.save();
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      sessionId: session._id,
+      challengeToken: challenge.token,
+      expiresAt: challenge.expiresAt.toISOString(),
+      expiresInSeconds: challenge.expiresInSeconds
+    }
+  });
+});
   if (!session) throw new ApiError(404, 'Session not found');
 
   if (req.user.role === 'faculty' && session.faculty.toString() !== req.user.userId) {
@@ -644,6 +687,10 @@ const joinSession = asyncHandler(async (req, res) => {
     .populate('subject', 'name code');
   if (!session) throw new ApiError(404, 'Attendance session not found');
 
+  if (session.status === 'paused') {
+    throw new ApiError(400, 'This session is currently paused. Please wait for the faculty to resume.');
+  }
+
   if (!['open', 'active'].includes(session.status)) {
     throw new ApiError(400, 'This session is not currently active');
   }
@@ -672,6 +719,7 @@ const joinSession = asyncHandler(async (req, res) => {
       code: session.subject?.code,
       date: session.date,
       period: session.period,
+      periods: session.periods || [session.period],
       attendanceMethod: session.attendanceMethod,
       isAlreadyMarked: existing ? ['present', 'late'].includes(existing.status) : false,
       verificationRequired: true
@@ -699,18 +747,23 @@ const recordStudentAttendance = asyncHandler(async (req, res) => {
     .populate('subject', 'name code');
   if (!session) throw new ApiError(404, 'Attendance session not found');
 
+  if (session.status === 'paused') {
+    throw new ApiError(400, 'This session is currently paused. Please wait for the faculty to resume.');
+  }
+
   if (!['open', 'active'].includes(session.status)) {
     throw new ApiError(400, 'This session is no longer active');
   }
 
-  // QR token validation if attendance method requires QR
-  if (session.attendanceMethod === 'qr_face' && qrChallengeToken) {
-    if (session.qrChallengeToken !== qrChallengeToken) {
-      throw new ApiError(400, 'Invalid or expired QR code challenge');
-    }
-    if (session.qrChallengeExpiresAt && new Date() > new Date(session.qrChallengeExpiresAt)) {
-      throw new ApiError(400, 'QR code has expired. Please scan the current code.');
-    }
+  // Check deadline
+  const deadline = sessionSchedulerService.calculateSessionDeadline(session);
+  if (new Date() > deadline) {
+    throw new ApiError(400, 'This attendance session has expired and is no longer accepting check-ins.');
+  }
+
+  // QR token validation if attendance method requires QR or token is supplied
+  if ((session.attendanceMethod === 'qr_face' || qrChallengeToken) && session.attendanceMethod !== 'manual') {
+    qrChallengeService.validateChallenge(session, qrChallengeToken, new Date());
   }
 
   // Biometric verification via Python AI service if liveImageData is provided
@@ -726,9 +779,16 @@ const recordStudentAttendance = asyncHandler(async (req, res) => {
     }
 
     if (liveImageData) {
-      const bioResult = await pythonAiService.verifyBiometricTemplate(faceProfile.encryptedData, liveImageData);
+      let bioResult;
+      try {
+        bioResult = await pythonAiService.verifyBiometricTemplate(faceProfile.encryptedData, liveImageData);
+      } catch (pyErr) {
+        throw new ApiError(503, `Biometric verification service error: ${pyErr.message}`);
+      }
+
       if (!bioResult || !bioResult.success || !bioResult.isMatch) {
-        throw new ApiError(400, `Biometric verification failed: ${bioResult?.message || 'Face does not match enrolled biometric template'}`);
+        const failureReason = bioResult?.message || 'Face does not match enrolled biometric template';
+        throw new ApiError(400, `Biometric verification failed: ${failureReason}`);
       }
       verifiedConfidence = bioResult.confidence || 0.95;
       verificationStatus = bioResult.verificationStatus || 'verified';
@@ -759,30 +819,57 @@ const recordStudentAttendance = asyncHandler(async (req, res) => {
     });
   }
 
-  if (attendance) {
-    attendance.status = targetStatus;
-    attendance.attendanceStatus = targetStatus;
-    attendance.verificationMethod = verificationMethod;
-    attendance.verificationStatus = targetVerificationStatus;
-    attendance.confidence = verificationMethod === 'manual' ? null : verifiedConfidence;
-    attendance.markedAt = new Date();
-    attendance.verifiedAt = new Date();
-    await attendance.save();
-  } else {
-    attendance = await Attendance.create({
-      session: session._id,
-      subject: session.subject._id || session.subject,
-      student: student._id,
-      date: session.date,
-      period: session.period,
-      status: targetStatus,
-      attendanceStatus: targetStatus,
-      verificationMethod,
-      verificationStatus: targetVerificationStatus,
-      confidence: verificationMethod === 'manual' ? null : verifiedConfidence,
-      markedAt: new Date(),
-      verifiedAt: new Date()
-    });
+  const sessionPeriods = session.periods && session.periods.length > 0 ? session.periods : [session.period];
+  const sessionPeriodCount = session.periodCount || sessionPeriods.length;
+
+  try {
+    if (attendance) {
+      attendance.status = targetStatus;
+      attendance.attendanceStatus = targetStatus;
+      attendance.verificationMethod = verificationMethod;
+      attendance.verificationStatus = targetVerificationStatus;
+      attendance.confidence = verificationMethod === 'manual' ? null : verifiedConfidence;
+      attendance.periods = sessionPeriods;
+      attendance.periodCount = sessionPeriodCount;
+      attendance.markedAt = new Date();
+      attendance.verifiedAt = new Date();
+      await attendance.save();
+    } else {
+      attendance = await Attendance.create({
+        session: session._id,
+        subject: session.subject._id || session.subject,
+        student: student._id,
+        date: session.date,
+        period: session.period,
+        periods: sessionPeriods,
+        periodCount: sessionPeriodCount,
+        status: targetStatus,
+        attendanceStatus: targetStatus,
+        verificationMethod,
+        verificationStatus: targetVerificationStatus,
+        confidence: verificationMethod === 'manual' ? null : verifiedConfidence,
+        markedAt: new Date(),
+        verifiedAt: new Date()
+      });
+    }
+  } catch (dbErr) {
+    if (dbErr.code === 11000) {
+      const existing = await Attendance.findOne({ session: session._id, student: student._id });
+      return res.status(200).json({
+        success: true,
+        data: {
+          attendanceId: existing?._id,
+          studentName: student.name || req.user.name,
+          rollNumber: student.rollNumber,
+          subject: session.subject?.name,
+          code: session.subject?.code,
+          status: existing?.status || 'present',
+          alreadyMarked: true
+        },
+        message: 'Attendance was already marked for this session'
+      });
+    }
+    throw dbErr;
   }
 
   // Increment session present count
@@ -790,8 +877,7 @@ const recordStudentAttendance = asyncHandler(async (req, res) => {
     session: session._id,
     status: { $in: ['present', 'late'] }
   });
-  session.presentCount = presentCount;
-  await session.save();
+  await AttendanceSession.findByIdAndUpdate(session._id, { presentCount });
 
   // Audit log entry
   await AttendanceAuditLog.record({
@@ -1280,6 +1366,8 @@ module.exports = {
   getSessions,
   getSessionById,
   startSession,
+  pauseSession,
+  resumeSession,
   endSession,
   finalizeSession,
   cancelSession,

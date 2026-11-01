@@ -67,14 +67,44 @@ export const attendanceService = {
     return res.data;
   },
 
-  closeSession: async (sessionId) => {
-    const res = await api.patch(`/api/faculty/attendance/sessions/${sessionId}/close`);
-    return res.data;
+  pauseSession: async (sessionId, reason = 'Paused by instructor') => {
+    try {
+      const res = await api.post(`/api/attendance/sessions/${sessionId}/pause`, { reason });
+      return res.data;
+    } catch (e) {
+      const res = await api.patch(`/api/faculty/attendance/sessions/${sessionId}/pause`, { reason });
+      return res.data;
+    }
   },
 
-  finalizeSession: async (sessionId) => {
-    const res = await api.patch(`/api/faculty/attendance/sessions/${sessionId}/finalize`);
-    return res.data;
+  resumeSession: async (sessionId, reason = 'Resumed by instructor') => {
+    try {
+      const res = await api.post(`/api/attendance/sessions/${sessionId}/resume`, { reason });
+      return res.data;
+    } catch (e) {
+      const res = await api.patch(`/api/faculty/attendance/sessions/${sessionId}/resume`, { reason });
+      return res.data;
+    }
+  },
+
+  closeSession: async (sessionId, reason = 'Class lecture concluded') => {
+    try {
+      const res = await api.post(`/api/attendance/sessions/${sessionId}/end`, { reason });
+      return res.data;
+    } catch (e) {
+      const res = await api.patch(`/api/faculty/attendance/sessions/${sessionId}/close`, { reason });
+      return res.data;
+    }
+  },
+
+  finalizeSession: async (sessionId, reason = 'Roster confirmed and finalized') => {
+    try {
+      const res = await api.post(`/api/attendance/sessions/${sessionId}/finalize`, { reason });
+      return res.data;
+    } catch (e) {
+      const res = await api.patch(`/api/faculty/attendance/sessions/${sessionId}/finalize`, { reason });
+      return res.data;
+    }
   },
 
   updateStudentAttendance: async (data) => {

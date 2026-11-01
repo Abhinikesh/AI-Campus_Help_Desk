@@ -13,6 +13,8 @@ const {
   getSessions,
   getSessionById,
   startSession,
+  pauseSession,
+  resumeSession,
   endSession,
   finalizeSession,
   cancelSession,
@@ -46,6 +48,8 @@ router.get('/sessions/active',                authMiddleware, getActiveSessions)
 router.get('/sessions',                       authMiddleware, allowRoles('faculty', 'admin'), getSessions);
 router.get('/sessions/:sessionId',            authMiddleware, getSessionById);
 router.post('/sessions/:sessionId/start',     authMiddleware, allowRoles('faculty', 'admin'), startSession);
+router.post('/sessions/:sessionId/pause',     authMiddleware, allowRoles('faculty', 'admin'), pauseSession);
+router.post('/sessions/:sessionId/resume',    authMiddleware, allowRoles('faculty', 'admin'), resumeSession);
 router.post('/sessions/:sessionId/end',       authMiddleware, allowRoles('faculty', 'admin'), endSession);
 router.post('/sessions/:sessionId/finalize',  authMiddleware, allowRoles('faculty', 'admin'), finalizeSession);
 router.post('/sessions/:sessionId/cancel',    authMiddleware, allowRoles('faculty', 'admin'), cancelSession);

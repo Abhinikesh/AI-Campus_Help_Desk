@@ -20,13 +20,49 @@ class PoorImageQualityError(BiometricException):
     def __init__(self, message: str = "Image quality is too low or lighting is insufficient."):
         super().__init__(message, code="POOR_IMAGE_QUALITY", status_code=400)
 
+class ImageTooBlurryError(PoorImageQualityError):
+    def __init__(self, message: str = "The image is blurry. Hold the camera steady and try again."):
+        super().__init__(message)
+        self.code = "IMAGE_TOO_BLURRY"
+
+class ImageTooDarkError(PoorImageQualityError):
+    def __init__(self, message: str = "The image is too dark. Increase ambient lighting and face the light source."):
+        super().__init__(message)
+        self.code = "IMAGE_TOO_DARK"
+
+class ImageTooBrightError(PoorImageQualityError):
+    def __init__(self, message: str = "The image is overexposed. Avoid direct glare or strong backlighting."):
+        super().__init__(message)
+        self.code = "IMAGE_TOO_BRIGHT"
+
+class ImageLowContrastError(PoorImageQualityError):
+    def __init__(self, message: str = "Low contrast detected between face and background."):
+        super().__init__(message)
+        self.code = "IMAGE_LOW_CONTRAST"
+
 class FaceTooSmallError(BiometricException):
     def __init__(self, message: str = "Face is too small. Please position your face closer to the camera."):
         super().__init__(message, code="FACE_TOO_SMALL", status_code=400)
 
+class FacePositionInvalidError(BiometricException):
+    def __init__(self, message: str = "Face is positioned too close to the frame boundary. Please center your face."):
+        super().__init__(message, code="FACE_POSITION_INVALID", status_code=400)
+
+class FaceDetectionFailedError(BiometricException):
+    def __init__(self, message: str = "Face detection pipeline encountered an unexpected error."):
+        super().__init__(message, code="FACE_DETECTION_FAILED", status_code=400)
+
 class InvalidImagePayloadError(BiometricException):
     def __init__(self, message: str = "Invalid or corrupted image payload."):
         super().__init__(message, code="INVALID_IMAGE_PAYLOAD", status_code=400)
+
+class NumericalCorruptionError(BiometricException):
+    def __init__(self, message: str = "Numerical corruption detected: embedding contains non-finite values (NaN or Inf)."):
+        super().__init__(message, code="NUMERICAL_CORRUPTION", status_code=400)
+
+class EmbeddingExtractionError(BiometricException):
+    def __init__(self, message: str = "Failed to extract face embedding from the provided face region."):
+        super().__init__(message, code="EMBEDDING_EXTRACTION_FAILED", status_code=400)
 
 class ConsentRequiredError(BiometricException):
     def __init__(self, message: str = "Active biometric consent is required before enrollment or verification."):

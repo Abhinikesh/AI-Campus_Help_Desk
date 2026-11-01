@@ -138,6 +138,10 @@ const attendanceSessionSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    autoExpired: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
@@ -182,13 +186,14 @@ attendanceSessionSchema.pre('save', function (next) {
   if (!this.isNew && this.isModified('status') && this._originalStatus && this._originalStatus !== this.status) {
     const allowedTransitions = {
       scheduled: ['open', 'active', 'cancelled'],
-      open: ['active', 'paused', 'closed', 'finalized', 'cancelled'],
-      active: ['paused', 'closed', 'finalized', 'cancelled'],
-      paused: ['open', 'active', 'closed', 'cancelled'],
+      open: ['active', 'paused', 'closed', 'completed', 'finalized', 'cancelled', 'expired'],
+      active: ['paused', 'closed', 'completed', 'finalized', 'cancelled', 'expired'],
+      paused: ['open', 'active', 'closed', 'completed', 'cancelled', 'expired'],
       closed: ['finalized', 'cancelled'],
+      completed: ['finalized', 'cancelled'],
       finalized: [], // terminal
       cancelled: [], // terminal
-      expired: ['closed', 'finalized', 'cancelled'],
+      expired: ['closed', 'completed', 'finalized', 'cancelled'],
     };
     const allowed = allowedTransitions[this._originalStatus] || [];
     if (!allowed.includes(this.status)) {

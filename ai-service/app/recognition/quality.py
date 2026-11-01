@@ -27,6 +27,16 @@ def analyze_face_quality(image: np.ndarray) -> Dict[str, Any]:
             "status": "NO_FACE_DETECTED",
             "message": "No face detected in the frame. Please look directly at the camera.",
             "metrics": photo_metrics,
+            "quality": {
+                "brightness": "dark" if photo_metrics.get("isTooDark") else ("overexposed" if photo_metrics.get("isTooBright") else "acceptable"),
+                "blur": photo_metrics.get("blurLevel", "acceptable"),
+                "contrast": "poor" if photo_metrics.get("isLowContrast") else "acceptable",
+                "face_position": "none"
+            },
+            "error": {
+                "code": "NO_FACE_DETECTED",
+                "message": "No face detected in the frame. Please look directly at the camera."
+            },
             "faceCount": 0
         }
 
@@ -36,6 +46,16 @@ def analyze_face_quality(image: np.ndarray) -> Dict[str, Any]:
             "status": "MULTIPLE_FACES_DETECTED",
             "message": f"Multiple faces ({face_count}) detected. Ensure only one person is visible.",
             "metrics": photo_metrics,
+            "quality": {
+                "brightness": "dark" if photo_metrics.get("isTooDark") else ("overexposed" if photo_metrics.get("isTooBright") else "acceptable"),
+                "blur": photo_metrics.get("blurLevel", "acceptable"),
+                "contrast": "poor" if photo_metrics.get("isLowContrast") else "acceptable",
+                "face_position": "multiple"
+            },
+            "error": {
+                "code": "MULTIPLE_FACES_DETECTED",
+                "message": f"Multiple faces ({face_count}) detected. Ensure only one person is visible."
+            },
             "faceCount": face_count
         }
 
@@ -51,6 +71,16 @@ def analyze_face_quality(image: np.ndarray) -> Dict[str, Any]:
             "status": "FACE_TOO_SMALL",
             "message": f"Face is too small ({face_w}x{face_h}px). Please move closer to the camera.",
             "metrics": photo_metrics,
+            "quality": {
+                "brightness": "dark" if photo_metrics.get("isTooDark") else ("overexposed" if photo_metrics.get("isTooBright") else "acceptable"),
+                "blur": photo_metrics.get("blurLevel", "acceptable"),
+                "contrast": "poor" if photo_metrics.get("isLowContrast") else "acceptable",
+                "face_position": "too_small"
+            },
+            "error": {
+                "code": "FACE_TOO_SMALL",
+                "message": f"Face is too small ({face_w}x{face_h}px). Please move closer to the camera."
+            },
             "faceCount": 1,
             "faceBox": {"top": top, "right": right, "bottom": bottom, "left": left}
         }
@@ -64,12 +94,35 @@ def analyze_face_quality(image: np.ndarray) -> Dict[str, Any]:
 
     is_centered = (margin_x <= face_center_x <= img_w - margin_x) and (margin_y <= face_center_y <= img_h - margin_y)
 
+    quality_breakdown = {
+        "brightness": "dark" if photo_metrics.get("isTooDark") else ("overexposed" if photo_metrics.get("isTooBright") else "acceptable"),
+        "blur": photo_metrics.get("blurLevel", "acceptable"),
+        "contrast": "poor" if photo_metrics.get("isLowContrast") else "acceptable",
+        "face_position": "acceptable" if is_centered else "off_center"
+    }
+
     if not photo_metrics["isSuitable"]:
+        if photo_metrics.get("isBlurry"):
+            status_code = "IMAGE_TOO_BLURRY"
+        elif photo_metrics.get("isTooDark"):
+            status_code = "IMAGE_TOO_DARK"
+        elif photo_metrics.get("isTooBright"):
+            status_code = "IMAGE_TOO_BRIGHT"
+        elif photo_metrics.get("isLowContrast"):
+            status_code = "IMAGE_LOW_CONTRAST"
+        else:
+            status_code = "POOR_IMAGE_QUALITY"
+
         return {
             "isValid": False,
-            "status": "POOR_IMAGE_QUALITY",
+            "status": status_code,
             "message": photo_metrics["feedback"],
             "metrics": photo_metrics,
+            "quality": quality_breakdown,
+            "error": {
+                "code": status_code,
+                "message": photo_metrics["feedback"]
+            },
             "faceCount": 1,
             "faceBox": {"top": top, "right": right, "bottom": bottom, "left": left}
         }
@@ -79,6 +132,7 @@ def analyze_face_quality(image: np.ndarray) -> Dict[str, Any]:
         "status": "ACCEPTABLE",
         "message": "Face image is suitable for biometric processing.",
         "metrics": photo_metrics,
+        "quality": quality_breakdown,
         "faceCount": 1,
         "isCentered": is_centered,
         "faceBox": {"top": top, "right": right, "bottom": bottom, "left": left}

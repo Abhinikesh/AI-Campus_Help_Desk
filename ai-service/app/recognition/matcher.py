@@ -3,7 +3,7 @@ from typing import Dict, Any, Tuple
 import numpy as np
 
 from app.config import Config
-from app.utils.exceptions import BiometricException
+from app.utils.exceptions import BiometricException, NumericalCorruptionError
 
 def calculate_comparison_metrics(vec_a: np.ndarray, vec_b: np.ndarray) -> Tuple[float, float]:
     """
@@ -16,11 +16,18 @@ def calculate_comparison_metrics(vec_a: np.ndarray, vec_b: np.ndarray) -> Tuple[
     a = np.array(vec_a, dtype=np.float32)
     b = np.array(vec_b, dtype=np.float32)
 
+    # Validate numerical integrity
+    if np.isnan(a).any() or np.isinf(a).any() or np.isnan(b).any() or np.isinf(b).any():
+        raise NumericalCorruptionError("Comparison vectors contain non-finite values (NaN or Inf)")
+
     # Normalize if not already unit vectors
     norm_a = np.linalg.norm(a)
     norm_b = np.linalg.norm(b)
-    if norm_a > 0: a = a / norm_a
-    if norm_b > 0: b = b / norm_b
+    if norm_a == 0 or norm_b == 0:
+        raise NumericalCorruptionError("Zero-magnitude vector cannot be evaluated for biometric matching")
+
+    a = a / norm_a
+    b = b / norm_b
 
     # Euclidean distance
     diff = a - b

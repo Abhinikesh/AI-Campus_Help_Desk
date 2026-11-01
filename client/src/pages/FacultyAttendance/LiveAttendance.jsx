@@ -10,7 +10,7 @@ import ConfirmationDialog from '../../components/AttendanceShared/ConfirmationDi
 import {
   GraduationCap, ArrowLeft, Clock, CheckCircle2, AlertTriangle,
   StopCircle, Lock, Search, RefreshCw, UserCheck, UserX,
-  Camera, ShieldCheck, Eye, Edit3, X
+  Camera, ShieldCheck, Eye, Edit3, X, Play, Pause
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import '../../components/AttendanceShared/AttendanceShared.css';
@@ -41,6 +41,7 @@ const LiveAttendance = () => {
   // QR Rotating Challenge state
   const [qrChallenge, setQrChallenge] = useState(null);
   const [qrLoading, setQrLoading] = useState(false);
+  const [qrCountdown, setQrCountdown] = useState(45);
 
   // Manual Override Modal state with mandatory reason
   const [overrideModal, setOverrideModal] = useState({
@@ -71,6 +72,7 @@ const LiveAttendance = () => {
       const res = await attendanceService.getQrChallenge(sessionId);
       if (res?.success && res.data) {
         setQrChallenge(res.data);
+        setQrCountdown(res.data.expiresInSeconds || 45);
       }
     } catch (err) {
       console.warn('QR challenge fetch error:', err);
@@ -83,14 +85,32 @@ const LiveAttendance = () => {
     fetchSession();
     fetchQrChallenge();
 
-    // Responsive polling for live attendance updates (every 2.5 seconds when session is open)
+    // Responsive polling for live attendance updates (every 2.5 seconds when session is active or paused)
     const interval = setInterval(() => {
-      if (session?.status === 'open') {
+      if (['open', 'active', 'paused'].includes(session?.status)) {
         fetchSession();
       }
     }, 2500);
 
     return () => clearInterval(interval);
+  }, [sessionId, session?.status]);
+
+  // QR Rotating countdown & auto-refresh effect
+  useEffect(() => {
+    const isClosedSession = ['closed', 'completed', 'finalized', 'cancelled', 'expired'].includes(session?.status);
+    if (isClosedSession) return;
+
+    const timer = setInterval(() => {
+      setQrCountdown((prev) => {
+        if (prev <= 1) {
+          fetchQrChallenge();
+          return 45;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, [sessionId, session?.status]);
 
   // Session timer
@@ -135,6 +155,30 @@ const LiveAttendance = () => {
     }
   };
 
+  const handlePauseSession = async () => {
+    try {
+      setActionLoading(true);
+      await attendanceService.pauseSession(sessionId);
+      fetchSession();
+    } catch (err) {
+      console.error('Error pausing session:', err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleResumeSession = async () => {
+    try {
+      setActionLoading(true);
+      await attendanceService.resumeSession(sessionId);
+      fetchSession();
+    } catch (err) {
+      console.error('Error resuming session:', err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleCloseSession = async () => {
     try {
       setActionLoading(true);
@@ -172,7 +216,8 @@ const LiveAttendance = () => {
   });
 
   const isFinalized = session?.status === 'finalized';
-  const isClosed = session?.status === 'closed' || isFinalized;
+  const isClosed = ['closed', 'completed', 'finalized', 'cancelled', 'expired'].includes(session?.status);
+  const isPaused = session?.status === 'paused';
   const { isCollapsed } = useSidebar();
 
   return (
@@ -236,21 +281,62 @@ const LiveAttendance = () => {
             </div>
 
             {!isClosed && (
-              <button
-                type="button"
-                className="ds-btn ds-btn-danger"
-                onClick={() => setShowCloseModal(true)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 34 }}
-              >
-                <StopCircle size={15} /> Stop Session
-              </button>
+              <>
+                {isPaused ? (
+                  <button
+                    type="button"
+                    className="ds-btn"
+                    onClick={handleResumeSession}
+                    disabled={actionLoading}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      height: 34,
+                      background: '#16A34A',
+                      color: '#FFFFFF',
+                      border: 'none',
+                    }}
+                  >
+                    <Play size={14} /> Resume Check-in
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="ds-btn ds-btn-secondary"
+                    onClick={handlePauseSession}
+                    disabled={actionLoading}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      height: 34,
+                      borderColor: '#F59E0B',
+                      color: '#D97706',
+                    }}
+                  >
+                    <Pause size={14} /> Pause Check-in
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="ds-btn ds-btn-danger"
+                  onClick={() => setShowCloseModal(true)}
+                  disabled={actionLoading}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 34 }}
+                >
+                  <StopCircle size={15} /> Stop Session
+                </button>
+              </>
             )}
 
-            {!isFinalized && (
+            {!isFinalized && isClosed && (
               <button
                 type="button"
                 className="ds-btn ds-btn-primary"
                 onClick={() => setShowFinalizeModal(true)}
+                disabled={actionLoading}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 34 }}
               >
                 <Lock size={14} /> Finalize Attendance
@@ -320,19 +406,44 @@ const LiveAttendance = () => {
                   <span style={{ fontSize: 12, fontWeight: 700, color: '#1E40AF', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <ShieldCheck size={15} /> Dynamic Session QR Challenge
                   </span>
-                  <button
-                    type="button"
-                    className="ds-btn ds-btn-secondary"
-                    onClick={fetchQrChallenge}
-                    disabled={qrLoading || isClosed}
-                    style={{ padding: '2px 8px', height: 26, fontSize: 12 }}
-                  >
-                    <RefreshCw size={12} className={qrLoading ? 'ds-spinner-inline' : ''} />
-                    <span>Regenerate</span>
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: qrCountdown <= 10 ? '#DC2626' : '#2563EB' }}>
+                      {qrCountdown}s
+                    </span>
+                    <button
+                      type="button"
+                      className="ds-btn ds-btn-secondary"
+                      onClick={fetchQrChallenge}
+                      disabled={qrLoading || isClosed}
+                      style={{ padding: '2px 8px', height: 26, fontSize: 12 }}
+                      title="Force refresh token"
+                    >
+                      <RefreshCw size={12} className={qrLoading ? 'ds-spinner-inline' : ''} />
+                    </button>
+                  </div>
                 </div>
 
-                {qrChallenge?.challengeToken ? (
+                {/* Rotating Progress Bar */}
+                {!isClosed && (
+                  <div className="ds-bar-track" style={{ height: 4, marginBottom: 12, background: '#DBEAFE' }}>
+                    <div
+                      className="ds-bar-fill"
+                      style={{
+                        width: `${(qrCountdown / 45) * 100}%`,
+                        background: qrCountdown <= 10 ? '#EF4444' : '#2563EB',
+                        transition: 'width 1s linear',
+                      }}
+                    />
+                  </div>
+                )}
+
+                {isPaused && (
+                  <div style={{ padding: '8px 12px', background: '#FEF3C7', border: '1px solid #FCD34D', borderRadius: 6, color: '#92400E', fontSize: 12, marginBottom: 10 }}>
+                    <strong>Session Paused:</strong> Check-in submissions are frozen. Click "Resume Check-in" above when ready.
+                  </div>
+                )}
+
+                {qrChallenge?.challengeToken || qrChallenge?.token || session?.qrChallengeToken ? (
                   <div>
                     <div style={{
                       fontFamily: 'monospace',
@@ -346,11 +457,13 @@ const LiveAttendance = () => {
                       color: '#1E3A8A',
                       marginBottom: 8,
                       userSelect: 'all',
+                      textAlign: 'center',
                     }}>
-                      {qrChallenge.challengeToken}
+                      {qrChallenge?.challengeToken || qrChallenge?.token || session?.qrChallengeToken}
                     </div>
-                    <div style={{ fontSize: 12, color: '#1D4ED8' }}>
-                      Token expires in <strong>{qrChallenge.expiresInSeconds || 45}s</strong>. Students present in classroom scan or enter this token during check-in.
+                    <div style={{ fontSize: 12, color: '#1D4ED8', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>45s rotating token • Scan or enter code</span>
+                      <span style={{ fontWeight: 600 }}>HMAC-SHA256</span>
                     </div>
                   </div>
                 ) : (
@@ -660,7 +773,7 @@ const LiveAttendance = () => {
       <ConfirmationDialog
         isOpen={showCloseModal}
         title="Stop Live Attendance Session"
-        message="Are you sure you want to stop this live attendance session? Any students remaining in 'Pending' will be marked as Absent. You can still manually review and adjust records before finalizing."
+        message="Are you sure you want to stop this live attendance session? Student check-in submissions will be closed. You can still review the roster and make manual adjustments before finalizing attendance."
         confirmLabel="Stop Session"
         cancelLabel="Keep Running"
         isDestructive={false}

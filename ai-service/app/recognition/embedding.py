@@ -6,7 +6,12 @@ import cv2
 import face_recognition
 
 from app.config import Config
-from app.utils.exceptions import BiometricException, NoFaceDetectedError
+from app.utils.exceptions import (
+    BiometricException,
+    NoFaceDetectedError,
+    NumericalCorruptionError,
+    EmbeddingExtractionError,
+)
 
 def generate_face_embedding(image: np.ndarray, bbox: Optional[Tuple[int, int, int, int]] = None) -> np.ndarray:
     """
@@ -17,15 +22,21 @@ def generate_face_embedding(image: np.ndarray, bbox: Optional[Tuple[int, int, in
     Returns:
         128-dimensional float32 numpy array with L2 norm = 1.0
     """
+    if image is None or image.size == 0:
+        raise BiometricException("Cannot extract embedding from empty or None image")
+
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     known_locations = [bbox] if bbox is not None else None
-    embeddings = face_recognition.face_encodings(
-        rgb_image,
-        known_face_locations=known_locations,
-        num_jitters=1,
-        model="small"  # 128-d ResNet
-    )
+    try:
+        embeddings = face_recognition.face_encodings(
+            rgb_image,
+            known_face_locations=known_locations,
+            num_jitters=1,
+            model="small"  # 128-d ResNet
+        )
+    except Exception as e:
+        raise EmbeddingExtractionError(f"Embedding extraction model failed: {str(e)}")
 
     if not embeddings:
         raise NoFaceDetectedError("Failed to extract face embedding from the provided face region.")
@@ -37,12 +48,12 @@ def generate_face_embedding(image: np.ndarray, bbox: Optional[Tuple[int, int, in
         raise BiometricException(f"Invalid embedding dimensions: expected {Config.MODEL_DIMENSIONS}, got {len(raw_vec)}")
 
     if np.isnan(raw_vec).any() or np.isinf(raw_vec).any():
-        raise BiometricException("Numerical corruption detected: embedding contains NaN or Inf values")
+        raise NumericalCorruptionError("Numerical corruption detected: embedding contains NaN or Inf values")
 
     # L2 normalize
     norm = np.linalg.norm(raw_vec)
-    if norm == 0:
-        raise BiometricException("Zero vector encountered during embedding normalization")
+    if norm == 0 or np.isnan(norm) or np.isinf(norm):
+        raise NumericalCorruptionError("Zero or invalid norm encountered during embedding normalization")
 
     unit_vec = (raw_vec / norm).astype(np.float32)
     return unit_vec
@@ -58,15 +69,25 @@ def aggregate_enrollment_embeddings(embeddings_list: List[np.ndarray]) -> Dict[s
     if not embeddings_list:
         raise BiometricException("At least one valid embedding is required for enrollment")
 
+    # Validate each embedding
+    for i, emb in enumerate(embeddings_list):
+        arr = np.array(emb, dtype=np.float32)
+        if len(arr) != Config.MODEL_DIMENSIONS:
+            raise BiometricException(f"Embedding {i} has invalid dimension {len(arr)}, expected {Config.MODEL_DIMENSIONS}")
+        if np.isnan(arr).any() or np.isinf(arr).any():
+            raise NumericalCorruptionError(f"Embedding {i} contains NaN or Inf values")
+
     if len(embeddings_list) == 1:
-        representative_vector = embeddings_list[0]
+        raw_vec = np.array(embeddings_list[0], dtype=np.float32)
+        norm = np.linalg.norm(raw_vec)
+        representative_vector = (raw_vec / norm).astype(np.float32) if norm > 0 else raw_vec
     else:
         # Check pairwise distances to reject any inconsistent capture
-        matrix = np.array(embeddings_list)
+        matrix = np.array(embeddings_list, dtype=np.float32)
         mean_vec = np.mean(matrix, axis=0)
         norm = np.linalg.norm(mean_vec)
-        if norm == 0:
-            representative_vector = embeddings_list[0]
+        if norm == 0 or np.isnan(norm) or np.isinf(norm):
+            representative_vector = np.array(embeddings_list[0], dtype=np.float32)
         else:
             representative_vector = (mean_vec / norm).astype(np.float32)
 

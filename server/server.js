@@ -93,8 +93,26 @@ if (env.NODE_ENV === 'production') {
 // ── Central error handler (must be LAST) ─────────────────────────────────────
 app.use(errorHandler);
 
+const sessionScheduler = require('./services/sessionScheduler.service');
+
 // ── Start Server ──────────────────────────────────────────────────────────────
 const PORT = env.PORT;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 CampusSphere ERP server running on http://localhost:${PORT} [${env.NODE_ENV}]`);
+  sessionScheduler.startScheduler(60000); // Check every minute
 });
+
+function gracefulShutdown(signal) {
+  console.log(`\n🛑 Received ${signal}. Shutting down session scheduler and closing server...`);
+  sessionScheduler.stopScheduler();
+  server.close(() => {
+    console.log('✅ HTTP server closed.');
+    mongoose.connection.close(false).then(() => {
+      console.log('✅ MongoDB connection closed.');
+      process.exit(0);
+    });
+  });
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
