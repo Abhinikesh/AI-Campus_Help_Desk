@@ -17,6 +17,10 @@ const ROLE_DASHBOARDS = {
   inventory_manager: '/admin/inventory',
   procurement_officer: '/admin/inventory',
   storekeeper: '/admin/inventory',
+  hr_admin: '/admin/hr',
+  hr_officer: '/admin/hr',
+  employee: '/employee/self-service',
+  department_head: '/faculty/hr',
 };
 
 /**

@@ -6,7 +6,7 @@ import {
   LayoutDashboard, BookOpen, CalendarCheck, BarChart2,
   Folder, Flag, MessageCircle, LogOut, Clock,
   ChevronLeft, ChevronRight, Menu, GraduationCap, UserCheck, Bell, CreditCard, Library,
-  Building, Bus, Briefcase, Sparkles, Boxes
+  Building, Bus, Briefcase, Sparkles, Boxes, Users
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -35,6 +35,7 @@ const NAV_CONFIG = {
     { label: 'Assignments',      icon: BookOpen,        to: '/faculty/assignments' },
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Weekly Timetable', icon: Clock,           to: '/faculty/timetable'   },
+    { label: 'HR Self-Service',  icon: Users,           to: '/faculty/hr'          },
     { label: 'Activities & Clubs', icon: Sparkles,      to: '/admin/activities'    },
     { label: 'Assets & Supplies',icon: Boxes,           to: '/faculty/inventory'   },
     { label: 'Student Results',  icon: BarChart2,       to: '/faculty/results'     },
@@ -52,6 +53,7 @@ const NAV_CONFIG = {
     { label: 'Placement Desk',   icon: Briefcase,       to: '/admin/placement'     },
     { label: 'Activities & Clubs', icon: Sparkles,      to: '/admin/activities'    },
     { label: 'Inventory Desk',   icon: Boxes,           to: '/admin/inventory'     },
+    { label: 'HR & Workforce',   icon: Users,           to: '/admin/hr'            },
     { label: 'Library Desk',     icon: Library,         to: '/admin/library'       },
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
@@ -124,6 +126,23 @@ const NAV_CONFIG = {
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  hr_admin: [
+    { label: 'HR & Workforce',   icon: Users,           to: '/admin/hr'            },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  hr_officer: [
+    { label: 'HR & Workforce',   icon: Users,           to: '/admin/hr'            },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  employee: [
+    { label: 'HR Self-Service',  icon: Users,           to: '/employee/self-service'},
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/faculty/ai-help'     },
   ],
   parent: [
     { label: 'Dashboard',        icon: LayoutDashboard, to: '/parent/dashboard'    },

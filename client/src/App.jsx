@@ -54,6 +54,8 @@ const AdminTransport            = lazyWithRetry(() => import('./pages/AdminTrans
 const AdminPlacement            = lazyWithRetry(() => import('./pages/AdminPlacement/index'));
 const AdminActivities           = lazyWithRetry(() => import('./pages/AdminActivities/index'));
 const AdminInventory            = lazyWithRetry(() => import('./pages/AdminInventory/index'));
+const AdminHR                   = lazyWithRetry(() => import('./pages/AdminHR/index'));
+const FacultyHR                 = lazyWithRetry(() => import('./pages/FacultyHR/index'));
 
 // Shared Authenticated Pages
 const NotificationsPage         = lazyWithRetry(() => import('./pages/Notifications/index'));
@@ -139,6 +141,10 @@ const App = () => (
             element={<ProtectedRoute role="faculty"><StudentDrive /></ProtectedRoute>} />
           <Route path="/faculty/inventory"
             element={<ProtectedRoute role="faculty"><FacultyInventory /></ProtectedRoute>} />
+          <Route path="/faculty/hr"
+            element={<ProtectedRoute role={['faculty', 'employee', 'department_head']}><FacultyHR /></ProtectedRoute>} />
+          <Route path="/employee/self-service"
+            element={<ProtectedRoute role={['faculty', 'employee', 'department_head', 'hr_officer', 'hr_admin']}><FacultyHR /></ProtectedRoute>} />
           <Route path="/faculty/ai-help"
             element={<ProtectedRoute role="faculty"><AIHelpDesk /></ProtectedRoute>} />
 
@@ -151,6 +157,8 @@ const App = () => (
             element={<ProtectedRoute role="admin"><AdminFinance /></ProtectedRoute>} />
           <Route path="/admin/inventory"
             element={<ProtectedRoute role={['admin', 'inventory_manager', 'procurement_officer', 'storekeeper']}><AdminInventory /></ProtectedRoute>} />
+          <Route path="/admin/hr"
+            element={<ProtectedRoute role={['admin', 'hr_admin', 'hr_officer']}><AdminHR /></ProtectedRoute>} />
           <Route path="/admin/hostel"
             element={<ProtectedRoute role={['admin', 'warden']}><AdminHostel /></ProtectedRoute>} />
           <Route path="/admin/transport"

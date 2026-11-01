@@ -14,6 +14,11 @@ const designationSchema = new mongoose.Schema(
       trim: true,
       maxlength: [100, 'Name cannot exceed 100 characters'],
     },
+    title: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     code: {
       type: String,
       required: [true, 'Designation code is required'],
@@ -55,5 +60,15 @@ const designationSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+designationSchema.pre('save', function (next) {
+  if (!this.title && this.name) {
+    this.title = this.name;
+  }
+  if (!this.name && this.title) {
+    this.name = this.title;
+  }
+  next();
+});
 
 module.exports = mongoose.model('Designation', designationSchema);
