@@ -27,3 +27,4 @@ $$\text{Draft} \xrightarrow{\text{Submit}} \text{Pending Approval} \xrightarrow{
 - When an authorized admin or faculty coordinator publishes an event (`POST /api/events/:id/publish`), `eventService.syncEventWithCalendar(event, userId)` executes.
 - An `AcademicCalendarEvent` is automatically created or updated with `linkedEntityType: 'CampusEvent'` and `linkedEntityId: event._id`.
 - If an event is subsequently cancelled, `POST /api/events/:id/cancel` sets the status to `cancelled`, releases all booked venues, updates the calendar event to `cancelled`, and sends high-priority notifications to registered students.
+

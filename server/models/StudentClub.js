@@ -106,3 +106,4 @@ studentClubSchema.index({ category: 1, isActive: 1 });
 studentClubSchema.index({ name: 'text', description: 'text' });
 
 module.exports = mongoose.model('StudentClub', studentClubSchema);
+

@@ -42,3 +42,4 @@ When a confirmed participant cancels their registration (`PATCH /api/events/:id/
    - Records `promotedFromWaitlistAt: new Date()`.
    - Increments `allocatedParticipantsCount` and decrements `waitlistCount`.
    - Dispatches an instant high-priority notification to the promoted student.
+

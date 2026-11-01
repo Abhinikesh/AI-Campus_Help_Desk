@@ -64,3 +64,4 @@ const eventFeedbackSchema = new mongoose.Schema(
 eventFeedbackSchema.index({ event: 1, student: 1 }, { unique: true });
 
 module.exports = mongoose.model('EventFeedback', eventFeedbackSchema);
+

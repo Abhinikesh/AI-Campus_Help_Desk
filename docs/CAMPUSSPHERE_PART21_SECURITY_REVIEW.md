@@ -24,3 +24,4 @@
 - **A04: Insecure Design:** Deterministic FIFO waitlisting and atomic promotion guarantee fair seat allocations.
 - **A05: Security Misconfiguration:** Helmet, CORS, and Express rate limiting active on the Node server.
 - **A08: Software and Data Integrity Failures:** Immutable `EventAuditLog.js` and `correctionHistory` trails for attendance changes.
+

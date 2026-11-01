@@ -111,3 +111,4 @@ This step-by-step walkthrough enables quality engineers, system administrators, 
 1. On the Admin Activities desk, click **CSV** on the symposium row.
 2. Open the downloaded file in a text editor.
 3. **Verification:** All cell values containing leading `=, +, -, @` are safely escaped with a leading single quote (`'`), neutralizing spreadsheet formula execution.
+

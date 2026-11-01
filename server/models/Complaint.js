@@ -15,7 +15,7 @@ const complaintSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['academic', 'admin', 'hostel', 'transport', 'placement', 'event', 'infrastructure', 'other'],
+      enum: ['academic', 'admin', 'hostel', 'transport', 'placement', 'event', 'asset', 'infrastructure', 'other'],
       required: [true, 'Category is required'],
     },
     title: {
@@ -91,6 +91,12 @@ const complaintSchema = new mongoose.Schema(
     campusEvent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'CampusEvent',
+      default: null,
+      index: true,
+    },
+    asset: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Asset',
       default: null,
       index: true,
     },

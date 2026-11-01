@@ -77,3 +77,4 @@ All endpoints (except public certificate verification) require an authenticated 
 | `GET` | `/api/events/announcements` | all authenticated | List published announcements |
 | `POST` | `/api/events/:id/feedback` | student | Submit post-event ratings and feedback |
 | `GET` | `/api/events/reports/overview` | admin, faculty, organizer | Direct database aggregation metrics |
+

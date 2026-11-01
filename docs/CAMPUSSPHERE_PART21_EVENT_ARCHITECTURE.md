@@ -74,3 +74,4 @@ The subsystem is integrated natively into the Node.js/Express backend, Mongoose/
 ### 2.5 Verifiable Cryptographic Certificates
 - Certificates generated for verified attendees or prize winners feature a unique certificate identifier (`CERT-YYYY-XXXXX`) and a crypto-random hex verification token (`crypto.randomBytes(16)`).
 - Public verification is exposed at `/api/certificates/verify/:identifier`, displaying authenticity status without leaking student private emails, phone numbers, or academic marks.
+

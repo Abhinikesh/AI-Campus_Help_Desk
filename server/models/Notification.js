@@ -41,6 +41,7 @@ const notificationSchema = new mongoose.Schema(
         'transport',
         'placement',
         'event',
+        'inventory',
         'administrative',
         'system',
       ],

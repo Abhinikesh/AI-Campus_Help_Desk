@@ -67,3 +67,4 @@ const eventVenueBookingSchema = new mongoose.Schema(
 eventVenueBookingSchema.index({ venue: 1, startDateTime: 1, endDateTime: 1, status: 1 });
 
 module.exports = mongoose.model('EventVenueBooking', eventVenueBookingSchema);
+

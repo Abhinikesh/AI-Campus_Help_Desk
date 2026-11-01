@@ -18,3 +18,4 @@ Campus event attendance is managed through `server/models/EventAttendance.js` an
    - If an error was made during physical check-in, organizers modify the record via `PATCH /api/events/:id/attendance/:attendanceId`.
    - Corrections strictly require an audit rationale of at least 5 characters.
    - The previous status, new status, modifier user ID, and timestamp are appended to `correctionHistory`.
+

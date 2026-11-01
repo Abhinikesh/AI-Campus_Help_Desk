@@ -1345,3 +1345,4 @@ const AdminActivities = () => {
 };
 
 export default AdminActivities;
+

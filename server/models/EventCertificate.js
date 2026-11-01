@@ -111,3 +111,4 @@ const eventCertificateSchema = new mongoose.Schema(
 eventCertificateSchema.index({ event: 1, student: 1, certificateType: 1 }, { unique: true });
 
 module.exports = mongoose.model('EventCertificate', eventCertificateSchema);
+

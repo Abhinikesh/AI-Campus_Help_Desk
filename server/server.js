@@ -73,6 +73,8 @@ app.use('/api/hostel',        require('./routes/hostel.routes'));
 app.use('/api/transport',     require('./routes/transport.routes'));
 app.use('/api/placement',     require('./routes/placement.routes'));
 app.use('/api/events',        require('./routes/event.routes'));
+app.use('/api/inventory',     require('./routes/inventory.routes'));
+app.use('/api/procurement',   require('./routes/inventory.routes'));
 app.use('/api/certificates/verify/:identifier', (req, res, next) => {
   return require('./controllers/event.controller').verifyCertificate(req, res, next);
 });

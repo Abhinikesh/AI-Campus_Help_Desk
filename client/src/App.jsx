@@ -41,6 +41,7 @@ const FacultyAttendanceRecords  = lazyWithRetry(() => import('./pages/FacultyAtt
 const FacultyAttendanceReports  = lazyWithRetry(() => import('./pages/FacultyAttendance/AttendanceReports'));
 const FacultyTimetable          = lazyWithRetry(() => import('./pages/FacultyTimetable/index'));
 const FacultyResults            = lazyWithRetry(() => import('./pages/FacultyResults/index'));
+const FacultyInventory          = lazyWithRetry(() => import('./pages/FacultyInventory/index'));
 
 // Admin Pages
 const AdminDashboard            = lazyWithRetry(() => import('./pages/AdminDashboard/index'));
@@ -52,6 +53,7 @@ const AdminHostel               = lazyWithRetry(() => import('./pages/AdminHoste
 const AdminTransport            = lazyWithRetry(() => import('./pages/AdminTransport/index'));
 const AdminPlacement            = lazyWithRetry(() => import('./pages/AdminPlacement/index'));
 const AdminActivities           = lazyWithRetry(() => import('./pages/AdminActivities/index'));
+const AdminInventory            = lazyWithRetry(() => import('./pages/AdminInventory/index'));
 
 // Shared Authenticated Pages
 const NotificationsPage         = lazyWithRetry(() => import('./pages/Notifications/index'));
@@ -135,6 +137,8 @@ const App = () => (
             element={<ProtectedRoute role="faculty"><Complaints /></ProtectedRoute>} />
           <Route path="/faculty/drive"
             element={<ProtectedRoute role="faculty"><StudentDrive /></ProtectedRoute>} />
+          <Route path="/faculty/inventory"
+            element={<ProtectedRoute role="faculty"><FacultyInventory /></ProtectedRoute>} />
           <Route path="/faculty/ai-help"
             element={<ProtectedRoute role="faculty"><AIHelpDesk /></ProtectedRoute>} />
 
@@ -145,6 +149,8 @@ const App = () => (
             element={<ProtectedRoute role="admin"><AdminTimetable /></ProtectedRoute>} />
           <Route path="/admin/finance"
             element={<ProtectedRoute role="admin"><AdminFinance /></ProtectedRoute>} />
+          <Route path="/admin/inventory"
+            element={<ProtectedRoute role={['admin', 'inventory_manager', 'procurement_officer', 'storekeeper']}><AdminInventory /></ProtectedRoute>} />
           <Route path="/admin/hostel"
             element={<ProtectedRoute role={['admin', 'warden']}><AdminHostel /></ProtectedRoute>} />
           <Route path="/admin/transport"

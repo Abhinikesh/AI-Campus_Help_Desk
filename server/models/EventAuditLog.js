@@ -65,3 +65,4 @@ const eventAuditLogSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('EventAuditLog', eventAuditLogSchema);
+

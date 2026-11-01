@@ -68,3 +68,4 @@ const eventAttendanceSchema = new mongoose.Schema(
 eventAttendanceSchema.index({ event: 1, student: 1 }, { unique: true });
 
 module.exports = mongoose.model('EventAttendance', eventAttendanceSchema);
+

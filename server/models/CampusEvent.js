@@ -232,3 +232,4 @@ campusEventSchema.index({ targetAudience: 1, targetDepartment: 1, status: 1 });
 campusEventSchema.index({ title: 'text', description: 'text' });
 
 module.exports = mongoose.model('CampusEvent', campusEventSchema);
+

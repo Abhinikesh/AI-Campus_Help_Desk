@@ -25,3 +25,4 @@
 - Overlap detection checks for conflicting bookings:
   $$\text{startDateTime} < \text{newEnd} \quad \land \quad \text{endDateTime} > \text{newStart}$$
 - Overlapping bookings for the same active venue are blocked with `HTTP 409 Conflict`.
+

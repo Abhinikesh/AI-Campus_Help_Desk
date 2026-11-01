@@ -31,3 +31,4 @@ The Student Club Subsystem enables extracurricular technical societies, robotics
 3. **Withdrawal / Leaving:**
    - Students can withdraw pending or approved memberships.
    - Withdrawing an approved membership atomically decrements `activeMembersCount`.
+

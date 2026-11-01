@@ -101,3 +101,4 @@ router.get('/venues', getVenues);
 router.post('/venues/bookings', allowRoles('admin', 'faculty', 'event_organizer'), bookVenue);
 
 module.exports = router;
+

@@ -14,6 +14,9 @@ const ROLE_DASHBOARDS = {
   placement_coordinator: '/admin/placement',
   event_organizer: '/admin/activities',
   club_coordinator: '/admin/activities',
+  inventory_manager: '/admin/inventory',
+  procurement_officer: '/admin/inventory',
+  storekeeper: '/admin/inventory',
 };
 
 /**

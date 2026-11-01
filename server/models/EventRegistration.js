@@ -100,3 +100,4 @@ eventRegistrationSchema.index({ event: 1, status: 1, waitlistNumber: 1 });
 eventRegistrationSchema.index({ student: 1, status: 1 });
 
 module.exports = mongoose.model('EventRegistration', eventRegistrationSchema);
+

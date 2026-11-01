@@ -82,3 +82,4 @@ clubMembershipSchema.index({ club: 1, student: 1, academicYear: 1 });
 clubMembershipSchema.index({ student: 1, status: 1 });
 
 module.exports = mongoose.model('ClubMembership', clubMembershipSchema);
+

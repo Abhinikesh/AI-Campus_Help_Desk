@@ -68,3 +68,4 @@ const eventAnnouncementSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('EventAnnouncement', eventAnnouncementSchema);
+

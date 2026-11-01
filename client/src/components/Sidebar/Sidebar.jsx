@@ -6,7 +6,7 @@ import {
   LayoutDashboard, BookOpen, CalendarCheck, BarChart2,
   Folder, Flag, MessageCircle, LogOut, Clock,
   ChevronLeft, ChevronRight, Menu, GraduationCap, UserCheck, Bell, CreditCard, Library,
-  Building, Bus, Briefcase, Sparkles
+  Building, Bus, Briefcase, Sparkles, Boxes
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -36,6 +36,7 @@ const NAV_CONFIG = {
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Weekly Timetable', icon: Clock,           to: '/faculty/timetable'   },
     { label: 'Activities & Clubs', icon: Sparkles,      to: '/admin/activities'    },
+    { label: 'Assets & Supplies',icon: Boxes,           to: '/faculty/inventory'   },
     { label: 'Student Results',  icon: BarChart2,       to: '/faculty/results'     },
     { label: 'Academic Drive',   icon: Folder,          to: '/faculty/drive'       },
     { label: 'Complaints',       icon: Flag,            to: '/faculty/complaints'  },
@@ -50,6 +51,7 @@ const NAV_CONFIG = {
     { label: 'Transport Desk',   icon: Bus,             to: '/admin/transport'     },
     { label: 'Placement Desk',   icon: Briefcase,       to: '/admin/placement'     },
     { label: 'Activities & Clubs', icon: Sparkles,      to: '/admin/activities'    },
+    { label: 'Inventory Desk',   icon: Boxes,           to: '/admin/inventory'     },
     { label: 'Library Desk',     icon: Library,         to: '/admin/library'       },
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
@@ -101,6 +103,24 @@ const NAV_CONFIG = {
   ],
   librarian: [
     { label: 'Library Desk',     icon: Library,         to: '/admin/library'       },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  inventory_manager: [
+    { label: 'Inventory Desk',   icon: Boxes,           to: '/admin/inventory'     },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  procurement_officer: [
+    { label: 'Procurement Desk', icon: Boxes,           to: '/admin/inventory'     },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  storekeeper: [
+    { label: 'Store & Stock',    icon: Boxes,           to: '/admin/inventory'     },
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },

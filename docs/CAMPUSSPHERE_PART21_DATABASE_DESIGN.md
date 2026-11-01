@@ -130,3 +130,4 @@ Part 21 introduces 12 dedicated Mongoose models and extends 5 shared platform sc
 3. **`NotificationPreference.js`:** Added `event: { type: Boolean, default: true }`.
 4. **`Complaint.js`:** Added `'event'` to `category` enum with optional `campusEvent` ref.
 5. **`AcademicCalendarEvent.js`:** Added `'CampusEvent'` to `linkedEntityType` enum.
+

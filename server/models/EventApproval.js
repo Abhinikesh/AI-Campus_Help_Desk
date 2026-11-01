@@ -56,3 +56,4 @@ const eventApprovalSchema = new mongoose.Schema(
 eventApprovalSchema.index({ event: 1, stage: 1 });
 
 module.exports = mongoose.model('EventApproval', eventApprovalSchema);
+

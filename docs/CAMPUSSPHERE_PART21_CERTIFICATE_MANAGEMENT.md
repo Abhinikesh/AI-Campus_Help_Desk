@@ -20,3 +20,4 @@ $$\text{Attendance Verified (Present)} \xrightarrow{\text{Issue Cert}} \text{Uni
 4. **Zero-PII Public Verification:**
    - Anyone (employers, academic evaluators, public users) can verify a certificate at `GET /api/certificates/verify/:identifier`.
    - The response confirms valid issuance, event title, participant name, date, honor type, and issuing dean without exposing private student contact details or academic marks.
+

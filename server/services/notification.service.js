@@ -145,6 +145,7 @@ class NotificationService {
         'transport',
         'placement',
         'event',
+        'inventory',
         'administrative',
       ];
 
