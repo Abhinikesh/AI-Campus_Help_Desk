@@ -59,3 +59,4 @@ flowchart TD
 ### 2.5 Real Database Analytics & Formula Injection Defense
 - All executive metrics (placement percentage, average CTC, active companies, application counts) are calculated directly from MongoDB collections using aggregation pipelines.
 - All CSV export streams sanitize formula injection triggers (`=`, `+`, `-`, `@`, `\t`, `\r`) with a leading apostrophe (`'`), preventing macro execution in spreadsheet software (CWE-1236).
+

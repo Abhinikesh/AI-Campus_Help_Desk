@@ -42,3 +42,4 @@ Students submit applications through the Student Placement Portal (`/student/pla
 ### 2.3 Application Self-Withdrawal
 - Students can withdraw their application with a mandatory reason if it is in `submitted` or `under_review` state.
 - Once a candidate is `shortlisted`, `selected`, or `offered`, self-withdrawal is blocked to prevent recruitment disruptions; candidates must contact the Placement Cell.
+

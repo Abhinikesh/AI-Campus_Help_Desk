@@ -144,3 +144,4 @@ All Placement endpoints are mounted under `/api/placement` and require Bearer JW
 - **Access:** Admin, Placement Officer, Placement Coordinator
 - **Query Params:** `type` (`applications` | `offers` | `companies`)
 - **Description:** Downloads RFC-4180 CSV export with CWE-1236 formula sanitization.
+

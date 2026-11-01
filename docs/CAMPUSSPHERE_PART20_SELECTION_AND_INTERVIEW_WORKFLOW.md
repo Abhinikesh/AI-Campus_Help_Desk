@@ -44,3 +44,4 @@ If an interviewer enters an incorrect score or outcome:
 
 - Shortlisted students can view scheduled assessment dates, start times, venues, and video conferencing links directly from their Student Placement Portal.
 - Confidential interviewer notes (`internalNotes`) are omitted from student responses, while constructive feedback (`studentFeedback`) is shared.
+

@@ -63,3 +63,4 @@ const placementAuditLogSchema = new mongoose.Schema(
 placementAuditLogSchema.index({ performedBy: 1, timestamp: -1 });
 
 module.exports = mongoose.model('PlacementAuditLog', placementAuditLogSchema);
+

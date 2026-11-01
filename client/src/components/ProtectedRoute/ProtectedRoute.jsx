@@ -12,6 +12,8 @@ const ROLE_DASHBOARDS = {
   attendant: '/admin/transport',
   placement_officer: '/admin/placement',
   placement_coordinator: '/admin/placement',
+  event_organizer: '/admin/activities',
+  club_coordinator: '/admin/activities',
 };
 
 /**

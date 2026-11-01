@@ -15,7 +15,7 @@ const complaintSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['academic', 'admin', 'hostel', 'transport', 'placement', 'infrastructure', 'other'],
+      enum: ['academic', 'admin', 'hostel', 'transport', 'placement', 'event', 'infrastructure', 'other'],
       required: [true, 'Category is required'],
     },
     title: {
@@ -85,6 +85,12 @@ const complaintSchema = new mongoose.Schema(
     drive: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'PlacementDrive',
+      default: null,
+      index: true,
+    },
+    campusEvent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'CampusEvent',
       default: null,
       index: true,
     },

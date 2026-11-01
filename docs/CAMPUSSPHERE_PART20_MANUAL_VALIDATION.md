@@ -159,3 +159,4 @@ This step-by-step walkthrough enables quality engineers, system administrators, 
 2. **Recruiter Privacy:** Calling `/api/placement/opportunities` as a student strips recruiter emails and direct phone numbers.
 3. **Coordinator Boundary:** A coordinator assigned only to Drive A cannot enter interview scores for Drive B.
 4. **Academic Mark Integrity:** Verify in the database that `Mark` records are untouched by any placement stage or offer activity.
+

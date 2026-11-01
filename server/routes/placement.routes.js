@@ -111,3 +111,4 @@ router.get('/metrics', allowRoles('admin', 'placement_officer', 'placement_coord
 router.get('/export', allowRoles('admin', 'placement_officer', 'placement_coordinator'), exportReport);
 
 module.exports = router;
+

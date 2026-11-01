@@ -116,3 +116,4 @@ placementDriveSchema.index({ company: 1, status: 1 });
 placementDriveSchema.index({ coordinators: 1 });
 
 module.exports = mongoose.model('PlacementDrive', placementDriveSchema);
+

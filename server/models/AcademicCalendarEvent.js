@@ -113,7 +113,7 @@ const academicCalendarEventSchema = new mongoose.Schema(
     },
     linkedEntityType: {
       type: String,
-      enum: ['Exam', 'Assignment', 'None'],
+      enum: ['Exam', 'Assignment', 'CampusEvent', 'None'],
       default: 'None',
     },
     linkedEntityId: {

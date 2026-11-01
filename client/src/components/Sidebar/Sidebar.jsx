@@ -6,7 +6,7 @@ import {
   LayoutDashboard, BookOpen, CalendarCheck, BarChart2,
   Folder, Flag, MessageCircle, LogOut, Clock,
   ChevronLeft, ChevronRight, Menu, GraduationCap, UserCheck, Bell, CreditCard, Library,
-  Building, Bus, Briefcase
+  Building, Bus, Briefcase, Sparkles
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -20,6 +20,7 @@ const NAV_CONFIG = {
     { label: 'Hostel & Housing', icon: Building,        to: '/student/hostel'      },
     { label: 'Campus Transport', icon: Bus,             to: '/student/transport'   },
     { label: 'Placement Cell',   icon: Briefcase,       to: '/student/placement'   },
+    { label: 'Activities & Clubs', icon: Sparkles,      to: '/student/activities'  },
     { label: 'Library & Books',  icon: Library,         to: '/student/library'     },
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Results & Grades', icon: BarChart2,       to: '/student/results'     },
@@ -34,6 +35,7 @@ const NAV_CONFIG = {
     { label: 'Assignments',      icon: BookOpen,        to: '/faculty/assignments' },
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Weekly Timetable', icon: Clock,           to: '/faculty/timetable'   },
+    { label: 'Activities & Clubs', icon: Sparkles,      to: '/admin/activities'    },
     { label: 'Student Results',  icon: BarChart2,       to: '/faculty/results'     },
     { label: 'Academic Drive',   icon: Folder,          to: '/faculty/drive'       },
     { label: 'Complaints',       icon: Flag,            to: '/faculty/complaints'  },
@@ -47,6 +49,7 @@ const NAV_CONFIG = {
     { label: 'Hostel Desk',      icon: Building,        to: '/admin/hostel'        },
     { label: 'Transport Desk',   icon: Bus,             to: '/admin/transport'     },
     { label: 'Placement Desk',   icon: Briefcase,       to: '/admin/placement'     },
+    { label: 'Activities & Clubs', icon: Sparkles,      to: '/admin/activities'    },
     { label: 'Library Desk',     icon: Library,         to: '/admin/library'       },
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'Complaints Hub',   icon: Flag,            to: '/admin/complaints'    },
@@ -77,6 +80,16 @@ const NAV_CONFIG = {
   ],
   attendant: [
     { label: 'My Route & Trips', icon: Bus,             to: '/admin/transport'     },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  event_organizer: [
+    { label: 'Activities & Clubs', icon: Sparkles,      to: '/admin/activities'    },
+    { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
+    { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
+  ],
+  club_coordinator: [
+    { label: 'Activities & Clubs', icon: Sparkles,      to: '/admin/activities'    },
     { label: 'Notifications',    icon: Bell,            to: '/notifications'       },
     { label: 'AI Help Desk',     icon: MessageCircle,   to: '/admin/ai-help'       },
   ],

@@ -41,3 +41,4 @@ The Placement subsystem handles student personal resumes, confidential corporate
 
 - The placement submission endpoint (`POST /api/placement/applications`) ignores any student-supplied CGPA, grade point, or backlog claims.
 - The server independently queries authoritative marks from `Mark.js` and runs `resultCalculationService.calculateSemesterResult()`, eliminating client-side spoofing.
+

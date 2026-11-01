@@ -25,3 +25,4 @@ The Placement Cell provides RFC-4180 compliant CSV downloads:
 All cell values pass through `placementService.sanitizeCsvValue()`:
 - Cells starting with `=`, `+`, `-`, `@`, `\t`, or `\r` are prefixed with a leading apostrophe (`'`).
 - This guarantees spreadsheet viewers treat cell contents strictly as plain text, eliminating macro execution vulnerabilities.
+

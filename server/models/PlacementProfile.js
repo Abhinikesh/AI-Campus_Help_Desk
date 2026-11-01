@@ -132,3 +132,4 @@ placementProfileSchema.methods.calculateCompletionScore = function () {
 };
 
 module.exports = mongoose.model('PlacementProfile', placementProfileSchema);
+

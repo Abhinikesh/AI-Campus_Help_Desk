@@ -21,6 +21,7 @@ const StudentLibrary            = lazyWithRetry(() => import('./pages/StudentLib
 const StudentHostel             = lazyWithRetry(() => import('./pages/StudentHostel/index'));
 const StudentTransport          = lazyWithRetry(() => import('./pages/StudentTransport/index'));
 const StudentPlacement          = lazyWithRetry(() => import('./pages/StudentPlacement/index'));
+const StudentActivities         = lazyWithRetry(() => import('./pages/StudentActivities/index'));
 const AttendanceOverview        = lazyWithRetry(() => import('./pages/Attendance/index'));
 const MarkAttendance            = lazyWithRetry(() => import('./pages/Attendance/MarkAttendance'));
 const AttendanceHistory         = lazyWithRetry(() => import('./pages/Attendance/AttendanceHistory'));
@@ -50,6 +51,7 @@ const AdminLibrary              = lazyWithRetry(() => import('./pages/AdminLibra
 const AdminHostel               = lazyWithRetry(() => import('./pages/AdminHostel/index'));
 const AdminTransport            = lazyWithRetry(() => import('./pages/AdminTransport/index'));
 const AdminPlacement            = lazyWithRetry(() => import('./pages/AdminPlacement/index'));
+const AdminActivities           = lazyWithRetry(() => import('./pages/AdminActivities/index'));
 
 // Shared Authenticated Pages
 const NotificationsPage         = lazyWithRetry(() => import('./pages/Notifications/index'));
@@ -87,6 +89,8 @@ const App = () => (
             element={<ProtectedRoute role="student"><StudentTransport /></ProtectedRoute>} />
           <Route path="/student/placement"
             element={<ProtectedRoute role="student"><StudentPlacement /></ProtectedRoute>} />
+          <Route path="/student/activities"
+            element={<ProtectedRoute role="student"><StudentActivities /></ProtectedRoute>} />
           <Route path="/student/library"
             element={<ProtectedRoute role="student"><StudentLibrary /></ProtectedRoute>} />
           <Route path="/student/attendance"
@@ -147,6 +151,8 @@ const App = () => (
             element={<ProtectedRoute role={['admin', 'transport_manager', 'driver', 'attendant']}><AdminTransport /></ProtectedRoute>} />
           <Route path="/admin/placement"
             element={<ProtectedRoute role={['admin', 'placement_officer', 'placement_coordinator']}><AdminPlacement /></ProtectedRoute>} />
+          <Route path="/admin/activities"
+            element={<ProtectedRoute role={['admin', 'faculty', 'event_organizer', 'club_coordinator']}><AdminActivities /></ProtectedRoute>} />
           <Route path="/admin/library"
             element={<ProtectedRoute role={['admin', 'librarian']}><AdminLibrary /></ProtectedRoute>} />
           <Route path="/admin/attendance"

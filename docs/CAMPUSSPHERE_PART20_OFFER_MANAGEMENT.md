@@ -25,3 +25,4 @@ To distinguish between tentative selections and confirmed employment:
 - Placement Officers verify offers by clicking **Verify Placement** (`POST /api/placement/offers/:id/verify`).
 - Sets `isPlacementVerified: true`, records `verifiedBy` and `verifiedAt`.
 - Only verified placements are counted in the institutional placement percentage numerator in executive reports.
+

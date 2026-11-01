@@ -46,6 +46,8 @@ const userSchema = new mongoose.Schema(
         'attendant',
         'placement_officer',
         'placement_coordinator',
+        'event_organizer',
+        'club_coordinator',
       ],
       required: [true, 'Role is required'],
     },

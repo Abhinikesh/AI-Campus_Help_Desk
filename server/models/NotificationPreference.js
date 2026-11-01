@@ -27,6 +27,7 @@ const notificationPreferenceSchema = new mongoose.Schema(
       hostel:         { type: Boolean, default: true },
       transport:      { type: Boolean, default: true },
       placement:      { type: Boolean, default: true },
+      event:          { type: Boolean, default: true },
       administrative: { type: Boolean, default: true },
       system:         { type: Boolean, default: true }, // Mandatory system notifications
     },

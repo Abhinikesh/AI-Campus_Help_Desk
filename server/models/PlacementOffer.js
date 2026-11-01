@@ -146,3 +146,4 @@ placementOfferSchema.index({ company: 1, status: 1 });
 placementOfferSchema.index({ isPlacementVerified: 1, status: 1 });
 
 module.exports = mongoose.model('PlacementOffer', placementOfferSchema);
+

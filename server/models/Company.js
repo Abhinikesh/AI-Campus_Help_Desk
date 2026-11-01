@@ -99,3 +99,4 @@ const companySchema = new mongoose.Schema(
 companySchema.index({ name: 'text', industry: 'text', location: 'text' });
 
 module.exports = mongoose.model('Company', companySchema);
+

@@ -72,6 +72,10 @@ app.use('/api/library',       require('./routes/library.routes'));
 app.use('/api/hostel',        require('./routes/hostel.routes'));
 app.use('/api/transport',     require('./routes/transport.routes'));
 app.use('/api/placement',     require('./routes/placement.routes'));
+app.use('/api/events',        require('./routes/event.routes'));
+app.use('/api/certificates/verify/:identifier', (req, res, next) => {
+  return require('./controllers/event.controller').verifyCertificate(req, res, next);
+});
 
 // ── Static file serving for uploads ──────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

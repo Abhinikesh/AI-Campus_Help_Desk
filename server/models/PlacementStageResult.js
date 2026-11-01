@@ -84,3 +84,4 @@ placementStageResultSchema.index({ application: 1, stage: 1 }, { unique: true })
 placementStageResultSchema.index({ stage: 1, outcome: 1 });
 
 module.exports = mongoose.model('PlacementStageResult', placementStageResultSchema);
+

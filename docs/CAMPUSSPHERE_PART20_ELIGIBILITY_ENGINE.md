@@ -59,3 +59,4 @@ eligibilitySnapshot: {
 }
 ```
 If the student's CGPA changes in a subsequent semester, the historical application retains the exact criteria and evaluation result from the application timestamp.
+

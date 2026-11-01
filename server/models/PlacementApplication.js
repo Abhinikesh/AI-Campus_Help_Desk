@@ -134,3 +134,4 @@ placementApplicationSchema.index({ opportunity: 1, status: 1 });
 placementApplicationSchema.index({ drive: 1, status: 1 });
 
 module.exports = mongoose.model('PlacementApplication', placementApplicationSchema);
+

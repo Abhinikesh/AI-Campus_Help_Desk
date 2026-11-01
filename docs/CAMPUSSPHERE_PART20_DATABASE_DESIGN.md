@@ -179,3 +179,4 @@ Corporate employment offer with package in integer paise and student response.
 | `isPlacementVerified` | Boolean | Default: false | TPO official verification |
 
 **Indexes:** Unique `{ offerNumber: 1 }`, Compound Unique `{ student: 1, opportunity: 1 }`, Index `{ isPlacementVerified: 1 }`.
+

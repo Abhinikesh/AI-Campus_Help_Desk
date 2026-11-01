@@ -101,3 +101,4 @@ A thorough search across the backend (`server/`) and frontend (`client/src/`) re
 5. **Spreadsheet Formula Injection (CWE-1236):**
    - *Risk:* Malicious strings in company names, candidate notes, or job titles triggering macro execution when exported to CSV.
    - *Mitigation:* Mandatory prefixing with `'` on all cells beginning with `=`, `+`, `-`, `@`, `\t`, or `\r`.
+

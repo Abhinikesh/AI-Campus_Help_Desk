@@ -76,3 +76,4 @@ const placementSelectionStageSchema = new mongoose.Schema(
 placementSelectionStageSchema.index({ drive: 1, sequence: 1 }, { unique: true });
 
 module.exports = mongoose.model('PlacementSelectionStage', placementSelectionStageSchema);
+

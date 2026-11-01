@@ -144,6 +144,7 @@ class NotificationService {
         'hostel',
         'transport',
         'placement',
+        'event',
         'administrative',
       ];
 

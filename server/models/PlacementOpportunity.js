@@ -158,3 +158,4 @@ placementOpportunitySchema.index({ company: 1, status: 1 });
 placementOpportunitySchema.index({ applicationDeadline: 1, status: 1 });
 
 module.exports = mongoose.model('PlacementOpportunity', placementOpportunitySchema);
+

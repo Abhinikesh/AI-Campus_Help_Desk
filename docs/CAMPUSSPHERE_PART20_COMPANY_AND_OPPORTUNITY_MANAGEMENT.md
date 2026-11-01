@@ -32,3 +32,4 @@ The `PlacementOpportunity` model defines institutional career openings posted by
 - Students cannot view or query draft opportunities via list endpoints or direct URL IDs (`HTTP 403 Forbidden`).
 - Publishing an opportunity (`POST /api/placement/opportunities/:id/publish`) transitions it to `'published'`, records `publishedAt`, and triggers centralized notifications to all eligible registered students under `category: 'placement'`.
 - Expired opportunities (`applicationDeadline < Date.now()`) are automatically blocked from accepting new submissions.
+
