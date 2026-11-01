@@ -349,7 +349,7 @@ class AttendanceCalculationService {
     // 3. Overall calculation
     const hasData = overallHeldUnits > 0;
     const rawOverall = hasData ? (overallAttendedUnits / overallHeldUnits) * 100 : null;
-    const displayOverall = rawOverall !== null ? Math.round(rawOverall) : 0;
+    const displayOverall = rawOverall !== null ? Math.round(rawOverall) : null;
     const overallStatus = this.getComplianceStatus(rawOverall, minAttendancePercent);
     const meetsRequirement = rawOverall !== null && rawOverall >= minAttendancePercent;
 
