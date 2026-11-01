@@ -21,6 +21,7 @@ const Faculty = require('../models/Faculty');
 const Subject = require('../models/Subject');
 const User = require('../models/User');
 const pythonAiService = require('../services/pythonAi.service');
+const attendanceCalculationService = require('../services/attendanceCalculation.service');
 const { transitionSessionState } = require('../services/sessionStateMachine.service');
 const sessionSchedulerService = require('../services/sessionScheduler.service');
 const qrChallengeService = require('../services/qrChallenge.service');
@@ -531,42 +532,26 @@ const getQrChallenge = asyncHandler(async (req, res) => {
 
 /**
  * GET /api/attendance/student/overview
- * Return student overview computed by Python AI analytics engine
+ * Return student overview computed by authoritative calculation service
  */
 const getStudentOverview = asyncHandler(async (req, res) => {
   const student = await getStudentForUser(req.user.userId);
 
-  // Fetch subjects for student's semester & branch
-  const subjects = await Subject.find({
-    semester: student.semester
-  }).populate('faculty', 'name');
-
-  // Fetch all sessions for student's branch & semester
-  const sessions = await AttendanceSession.find({
+  // Invoke authoritative calculation service
+  const calculation = await attendanceCalculationService.calculateStudentOverview({
+    studentId: student._id,
+    semester: student.semester,
     branch: student.branch,
-    semester: student.semester
-  }).populate('subject', 'name code');
+  });
 
-  // Fetch attendance records for this student
-  const records = await Attendance.find({
+  // Recent attendance history for quick preview
+  const recentRecords = await Attendance.find({
     student: student._id
-  }).populate('subject', 'name code');
-
-  const subjectsCatalog = subjects.map(s => ({
-    _id: s._id.toString(),
-    name: s.name,
-    code: s.code,
-    credits: s.credits
-  }));
-
-  // Invoke Python AI calculation engine
-  const calculation = await pythonAiService.calculateStudentOverview(
-    student._id,
-    sessions,
-    records,
-    subjectsCatalog,
-    false
-  );
+  })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .populate('subject', 'name code')
+    .lean();
 
   // Active sessions student can join
   const activeSessions = await AttendanceSession.find({
@@ -601,15 +586,9 @@ const getStudentOverview = asyncHandler(async (req, res) => {
     success: true,
     data: calculation.subjectWise,
     summary: {
-      overall: calculation.overallPercentage,
-      totalClasses: calculation.totalClasses,
-      totalAttended: calculation.classesAttended,
-      totalMissed: calculation.classesMissed,
-      minThreshold: calculation.minimumThreshold,
-      status: calculation.status,
-      hasRecords: calculation.hasData,
+      ...calculation.summary,
       activeSessions: activeWithStatus,
-      recentHistory: records.slice(0, 5).map(r => ({
+      recentHistory: recentRecords.map(r => ({
         _id: r._id,
         subject: r.subject?.name,
         code: r.subject?.code,
@@ -778,6 +757,11 @@ const recordStudentAttendance = asyncHandler(async (req, res) => {
       throw new ApiError(403, 'Active biometric enrollment and consent required. Please enroll your face first or request manual verification.');
     }
 
+    const activeConsent = await ConsentRecord.findOne({ student: student._id, consentStatus: 'active' });
+    if (!activeConsent) {
+      throw new ApiError(403, 'Biometric consent has been withdrawn. Biometric verification is unavailable.');
+    }
+
     if (liveImageData) {
       let bioResult;
       try {
@@ -940,45 +924,18 @@ const getStudentAttendanceRecord = asyncHandler(async (req, res) => {
  * GET /api/attendance/faculty/overview
  */
 const getFacultyOverview = asyncHandler(async (req, res) => {
-  const faculty = await getFacultyForUser(req.user.userId);
-  const today = new Date().toISOString().split('T')[0];
+  const metrics = await attendanceCalculationService.calculateFacultyMetrics(req.user.userId);
+  const today = attendanceCalculationService.getIndianAcademicDate();
 
   const sessionsToday = await AttendanceSession.find({
     faculty: req.user.userId,
     date: today
   }).populate('subject', 'name code');
 
-  const totalSessions = await AttendanceSession.countDocuments({
-    faculty: req.user.userId,
-    status: { $in: ['completed', 'finalized'] }
-  });
-
-  const subjects = await Subject.find({
-    $or: [{ faculty: req.user.userId }, { faculty: faculty._id }, { _id: { $in: faculty.assignedSubjects || [] } }]
-  });
-
-  // Calculate overall average attendance across faculty sessions
-  const pastSessions = await AttendanceSession.find({
-    faculty: req.user.userId,
-    status: { $in: ['completed', 'finalized'] }
-  });
-
-  let avgAttendance = 0;
-  if (pastSessions.length > 0) {
-    const totalPcts = pastSessions.reduce((acc, s) => {
-      const pct = s.totalStudents > 0 ? (s.presentCount / s.totalStudents) * 100 : 0;
-      return acc + pct;
-    }, 0);
-    avgAttendance = Math.round(totalPcts / pastSessions.length);
-  }
-
   return res.status(200).json({
     success: true,
     data: {
-      assignedSubjectsCount: subjects.length,
-      classesToday: sessionsToday.length,
-      sessionsConducted: totalSessions,
-      averageAttendance: avgAttendance,
+      ...metrics,
       sessionsToday
     }
   });

@@ -78,11 +78,22 @@ class AttendanceEngine:
                     "status": "No Data"
                 }
 
-        total_eligible = len(eligible_sessions)
+        total_eligible = 0
         total_attended = 0
         total_missed = 0
 
         for sid, sess in eligible_sessions.items():
+            # Determine multi-period academic units
+            p_count = sess.get("periodCount")
+            if isinstance(p_count, (int, float)) and p_count > 0:
+                units = int(p_count)
+            elif isinstance(sess.get("periods"), list) and len(sess.get("periods")) > 0:
+                units = len(sess.get("periods"))
+            else:
+                units = 1
+
+            total_eligible += units
+
             sub_id = str(sess.get("subject") or sess.get("subjectId") or "General")
             sub_name = sess.get("subjectName") or sess.get("subject", {}).get("name") if isinstance(sess.get("subject"), dict) else sub_id
             sub_code = sess.get("subjectCode") or sess.get("subject", {}).get("code") if isinstance(sess.get("subject"), dict) else sub_id
@@ -99,7 +110,7 @@ class AttendanceEngine:
                     "status": "No Data"
                 }
 
-            subject_stats[sub_id]["total"] += 1
+            subject_stats[sub_id]["total"] += units
 
             record = student_session_records.get(sid)
             is_present = False
@@ -112,11 +123,11 @@ class AttendanceEngine:
                     is_present = True
 
             if is_present:
-                total_attended += 1
-                subject_stats[sub_id]["attended"] += 1
+                total_attended += units
+                subject_stats[sub_id]["attended"] += units
             else:
-                total_missed += 1
-                subject_stats[sub_id]["missed"] += 1
+                total_missed += units
+                subject_stats[sub_id]["missed"] += units
 
         # Calculate subject percentages
         subject_wise_list = []
@@ -171,10 +182,22 @@ class AttendanceEngine:
         """Generate faculty class and session level attendance reports."""
         valid_sessions = [s for s in sessions if (s.get("status") or s.get("sessionStatus")) in ["completed", "finalized"]]
         total_sessions = len(valid_sessions)
-        session_ids = {str(s.get("_id") or s.get("sessionId")): s for s in valid_sessions}
+        session_units: Dict[str, int] = {}
+        total_held_units = 0
+        for s in valid_sessions:
+            sid = str(s.get("_id") or s.get("sessionId"))
+            p_count = s.get("periodCount")
+            if isinstance(p_count, (int, float)) and p_count > 0:
+                u = int(p_count)
+            elif isinstance(s.get("periods"), list) and len(s.get("periods")) > 0:
+                u = len(s.get("periods"))
+            else:
+                u = 1
+            session_units[sid] = u
+            total_held_units += u
 
         # Records belonging to valid sessions
-        filtered_records = [r for r in records if str(r.get("session") or r.get("sessionId")) in session_ids]
+        filtered_records = [r for r in records if str(r.get("session") or r.get("sessionId")) in session_units]
 
         student_map = {str(st.get("_id") or st.get("id")): st for st in students}
         student_attendance: Dict[str, Dict[str, Any]] = {}
@@ -188,15 +211,21 @@ class AttendanceEngine:
                 "name": name or "Unknown",
                 "rollNumber": st_obj.get("rollNumber", "N/A"),
                 "attended": 0,
-                "total": total_sessions,
+                "total": total_held_units,
                 "percentage": 0.0
             }
 
+        seen_student_sessions = set()
         for r in filtered_records:
             st_id = str(r.get("student") or r.get("studentId"))
+            sid = str(r.get("session") or r.get("sessionId"))
+            pair = (st_id, sid)
+            if pair in seen_student_sessions:
+                continue
+            seen_student_sessions.add(pair)
             rec_status = str(r.get("status") or r.get("attendanceStatus") or "").lower()
             if st_id in student_attendance and rec_status in ["present", "late"]:
-                student_attendance[st_id]["attended"] += 1
+                student_attendance[st_id]["attended"] += session_units.get(sid, 1)
 
         for st_id, data in student_attendance.items():
             if data["total"] > 0:
@@ -209,6 +238,7 @@ class AttendanceEngine:
 
         return {
             "totalSessions": total_sessions,
+            "totalHeldUnits": total_held_units,
             "totalStudents": len(students),
             "averageAttendance": avg_attendance,
             "studentBreakdown": list(student_attendance.values())

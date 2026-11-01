@@ -409,6 +409,65 @@ const deleteFaceEnrollment = asyncHandler(async (req, res) => {
   });
 });
 
+// POST /api/admin/attendance/face-enrollments/purge-bulk
+const purgeBulkEnrollments = asyncHandler(async (req, res) => {
+  const { studentIds, reason, confirm } = req.body;
+  if (!confirm) {
+    throw new ApiError(400, 'Explicit confirmation (confirm: true) is required for bulk biometric purge');
+  }
+  if (!Array.isArray(studentIds) || studentIds.length === 0) {
+    throw new ApiError(400, 'An array of studentIds is required for bulk purge');
+  }
+  if (!reason || typeof reason !== 'string' || reason.trim().length < 5) {
+    throw new ApiError(400, 'A non-empty administrative justification is required for bulk biometric purge');
+  }
+
+  const purgeCount = await FaceEmbedding.countDocuments({
+    student: { $in: studentIds },
+    status: 'enrolled'
+  });
+
+  await FaceEmbedding.updateMany(
+    { student: { $in: studentIds } },
+    {
+      encryptedData: null,
+      templateReference: null,
+      isActive: false,
+      status: 'deleted',
+      enrollmentStatus: 'deleted',
+      consentStatus: 'revoked',
+      consentGiven: false,
+      samplesCaptured: 0,
+      deletionRequestedAt: new Date(),
+      deletionCompletedAt: new Date()
+    }
+  );
+
+  await ConsentRecord.updateMany(
+    { student: { $in: studentIds }, consentStatus: 'active' },
+    { consentStatus: 'revoked', withdrawalTimestamp: new Date() }
+  );
+
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: req.user.role,
+    action: 'admin_purge_biometric',
+    reason: `Bulk purge of ${studentIds.length} biometric templates: ${reason}`,
+    previousValue: { targetCount: studentIds.length, activePurged: purgeCount },
+    ipAddress: req.ip
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      requestedCount: studentIds.length,
+      purgedCount: purgeCount,
+      reason
+    },
+    message: `Successfully purged ${purgeCount} active biometric templates.`
+  });
+});
+
 // GET /api/admin/attendance/analytics — Comprehensive Attendance Analytics
 const getAttendanceAnalytics = asyncHandler(async (req, res) => {
   const [allStudents, allSessions, allRecords] = await Promise.all([
@@ -604,6 +663,7 @@ module.exports = {
   getAdminAttendanceRecords,
   getFaceEnrollments,
   deleteFaceEnrollment,
+  purgeBulkEnrollments,
   getAttendanceAnalytics,
   getAttendanceSettings,
   updateAttendanceSettings,

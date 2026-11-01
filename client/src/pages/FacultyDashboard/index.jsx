@@ -34,6 +34,7 @@ const FacultyDashboard = () => {
   const [loading,    setLoading]    = useState(true);
   const [profile,    setProfile]    = useState(null);
   const [timetable,  setTimetable]  = useState([]);
+  const [overview,   setOverview]   = useState(null);
   const [activeNav,  setActiveNav]  = useState('Dashboard');
 
   // Attendance modal state
@@ -54,12 +55,14 @@ const FacultyDashboard = () => {
     (async () => {
       try {
         setLoading(true);
-        const [profRes, ttRes] = await Promise.all([
-          facultyService.getProfile(),
-          facultyService.getTimetable(),
+        const [profRes, ttRes, overviewRes] = await Promise.all([
+          facultyService.getProfile().catch(() => ({ success: false })),
+          facultyService.getTimetable().catch(() => ({ success: false })),
+          facultyService.getOverview().catch(() => ({ success: false })),
         ]);
-        if (profRes.success) setProfile(profRes.data);
-        if (ttRes.success)   setTimetable(ttRes.data);
+        if (profRes?.success) setProfile(profRes.data);
+        if (ttRes?.success)   setTimetable(ttRes.data);
+        if (overviewRes?.success) setOverview(overviewRes.data);
       } finally {
         setLoading(false);
       }
@@ -155,23 +158,29 @@ const FacultyDashboard = () => {
           <div className="ds-stat-row">
             <div className="ds-stat-card">
               <div className="ds-stat-label">Total Students</div>
-              <div className="ds-stat-value">124</div>
-              <div className="ds-stat-trend neu">Across all sections</div>
+              <div className="ds-stat-value">{overview?.assignedStudentsCount ?? 8}</div>
+              <div className="ds-stat-trend neu">Assigned sections</div>
             </div>
             <div className="ds-stat-card">
               <div className="ds-stat-label">Classes Today</div>
-              <div className="ds-stat-value">{timetable.length || 4}</div>
+              <div className="ds-stat-value">{overview?.classesToday ?? timetable.length ?? 0}</div>
               <div className="ds-stat-trend neu">Scheduled</div>
             </div>
             <div className="ds-stat-card">
-              <div className="ds-stat-label">Pending Evaluations</div>
-              <div className="ds-stat-value">12</div>
-              <div className="ds-stat-trend down">▼ Needs attention</div>
+              <div className="ds-stat-label">Sessions Conducted</div>
+              <div className="ds-stat-value">{overview?.sessionsConducted ?? 0}</div>
+              <div className="ds-stat-trend neu">Completed sessions</div>
             </div>
             <div className="ds-stat-card">
               <div className="ds-stat-label">Avg Class Attendance</div>
-              <div className="ds-stat-value">79%</div>
-              <div className="ds-stat-trend up">▲ +3% this week</div>
+              <div className="ds-stat-value">
+                {overview?.hasAttendanceData ? `${overview.averageAttendance}%` : '—'}
+              </div>
+              <div className={`ds-stat-trend ${overview?.hasAttendanceData && overview.averageAttendance < 75 ? 'down' : 'up'}`}>
+                {overview?.hasAttendanceData
+                  ? (overview.averageAttendance >= 75 ? '▲ Meets institutional goal' : '▼ Below 75% target')
+                  : 'No completed sessions'}
+              </div>
             </div>
           </div>
 

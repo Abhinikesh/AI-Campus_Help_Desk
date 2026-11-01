@@ -16,6 +16,7 @@ const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const AttendanceSettings = require('../models/AttendanceSettings');
 const pythonAiService = require('../services/pythonAi.service');
 const qrChallengeService = require('../services/qrChallenge.service');
+const attendanceCalculationService = require('../services/attendanceCalculation.service');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -72,91 +73,17 @@ const getAttendance = asyncHandler(async (req, res) => {
   const student = await Student.findOne({ user: req.user.userId });
   if (!student) throw new ApiError(404, 'Student profile not found');
 
-  // Load configured settings
-  let settings = await AttendanceSettings.findOne();
-  if (!settings) {
-    settings = { minAttendancePercent: 75 };
-  }
-
-  // Get subjects for student's semester and branch
-  const subjects = await Subject.find({
+  // Authoritative academic attendance calculation
+  const calculation = await attendanceCalculationService.calculateStudentOverview({
+    studentId: student._id,
     semester: student.semester,
-  }).populate('faculty', 'name');
-
-  // Get all attendance records for this student
-  const records = await Attendance.find({ student: student._id })
-    .populate('subject', 'name code credits')
-    .sort({ date: -1, createdAt: -1 });
-
-  // Map subject stats
-  const subjectMap = {};
-  for (const sub of subjects) {
-    subjectMap[sub._id.toString()] = {
-      _id: sub._id,
-      subject: sub.name,
-      code: sub.code,
-      credits: sub.credits,
-      facultyName: sub.faculty?.name || 'Assigned Faculty',
-      total: 0,
-      attended: 0,
-      missed: 0,
-      percentage: 0,
-      hasClasses: false,
-    };
-  }
-
-  for (const rec of records) {
-    if (!rec.subject) continue;
-    const subId = rec.subject._id.toString();
-    if (!subjectMap[subId]) {
-      subjectMap[subId] = {
-        _id: rec.subject._id,
-        subject: rec.subject.name,
-        code: rec.subject.code,
-        credits: rec.subject.credits || 3,
-        facultyName: 'Assigned Faculty',
-        total: 0,
-        attended: 0,
-        missed: 0,
-        percentage: 0,
-        hasClasses: false,
-      };
-    }
-
-    subjectMap[subId].total += 1;
-    subjectMap[subId].hasClasses = true;
-    if (rec.status === 'present') {
-      subjectMap[subId].attended += 1;
-    } else {
-      subjectMap[subId].missed += 1;
-    }
-  }
-
-  const subjectList = Object.values(subjectMap).map(sub => {
-    const pct = sub.total > 0 ? Math.round((sub.attended / sub.total) * 100) : 0;
-    let status = 'Good';
-    if (sub.total > 0) {
-      if (pct < 60) status = 'Critical';
-      else if (pct < settings.minAttendancePercent) status = 'Warning';
-    } else {
-      status = 'No Classes';
-    }
-    return {
-      ...sub,
-      percentage: pct,
-      status,
-    };
+    branch: student.branch,
   });
-
-  const totalClasses = subjectList.reduce((sum, s) => sum + s.total, 0);
-  const totalAttended = subjectList.reduce((sum, s) => sum + s.attended, 0);
-  const totalMissed = totalClasses - totalAttended;
-  const overall = totalClasses > 0 ? Math.round((totalAttended / totalClasses) * 100) : 0;
 
   // Active / Upcoming sessions that student can join
   const activeSessions = await AttendanceSession.find({
     semester: student.semester,
-    status: 'open',
+    status: { $in: ['open', 'active'] },
   }).populate('subject', 'name code').populate('faculty', 'name');
 
   // Check if student has already been marked in these active sessions
@@ -183,18 +110,19 @@ const getAttendance = asyncHandler(async (req, res) => {
     })
   );
 
+  // Recent attendance history
+  const recentRecords = await Attendance.find({ student: student._id })
+    .populate('subject', 'name code')
+    .sort({ date: -1, createdAt: -1 })
+    .limit(5);
+
   return res.status(200).json({
     success: true,
-    data: subjectList,
+    data: calculation.data,
     summary: {
-      overall,
-      totalClasses,
-      totalAttended,
-      totalMissed,
-      minThreshold: settings.minAttendancePercent,
-      hasRecords: totalClasses > 0,
+      ...calculation.summary,
       activeSessions: activeWithStatus,
-      recentHistory: records.slice(0, 5).map(r => ({
+      recentHistory: recentRecords.map(r => ({
         _id: r._id,
         subject: r.subject?.name,
         code: r.subject?.code,
@@ -206,6 +134,7 @@ const getAttendance = asyncHandler(async (req, res) => {
     },
     message: 'Attendance data loaded',
   });
+});
 });
 
 // GET /api/student/attendance/history
@@ -349,6 +278,11 @@ const joinAttendanceSession = asyncHandler(async (req, res) => {
       throw new ApiError(403, 'Active biometric consent and enrollment required. Please enroll your face first or request manual verification.');
     }
 
+    const activeConsent = await ConsentRecord.findOne({ student: student._id, consentStatus: 'active' });
+    if (!activeConsent) {
+      throw new ApiError(403, 'Biometric consent has been withdrawn. Biometric verification is unavailable.');
+    }
+
     if (liveImageData) {
       const bioResult = await pythonAiService.verifyBiometricTemplate(faceProfile.encryptedData, liveImageData);
       if (!bioResult || !bioResult.success || !bioResult.isMatch) {
@@ -488,88 +422,251 @@ const getFaceStatus = asyncHandler(async (req, res) => {
   });
 });
 
-// POST /api/student/face/enroll
-const enrollFace = asyncHandler(async (req, res) => {
-  const { consentGiven, samplesCount = 3, qualityScore = 92, imageData, imageSamples } = req.body;
+// POST /api/student/face/consent
+const grantConsent = asyncHandler(async (req, res) => {
+  const { consentGiven, policyReference = 'CAMPUS-BIO-PRIVACY-v1.0' } = req.body;
   if (!consentGiven) {
-    throw new ApiError(400, 'Explicit biometric consent is required for enrollment');
+    throw new ApiError(400, 'Consent flag must be explicitly true');
+  }
+  if (policyReference !== 'CAMPUS-BIO-PRIVACY-v1.0') {
+    throw new ApiError(400, 'Invalid biometric policy reference. Accepted policy: CAMPUS-BIO-PRIVACY-v1.0');
   }
 
   const student = await Student.findOne({ user: req.user.userId });
   if (!student) throw new ApiError(404, 'Student profile not found');
 
-  let encryptedData = null;
-  let templateReference = null;
-  let measuredQuality = qualityScore;
-
-  const candidateImage = imageData || (Array.isArray(imageSamples) && imageSamples.length > 0 ? imageSamples[0] : null);
-
-  // If face image is provided, extract embedding and encrypt with Python AI service
-  if (candidateImage) {
-    try {
-      const aiResult = await pythonAiService.enrollBiometricTemplate(student._id.toString(), candidateImage);
-      if (!aiResult.success) {
-        throw new ApiError(400, aiResult.message || 'Face biometric extraction rejected. Ensure face is centered and lit.');
-      }
-      const bioData = aiResult.data || aiResult;
-      encryptedData = bioData.encryptedData;
-      templateReference = bioData.templateReference;
-      if (bioData.qualitySummary?.averageQuality) {
-        measuredQuality = Math.round(bioData.qualitySummary.averageQuality * 100);
-      }
-    } catch (aiErr) {
-      if (aiErr instanceof ApiError) throw aiErr;
-      console.warn(`[StudentController] AI enrollment error: ${aiErr.message}`);
-      throw new ApiError(400, `Biometric processing error: ${aiErr.message}`);
-    }
+  const activeExisting = await ConsentRecord.findOne({ student: student._id, consentStatus: 'active' });
+  let consent;
+  if (activeExisting) {
+    consent = activeExisting;
+  } else {
+    consent = await ConsentRecord.create({
+      student: student._id,
+      consentStatus: 'active',
+      consentTimestamp: new Date(),
+      policyReference,
+      ipAddress: req.ip || '',
+    });
   }
 
   let face = await FaceEmbedding.findOne({ student: student._id });
   if (face) {
     face.consentGiven = true;
+    face.consentStatus = 'active';
+    face.consentDate = new Date();
+    if (face.status === 'not_enrolled' || face.status === 'revoked' || face.status === 'consent_withdrawn') {
+      face.status = 'consent_granted';
+      face.enrollmentStatus = 'consent_granted';
+    }
+    await face.save();
+  }
+
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: 'student',
+    action: 'consent_granted',
+    affectedStudentId: student._id,
+    reason: `Student granted informed biometric consent under policy ${policyReference}`,
+    ipAddress: req.ip
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      consentStatus: 'active',
+      consentDate: consent.consentTimestamp,
+      policyReference
+    },
+    message: 'Biometric consent recorded successfully.'
+  });
+});
+
+// POST /api/student/face/re-enroll
+const requestReEnrollment = asyncHandler(async (req, res) => {
+  const { reason = 'Student requested face template re-enrollment' } = req.body;
+  if (!reason || typeof reason !== 'string' || reason.trim().length < 3) {
+    throw new ApiError(400, 'A valid reason is required to request biometric re-enrollment');
+  }
+
+  const student = await Student.findOne({ user: req.user.userId });
+  if (!student) throw new ApiError(404, 'Student profile not found');
+
+  let face = await FaceEmbedding.findOne({ student: student._id });
+  if (!face || face.status !== 'enrolled') {
+    throw new ApiError(400, 'No active biometric enrollment found to re-enroll');
+  }
+
+  face.status = 're_enrollment_required';
+  face.enrollmentStatus = 're_enrollment_required';
+  await face.save();
+
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: 'student',
+    action: 're_enrollment_requested',
+    affectedStudentId: student._id,
+    reason: `Student requested re-enrollment: ${reason}`,
+    ipAddress: req.ip
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: { status: 're_enrollment_required' },
+    message: 'Re-enrollment authorized. You may now capture a new face biometric.'
+  });
+});
+
+// POST /api/student/face/enroll
+const enrollFace = asyncHandler(async (req, res) => {
+  const {
+    consentGiven,
+    isReEnrollment = false,
+    policyReference = 'CAMPUS-BIO-PRIVACY-v1.0',
+    samplesCount = 3,
+    qualityScore = 92,
+    imageData,
+    imageSamples
+  } = req.body;
+
+  if (policyReference && policyReference !== 'CAMPUS-BIO-PRIVACY-v1.0') {
+    throw new ApiError(400, 'Invalid biometric policy reference. Accepted policy: CAMPUS-BIO-PRIVACY-v1.0');
+  }
+
+  const student = await Student.findOne({ user: req.user.userId });
+  if (!student) throw new ApiError(404, 'Student profile not found');
+
+  // Verify explicit active consent
+  const activeConsent = await ConsentRecord.findOne({ student: student._id, consentStatus: 'active' });
+  if (!consentGiven && !activeConsent) {
+    throw new ApiError(400, 'Explicit biometric consent is required for enrollment');
+  }
+
+  let face = await FaceEmbedding.findOne({ student: student._id });
+
+  // Reject duplicate active enrollment unless explicitly replacing via re-enrollment
+  if (face && face.status === 'enrolled' && face.isActive && !isReEnrollment && face.enrollmentStatus !== 're_enrollment_required') {
+    throw new ApiError(400, 'Student already has an active biometric enrollment. Request re-enrollment to update.');
+  }
+
+  const samples = Array.isArray(imageSamples) && imageSamples.length > 0
+    ? imageSamples
+    : (imageData ? [imageData] : []);
+
+  if (samples.length === 0) {
+    throw new ApiError(400, 'At least one face image sample is required for biometric enrollment');
+  }
+
+  // Update status to enrolling
+  if (face) {
+    face.status = 'enrolling';
+    face.enrollmentStatus = 'enrolling';
+    await face.save();
+  }
+
+  let encryptedData = null;
+  let templateReference = null;
+  let measuredQuality = qualityScore;
+
+  try {
+    const aiResult = await pythonAiService.enrollBiometricTemplate(
+      student._id.toString(),
+      samples[0],
+      samples
+    );
+
+    if (!aiResult || !aiResult.success) {
+      if (face) {
+        face.status = 'enrollment_failed';
+        face.enrollmentStatus = 'enrollment_failed';
+        await face.save();
+      }
+      await AttendanceAuditLog.record({
+        actorId: req.user.userId,
+        actorRole: 'student',
+        action: 'enrollment_failed',
+        affectedStudentId: student._id,
+        reason: `Biometric extraction rejected: ${aiResult?.message || 'Face quality criteria not met'}`,
+        ipAddress: req.ip
+      });
+      throw new ApiError(400, aiResult?.message || 'Face biometric extraction rejected. Ensure face is centered and lit.');
+    }
+
+    const bioData = aiResult.data || aiResult;
+    encryptedData = bioData.encryptedData;
+    templateReference = bioData.templateReference;
+    if (bioData.qualitySummary?.averageQuality) {
+      measuredQuality = Math.round(bioData.qualitySummary.averageQuality * 100);
+    }
+  } catch (aiErr) {
+    if (face) {
+      face.status = 'enrollment_failed';
+      face.enrollmentStatus = 'enrollment_failed';
+      await face.save();
+    }
+    await AttendanceAuditLog.record({
+      actorId: req.user.userId,
+      actorRole: 'student',
+      action: 'enrollment_failed',
+      affectedStudentId: student._id,
+      reason: `Biometric processing error: ${aiErr.message}`,
+      ipAddress: req.ip
+    });
+    if (aiErr instanceof ApiError) throw aiErr;
+    throw new ApiError(400, `Biometric processing error: ${aiErr.message}`);
+  }
+
+  // Ensure active ConsentRecord
+  if (!activeConsent) {
+    await ConsentRecord.create({
+      student: student._id,
+      consentStatus: 'active',
+      consentTimestamp: new Date(),
+      policyReference,
+      ipAddress: req.ip || '',
+    });
+  }
+
+  if (face) {
+    face.consentGiven = true;
+    face.consentStatus = 'active';
     face.consentDate = new Date();
     face.enrolledAt = new Date();
     face.isActive = true;
     face.status = 'enrolled';
     face.enrollmentStatus = 'enrolled';
-    face.samplesCaptured = samplesCount;
+    face.samplesCaptured = samples.length;
     face.imageQualityScore = measuredQuality;
-    if (encryptedData) face.encryptedData = encryptedData;
-    if (templateReference) face.templateReference = templateReference;
+    face.encryptedData = encryptedData;
+    face.templateReference = templateReference;
+    face.deletionRequestedAt = null;
+    face.deletionCompletedAt = null;
     await face.save();
   } else {
     face = await FaceEmbedding.create({
       student: student._id,
       consentGiven: true,
+      consentStatus: 'active',
       consentDate: new Date(),
       enrolledAt: new Date(),
       isActive: true,
       status: 'enrolled',
       enrollmentStatus: 'enrolled',
-      samplesCaptured: samplesCount,
+      samplesCaptured: samples.length,
       imageQualityScore: measuredQuality,
-      encryptedData: encryptedData || null,
-      templateReference: templateReference || null,
+      encryptedData,
+      templateReference,
     });
   }
 
-  // Create explicit ConsentRecord
-  await ConsentRecord.create({
-    student: student._id,
-    consentStatus: 'active',
-    consentTimestamp: new Date(),
-    policyReference: 'CAMPUS-BIO-PRIVACY-v1.0',
-    ipAddress: req.ip || '',
-  });
-
-  // Record audit trail in append-only log
   await AttendanceAuditLog.record({
     actorId: req.user.userId,
     actorRole: 'student',
     action: 'enroll_biometric',
     affectedStudentId: student._id,
-    newValue: { status: 'enrolled', samplesCount },
-    reason: 'Student voluntary face biometric enrollment with explicit consent',
+    newValue: { status: 'enrolled', samplesCount: samples.length, qualityScore: measuredQuality },
+    reason: isReEnrollment
+      ? 'Student voluntary face biometric re-enrollment with explicit consent'
+      : 'Student voluntary face biometric enrollment with explicit consent',
     ipAddress: req.ip
   });
 
@@ -580,6 +677,7 @@ const enrollFace = asyncHandler(async (req, res) => {
       status: 'enrolled',
       enrolledAt: face.enrolledAt,
       qualityScore: measuredQuality,
+      samplesCaptured: samples.length
     },
     message: 'Face biometric enrolled successfully!',
   });
@@ -594,10 +692,12 @@ const revokeFace = asyncHandler(async (req, res) => {
   if (face) {
     face.isActive = false;
     face.status = 'revoked';
-    face.enrollmentStatus = 'revoked';
+    face.enrollmentStatus = 'consent_withdrawn';
+    face.consentStatus = 'withdrawn';
     face.consentGiven = false;
     face.encryptedData = null; // Cryptographically purge template
     face.templateReference = null;
+    face.samplesCaptured = 0;
     face.deletionRequestedAt = new Date();
     face.deletionCompletedAt = new Date();
     await face.save();
@@ -609,19 +709,28 @@ const revokeFace = asyncHandler(async (req, res) => {
     { consentStatus: 'withdrawn', withdrawalTimestamp: new Date() }
   );
 
-  // Record audit trail in append-only log
+  // Record audit trails in append-only log
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: 'student',
+    action: 'consent_withdrawn',
+    affectedStudentId: student._id,
+    reason: 'Student withdrew biometric consent',
+    ipAddress: req.ip
+  });
+
   await AttendanceAuditLog.record({
     actorId: req.user.userId,
     actorRole: 'student',
     action: 'revoke_biometric',
     affectedStudentId: student._id,
-    reason: 'Student withdrew biometric consent — template purged',
+    reason: 'Biometric template purged following consent withdrawal',
     ipAddress: req.ip
   });
 
   return res.status(200).json({
     success: true,
-    data: { isEnrolled: false, status: 'revoked' },
+    data: { isEnrolled: false, status: 'revoked', consentStatus: 'withdrawn' },
     message: 'Biometric consent revoked and enrollment deactivated.',
   });
 });
@@ -680,7 +789,9 @@ module.exports = {
   getActiveSessions,
   joinAttendanceSession,
   getFaceStatus,
+  grantConsent,
   enrollFace,
+  requestReEnrollment,
   revokeFace,
   getExams,
   getResults,

@@ -31,13 +31,28 @@ export const attendanceService = {
     return res.data;
   },
 
+  grantConsent: async (data = { consentGiven: true }) => {
+    const res = await api.post('/api/student/face/consent', data);
+    return res.data;
+  },
+
   enrollFace: async (data) => {
     const res = await api.post('/api/student/face/enroll', data);
     return res.data;
   },
 
+  requestReEnrollment: async (reason) => {
+    const res = await api.post('/api/student/face/re-enroll', { reason });
+    return res.data;
+  },
+
   revokeFace: async () => {
     const res = await api.post('/api/student/face/revoke');
+    return res.data;
+  },
+
+  purgeBulkEnrollments: async (data) => {
+    const res = await api.post('/api/admin/attendance/face-enrollments/purge-bulk', data);
     return res.data;
   },
 

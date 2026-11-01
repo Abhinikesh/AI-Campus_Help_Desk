@@ -12,6 +12,7 @@ const Attendance = require('../models/Attendance');
 const AttendanceSession = require('../models/AttendanceSession');
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const AttendanceSettings = require('../models/AttendanceSettings');
+const attendanceCalculationService = require('../services/attendanceCalculation.service');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -607,8 +608,19 @@ const raiseComplaint = asyncHandler(async (req, res) => {
   return res.status(201).json({ success: true, data: complaint, message: 'Complaint submitted' });
 });
 
+// GET /api/faculty/overview
+const getOverview = asyncHandler(async (req, res) => {
+  const metrics = await attendanceCalculationService.calculateFacultyMetrics(req.user.userId);
+  return res.status(200).json({
+    success: true,
+    data: metrics,
+    message: 'Faculty overview loaded',
+  });
+});
+
 module.exports = {
   getProfile,
+  getOverview,
   getTimetable,
   createAttendanceSession,
   getAttendanceSessions,

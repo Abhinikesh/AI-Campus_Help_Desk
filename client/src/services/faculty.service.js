@@ -5,6 +5,10 @@ export const facultyService = {
     const response = await api.get('/api/faculty/profile');
     return response.data;
   },
+  getOverview: async () => {
+    const response = await api.get('/api/faculty/overview');
+    return response.data;
+  },
   getTimetable: async () => {
     const response = await api.get('/api/faculty/timetable');
     return response.data;

@@ -20,6 +20,7 @@ const {
   getAdminAttendanceRecords,
   getFaceEnrollments,
   deleteFaceEnrollment,
+  purgeBulkEnrollments,
   getAttendanceAnalytics,
   getAttendanceSettings,
   updateAttendanceSettings,
@@ -44,6 +45,7 @@ router.get('/attendance/overview',            getAttendanceOverview);
 router.get('/attendance/sessions',            getAdminAttendanceSessions);
 router.get('/attendance/records',             getAdminAttendanceRecords);
 router.get('/attendance/face-enrollments',    getFaceEnrollments);
+router.post('/attendance/face-enrollments/purge-bulk', purgeBulkEnrollments);
 router.delete('/attendance/face-enrollments/:studentId', deleteFaceEnrollment);
 router.get('/attendance/analytics',           getAttendanceAnalytics);
 router.get('/attendance/settings',            getAttendanceSettings);

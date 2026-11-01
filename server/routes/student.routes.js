@@ -16,7 +16,9 @@ const {
   getActiveSessions,
   joinAttendanceSession,
   getFaceStatus,
+  grantConsent,
   enrollFace,
+  requestReEnrollment,
   revokeFace,
   getExams,
   getResults,
@@ -41,7 +43,9 @@ router.post('/attendance/join/:sessionId', joinAttendanceSession);
 
 // Face Biometric Enrollment
 router.get('/face/status',          getFaceStatus);
+router.post('/face/consent',         grantConsent);
 router.post('/face/enroll',         enrollFace);
+router.post('/face/re-enroll',      requestReEnrollment);
 router.post('/face/revoke',         revokeFace);
 
 // Exams & Results

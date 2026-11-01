@@ -142,6 +142,9 @@ attendanceSchema.pre('save', function (next) {
   if (this.periods && Array.isArray(this.periods) && this.periods.length > 0) {
     this.periodCount = this.periods.length;
     this.period = this.periods[0];
+  } else if (this.periodCount && this.periodCount > 1) {
+    const base = this.period || 1;
+    this.periods = Array.from({ length: this.periodCount }, (_, i) => base + i);
   } else if (this.period) {
     this.periods = [this.period];
     this.periodCount = 1;

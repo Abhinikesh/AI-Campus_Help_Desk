@@ -98,6 +98,7 @@ const FaceRegistration = () => {
     try {
       const enrollRes = await attendanceService.enrollFace({
         consentGiven: true,
+        isReEnrollment: faceStatus.isEnrolled,
         samplesCount: frames.length || 3,
         imageData: primaryImage,
         imageSamples: frames.length > 0 ? frames : undefined,

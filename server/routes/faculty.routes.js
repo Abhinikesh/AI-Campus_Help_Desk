@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const {
   getProfile,
+  getOverview,
   getTimetable,
   createAttendanceSession,
   getAttendanceSessions,
@@ -30,6 +31,7 @@ const { allowRoles } = require('../middleware/role.middleware');
 router.use(authMiddleware, allowRoles('faculty'));
 
 router.get('/profile',              getProfile);
+router.get('/overview',             getOverview);
 router.get('/timetable',            getTimetable);
 router.post('/announcements',       createAnnouncement);
 router.get('/announcements',        getAnnouncements);

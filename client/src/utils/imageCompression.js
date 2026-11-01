@@ -122,3 +122,4 @@ export function validateImagePayload(dataUrl, maxSizeBytes = 300 * 1024) {
 
   return { valid: true, sizeKb, reason: null };
 }
+
