@@ -59,3 +59,4 @@ router.post('/:id/results/publish', allowRoles('faculty', 'admin'), publishExamR
 router.post('/:id/marks/request-correction', allowRoles('admin'), requestMarksCorrection);
 
 module.exports = router;
+

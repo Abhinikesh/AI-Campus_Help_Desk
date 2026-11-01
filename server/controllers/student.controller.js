@@ -7,6 +7,7 @@ const Student = require('../models/Student');
 const Complaint = require('../models/Complaint');
 const Announcement = require('../models/Announcement');
 const Fee = require('../models/Fee');
+const FeeInvoice = require('../models/FeeInvoice');
 const Subject = require('../models/Subject');
 const Attendance = require('../models/Attendance');
 const AttendanceSession = require('../models/AttendanceSession');
@@ -67,7 +68,16 @@ const getFees = asyncHandler(async (req, res) => {
   if (!student) throw new ApiError(404, 'Student not found');
 
   const fees = await Fee.find({ student: student._id }).sort({ dueDate: 1 });
-  return res.status(200).json({ success: true, data: fees, message: 'OK' });
+  const invoices = await FeeInvoice.find({ student: student._id })
+    .populate('feeStructure', 'name code')
+    .sort({ dueDate: 1 });
+
+  return res.status(200).json({
+    success: true,
+    data: fees,
+    invoices,
+    message: 'OK',
+  });
 });
 
 // GET /api/student/attendance

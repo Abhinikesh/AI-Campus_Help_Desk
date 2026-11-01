@@ -22,6 +22,8 @@ const notificationPreferenceSchema = new mongoose.Schema(
       assignment:     { type: Boolean, default: true },
       timetable:      { type: Boolean, default: true },
       announcement:   { type: Boolean, default: true },
+      fee:            { type: Boolean, default: true },
+      library:        { type: Boolean, default: true },
       administrative: { type: Boolean, default: true },
       system:         { type: Boolean, default: true }, // Mandatory system notifications
     },

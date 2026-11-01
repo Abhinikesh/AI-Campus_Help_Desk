@@ -27,59 +27,42 @@ const getProfile = asyncHandler(async (req, res) => {
 
 // GET /api/faculty/timetable
 const getTimetable = asyncHandler(async (req, res) => {
-  // Find subjects taught by this faculty (or all CSE subjects if faculty ref is generic)
+  const facultyId = req.user._id || req.user.userId;
+
+  // Find subjects taught by this faculty
   const subjects = await Subject.find({
-    $or: [{ faculty: req.user.userId }, { branch: 'CSE' }],
+    $or: [{ faculty: facultyId }, { branch: 'CSE' }],
   });
 
   const subjectIds = subjects.map(s => s._id);
-  let timetable = await Timetable.find({ subject: { $in: subjectIds } })
+
+  // Query database-backed timetable entries assigned to faculty or their subjects
+  const timetable = await Timetable.find({
+    $or: [
+      { faculty: facultyId },
+      { subject: { $in: subjectIds } },
+    ],
+    status: { $in: ['published', 'updated', 'draft'] },
+  })
     .populate('subject', 'name code credits semester branch')
     .sort({ dayOfWeek: 1, startTime: 1 });
-
-  // If no timetable in DB, return clean structured timetable based on subjects
-  if (!timetable.length && subjects.length) {
-    const days = [
-      { day: 1, name: 'Monday', time: '09:00 - 10:00 AM', room: 'Hall 301' },
-      { day: 1, name: 'Monday', time: '11:15 - 12:15 PM', room: 'Lab 2' },
-      { day: 2, name: 'Tuesday', time: '10:00 - 11:00 AM', room: 'Hall 301' },
-      { day: 3, name: 'Wednesday', time: '09:00 - 10:00 AM', room: 'Hall 301' },
-      { day: 4, name: 'Thursday', time: '02:00 - 04:00 PM', room: 'Lab 2' },
-      { day: 5, name: 'Friday', time: '11:15 - 12:15 PM', room: 'Hall 302' },
-    ];
-
-    const fallback = days.map((d, idx) => {
-      const sub = subjects[idx % subjects.length];
-      return {
-        _id: `tt-${idx}`,
-        dayOfWeek: d.day,
-        dayName: d.name,
-        startTime: d.time.split(' - ')[0],
-        endTime: d.time.split(' - ')[1],
-        time: d.time,
-        room: d.room,
-        subject: {
-          _id: sub._id,
-          name: sub.name,
-          code: sub.code,
-          credits: sub.credits,
-          semester: sub.semester,
-          branch: sub.branch,
-        },
-      };
-    });
-    return res.status(200).json({ success: true, data: fallback, message: 'Timetable loaded' });
-  }
 
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const formatted = timetable.map(t => ({
     _id: t._id,
     dayOfWeek: t.dayOfWeek,
-    dayName: dayNames[t.dayOfWeek] || 'Weekday',
+    dayName: t.dayName || dayNames[t.dayOfWeek] || 'Weekday',
     startTime: t.startTime,
     endTime: t.endTime,
     time: `${t.startTime} - ${t.endTime}`,
-    room: t.room || 'Hall 301',
+    room: t.room || 'TBA',
+    period: t.period || 1,
+    periodCount: t.periodCount || 1,
+    sessionType: t.sessionType || 'Lecture',
+    semester: t.semester,
+    section: t.section,
+    department: t.department,
+    status: t.status,
     subject: t.subject,
   }));
 

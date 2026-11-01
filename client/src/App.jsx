@@ -15,6 +15,9 @@ const LoginPage                 = lazyWithRetry(() => import('./pages/LoginPage/
 // Student Pages
 const StudentDashboard          = lazyWithRetry(() => import('./pages/StudentDashboard/index'));
 const StudentAssignments        = lazyWithRetry(() => import('./pages/StudentAssignments/index'));
+const StudentTimetable          = lazyWithRetry(() => import('./pages/StudentTimetable/index'));
+const StudentFees               = lazyWithRetry(() => import('./pages/StudentFees/index'));
+const StudentLibrary            = lazyWithRetry(() => import('./pages/StudentLibrary/index'));
 const AttendanceOverview        = lazyWithRetry(() => import('./pages/Attendance/index'));
 const MarkAttendance            = lazyWithRetry(() => import('./pages/Attendance/MarkAttendance'));
 const AttendanceHistory         = lazyWithRetry(() => import('./pages/Attendance/AttendanceHistory'));
@@ -38,6 +41,9 @@ const FacultyResults            = lazyWithRetry(() => import('./pages/FacultyRes
 // Admin Pages
 const AdminDashboard            = lazyWithRetry(() => import('./pages/AdminDashboard/index'));
 const AdminAttendanceHub        = lazyWithRetry(() => import('./pages/AdminAttendance/index'));
+const AdminTimetable            = lazyWithRetry(() => import('./pages/AdminTimetable/index'));
+const AdminFinance              = lazyWithRetry(() => import('./pages/AdminFinance/index'));
+const AdminLibrary              = lazyWithRetry(() => import('./pages/AdminLibrary/index'));
 
 // Shared Authenticated Pages
 const NotificationsPage         = lazyWithRetry(() => import('./pages/Notifications/index'));
@@ -63,8 +69,14 @@ const App = () => (
           {/* ── Student ── */}
           <Route path="/student/dashboard"
             element={<ProtectedRoute role="student"><StudentDashboard /></ProtectedRoute>} />
+          <Route path="/student/timetable"
+            element={<ProtectedRoute role="student"><StudentTimetable /></ProtectedRoute>} />
           <Route path="/student/assignments"
             element={<ProtectedRoute role="student"><StudentAssignments /></ProtectedRoute>} />
+          <Route path="/student/fees"
+            element={<ProtectedRoute role="student"><StudentFees /></ProtectedRoute>} />
+          <Route path="/student/library"
+            element={<ProtectedRoute role="student"><StudentLibrary /></ProtectedRoute>} />
           <Route path="/student/attendance"
             element={<ProtectedRoute role="student"><AttendanceOverview /></ProtectedRoute>} />
           <Route path="/student/attendance/mark"
@@ -113,6 +125,12 @@ const App = () => (
           {/* ── Admin ── */}
           <Route path="/admin/dashboard"
             element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/timetable"
+            element={<ProtectedRoute role="admin"><AdminTimetable /></ProtectedRoute>} />
+          <Route path="/admin/finance"
+            element={<ProtectedRoute role="admin"><AdminFinance /></ProtectedRoute>} />
+          <Route path="/admin/library"
+            element={<ProtectedRoute role="admin"><AdminLibrary /></ProtectedRoute>} />
           <Route path="/admin/attendance"
             element={<ProtectedRoute role="admin"><AdminAttendanceHub /></ProtectedRoute>} />
           <Route path="/admin/complaints"

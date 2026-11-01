@@ -163,16 +163,7 @@ markSchema.index(
   { student: 1, exam: 1 },
   {
     unique: true,
-    partialFilterExpression: { exam: { $exists: true, $ne: null } },
-  }
-);
-
-// Legacy fallback index for subject-only entries
-markSchema.index(
-  { student: 1, subject: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { exam: null },
+    partialFilterExpression: { exam: { $type: 'objectId' } },
   }
 );
 

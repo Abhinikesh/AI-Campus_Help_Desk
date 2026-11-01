@@ -214,3 +214,4 @@ module.exports = {
   validateMarksPayload,
   GRADE_TABLE,
 };
+

@@ -36,7 +36,13 @@ const Exams = () => {
     );
   }
 
-  const upcomingExams = exams.filter(e => new Date(e.date) >= new Date() || !isNaN(Date.parse(e.date)));
+  const now = new Date();
+  const upcomingExams = exams.filter(
+    (e) => (new Date(e.rawDate || e.date) >= now || e.status === 'scheduled') && e.status !== 'completed'
+  );
+  const completedExams = exams.filter(
+    (e) => new Date(e.rawDate || e.date) < now || e.status === 'completed'
+  );
 
   return (
     <div className="ds-shell">
@@ -148,9 +154,79 @@ const Exams = () => {
           )}
 
           {activeTab === 'completed' && (
-            <div className="ds-empty">
-              <AlertCircle size={48} />
-              <p>No completed exams found for the current session.</p>
+            <div className="exams-list">
+              {completedExams.length > 0 ? (
+                completedExams.map((exam, i) => {
+                  const dateObj = new Date(exam.date);
+                  const day = !isNaN(dateObj) ? dateObj.getDate() : '??';
+                  const month = !isNaN(dateObj) ? dateObj.toLocaleString('default', { month: 'short' }) : '??';
+
+                  return (
+                    <div
+                      className="exam-card"
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 20,
+                        background: '#fff',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: 12,
+                        padding: '18px 24px',
+                        marginBottom: 12,
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+                        opacity: 0.9,
+                      }}
+                    >
+                      <div
+                        style={{
+                          minWidth: 60,
+                          textAlign: 'center',
+                          background: '#F3F4F6',
+                          borderRadius: 10,
+                          padding: '10px 8px',
+                        }}
+                      >
+                        <div style={{ fontSize: 22, fontWeight: 700, color: '#4B5563', lineHeight: 1 }}>{day}</div>
+                        <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', marginTop: 2 }}>{month}</div>
+                      </div>
+
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                          <h3 style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: 0 }}>{exam.subject}</h3>
+                          <span style={{ fontSize: 11, background: '#F3F4F6', color: '#374151', padding: '2px 8px', borderRadius: 6, fontWeight: 600 }}>{exam.code}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#6B7280' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={13}/> {exam.time}</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={13}/> {exam.room}</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            padding: '4px 10px',
+                            borderRadius: 6,
+                            background: '#ECFDF5',
+                            color: '#059669',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                          }}
+                        >
+                          Completed
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="ds-empty">
+                  <AlertCircle size={48} />
+                  <p>No completed exams found for the current session.</p>
+                </div>
+              )}
             </div>
           )}
         </main>

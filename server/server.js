@@ -64,6 +64,11 @@ app.use('/api/notifications', require('./routes/notification.routes'));
 app.use('/api/announcements', require('./routes/announcement.routes'));
 app.use('/api/assignments',   require('./routes/assignment.routes'));
 app.use('/api/submissions',   require('./routes/submission.routes'));
+app.use('/api/exams',         require('./routes/exam.routes'));
+app.use('/api/timetable',     require('./routes/timetable.routes'));
+app.use('/api/calendar',      require('./routes/calendar.routes'));
+app.use('/api/fees',          require('./routes/fee.routes'));
+app.use('/api/library',       require('./routes/library.routes'));
 
 // ── Static file serving for uploads ──────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

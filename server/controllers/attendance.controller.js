@@ -79,7 +79,7 @@ const createSession = asyncHandler(async (req, res) => {
   if (req.user.role === 'faculty') {
     const faculty = await getFacultyForUser(req.user.userId);
     const isAssigned =
-      (subject.faculty && (subject.faculty.toString() === req.user.userId || subject.faculty.toString() === faculty._id.toString())) ||
+      (subject.faculty && (subject.faculty.toString() === req.user.userId?.toString() || subject.faculty.toString() === faculty._id.toString())) ||
       faculty.assignedSubjects?.some(s => s.toString() === subjectId.toString());
 
     if (subject.faculty && !isAssigned) {
@@ -95,6 +95,18 @@ const createSession = asyncHandler(async (req, res) => {
       if (isNaN(p) || p < 1 || p > 10) {
         throw new ApiError(400, `Invalid period number ${p}. Periods must be integers between 1 and 10.`);
       }
+    }
+  }
+
+  // Prevent duplicate attendance sessions for the same scheduled timetable slot on the same day
+  if (req.body.timetableEntry) {
+    const ttConflict = await AttendanceSession.findOne({
+      timetableEntry: req.body.timetableEntry,
+      date,
+      status: { $in: ['open', 'active', 'scheduled', 'completed', 'finalized'] }
+    });
+    if (ttConflict) {
+      throw new ApiError(409, `An attendance session has already been created for this scheduled timetable slot on ${date}`);
     }
   }
 
@@ -434,8 +446,8 @@ const finalizeSession = asyncHandler(async (req, res) => {
         });
 
         if (st.user) {
-          notificationService
-            .createNotification({
+          try {
+            await notificationService.createNotification({
               recipient: st.user,
               title: `Absence Recorded: ${session.subject?.name || 'Class'}`,
               message: `You were recorded as Absent in ${session.subject?.name || 'Class'} on ${session.date} (Period ${session.period}).`,
@@ -448,8 +460,10 @@ const finalizeSession = asyncHandler(async (req, res) => {
               actorName: req.user.name || 'Faculty',
               actorRole: 'faculty',
               eventId: `sess_abs_${session._id}_${st._id}`,
-            })
-            .catch(() => {});
+            });
+          } catch (err) {
+            // Non-blocking notification delivery
+          }
         }
       } catch (dupErr) {
         // Concurrency safeguard: ignore duplicate key error if created simultaneously

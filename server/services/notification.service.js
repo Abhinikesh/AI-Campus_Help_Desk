@@ -139,6 +139,8 @@ class NotificationService {
         'assignment',
         'timetable',
         'announcement',
+        'fee',
+        'library',
         'administrative',
       ];
 

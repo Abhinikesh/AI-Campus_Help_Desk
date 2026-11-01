@@ -52,4 +52,12 @@ router.post('/face/revoke',         revokeFace);
 router.get('/exams',                getExams);
 router.get('/results',              getResults);
 
+// Timetable & Academic Calendar
+const { getStudentTimetable } = require('../controllers/timetable.controller');
+const { getCalendarEvents, getUpcomingEvents } = require('../controllers/calendar.controller');
+
+router.get('/timetable',            getStudentTimetable);
+router.get('/calendar',             getCalendarEvents);
+router.get('/calendar/upcoming',    getUpcomingEvents);
+
 module.exports = router;

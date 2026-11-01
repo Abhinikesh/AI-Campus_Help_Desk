@@ -669,8 +669,8 @@ const publishExamResults = asyncHandler(async (req, res) => {
   const studentMarks = await Mark.find({ exam: exam._id }).populate('student', 'user');
   for (const m of studentMarks) {
     if (m.student?.user) {
-      notificationService
-        .createNotification({
+      try {
+        await notificationService.createNotification({
           recipient: m.student.user,
           title: `Exam Results Published: ${exam.title}`,
           message: `Official results for '${exam.title}' (${exam.subject?.name}) are now available in your Student Portal.`,
@@ -683,8 +683,10 @@ const publishExamResults = asyncHandler(async (req, res) => {
           actorName: req.user.name || 'Examiner',
           actorRole: req.user.role,
           eventId: `exam_pub_${exam._id}_${m.student.user}`,
-        })
-        .catch(() => {});
+        });
+      } catch (err) {
+        // Non-blocking notification delivery
+      }
     }
   }
 
