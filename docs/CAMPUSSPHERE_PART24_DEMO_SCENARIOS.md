@@ -110,3 +110,4 @@ All accounts are seeded and available in the local database:
 - **Real-Time Responsiveness**: SSE push delivers notification banners within $< 500\text{ms}$.
 - **Data Fidelity**: All financial amounts render in Indian Rupee format (`₹XX,XXX.XX`).
 - **Access Control Enforced**: Attempting to access `/admin/finance` as student redirects to `/student/dashboard`.
+

@@ -89,3 +89,4 @@ To prevent academic penalties due to hardware limitations (e.g. cracked mobile c
 - **Spoof Resistance**: Verified against printed photos and digital screen replays.
 - **Privacy Compliance**: AES-256 encrypted vector storage with zero raw photo persistence.
 - **Status**: **PASS — Smart Attendance System Fully Certified**
+
