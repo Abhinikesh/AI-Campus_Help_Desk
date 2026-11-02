@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "CampusSphere AI Platform",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "concurrently -k -n \"AI,BACKEND,CLIENT\" -c \"magenta,cyan,green\" \"npm run ai\" \"npm run server\" \"npm run client\"",
+    "start": "npm run dev",
+    "ai": "cd ai-service && (.venv/bin/python app.py 2>/dev/null || python3 app.py || python app.py)",
     "server": "cd server && npm run dev",
     "client": "cd client && npm run dev",
     "install-all": "npm install && cd server && npm install && cd ../client && npm install",
