@@ -26,7 +26,6 @@ import {
 import eventService from '../../services/event.service';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import Navbar from '../../components/Navbar/Navbar';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
 
@@ -399,8 +398,7 @@ const AdminActivities = () => {
     <div className="flex h-screen bg-slate-900 text-slate-100 antialiased overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <Navbar />
-
+        
         <main className="p-6 max-w-7xl mx-auto w-full space-y-6">
           {/* Header & Metrics */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

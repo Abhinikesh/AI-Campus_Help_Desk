@@ -4,7 +4,6 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../../components/Sidebar/Sidebar';
-import Navbar from '../../components/Navbar/Navbar';
 import { useToast } from '../../context/ToastContext';
 import assignmentService from '../../services/assignment.service';
 import {
@@ -307,8 +306,7 @@ const FacultyAssignments = () => {
     <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <Navbar />
-
+        
         <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto mt-16">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">

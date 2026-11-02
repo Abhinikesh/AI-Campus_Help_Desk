@@ -154,7 +154,7 @@ const MarkAttendance = () => {
   return (
     <div className="ds-shell" style={{ background: '#F8FAFC' }}>
       <Sidebar />
-      <div style={{ marginLeft: isCollapsed ? 64 : 240, transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)', width: '100%', padding: '24px 20px' }}>
+      <div style={{ width: '100%', padding: '24px 20px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {/* Top Breadcrumb Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>

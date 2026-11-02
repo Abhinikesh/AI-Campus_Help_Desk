@@ -1,29 +1,143 @@
-/* Sidebar.css — Unified Collapsible White Sidebar */
+/* ═══════════════════════════════════════════════════════════════
+   Sidebar.css — Enterprise Unified Collapsible Sidebar System
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --cs-sidebar-width-expanded: 250px;
+  --cs-sidebar-width-collapsed: 72px;
+}
+
+/* ── Mobile Top Header (Visible ONLY on screens <= 768px) ────── */
+.cs-mobile-topbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .cs-mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E2E8F0;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 80;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .cs-mobile-toggle-btn {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #334155;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .cs-mobile-toggle-btn:hover {
+    background: #EFF6FF;
+    color: #1A56DB;
+  }
+
+  .cs-mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+
+  .cs-mobile-logo {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+  }
+
+  .cs-mobile-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0F172A;
+    letter-spacing: -0.2px;
+  }
+
+  .cs-mobile-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #1A56DB;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .cs-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(3px);
+    z-index: 990;
+    animation: fadeIn 0.2s ease;
+  }
+}
+
+/* ── Primary Sidebar (Sticky in Normal Flex Flow) ─────────────── */
 .cs-sidebar {
   background: #FFFFFF;
   border-right: 1px solid #E2E8F0;
   display: flex;
   flex-direction: column;
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   height: 100vh;
-  z-index: 1000;
-  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+  z-index: 50;
+  flex-shrink: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   box-shadow: 1px 0 3px rgba(0, 0, 0, 0.03);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Header */
+.cs-sidebar.expanded {
+  width: var(--cs-sidebar-width-expanded) !important;
+  min-width: var(--cs-sidebar-width-expanded) !important;
+  max-width: var(--cs-sidebar-width-expanded) !important;
+}
+
+.cs-sidebar.collapsed {
+  width: var(--cs-sidebar-width-collapsed) !important;
+  min-width: var(--cs-sidebar-width-collapsed) !important;
+  max-width: var(--cs-sidebar-width-collapsed) !important;
+}
+
+/* ── Header & Branding ───────────────────────────────────────── */
 .cs-sidebar-header {
-  height: 60px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 14px;
   border-bottom: 1px solid #E2E8F0;
   flex-shrink: 0;
+  background: #FFFFFF;
+}
+
+.cs-sidebar.collapsed .cs-sidebar-header {
+  padding: 0 10px;
+  justify-content: space-between;
+  gap: 4px;
 }
 
 .cs-sidebar-logo-link {
@@ -32,29 +146,73 @@
   gap: 10px;
   text-decoration: none;
   min-width: 0;
+  flex: 1;
+}
+
+.cs-sidebar.collapsed .cs-sidebar-logo-link {
+  gap: 0;
+  justify-content: center;
+  flex: 0;
 }
 
 .cs-sidebar-logo-img {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
   flex-shrink: 0;
+}
+
+.cs-sidebar-brand-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .cs-sidebar-brand {
   font-size: 15px;
   font-weight: 700;
-  color: #1A56DB;
+  color: #0F172A;
   white-space: nowrap;
   letter-spacing: -0.2px;
+  line-height: 1.2;
 }
+
+.cs-sidebar-role-badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 1.5px 7px;
+  border-radius: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+/* ── Role Badge Color Tokens ─────────────────────────────────── */
+.badge-student    { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.badge-faculty    { background: #F8FAFC; color: #334155; border: 1px solid #CBD5E1; }
+.badge-admin      { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+.badge-warden     { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+.badge-librarian  { background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
+.badge-transport  { background: #ECFEFF; color: #0E7490; border: 1px solid #A5F3FC; }
+.badge-placement  { background: #FAF5FF; color: #7E22CE; border: 1px solid #E9D5FF; }
+.badge-activities { background: #FDF4FF; color: #A21CAF; border: 1px solid #F0ABFC; }
+.badge-inventory  { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+.badge-hr         { background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; }
+.badge-staff      { background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0; }
+.badge-parent     { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; }
+.badge-admission  { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
 
 .cs-sidebar-toggle-btn {
   background: #F8F9FA;
   border: 1px solid #E2E8F0;
   border-radius: 6px;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,20 +228,29 @@
   border-color: #BFDBFE;
 }
 
-/* User Profile card */
+/* ── User Information Block ─────────────────────────────────── */
 .cs-sidebar-user {
   padding: 12px 14px;
   border-bottom: 1px solid #E2E8F0;
-  background: #FAF5FF;
+  background: #FAF8FF;
   display: flex;
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
 }
 
+.cs-sidebar-user-collapsed {
+  padding: 10px 0;
+  border-bottom: 1px solid #E2E8F0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .cs-sidebar-avatar {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: #1A56DB;
   color: #FFFFFF;
@@ -91,6 +258,20 @@
   align-items: center;
   justify-content: center;
   font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.cs-sidebar-avatar-small {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #1A56DB;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -103,7 +284,7 @@
 .cs-sidebar-user-name {
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: #0F172A;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -111,17 +292,20 @@
 
 .cs-sidebar-user-role {
   font-size: 11px;
-  color: #6B7280;
+  color: #64748B;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Navigation List */
+/* ── Navigation Links ───────────────────────────────────────── */
 .cs-sidebar-nav {
   flex: 1;
-  padding: 12px 8px;
+  padding: 10px 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -130,7 +314,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 9px 12px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
@@ -142,6 +326,11 @@
   white-space: nowrap;
   transition: all 0.15s ease;
   position: relative;
+}
+
+.cs-sidebar.collapsed .cs-sidebar-item {
+  justify-content: center;
+  padding: 10px 0;
 }
 
 .cs-sidebar-item:hover {
@@ -173,9 +362,15 @@
   justify-content: center;
 }
 
-/* Footer / Logout */
+.cs-sidebar-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Footer / Logout ────────────────────────────────────────── */
 .cs-sidebar-footer {
-  padding: 10px 8px;
+  padding: 8px;
   border-top: 1px solid #E2E8F0;
   flex-shrink: 0;
 }
@@ -184,7 +379,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 9px 12px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
@@ -199,7 +394,86 @@
   transition: background 0.15s ease;
 }
 
+.cs-sidebar.collapsed .cs-sidebar-logout {
+  justify-content: center;
+  padding: 10px 0;
+}
+
 .cs-sidebar-logout:hover {
   background: #FEF2F2;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL PORTAL LAYOUT NORMALIZATION
+   Enforces that main content NEVER overlaps or sits behind sidebar
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Universal Layout Shells */
+.ds-shell,
+.cs-layout,
+.cs-portal-shell {
+  display: flex !important;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Universal Main Content Region: flex: 1 takes the exact remaining width */
+.ds-main,
+.cs-main-content,
+.cs-portal-main,
+.flex-1 {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  margin-left: 0 !important; /* Neutralizes arbitrary fixed margins */
+  overflow-x: hidden;
+}
+
+/* ── Responsive Viewport Rules ──────────────────────────────── */
+
+/* Mobile Breakpoint (<= 768px): Sidebar slides out as off-canvas drawer */
+@media (max-width: 768px) {
+  .cs-sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    z-index: 1000;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .cs-sidebar.collapsed {
+    transform: translateX(-100%) !important;
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+  }
+
+  .cs-sidebar.expanded {
+    transform: translateX(0) !important;
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .ds-main,
+  .cs-main-content,
+  .cs-portal-main,
+  .flex-1 {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+}
+
+/* Tablet & Desktop Breakpoints (> 768px): Sidebar is sticky flex item */
+@media (min-width: 769px) {
+  .cs-sidebar {
+    position: sticky !important;
+    top: 0;
+    left: 0;
+    height: 100vh;
+  }
+}

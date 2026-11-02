@@ -18,7 +18,6 @@ import {
 import inventoryService from '../../services/inventory.service';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import Navbar from '../../components/Navbar/Navbar';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
 
@@ -139,8 +138,7 @@ const FacultyInventory = () => {
     <div className="flex h-screen bg-slate-900 text-slate-100 font-sans">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar />
-        <main className="flex-1 overflow-y-auto p-6 space-y-6">
+                <main className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <div>

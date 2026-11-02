@@ -26,7 +26,6 @@ import {
 import transportService from '../../services/transport.service';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import Navbar from '../../components/Navbar/Navbar';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
 
@@ -359,8 +358,7 @@ const AdminTransport = () => {
     <div className="flex h-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <Navbar />
-
+        
         <main className="p-6 max-w-7xl mx-auto w-full space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">

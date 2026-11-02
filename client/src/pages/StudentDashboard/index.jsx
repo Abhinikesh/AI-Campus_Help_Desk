@@ -131,10 +131,7 @@ const StudentDashboard = () => {
       {/* ── MAIN CONTENT ── */}
       <div
         className="ds-main"
-        style={{
-          marginLeft: isCollapsed ? 64 : 240,
-          transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
+        
       >
         {/* Top header */}
         <header className="ds-header">

@@ -5,7 +5,6 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../../components/Sidebar/Sidebar';
-import Navbar from '../../components/Navbar/Navbar';
 import { useSidebar } from '../../context/SidebarContext';
 import { useToast } from '../../context/ToastContext';
 import hostelService from '../../services/hostel.service';
@@ -234,8 +233,7 @@ const StudentHostel = () => {
     <div className="cs-layout">
       <Sidebar />
       <div className={`cs-main-content ${isCollapsed ? 'collapsed' : ''}`}>
-        <Navbar />
-
+        
         <div className="cs-page-container">
           {/* ── Top Header Banner ── */}
           <div className="cs-page-header">

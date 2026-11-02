@@ -28,7 +28,6 @@ import {
 import placementService from '../../services/placement.service';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import Navbar from '../../components/Navbar/Navbar';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
 
@@ -188,8 +187,7 @@ const StudentPlacement = () => {
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <Navbar />
-        <main style={{ padding: '24px 32px', flex: 1 }}>
+                <main style={{ padding: '24px 32px', flex: 1 }}>
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
             <div>

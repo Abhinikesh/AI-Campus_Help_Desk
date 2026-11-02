@@ -223,7 +223,7 @@ const LiveAttendance = () => {
   return (
     <div className="ds-shell" style={{ background: '#F8FAFC' }}>
       <Sidebar />
-      <div style={{ marginLeft: isCollapsed ? 64 : 240, transition: 'margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1)', width: '100%', padding: '20px 24px' }}>
+      <div style={{ width: '100%', padding: '20px 24px' }}>
         {/* Top Control Bar */}
         <div
           style={{

@@ -54,12 +54,13 @@ const login = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'loginId, password, and role are required');
   }
 
-  if (!ROLE_REDIRECTS[role]) {
+  const userRole = role.toLowerCase();
+  if (!ROLE_REDIRECTS[userRole]) {
     throw new ApiError(400, 'Invalid role');
   }
 
   // Find user by loginId AND role (prevents cross-role login)
-  const user = await User.findOne({ loginId: loginId.trim(), role }).select('+passwordHash');
+  const user = await User.findOne({ loginId: loginId.trim(), role: userRole }).select('+passwordHash');
 
   if (!user) {
     console.log(`❌ Login failed: User not found for loginId="${loginId}", role="${role}"`);

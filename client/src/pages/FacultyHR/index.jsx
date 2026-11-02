@@ -23,7 +23,6 @@ import {
 import hrService from '../../services/hr.service';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import Navbar from '../../components/Navbar/Navbar';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
 
@@ -214,8 +213,7 @@ const FacultyHR = () => {
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar />
-
+        
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Employee Header Profile Card */}
           <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

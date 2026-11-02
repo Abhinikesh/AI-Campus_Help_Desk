@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Navbar from '../../components/Navbar/Navbar';
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -59,8 +58,7 @@ const VirtualTour = () => {
 
   return (
     <div className="vt-layout">
-      <Navbar />
-      
+            
       <div className="vt-container">
         {/* LEFT SIDEBAR */}
         <aside className="vt-sidebar">

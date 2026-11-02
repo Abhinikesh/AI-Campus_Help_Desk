@@ -26,7 +26,6 @@ import {
 import eventService from '../../services/event.service';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import Navbar from '../../components/Navbar/Navbar';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
 
@@ -213,8 +212,7 @@ const StudentActivities = () => {
     <div className="flex h-screen bg-slate-900 text-slate-100 antialiased overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <Navbar />
-
+        
         <main className="p-6 max-w-7xl mx-auto w-full space-y-6">
           {/* Header Banner */}
           <div className="bg-gradient-to-r from-purple-900/60 via-indigo-900/40 to-slate-800 border border-purple-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
