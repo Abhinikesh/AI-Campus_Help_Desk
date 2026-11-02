@@ -2,11 +2,12 @@ import React, { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
+import { useTheme } from '../../context/ThemeContext';
 import {
   LayoutDashboard, BookOpen, CalendarCheck, BarChart2,
   Folder, Flag, MessageCircle, LogOut, Clock,
   ChevronLeft, ChevronRight, Menu, GraduationCap, UserCheck, Bell, CreditCard, Library,
-  Building, Bus, Briefcase, Sparkles, Boxes, Users
+  Building, Bus, Briefcase, Sparkles, Boxes, Users, Sun, Moon
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -188,6 +189,7 @@ const initials = (name = '') =>
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const { isCollapsed, toggleSidebar, setIsCollapsed } = useSidebar();
+  const { theme, isDark, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -227,8 +229,19 @@ const Sidebar = () => {
             {badgeInfo.label}
           </span>
         </Link>
-        <div className="cs-mobile-user-avatar">
-          {initials(user?.name)}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="cs-mobile-theme-btn"
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {isDark ? <Sun size={17} style={{ color: '#FBBF24' }} /> : <Moon size={17} style={{ color: '#4F46E5' }} />}
+          </button>
+          <div className="cs-mobile-user-avatar">
+            {initials(user?.name)}
+          </div>
         </div>
       </div>
 
@@ -322,8 +335,25 @@ const Sidebar = () => {
           })}
         </nav>
 
-        {/* ── Footer / Logout ── */}
+        {/* ── Footer / Theme Toggle & Logout ── */}
         <div className="cs-sidebar-footer">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className={`cs-theme-toggle-btn${isCollapsed ? ' collapsed' : ''}`}
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            <div className="cs-sidebar-icon">
+              {isDark ? <Sun size={18} style={{ color: '#FBBF24' }} /> : <Moon size={18} style={{ color: '#4F46E5' }} />}
+            </div>
+            {!isCollapsed && (
+              <>
+                <span className="cs-sidebar-label">{isDark ? 'Dark Mode' : 'Light Mode'}</span>
+                <span className="cs-theme-toggle-pill">{isDark ? 'Dark' : 'Light'}</span>
+              </>
+            )}
+          </button>
           <button
             type="button"
             onClick={handleLogout}

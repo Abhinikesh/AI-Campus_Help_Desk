@@ -18,8 +18,8 @@
     align-items: center;
     justify-content: space-between;
     height: 56px;
-    background: #FFFFFF;
-    border-bottom: 1px solid #E2E8F0;
+    background: var(--cs-sidebar-bg, #FFFFFF);
+    border-bottom: 1px solid var(--cs-sidebar-border, #E2E8F0);
     padding: 0 16px;
     position: sticky;
     top: 0;
@@ -27,25 +27,26 @@
     width: 100%;
     z-index: 80;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: background 0.2s ease, border-color 0.2s ease;
   }
 
   .cs-mobile-toggle-btn {
-    background: #F8FAFC;
-    border: 1px solid #E2E8F0;
+    background: var(--cs-bg-subtle, #F8FAFC);
+    border: 1px solid var(--cs-border-subtle, #E2E8F0);
     border-radius: 8px;
     width: 36px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #334155;
+    color: var(--cs-sidebar-text, #334155);
     cursor: pointer;
     transition: background 0.15s ease;
   }
 
   .cs-mobile-toggle-btn:hover {
-    background: #EFF6FF;
-    color: #1A56DB;
+    background: var(--cs-sidebar-hover-bg, #EFF6FF);
+    color: var(--cs-primary, #1A56DB);
   }
 
   .cs-mobile-brand {
@@ -64,7 +65,7 @@
   .cs-mobile-title {
     font-size: 15px;
     font-weight: 700;
-    color: #0F172A;
+    color: var(--cs-text-primary, #0F172A);
     letter-spacing: -0.2px;
   }
 
@@ -93,8 +94,8 @@
 
 /* ── Primary Sidebar (Sticky in Normal Flex Flow) ─────────────── */
 .cs-sidebar {
-  background: #FFFFFF;
-  border-right: 1px solid #E2E8F0;
+  background: var(--cs-sidebar-bg, #FFFFFF);
+  border-right: 1px solid var(--cs-sidebar-border, #E2E8F0);
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -107,7 +108,7 @@
   overflow-y: auto;
   box-shadow: 1px 0 3px rgba(0, 0, 0, 0.03);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, border-color 0.2s ease;
 }
 
 .cs-sidebar.expanded {
@@ -129,9 +130,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 14px;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid var(--cs-sidebar-border, #E2E8F0);
   flex-shrink: 0;
-  background: #FFFFFF;
+  background: var(--cs-sidebar-bg, #FFFFFF);
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .cs-sidebar.collapsed .cs-sidebar-header {
@@ -173,7 +175,7 @@
 .cs-sidebar-brand {
   font-size: 15px;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--cs-text-primary, #0F172A);
   white-space: nowrap;
   letter-spacing: -0.2px;
   line-height: 1.2;
@@ -192,7 +194,7 @@
   line-height: 1.3;
 }
 
-/* ── Role Badge Color Tokens ─────────────────────────────────── */
+/* ── Role Badge Color Tokens (Light & Dark) ─────────────────── */
 .badge-student    { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
 .badge-faculty    { background: #F8FAFC; color: #334155; border: 1px solid #CBD5E1; }
 .badge-admin      { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
@@ -207,41 +209,56 @@
 .badge-parent     { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; }
 .badge-admission  { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
 
+html.dark .badge-student    { background: rgba(29, 78, 216, 0.2); color: #93C5FD; border-color: rgba(147, 197, 253, 0.3); }
+html.dark .badge-faculty    { background: rgba(126, 34, 206, 0.2); color: #D8B4FE; border-color: rgba(216, 180, 254, 0.3); }
+html.dark .badge-admin      { background: rgba(220, 38, 38, 0.2); color: #FCA5A5; border-color: rgba(252, 165, 165, 0.3); }
+html.dark .badge-warden     { background: rgba(21, 128, 61, 0.2); color: #86EFAC; border-color: rgba(134, 239, 172, 0.3); }
+html.dark .badge-librarian  { background: rgba(180, 83, 9, 0.2); color: #FDE68A; border-color: rgba(253, 230, 138, 0.3); }
+html.dark .badge-transport  { background: rgba(14, 116, 144, 0.2); color: #67E8F9; border-color: rgba(103, 232, 249, 0.3); }
+html.dark .badge-placement  { background: rgba(126, 34, 206, 0.2); color: #D8B4FE; border-color: rgba(216, 180, 254, 0.3); }
+html.dark .badge-activities { background: rgba(162, 28, 175, 0.2); color: #F0ABFC; border-color: rgba(240, 171, 252, 0.3); }
+html.dark .badge-inventory  { background: rgba(22, 101, 52, 0.2); color: #86EFAC; border-color: rgba(134, 239, 172, 0.3); }
+html.dark .badge-hr         { background: rgba(37, 99, 235, 0.2); color: #93C5FD; border-color: rgba(147, 197, 253, 0.3); }
+html.dark .badge-staff      { background: rgba(71, 85, 105, 0.2); color: #CBD5E1; border-color: rgba(203, 213, 225, 0.3); }
+html.dark .badge-parent     { background: rgba(22, 163, 74, 0.2); color: #86EFAC; border-color: rgba(134, 239, 172, 0.3); }
+html.dark .badge-admission  { background: rgba(217, 119, 6, 0.2); color: #FDE68A; border-color: rgba(253, 230, 138, 0.3); }
+
 .cs-sidebar-toggle-btn {
-  background: #F8F9FA;
-  border: 1px solid #E2E8F0;
+  background: var(--cs-bg-subtle, #F8F9FA);
+  border: 1px solid var(--cs-border-subtle, #E2E8F0);
   border-radius: 6px;
   width: 26px;
   height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748B;
+  color: var(--cs-text-muted, #64748B);
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
 }
 
 .cs-sidebar-toggle-btn:hover {
-  background: #EFF6FF;
-  color: #1A56DB;
-  border-color: #BFDBFE;
+  background: var(--cs-sidebar-hover-bg, #EFF6FF);
+  color: var(--cs-primary, #1A56DB);
+  border-color: var(--cs-primary-light, #BFDBFE);
 }
 
 /* ── User Information Block ─────────────────────────────────── */
 .cs-sidebar-user {
   padding: 12px 14px;
-  border-bottom: 1px solid #E2E8F0;
-  background: #FAF8FF;
+  border-bottom: 1px solid var(--cs-sidebar-border, #E2E8F0);
+  background: var(--cs-bg-subtle, #FAF8FF);
   display: flex;
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .cs-sidebar-user-collapsed {
   padding: 10px 0;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid var(--cs-sidebar-border, #E2E8F0);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -252,7 +269,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #1A56DB;
+  background: var(--cs-primary, #1A56DB);
   color: #FFFFFF;
   display: flex;
   align-items: center;
@@ -266,7 +283,7 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #1A56DB;
+  background: var(--cs-primary, #1A56DB);
   color: #FFFFFF;
   display: flex;
   align-items: center;
@@ -284,7 +301,7 @@
 .cs-sidebar-user-name {
   font-size: 13px;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--cs-text-primary, #0F172A);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -292,7 +309,7 @@
 
 .cs-sidebar-user-role {
   font-size: 11px;
-  color: #64748B;
+  color: var(--cs-text-muted, #64748B);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -318,7 +335,7 @@
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
-  color: #475569;
+  color: var(--cs-sidebar-text, #475569);
   text-decoration: none;
   cursor: pointer;
   border: none;
@@ -334,13 +351,13 @@
 }
 
 .cs-sidebar-item:hover {
-  background: #F1F5F9;
-  color: #0F172A;
+  background: var(--cs-sidebar-hover-bg, #F1F5F9);
+  color: var(--cs-text-primary, #0F172A);
 }
 
 .cs-sidebar-item.active {
-  background: #EFF6FF;
-  color: #1A56DB;
+  background: var(--cs-sidebar-active-bg, #EFF6FF);
+  color: var(--cs-sidebar-active-text, #1A56DB);
   font-weight: 600;
 }
 
@@ -351,7 +368,7 @@
   top: 6px;
   bottom: 6px;
   width: 3px;
-  background: #1A56DB;
+  background: var(--cs-sidebar-active-border, #1A56DB);
   border-radius: 0 4px 4px 0;
 }
 
@@ -371,8 +388,10 @@
 /* ── Footer / Logout ────────────────────────────────────────── */
 .cs-sidebar-footer {
   padding: 8px;
-  border-top: 1px solid #E2E8F0;
+  border-top: 1px solid var(--cs-sidebar-border, #E2E8F0);
+  background: var(--cs-sidebar-bg, #FFFFFF);
   flex-shrink: 0;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .cs-sidebar-logout {

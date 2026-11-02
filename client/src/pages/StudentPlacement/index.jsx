@@ -184,7 +184,7 @@ const StudentPlacement = () => {
   const academicMetrics = profileData?.academicMetrics;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
+    <div className="cs-portal-shell">
       <Sidebar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 <main style={{ padding: '24px 32px', flex: 1 }}>

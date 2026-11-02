@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -64,10 +65,11 @@ const NotificationsPage         = lazyWithRetry(() => import('./pages/Notificati
 const NotFound                  = lazyWithRetry(() => import('./pages/NotFound/index'));
 
 const App = () => (
-  <AuthProvider>
-    <ToastProvider>
-      <NotificationProvider>
-        <SidebarProvider>
+  <ThemeProvider>
+    <AuthProvider>
+      <ToastProvider>
+        <NotificationProvider>
+          <SidebarProvider>
           <ErrorBoundary>
             <Suspense fallback={<LoadingSpinner size="lg" text="Loading CampusSphere…" />}>
               <Routes>
@@ -185,6 +187,7 @@ const App = () => (
       </NotificationProvider>
     </ToastProvider>
   </AuthProvider>
+</ThemeProvider>
 );
 
 export default App;

@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import './styles/theme.css';
 
 @tailwind base;
 @tailwind components;
@@ -17,8 +18,8 @@ html {
 }
 
 body {
-  background-color: #FFFFFF;
-  color: #111827;
+  background-color: var(--cs-bg-canvas, #F8F9FA);
+  color: var(--cs-text-primary, #0F172A);
   font-family: 'Inter', sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;

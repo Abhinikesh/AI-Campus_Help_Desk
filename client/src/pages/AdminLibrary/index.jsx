@@ -307,9 +307,9 @@ const AdminLibrary = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#0B0F19] text-gray-100 overflow-hidden font-sans">
+    <div className="cs-portal-shell overflow-hidden font-sans">
       <Sidebar />
-      <div className={`flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300 `}>
+      <div className="cs-portal-main overflow-hidden transition-all duration-300">
         
         <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-6">
           {/* Header */}
