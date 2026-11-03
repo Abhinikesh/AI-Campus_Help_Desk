@@ -12,6 +12,12 @@ const authMiddleware = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
+    if (req.user && !req.user._id && req.user.userId) {
+      req.user._id = req.user.userId;
+    }
+    if (req.user && !req.user.id && req.user.userId) {
+      req.user.id = req.user.userId;
+    }
     next();
   } catch (error) {
     console.error('❌ Auth middleware error:', error.message);

@@ -19,6 +19,8 @@ const Attendance = require('../models/Attendance');
 const AttendanceSession = require('../models/AttendanceSession');
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const AttendanceSettings = require('../models/AttendanceSettings');
+const FaceEmbedding = require('../models/FaceEmbedding');
+const ConsentRecord = require('../models/ConsentRecord');
 
 const API_BASE = 'http://localhost:5001/api/attendance';
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -37,10 +39,16 @@ test('Smart Attendance Backend & API Test Suite', async (t) => {
   let testSubject, student1Doc, student2Doc;
   let createdSessionId, createdAttendanceId;
 
+  t.after(async () => {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
+  });
+
   // Setup: Connect & load fixture identities
   await t.test('Setup: Connect & load fixture identities', async () => {
     if (mongoose.connection.readyState === 0) {
-      const dbUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27018/test';
+      const dbUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27018/campus-erp';
       await mongoose.connect(dbUri);
     }
 
@@ -60,6 +68,38 @@ test('Smart Attendance Backend & API Test Suite', async (t) => {
     testSubject = await Subject.findOne({
       $or: [{ faculty: facultyUser._id }]
     }) || await Subject.findOne();
+
+    // Ensure student1 has active face profile with consent for attendance verification
+    await FaceEmbedding.findOneAndUpdate(
+      { student: student1Doc._id },
+      {
+        student: student1Doc._id,
+        user: student1User._id,
+        embedding: new Array(128).fill(0.1),
+        encryptedData: 'dummy_encrypted_data',
+        templateReference: 'tpl_student1',
+        status: 'enrolled',
+        enrollmentStatus: 'enrolled',
+        isActive: true,
+        consentGiven: true,
+        consentStatus: 'active',
+        consentDate: new Date(),
+        encryptionKeyVersion: '1'
+      },
+      { upsert: true }
+    );
+
+    await ConsentRecord.findOneAndUpdate(
+      { student: student1Doc._id },
+      {
+        student: student1Doc._id,
+        user: student1User._id,
+        consentStatus: 'active',
+        policyVersion: 'v1.0',
+        grantedAt: new Date()
+      },
+      { upsert: true }
+    );
 
     adminToken = makeToken(adminUser);
     facultyToken = makeToken(facultyUser);

@@ -279,7 +279,7 @@ const StudentTransport = () => {
               </div>
 
               {/* Navigation Tabs */}
-              <div className="flex border-b border-slate-800 text-sm font-medium gap-2">
+              <div className="flex border-b border-slate-200 dark:border-slate-800 text-sm font-medium gap-2 overflow-x-auto whitespace-nowrap scrollbar-none pb-0.5">
                 <button
                   onClick={() => setActiveTab('my_transport')}
                   className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition ${

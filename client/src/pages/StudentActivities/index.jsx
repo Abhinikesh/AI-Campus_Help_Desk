@@ -82,7 +82,7 @@ const StudentActivities = () => {
       if (annRes?.success) setAnnouncements(annRes.data || []);
     } catch (err) {
       console.error('Failed to load student activities data:', err);
-      showToast('error', 'Failed to load activities data');
+      showToast('Failed to load activities data', 'error');
     } finally {
       setLoading(false);
     }
@@ -102,7 +102,7 @@ const StudentActivities = () => {
         setShowEligibilityModal(true);
       }
     } catch (err) {
-      showToast('error', 'Could not evaluate eligibility');
+      showToast('Could not evaluate eligibility', 'error');
     }
   };
 
@@ -118,12 +118,12 @@ const StudentActivities = () => {
     try {
       const res = await eventService.registerForEvent(selectedEvent._id);
       if (res?.success) {
-        showToast('success', res.message || 'Registration confirmed!');
+        showToast(res.message || 'Registration confirmed!', 'success');
         setShowRegisterModal(false);
         fetchData();
       }
     } catch (err) {
-      showToast('error', err.response?.data?.message || 'Failed to register');
+      showToast(err.response?.data?.message || 'Failed to register', 'error');
     }
   };
 
@@ -133,11 +133,11 @@ const StudentActivities = () => {
     try {
       const res = await eventService.cancelRegistration(eventId, regId);
       if (res?.success) {
-        showToast('success', 'Registration cancelled');
+        showToast('Registration cancelled', 'success');
         fetchData();
       }
     } catch (err) {
-      showToast('error', err.response?.data?.message || 'Failed to cancel');
+      showToast(err.response?.data?.message || 'Failed to cancel', 'error');
     }
   };
 
@@ -153,12 +153,12 @@ const StudentActivities = () => {
     try {
       const res = await eventService.applyForMembership(selectedClub._id, { statementOfPurpose });
       if (res?.success) {
-        showToast('success', res.message || 'Application submitted');
+        showToast(res.message || 'Application submitted', 'success');
         setShowClubModal(false);
         fetchData();
       }
     } catch (err) {
-      showToast('error', err.response?.data?.message || 'Failed to apply');
+      showToast(err.response?.data?.message || 'Failed to apply', 'error');
     }
   };
 
@@ -171,11 +171,11 @@ const StudentActivities = () => {
         comments: feedbackComments,
       });
       if (res?.success) {
-        showToast('success', 'Feedback submitted! Thank you.');
+        showToast('Feedback submitted! Thank you.', 'success');
         setShowFeedbackModal(false);
       }
     } catch (err) {
-      showToast('error', err.response?.data?.message || 'Failed to submit feedback');
+      showToast(err.response?.data?.message || 'Failed to submit feedback', 'error');
     }
   };
 
@@ -187,7 +187,7 @@ const StudentActivities = () => {
         setVerifyingCert(res.certificate);
       }
     } catch (err) {
-      showToast('error', 'Certificate could not be verified');
+      showToast('Certificate could not be verified', 'error');
     }
   };
 
@@ -248,7 +248,7 @@ const StudentActivities = () => {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-slate-800 space-x-2">
+          <div className="cs-tab-bar">
             {[
               { id: 'events', label: 'Explore Events', icon: Calendar, count: events.length },
               { id: 'my_registrations', label: 'My Registrations', icon: Clock, count: myRegistrations.length },
@@ -262,18 +262,14 @@ const StudentActivities = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all ${
-                    isActive
-                      ? 'border-purple-500 text-purple-400 bg-purple-500/10 rounded-t-lg'
-                      : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-                  }`}
+                  className={`cs-tab-item ${isActive ? 'active' : ''}`}
                 >
                   <Icon className="w-4 h-4" />
                   <span>{tab.label}</span>
                   {tab.count !== undefined && (
                     <span
                       className={`ml-1 text-xs px-2 py-0.5 rounded-full ${
-                        isActive ? 'bg-purple-500/30 text-purple-300' : 'bg-slate-800 text-slate-400'
+                        isActive ? 'bg-purple-500/20 text-purple-600 dark:text-purple-300' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       {tab.count}

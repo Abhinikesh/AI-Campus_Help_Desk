@@ -451,11 +451,10 @@ const AdminHostel = () => {
   };
 
   return (
-    <div className="cs-layout">
+    <div className="cs-portal-shell overflow-hidden font-sans">
       <Sidebar />
-      <div className={`cs-main-content ${isCollapsed ? 'collapsed' : ''}`}>
-        
-        <div className="cs-page-container">
+      <div className="cs-portal-main overflow-y-auto">
+        <div className="cs-page-body space-y-6">
           {/* ── Top Header Banner ── */}
           <div className="cs-page-header">
             <div>

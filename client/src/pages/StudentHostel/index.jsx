@@ -230,11 +230,10 @@ const StudentHostel = () => {
   const occupancy = overview?.occupancy;
 
   return (
-    <div className="cs-layout">
+    <div className="cs-portal-shell overflow-hidden font-sans">
       <Sidebar />
-      <div className={`cs-main-content ${isCollapsed ? 'collapsed' : ''}`}>
-        
-        <div className="cs-page-container">
+      <div className="cs-portal-main overflow-y-auto">
+        <div className="cs-page-body space-y-6">
           {/* ── Top Header Banner ── */}
           <div className="cs-page-header">
             <div>
@@ -317,7 +316,7 @@ const StudentHostel = () => {
           </div>
 
           {/* ── Navigation Tabs ── */}
-          <div className="flex border-b border-gray-200 mb-6 space-x-2">
+          <div className="cs-tab-bar">
             {[
               { id: 'my_room', label: 'My Accommodation', icon: Home },
               { id: 'applications', label: 'Applications', icon: Send },
@@ -331,14 +330,10 @@ const StudentHostel = () => {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`cs-tab-item ${activeTab === tab.id ? 'active' : ''}`}
                 >
                   <Icon size={16} />
-                  {tab.label}
+                  <span>{tab.label}</span>
                 </button>
               );
             })}

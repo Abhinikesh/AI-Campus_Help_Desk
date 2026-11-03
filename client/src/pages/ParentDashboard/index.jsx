@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useSidebar } from '../../context/SidebarContext';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import { parentService } from '../../services/parent.service';
 import {
@@ -70,8 +69,6 @@ const ParentDashboard = () => {
         { subject: 'Computer Graphics (CG)', total: 15, attended: 13 },
         { subject: 'Software Development Processes (SDP)', total: 15, attended: 14 },
       ];
-
-  const { isCollapsed } = useSidebar();
 
   return (
     <div className="ds-shell">

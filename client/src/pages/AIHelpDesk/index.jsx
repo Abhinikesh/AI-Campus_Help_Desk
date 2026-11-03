@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useSidebar } from '../../context/SidebarContext';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import { aiService } from '../../services/ai.service';
 import {
@@ -158,7 +157,6 @@ const AIHelpDesk = () => {
   };
 
   const now = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const { isCollapsed } = useSidebar();
 
   const preview = (msgs) => {
     const last = [...msgs].reverse().find(m => m.role === 'user');

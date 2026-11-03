@@ -264,20 +264,26 @@ body {
 
 /* ── Light Mode Normalizers for Dark-Styled Pages ─────────── */
 html.light .bg-\[\#0B0F19\],
+html.light .bg-\[\#0b0f19\],
 html.light .bg-slate-900,
-html.light .bg-slate-950 {
+html.light .bg-slate-950,
+html.light .bg-slate-900\/40,
+:root:not(.dark) .bg-\[\#0B0F19\],
+:root:not(.dark) .bg-\[\#0b0f19\] {
   background-color: var(--cs-bg-canvas) !important;
   color: var(--cs-text-primary) !important;
 }
 
 html.light .bg-\[\#131B2E\],
 html.light .bg-slate-800,
+html.light .bg-slate-800\/40,
 html.light .bg-slate-800\/60,
 html.light .bg-slate-800\/70,
 html.light .bg-slate-800\/80,
 html.light .bg-slate-900\/60,
 html.light .bg-slate-900\/70,
-html.light .bg-gray-900 {
+html.light .bg-gray-900,
+:root:not(.dark) .bg-\[\#131B2E\] {
   background-color: var(--cs-card-bg) !important;
   border-color: var(--cs-border-subtle) !important;
   color: var(--cs-text-primary) !important;
@@ -311,7 +317,11 @@ html.light h2.text-white,
 html.light h3.text-white,
 html.light h4.text-white,
 html.light div.text-white,
-html.light p.text-white {
+html.light p.text-white,
+html.light span.text-white:not([class*="bg-indigo"]):not([class*="bg-blue"]):not([class*="bg-rose"]):not([class*="bg-emerald"]):not([class*="bg-purple"]):not([class*="bg-amber"]),
+html.light strong.text-white,
+html.light td.text-white,
+html.light th.text-white {
   color: var(--cs-text-primary) !important;
 }
 
@@ -335,10 +345,22 @@ html.light [class*="modal"] .bg-\[\#131B2E\],
 html.light [class*="modal"] .bg-slate-900,
 html.light [class*="modal"] .bg-slate-950,
 html.light [class*="modal"] .bg-gray-900,
-html.light [class*="modal"] .bg-\[\#0B0F19\] {
+html.light [class*="modal"] .bg-\[\#0B0F19\],
+html.light .fixed.inset-0 .bg-\[\#131B2E\],
+html.light .fixed.inset-0 .bg-slate-900,
+html.light .fixed.inset-0 .bg-slate-950,
+html.light .fixed.inset-0 .bg-gray-900,
+html.light .fixed.inset-0 .bg-\[\#0B0F19\],
+html.light .fixed .bg-\[\#131B2E\],
+html.light .fixed .bg-slate-900 {
   background-color: var(--cs-modal-bg) !important;
   border-color: var(--cs-modal-border) !important;
   color: var(--cs-text-primary) !important;
+}
+
+html.light .fixed.inset-0 label,
+html.light [class*="modal"] label {
+  color: var(--cs-text-secondary) !important;
 }
 
 /* ── Dark Mode Normalizers for Light-Styled Pages ─────────── */
@@ -477,4 +499,350 @@ html.dark .bg-purple-50 {
 
 .cs-mobile-theme-btn:hover {
   background: var(--cs-bg-hover);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   STANDARDIZED PAGE-LEVEL UI/UX DESIGN SYSTEM COMPONENTS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Page Container */
+.cs-page-body {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 28px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .cs-page-body {
+    padding: 16px 14px;
+  }
+}
+
+/* Page Header Row */
+.cs-page-header-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+  .cs-page-header-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.cs-page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--cs-text-primary);
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+@media (min-width: 640px) {
+  .cs-page-title {
+    font-size: 24px;
+  }
+}
+
+.cs-page-subtitle {
+  font-size: 13px;
+  color: var(--cs-text-muted);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.cs-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Responsive Stat Cards Grid */
+.cs-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+  .cs-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .cs-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.cs-stat-card {
+  background: var(--cs-card-bg);
+  border: 1px solid var(--cs-card-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: var(--cs-card-shadow);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.cs-stat-card:hover {
+  border-color: var(--cs-border-strong);
+}
+
+.cs-stat-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--cs-bg-subtle);
+  color: var(--cs-primary);
+}
+
+.cs-stat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cs-text-muted);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cs-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--cs-text-primary);
+  line-height: 1.2;
+}
+
+/* Tab Bar with Smooth Touch Scrolling */
+.cs-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--cs-border-subtle);
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin-bottom: 24px;
+  padding-bottom: 2px;
+}
+
+.cs-tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.cs-tab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cs-text-secondary);
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 6px 6px 0 0;
+  text-decoration: none;
+  user-select: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.cs-tab-item:hover {
+  color: var(--cs-text-primary);
+  background: var(--cs-bg-subtle);
+}
+
+.cs-tab-item.active {
+  color: var(--cs-primary);
+  border-bottom-color: var(--cs-primary);
+  font-weight: 600;
+  background: transparent;
+}
+
+/* Table Wrapper & Standardized Table */
+.cs-table-container {
+  background: var(--cs-card-bg);
+  border: 1px solid var(--cs-card-border);
+  border-radius: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: var(--cs-card-shadow);
+  margin-bottom: 24px;
+}
+
+.cs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+  min-width: 650px;
+}
+
+.cs-table th {
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cs-table-header-text);
+  background: var(--cs-table-header-bg);
+  border-bottom: 1px solid var(--cs-border-subtle);
+}
+
+.cs-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--cs-table-border);
+  color: var(--cs-text-primary);
+  vertical-align: middle;
+}
+
+.cs-table tr:last-child td {
+  border-bottom: none;
+}
+
+.cs-table tr:hover td {
+  background: var(--cs-table-row-hover);
+}
+
+/* Filter Bar & Search */
+.cs-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.cs-search-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+  max-width: 440px;
+}
+
+.cs-search-input-wrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--cs-input-placeholder);
+  pointer-events: none;
+}
+
+.cs-search-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 14px 0 36px;
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--cs-input-bg);
+  border: 1px solid var(--cs-input-border);
+  color: var(--cs-input-text);
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cs-search-input:focus {
+  border-color: var(--cs-border-focus);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.15);
+}
+
+.cs-search-input::placeholder {
+  color: var(--cs-input-placeholder);
+}
+
+/* Honest Empty State */
+.cs-empty-state {
+  padding: 56px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--cs-card-bg);
+  border: 1px dashed var(--cs-border-strong);
+  border-radius: 12px;
+  margin: 16px 0;
+  box-sizing: border-box;
+}
+
+.cs-empty-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--cs-bg-subtle);
+  color: var(--cs-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.cs-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+  margin-bottom: 6px;
+}
+
+.cs-empty-desc {
+  font-size: 13px;
+  color: var(--cs-text-muted);
+  max-width: 420px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.cs-empty-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--cs-primary);
+  color: #FFFFFF;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-decoration: none;
+}
+
+.cs-empty-action:hover {
+  background: var(--cs-primary-hover);
 }

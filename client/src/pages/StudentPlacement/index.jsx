@@ -330,7 +330,7 @@ const StudentPlacement = () => {
           )}
 
           {/* Navigation Tabs */}
-          <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid #E5E7EB', marginBottom: 24 }}>
+          <div className="cs-tab-bar">
             {[
               { id: 'opportunities', label: 'Eligible Opportunities', count: opportunities.length },
               { id: 'applications', label: 'My Applications', count: applications.length },
@@ -342,30 +342,14 @@ const StudentPlacement = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                style={{
-                  padding: '12px 18px',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  border: 'none',
-                  background: 'none',
-                  color: activeTab === tab.id ? '#4F46E5' : '#6B7280',
-                  borderBottom: activeTab === tab.id ? '2px solid #4F46E5' : '2px solid transparent',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
+                className={`cs-tab-item ${activeTab === tab.id ? 'active' : ''}`}
               >
-                {tab.label}
+                <span>{tab.label}</span>
                 {tab.count !== undefined && (
                   <span
-                    style={{
-                      fontSize: 11,
-                      padding: '2px 7px',
-                      borderRadius: 10,
-                      backgroundColor: activeTab === tab.id ? '#EEF2FF' : '#F3F4F6',
-                      color: activeTab === tab.id ? '#4F46E5' : '#6B7280',
-                    }}
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      activeTab === tab.id ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-semibold' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                    }`}
                   >
                     {tab.count}
                   </span>

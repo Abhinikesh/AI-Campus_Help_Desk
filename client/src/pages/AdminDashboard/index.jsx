@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useSidebar } from '../../context/SidebarContext';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import { adminService } from '../../services/admin.service';
 import {
@@ -106,7 +105,6 @@ const AdminDashboard = () => {
   ];
 
   const studentPill = (s) => ({ Active: 'green', Detained: 'red', 'On Leave': 'amber' }[s] || 'gray');
-  const { isCollapsed } = useSidebar();
 
   return (
     <div className="ds-shell">

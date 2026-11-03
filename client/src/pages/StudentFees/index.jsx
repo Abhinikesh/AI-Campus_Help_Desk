@@ -258,11 +258,11 @@ const StudentFees = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-                <CreditCard className="w-8 h-8 text-indigo-400" />
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+                <CreditCard className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
                 Fee & Payment Management
               </h1>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
                 View your academic fee invoices, submit offline payment proofs, and download verified receipts.
               </p>
             </div>
@@ -272,48 +272,48 @@ const StudentFees = () => {
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-pulse">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-24 bg-[#131B2E] rounded-xl border border-gray-800"></div>
+                <div key={i} className="h-24 bg-slate-100 dark:bg-[#131B2E] rounded-xl border border-slate-200 dark:border-gray-800"></div>
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Net Billed</p>
-                  <p className="text-2xl font-bold text-white mt-1">₹{overview?.totalBilledInRupees?.toLocaleString() || 0}</p>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Total Net Billed</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">₹{overview?.totalBilledInRupees?.toLocaleString() || 0}</p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+                <div className="w-12 h-12 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20">
                   <FileText className="w-6 h-6" />
                 </div>
               </div>
 
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Verified Paid</p>
-                  <p className="text-2xl font-bold text-emerald-400 mt-1">₹{overview?.totalPaidInRupees?.toLocaleString() || 0}</p>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Total Verified Paid</p>
+                  <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">₹{overview?.totalPaidInRupees?.toLocaleString() || 0}</p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                <div className="w-12 h-12 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20">
                   <CheckCircle className="w-6 h-6" />
                 </div>
               </div>
 
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Outstanding Balance</p>
-                  <p className="text-2xl font-bold text-rose-400 mt-1">₹{overview?.totalOutstandingInRupees?.toLocaleString() || 0}</p>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Outstanding Balance</p>
+                  <p className="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-1">₹{overview?.totalOutstandingInRupees?.toLocaleString() || 0}</p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400 border border-rose-500/20">
+                <div className="w-12 h-12 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-500/20">
                   <IndianRupee className="w-6 h-6" />
                 </div>
               </div>
 
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Pending Verification</p>
-                  <p className="text-2xl font-bold text-amber-400 mt-1">{overview?.pendingPaymentsCount || 0}</p>
-                  <p className="text-[11px] text-gray-500 mt-0.5">Transactions under review</p>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Pending Verification</p>
+                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{overview?.pendingPaymentsCount || 0}</p>
+                  <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-0.5">Transactions under review</p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 border border-amber-500/20">
+                <div className="w-12 h-12 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-500/20">
                   <Clock className="w-6 h-6" />
                 </div>
               </div>
@@ -321,26 +321,22 @@ const StudentFees = () => {
           )}
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-gray-800">
+          <div className="cs-tab-bar">
             <button
+              type="button"
               onClick={() => setActiveTab('invoices')}
-              className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                activeTab === 'invoices'
-                  ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
-              }`}
+              className={`cs-tab-item ${activeTab === 'invoices' ? 'active' : ''}`}
             >
-              <FileText className="w-4 h-4" /> Academic Invoices ({invoices.length})
+              <FileText className="w-4 h-4" />
+              <span>Academic Invoices ({invoices.length})</span>
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('receipts')}
-              className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                activeTab === 'receipts'
-                  ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
-              }`}
+              className={`cs-tab-item ${activeTab === 'receipts' ? 'active' : ''}`}
             >
-              <Receipt className="w-4 h-4" /> Verified Receipts ({receipts.length})
+              <Receipt className="w-4 h-4" />
+              <span>Verified Receipts ({receipts.length})</span>
             </button>
           </div>
 
@@ -349,81 +345,83 @@ const StudentFees = () => {
             <div className="space-y-4">
               {/* Search & Notice Bar */}
               <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
-                <div className="relative w-full sm:w-80">
-                  <Search className="w-4 h-4 absolute left-3 top-3 text-gray-500" />
+                <div className="cs-search-input-wrap">
+                  <Search className="w-4 h-4" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search invoices..."
-                    className="w-full bg-[#131B2E] border border-gray-800 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-indigo-500"
+                    className="cs-search-input"
                   />
                 </div>
-                <div className="text-xs text-gray-400 flex items-center gap-1.5 self-start sm:self-auto bg-gray-800/40 px-3 py-1.5 rounded-lg border border-gray-700/50">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <div className="text-xs text-slate-500 dark:text-gray-400 flex items-center gap-1.5 self-start sm:self-auto bg-slate-100 dark:bg-gray-800/40 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-gray-700/50">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
                   Payments are securely recorded in paise and reconciled by the Finance Office.
                 </div>
               </div>
 
               {filteredInvoices.length === 0 ? (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-12 text-center text-gray-400">
-                  <FileText className="w-12 h-12 mx-auto text-gray-600 mb-3" />
-                  <p className="text-base font-medium text-gray-300">No invoices found</p>
-                  <p className="text-sm text-gray-500 mt-1">There are no fee invoices matching your criteria.</p>
+                <div className="cs-empty-state">
+                  <div className="cs-empty-icon">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <h3 className="cs-empty-title">No invoices found</h3>
+                  <p className="cs-empty-desc">There are no fee invoices matching your criteria.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {filteredInvoices.map((inv) => (
                     <div
                       key={inv._id}
-                      className="bg-[#131B2E] border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition flex flex-col justify-between"
+                      className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-gray-800 rounded-xl p-5 hover:border-slate-300 dark:hover:border-gray-700 shadow-sm transition flex flex-col justify-between"
                     >
                       <div>
                         <div className="flex justify-between items-start gap-2 mb-3">
                           <div>
-                            <span className="text-xs font-mono font-bold text-indigo-400 tracking-wider">
+                            <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">
                               {inv.invoiceNumber}
                             </span>
-                            <h3 className="text-base font-semibold text-white mt-0.5">
+                            <h3 className="text-base font-semibold text-slate-900 dark:text-white mt-0.5">
                               {inv.feeStructure?.name || `Semester ${inv.semester} Fees`}
                             </h3>
                           </div>
                           {getStatusBadge(inv.status)}
                         </div>
 
-                        <div className="text-xs text-gray-400 space-y-1 mb-4">
-                          <p>Department: <span className="text-gray-200 font-medium">{inv.department}</span></p>
-                          <p>Academic Term: <span className="text-gray-200 font-medium">{inv.academicYear} (Sem {inv.semester})</span></p>
-                          <p>Due Date: <span className="text-gray-200 font-medium">{new Date(inv.dueDate).toLocaleDateString()}</span></p>
+                        <div className="text-xs text-slate-500 dark:text-gray-400 space-y-1 mb-4">
+                          <p>Department: <span className="text-slate-800 dark:text-gray-200 font-medium">{inv.department}</span></p>
+                          <p>Academic Term: <span className="text-slate-800 dark:text-gray-200 font-medium">{inv.academicYear} (Sem {inv.semester})</span></p>
+                          <p>Due Date: <span className="text-slate-800 dark:text-gray-200 font-medium">{new Date(inv.dueDate).toLocaleDateString()}</span></p>
                         </div>
 
                         {/* Financial Ledger Mini Summary */}
-                        <div className="bg-[#0B0F19] rounded-lg p-3 space-y-1.5 text-xs border border-gray-800/70 mb-4">
-                          <div className="flex justify-between text-gray-400">
+                        <div className="bg-slate-50 dark:bg-[#0B0F19] rounded-lg p-3 space-y-1.5 text-xs border border-slate-200 dark:border-gray-800/70 mb-4">
+                          <div className="flex justify-between text-slate-500 dark:text-gray-400">
                             <span>Gross Billed:</span>
                             <span>₹{inv.grossAmount?.toLocaleString()}</span>
                           </div>
                           {inv.concessionAmount > 0 && (
-                            <div className="flex justify-between text-emerald-400">
+                            <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                               <span>Scholarship/Concession:</span>
                               <span>- ₹{inv.concessionAmount?.toLocaleString()}</span>
                             </div>
                           )}
                           {inv.lateFeeAmount > 0 && (
-                            <div className="flex justify-between text-rose-400">
+                            <div className="flex justify-between text-rose-600 dark:text-rose-400">
                               <span>Late Fee:</span>
                               <span>+ ₹{inv.lateFeeAmount?.toLocaleString()}</span>
                             </div>
                           )}
-                          <div className="flex justify-between text-gray-200 font-semibold pt-1 border-t border-gray-800">
+                          <div className="flex justify-between text-slate-800 dark:text-gray-200 font-semibold pt-1 border-t border-slate-200 dark:border-gray-800">
                             <span>Net Payable:</span>
                             <span>₹{inv.netPayable?.toLocaleString()}</span>
                           </div>
-                          <div className="flex justify-between text-emerald-400">
+                          <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                             <span>Amount Paid:</span>
                             <span>₹{inv.amountPaid?.toLocaleString()}</span>
                           </div>
-                          <div className="flex justify-between text-rose-400 font-bold pt-1 border-t border-gray-800 text-sm">
+                          <div className="flex justify-between text-rose-600 dark:text-rose-400 font-bold pt-1 border-t border-slate-200 dark:border-gray-800 text-sm">
                             <span>Outstanding:</span>
                             <span>₹{inv.outstandingBalance?.toLocaleString()}</span>
                           </div>
@@ -431,7 +429,7 @@ const StudentFees = () => {
                       </div>
 
                       {/* Action buttons */}
-                      <div className="space-y-2 pt-2 border-t border-gray-800">
+                      <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-gray-800">
                         {inv.outstandingBalance > 0 && inv.status !== 'cancelled' ? (
                           <button
                             onClick={() => handleOpenPayment(inv)}
@@ -476,27 +474,28 @@ const StudentFees = () => {
           {activeTab === 'receipts' && (
             <div className="space-y-4">
               {receipts.length === 0 ? (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-12 text-center text-gray-400">
-                  <Receipt className="w-12 h-12 mx-auto text-gray-600 mb-3" />
-                  <p className="text-base font-medium text-gray-300">No verified payment receipts</p>
-                  <p className="text-sm text-gray-500 mt-1">Once your submitted offline payments are verified by the Finance Department, formal receipts appear here.</p>
+                <div className="cs-empty-state">
+                  <div className="cs-empty-icon">
+                    <Receipt className="w-6 h-6" />
+                  </div>
+                  <h3 className="cs-empty-title">No verified payment receipts</h3>
+                  <p className="cs-empty-desc">Once your submitted offline payments are verified by the Finance Department, formal receipts appear here.</p>
                 </div>
               ) : (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-gray-300">
-                      <thead className="bg-[#0B0F19] text-xs uppercase font-semibold text-gray-400 border-b border-gray-800">
-                        <tr>
-                          <th className="px-5 py-3.5">Receipt #</th>
-                          <th className="px-5 py-3.5">Transaction ID</th>
-                          <th className="px-5 py-3.5">Invoice #</th>
-                          <th className="px-5 py-3.5">Amount</th>
-                          <th className="px-5 py-3.5">Method & Ref</th>
-                          <th className="px-5 py-3.5">Payment Date</th>
-                          <th className="px-5 py-3.5 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-800/60">
+                <div className="cs-table-container">
+                  <table className="cs-table">
+                    <thead>
+                      <tr>
+                        <th>Receipt #</th>
+                        <th>Transaction ID</th>
+                        <th>Invoice #</th>
+                        <th>Amount</th>
+                        <th>Method & Ref</th>
+                        <th>Payment Date</th>
+                        <th className="text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                         {receipts.map((rcp) => (
                           <tr key={rcp._id} className="hover:bg-gray-800/30 transition">
                             <td className="px-5 py-3.5 font-mono font-medium text-indigo-400">
@@ -532,7 +531,6 @@ const StudentFees = () => {
                         ))}
                       </tbody>
                     </table>
-                  </div>
                 </div>
               )}
             </div>

@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useSidebar } from '../../context/SidebarContext';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import { facultyService } from '../../services/faculty.service';
 import {
@@ -126,7 +125,6 @@ const FacultyDashboard = () => {
   }
 
   const facultyName = profile?.userId?.name || user?.name || 'Faculty';
-  const { isCollapsed } = useSidebar();
 
   return (
     <div className="ds-shell">
