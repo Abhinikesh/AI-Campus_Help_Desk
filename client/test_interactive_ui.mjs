@@ -134,29 +134,27 @@ async function runTests() {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // 3. GLOBAL THEME SYSTEM INTERACTION (LIGHT <-> DARK)
+    // 3. MANDATORY PERMANENT LIGHT MODE ENFORCEMENT VERIFICATION
     // ═══════════════════════════════════════════════════════════════
-    console.log('\n--- 3. Testing Global Theme System Interaction ---');
-    const themeBtn = await page.$('.cs-theme-toggle-btn, [title*="theme"], [title*="Theme"], [aria-label*="theme"]');
-    if (themeBtn) {
-      const initialTheme = await page.evaluate(() => document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    console.log('\n--- 3. Testing Mandatory Permanent Light Mode Enforcement ---');
+    const lightModeState = await page.evaluate(() => {
+      const root = document.documentElement;
+      return {
+        hasDark: root.classList.contains('dark'),
+        hasLight: root.classList.contains('light'),
+        dataTheme: root.getAttribute('data-theme'),
+        themeKey: localStorage.getItem('campussphere_theme'),
+        hasToggleBtn: !!document.querySelector('.cs-theme-toggle-btn'),
+        hasMobileToggleBtn: !!document.querySelector('.cs-mobile-theme-btn'),
+        bodyBg: window.getComputedStyle(document.body).backgroundColor,
+      };
+    });
 
-      // Click to toggle
-      await themeBtn.click();
-      await new Promise(r => setTimeout(r, 400));
-      const toggledTheme = await page.evaluate(() => document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-      recordTest('Theme toggle changes document class', 'Theme', toggledTheme !== initialTheme, `Theme: ${initialTheme} -> ${toggledTheme}`);
-      await page.screenshot({ path: path.join(SCREENSHOTS_DIR, `04_dashboard_${toggledTheme}_theme.png`) });
-
-      // Click to toggle back
-      await themeBtn.click();
-      await new Promise(r => setTimeout(r, 400));
-      const revertedTheme = await page.evaluate(() => document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-      recordTest('Theme toggle reversibility', 'Theme', revertedTheme === initialTheme, `Reverted back to ${revertedTheme}`);
-      await page.screenshot({ path: path.join(SCREENSHOTS_DIR, `05_dashboard_${revertedTheme}_theme.png`) });
-    } else {
-      recordTest('Theme toggle control present', 'Theme', false, 'Theme toggle button selector not found');
-    }
+    recordTest('Application loads strictly in light mode (no .dark class)', 'Theme', !lightModeState.hasDark, `Dark class present: ${lightModeState.hasDark}`);
+    recordTest('Root element has .light class and data-theme="light"', 'Theme', lightModeState.hasLight && lightModeState.dataTheme === 'light', `data-theme: ${lightModeState.dataTheme}`);
+    recordTest('Theme toggle buttons completely eliminated from UI', 'Theme', !lightModeState.hasToggleBtn && !lightModeState.hasMobileToggleBtn, 'No theme switches found');
+    await page.screenshot({ path: path.join(SCREENSHOTS_DIR, '04_dashboard_light_theme.png') });
+    await page.screenshot({ path: path.join(SCREENSHOTS_DIR, '05_dashboard_light_mode_verified.png') });
 
     // ═══════════════════════════════════════════════════════════════
     // 4. STUDENT PORTAL MODULES & INTERACTIVE FEATURES
