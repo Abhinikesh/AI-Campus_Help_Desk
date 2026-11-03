@@ -296,11 +296,11 @@ const AdminHR = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Users className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
+              <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <Users className="w-7 h-7 text-indigo-600" />
                 Institutional HR & Workforce Management
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-sm text-slate-500 mt-1">
                 Centralized employee master directory, leaves, attendance, and administrative workforce operations.
               </p>
             </div>
@@ -308,7 +308,7 @@ const AdminHR = () => {
             <div className="flex items-center gap-2">
               <a
                 href={hrService.exportEmployeesCsvUrl()}
-                className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-lg flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm"
+                className="px-3 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg flex items-center gap-2 hover shadow-sm"
                 download
               >
                 <Download className="w-4 h-4" />
@@ -316,7 +316,7 @@ const AdminHR = () => {
               </a>
               <a
                 href={hrService.exportLeavesCsvUrl()}
-                className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-lg flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm"
+                className="px-3 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg flex items-center gap-2 hover shadow-sm"
                 download
               >
                 <Download className="w-4 h-4" />
@@ -324,7 +324,7 @@ const AdminHR = () => {
               </a>
               <button
                 onClick={() => setShowAddEmpModal(true)}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg flex items-center gap-2 shadow-sm transition-colors"
+                className="px-4 py-2 bg-indigo-600 hover text-white text-sm font-medium rounded-lg flex items-center gap-2 shadow-sm transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add Employee
@@ -334,56 +334,56 @@ const AdminHR = () => {
 
           {/* KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Staff</span>
+                <span className="text-xs font-medium text-slate-500">Total Staff</span>
                 <Users className="w-4 h-4 text-indigo-500" />
               </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
+              <p className="text-2xl font-bold text-slate-900 mt-2">
                 {metrics.workforce.total}
               </p>
               <span className="text-xs text-slate-400">{metrics.workforce.active} active</span>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">On Probation</span>
+                <span className="text-xs font-medium text-slate-500">On Probation</span>
                 <Clock className="w-4 h-4 text-amber-500" />
               </div>
-              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">
+              <p className="text-2xl font-bold text-amber-600 mt-2">
                 {metrics.workforce.probation}
               </p>
               <span className="text-xs text-slate-400">Pending review</span>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Onboarding Queue</span>
+                <span className="text-xs font-medium text-slate-500">Onboarding Queue</span>
                 <UserCheck className="w-4 h-4 text-blue-500" />
               </div>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-2">
+              <p className="text-2xl font-bold text-blue-600 mt-2">
                 {metrics.workforce.pendingOnboarding}
               </p>
               <span className="text-xs text-slate-400">Pending verification</span>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Pending Leaves</span>
+                <span className="text-xs font-medium text-slate-500">Pending Leaves</span>
                 <Calendar className="w-4 h-4 text-rose-500" />
               </div>
-              <p className="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-2">
+              <p className="text-2xl font-bold text-rose-600 mt-2">
                 {metrics.leaves.pending}
               </p>
               <span className="text-xs text-slate-400">{metrics.leaves.approved} approved</span>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Present Today</span>
+                <span className="text-xs font-medium text-slate-500">Present Today</span>
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
               </div>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
+              <p className="text-2xl font-bold text-emerald-600 mt-2">
                 {metrics.todayAttendance.present + metrics.todayAttendance.late}
               </p>
               <span className="text-xs text-slate-400">{metrics.todayAttendance.on_leave} on approved leave</span>
@@ -391,7 +391,7 @@ const AdminHR = () => {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="border-b border-slate-200 dark:border-slate-700 flex gap-6">
+          <div className="border-b border-slate-200 flex gap-6">
             {[
               { id: 'overview', label: 'Overview', icon: Briefcase },
               { id: 'employees', label: 'Employee Directory', icon: Users },
@@ -407,8 +407,8 @@ const AdminHR = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors ${
                     isActive
-                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
-                      : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                      ? 'border-indigo-600 text-indigo-600  '
+                      : 'border-transparent text-slate-500 hover '
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -421,8 +421,8 @@ const AdminHR = () => {
           {/* TAB 1: OVERVIEW */}
           {activeTab === 'overview' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
                   <Building className="w-5 h-5 text-indigo-500" />
                   Headcount by Department
                 </h3>
@@ -432,8 +432,8 @@ const AdminHR = () => {
                   ) : (
                     metrics.workforce.byDepartment.map((d, idx) => (
                       <div key={idx} className="flex justify-between items-center text-sm">
-                        <span className="text-slate-600 dark:text-slate-300">{d.name}</span>
-                        <span className="font-semibold bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">
+                        <span className="text-slate-600">{d.name}</span>
+                        <span className="font-semibold bg-slate-100 px-2 py-0.5 rounded text-slate-700">
                           {d.count}
                         </span>
                       </div>
@@ -442,8 +442,8 @@ const AdminHR = () => {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
                   <Sliders className="w-5 h-5 text-indigo-500" />
                   Staff Category Breakdown
                 </h3>
@@ -453,8 +453,8 @@ const AdminHR = () => {
                   ) : (
                     Object.entries(metrics.workforce.byCategory).map(([cat, count]) => (
                       <div key={cat} className="flex justify-between items-center text-sm capitalize">
-                        <span className="text-slate-600 dark:text-slate-300">{cat.replace(/_/g, ' ')}</span>
-                        <span className="font-semibold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded">
+                        <span className="text-slate-600">{cat.replace(/_/g, ' ')}</span>
+                        <span className="font-semibold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">
                           {count}
                         </span>
                       </div>
@@ -476,14 +476,14 @@ const AdminHR = () => {
                     placeholder="Search by name, employee ID, or official email..."
                     value={empSearch}
                     onChange={(e) => setEmpSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
 
                 <select
                   value={empDeptFilter}
                   onChange={(e) => setEmpDeptFilter(e.target.value)}
-                  className="px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900"
                 >
                   <option value="">All Departments</option>
                   {departments.map((d) => (
@@ -496,7 +496,7 @@ const AdminHR = () => {
                 <select
                   value={empStatusFilter}
                   onChange={(e) => setEmpStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900"
                 >
                   <option value="">All Statuses</option>
                   <option value="active">Active</option>
@@ -508,10 +508,10 @@ const AdminHR = () => {
                 </select>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto shadow-sm">
+              <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
                 <table className="w-full text-left border-collapse text-sm">
                   <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-750 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                    <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
                       <th className="p-3 font-medium">Employee</th>
                       <th className="p-3 font-medium">Department</th>
                       <th className="p-3 font-medium">Designation</th>
@@ -521,7 +521,7 @@ const AdminHR = () => {
                       <th className="p-3 font-medium text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200">
+                  <tbody className="divide-y divide-slate-100 text-slate-700">
                     {employees.length === 0 ? (
                       <tr>
                         <td colSpan="7" className="p-6 text-center text-slate-400">
@@ -530,9 +530,9 @@ const AdminHR = () => {
                       </tr>
                     ) : (
                       employees.map((emp) => (
-                        <tr key={emp._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                        <tr key={emp._id} className="hover">
                           <td className="p-3">
-                            <div className="font-medium text-slate-900 dark:text-white">
+                            <div className="font-medium text-slate-900">
                               {emp.firstName} {emp.lastName}
                             </div>
                             <div className="text-xs text-slate-400">
@@ -546,10 +546,10 @@ const AdminHR = () => {
                             <span
                               className={`px-2 py-0.5 text-xs rounded font-medium ${
                                 emp.employmentStatus === 'active' || emp.employmentStatus === 'confirmed'
-                                  ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                                  ? 'bg-emerald-50  text-emerald-600 '
                                   : emp.employmentStatus === 'probation'
-                                  ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
-                                  : 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'
+                                  ? 'bg-amber-50  text-amber-600 '
+                                  : 'bg-rose-50  text-rose-600 '
                               }`}
                             >
                               {emp.employmentStatus}
@@ -559,8 +559,8 @@ const AdminHR = () => {
                             <span
                               className={`px-2 py-0.5 text-xs rounded font-medium ${
                                 emp.onboardingStatus === 'verified'
-                                  ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                                  ? 'bg-blue-50  text-blue-600 '
+                                  : 'bg-slate-100  text-slate-600 '
                               }`}
                             >
                               {emp.onboardingStatus}
@@ -570,7 +570,7 @@ const AdminHR = () => {
                             {emp.onboardingStatus !== 'verified' && (
                               <button
                                 onClick={() => handleVerifyOnboarding(emp._id)}
-                                className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-xs rounded transition-colors"
+                                className="px-2 py-1 bg-blue-50 hover text-blue-700 text-xs rounded transition-colors"
                               >
                                 Verify
                               </button>
@@ -578,7 +578,7 @@ const AdminHR = () => {
                             {emp.employmentStatus === 'probation' && (
                               <button
                                 onClick={() => handleConfirmProbation(emp._id)}
-                                className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 text-xs rounded transition-colors"
+                                className="px-2 py-1 bg-emerald-50 hover text-emerald-700 text-xs rounded transition-colors"
                               >
                                 Confirm
                               </button>
@@ -605,7 +605,7 @@ const AdminHR = () => {
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors ${
                         leaveStatusFilter === st
                           ? 'bg-indigo-600 text-white'
-                          : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                          : 'bg-white  border border-slate-200  text-slate-600 '
                       }`}
                     >
                       {st}
@@ -615,7 +615,7 @@ const AdminHR = () => {
 
                 <button
                   onClick={() => setShowAddPolicyModal(true)}
-                  className="px-3 py-1.5 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white text-xs font-medium rounded-lg flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-slate-800 hover text-white text-xs font-medium rounded-lg flex items-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   New Leave Policy
@@ -623,10 +623,10 @@ const AdminHR = () => {
               </div>
 
               {/* Leave Applications Table */}
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto shadow-sm">
+              <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
                 <table className="w-full text-left border-collapse text-sm">
                   <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-750 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                    <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
                       <th className="p-3 font-medium">App #</th>
                       <th className="p-3 font-medium">Employee</th>
                       <th className="p-3 font-medium">Leave Policy</th>
@@ -636,7 +636,7 @@ const AdminHR = () => {
                       <th className="p-3 font-medium text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200">
+                  <tbody className="divide-y divide-slate-100 text-slate-700">
                     {leaveApplications.length === 0 ? (
                       <tr>
                         <td colSpan="7" className="p-6 text-center text-slate-400">
@@ -645,10 +645,10 @@ const AdminHR = () => {
                       </tr>
                     ) : (
                       leaveApplications.map((app) => (
-                        <tr key={app._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                        <tr key={app._id} className="hover">
                           <td className="p-3 font-mono text-xs">{app.applicationNumber}</td>
                           <td className="p-3">
-                            <div className="font-medium text-slate-900 dark:text-white">
+                            <div className="font-medium text-slate-900">
                               {app.employee?.firstName} {app.employee?.lastName}
                             </div>
                             <div className="text-xs text-slate-400">{app.employee?.employeeId}</div>
@@ -663,10 +663,10 @@ const AdminHR = () => {
                             <span
                               className={`px-2 py-0.5 text-xs rounded font-medium ${
                                 app.status === 'approved'
-                                  ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                                  ? 'bg-emerald-50  text-emerald-600 '
                                   : app.status === 'pending'
-                                  ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
-                                  : 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'
+                                  ? 'bg-amber-50  text-amber-600 '
+                                  : 'bg-rose-50  text-rose-600 '
                               }`}
                             >
                               {app.status}
@@ -679,7 +679,7 @@ const AdminHR = () => {
                                   setSelectedLeave(app);
                                   setShowReviewLeaveModal(true);
                                 }}
-                                className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 text-xs font-medium rounded transition-colors"
+                                className="px-3 py-1 bg-indigo-50 hover text-indigo-700 text-xs font-medium rounded transition-colors"
                               >
                                 Review
                               </button>
@@ -693,26 +693,26 @@ const AdminHR = () => {
               </div>
 
               {/* Active Leave Policies Section */}
-              <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-3">Institutional Leave Policies</h3>
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-3">Institutional Leave Policies</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {leavePolicies.map((pol) => (
                     <div
                       key={pol._id}
-                      className="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-750"
+                      className="p-4 rounded-lg border border-slate-200 bg-slate-50"
                     >
                       <div className="flex justify-between items-start">
-                        <span className="font-semibold text-slate-900 dark:text-white">{pol.name}</span>
-                        <span className="text-xs font-mono bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">
+                        <span className="font-semibold text-slate-900">{pol.name}</span>
+                        <span className="text-xs font-mono bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">
                           {pol.code}
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 mt-1">{pol.description || 'Institutional leave benefit'}</p>
-                      <div className="mt-3 flex justify-between text-xs text-slate-600 dark:text-slate-300">
+                      <div className="mt-3 flex justify-between text-xs text-slate-600">
                         <span>Annual Quota:</span>
                         <span className="font-semibold">{pol.annualEntitlement} days</span>
                       </div>
-                      <div className="flex justify-between text-xs text-slate-600 dark:text-slate-300 mt-1">
+                      <div className="flex justify-between text-xs text-slate-600 mt-1">
                         <span>Max Consecutive:</span>
                         <span>{pol.maxConsecutiveDays} days</span>
                       </div>
@@ -731,17 +731,17 @@ const AdminHR = () => {
                   type="date"
                   value={rosterDate}
                   onChange={(e) => setRosterDate(e.target.value)}
-                  className="px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900"
                 />
                 <span className="text-xs text-slate-500">
                   Showing recorded attendance and approved leave sync for selected date
                 </span>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto shadow-sm">
+              <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
                 <table className="w-full text-left border-collapse text-sm">
                   <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-750 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                    <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
                       <th className="p-3 font-medium">Employee</th>
                       <th className="p-3 font-medium">Department</th>
                       <th className="p-3 font-medium">Check-In</th>
@@ -751,7 +751,7 @@ const AdminHR = () => {
                       <th className="p-3 font-medium text-right">Correct</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-200">
+                  <tbody className="divide-y divide-slate-100 text-slate-700">
                     {attendanceRoster.length === 0 ? (
                       <tr>
                         <td colSpan="7" className="p-6 text-center text-slate-400">
@@ -760,9 +760,9 @@ const AdminHR = () => {
                       </tr>
                     ) : (
                       attendanceRoster.map((att) => (
-                        <tr key={att._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                        <tr key={att._id} className="hover">
                           <td className="p-3">
-                            <div className="font-medium text-slate-900 dark:text-white">
+                            <div className="font-medium text-slate-900">
                               {att.employee?.firstName} {att.employee?.lastName}
                             </div>
                             <div className="text-xs text-slate-400">{att.employee?.employeeId}</div>
@@ -779,12 +779,12 @@ const AdminHR = () => {
                             <span
                               className={`px-2 py-0.5 text-xs rounded font-medium ${
                                 att.status === 'present'
-                                  ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                                  ? 'bg-emerald-50  text-emerald-600 '
                                   : att.status === 'late'
-                                  ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                                  ? 'bg-amber-50  text-amber-600 '
                                   : att.status === 'on_leave'
-                                  ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                                  : 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'
+                                  ? 'bg-blue-50  text-blue-600 '
+                                  : 'bg-rose-50  text-rose-600 '
                               }`}
                             >
                               {att.status?.replace(/_/g, ' ')}
@@ -797,7 +797,7 @@ const AdminHR = () => {
                                 setCorrectionData({ status: att.status, reason: '' });
                                 setShowAttendanceCorrectionModal(true);
                               }}
-                              className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 text-xs rounded flex items-center gap-1 ml-auto"
+                              className="px-2 py-1 bg-slate-100 hover text-slate-700 text-xs rounded flex items-center gap-1 ml-auto"
                             >
                               <Edit className="w-3 h-3" />
                               Correct
@@ -819,7 +819,7 @@ const AdminHR = () => {
                 <p className="text-sm text-slate-500">Official HR notifications, policy updates, and staff circulars.</p>
                 <button
                   onClick={() => setShowAnnouncementModal(true)}
-                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-indigo-600 hover text-white text-xs font-medium rounded-lg flex items-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Publish Announcement
@@ -830,22 +830,22 @@ const AdminHR = () => {
                 {announcements.map((ann) => (
                   <div
                     key={ann._id}
-                    className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+                    className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm"
                   >
                     <div className="flex justify-between items-start">
-                      <h4 className="font-semibold text-slate-900 dark:text-white">{ann.title}</h4>
+                      <h4 className="font-semibold text-slate-900">{ann.title}</h4>
                       <span
                         className={`px-2 py-0.5 text-xs rounded font-medium uppercase ${
                           ann.priority === 'urgent'
-                            ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
-                            : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
+                            ? 'bg-rose-100 text-rose-700  '
+                            : 'bg-indigo-50 text-indigo-700  '
                         }`}
                       >
                         {ann.priority}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 whitespace-pre-line">{ann.content}</p>
-                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between text-xs text-slate-400">
+                    <p className="text-xs text-slate-500 mt-2 whitespace-pre-line">{ann.content}</p>
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between text-xs text-slate-400">
                       <span>Audience: {ann.targetAudience.replace(/_/g, ' ')}</span>
                       <span>{new Date(ann.publishDate).toLocaleDateString()}</span>
                     </div>
@@ -858,10 +858,10 @@ const AdminHR = () => {
           {/* MODAL: ADD EMPLOYEE */}
           {showAddEmpModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-lg text-slate-900 dark:text-white">Add Institutional Employee</h3>
-                  <button onClick={() => setShowAddEmpModal(false)} className="text-slate-400 hover:text-slate-600">
+                  <h3 className="font-bold text-lg text-slate-900">Add Institutional Employee</h3>
+                  <button onClick={() => setShowAddEmpModal(false)} className="text-slate-400 hover">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -869,45 +869,45 @@ const AdminHR = () => {
                 <form onSubmit={handleCreateEmployee} className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">First Name *</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">First Name *</label>
                       <input
                         type="text"
                         required
                         value={newEmp.firstName}
                         onChange={(e) => setNewEmp({ ...newEmp, firstName: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Last Name *</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Last Name *</label>
                       <input
                         type="text"
                         required
                         value={newEmp.lastName}
                         onChange={(e) => setNewEmp({ ...newEmp, lastName: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Official Email *</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Official Email *</label>
                     <input
                       type="email"
                       required
                       value={newEmp.officialEmail}
                       onChange={(e) => setNewEmp({ ...newEmp, officialEmail: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                      className="w-full px-3 py-2 border rounded-lg text-sm"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Category *</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Category *</label>
                       <select
                         value={newEmp.employeeCategory}
                         onChange={(e) => setNewEmp({ ...newEmp, employeeCategory: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
                       >
                         <option value="teaching_faculty">Teaching Faculty</option>
                         <option value="non_teaching_staff">Non-Teaching Staff</option>
@@ -917,25 +917,25 @@ const AdminHR = () => {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Joining Date *</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Joining Date *</label>
                       <input
                         type="date"
                         required
                         value={newEmp.joiningDate}
                         onChange={(e) => setNewEmp({ ...newEmp, joiningDate: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Department *</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Department *</label>
                       <select
                         required
                         value={newEmp.department}
                         onChange={(e) => setNewEmp({ ...newEmp, department: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
                       >
                         <option value="">Select Department</option>
                         {departments.map((d) => (
@@ -947,12 +947,12 @@ const AdminHR = () => {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Designation *</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Designation *</label>
                       <select
                         required
                         value={newEmp.designation}
                         onChange={(e) => setNewEmp({ ...newEmp, designation: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
                       >
                         <option value="">Select Designation</option>
                         {designations.map((des) => (
@@ -964,17 +964,17 @@ const AdminHR = () => {
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-4 border-t dark:border-slate-700">
+                  <div className="flex justify-end gap-2 pt-4 border-t">
                     <button
                       type="button"
                       onClick={() => setShowAddEmpModal(false)}
-                      className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300"
+                      className="px-4 py-2 text-sm text-slate-600"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg"
+                      className="px-4 py-2 bg-indigo-600 hover text-white text-sm font-medium rounded-lg"
                     >
                       Create Employee
                     </button>
@@ -987,15 +987,15 @@ const AdminHR = () => {
           {/* MODAL: REVIEW LEAVE */}
           {showReviewLeaveModal && selectedLeave && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl">
+              <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-lg text-slate-900 dark:text-white">Review Leave Application</h3>
-                  <button onClick={() => setShowReviewLeaveModal(false)} className="text-slate-400 hover:text-slate-600">
+                  <h3 className="font-bold text-lg text-slate-900">Review Leave Application</h3>
+                  <button onClick={() => setShowReviewLeaveModal(false)} className="text-slate-400 hover">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-750 p-3 rounded-lg text-xs space-y-1 mb-4">
+                <div className="bg-slate-50 p-3 rounded-lg text-xs space-y-1 mb-4">
                   <div>
                     <span className="font-semibold">Applicant:</span> {selectedLeave.employee?.firstName}{' '}
                     {selectedLeave.employee?.lastName} ({selectedLeave.employee?.employeeId})
@@ -1012,7 +1012,7 @@ const AdminHR = () => {
 
                 <form onSubmit={handleReviewLeave} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Decision</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Decision</label>
                     <div className="flex gap-4">
                       <label className="flex items-center gap-2 text-sm">
                         <input
@@ -1038,7 +1038,7 @@ const AdminHR = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
                       {reviewAction === 'approve' ? 'Comments (Optional)' : 'Rejection Reason *'}
                     </label>
                     <textarea
@@ -1047,22 +1047,22 @@ const AdminHR = () => {
                       onChange={(e) => setReviewComments(e.target.value)}
                       placeholder={reviewAction === 'approve' ? 'Approved by HR' : 'Provide clear justification...'}
                       rows="3"
-                      className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                      className="w-full px-3 py-2 border rounded-lg text-sm"
                     />
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-3 border-t dark:border-slate-700">
+                  <div className="flex justify-end gap-2 pt-3 border-t">
                     <button
                       type="button"
                       onClick={() => setShowReviewLeaveModal(false)}
-                      className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300"
+                      className="px-4 py-2 text-sm text-slate-600"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       className={`px-4 py-2 text-white text-sm font-medium rounded-lg ${
-                        reviewAction === 'approve' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'
+                        reviewAction === 'approve' ? 'bg-emerald-600 hover' : 'bg-rose-600 hover'
                       }`}
                     >
                       Confirm {reviewAction === 'approve' ? 'Approval' : 'Rejection'}
@@ -1076,12 +1076,12 @@ const AdminHR = () => {
           {/* MODAL: ATTENDANCE CORRECTION */}
           {showAttendanceCorrectionModal && selectedAttendance && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl">
+              <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-lg text-slate-900 dark:text-white">Audit-Logged Attendance Correction</h3>
+                  <h3 className="font-bold text-lg text-slate-900">Audit-Logged Attendance Correction</h3>
                   <button
                     onClick={() => setShowAttendanceCorrectionModal(false)}
-                    className="text-slate-400 hover:text-slate-600"
+                    className="text-slate-400 hover"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -1089,11 +1089,11 @@ const AdminHR = () => {
 
                 <form onSubmit={handleCorrectAttendance} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">New Status</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">New Status</label>
                     <select
                       value={correctionData.status}
                       onChange={(e) => setCorrectionData({ ...correctionData, status: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                      className="w-full px-3 py-2 border rounded-lg text-sm"
                     >
                       <option value="present">Present</option>
                       <option value="late">Late</option>
@@ -1104,7 +1104,7 @@ const AdminHR = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
                       Mandatory Audit Reason *
                     </label>
                     <textarea
@@ -1113,21 +1113,21 @@ const AdminHR = () => {
                       value={correctionData.reason}
                       onChange={(e) => setCorrectionData({ ...correctionData, reason: e.target.value })}
                       rows="3"
-                      className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                      className="w-full px-3 py-2 border rounded-lg text-sm"
                     />
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-3 border-t dark:border-slate-700">
+                  <div className="flex justify-end gap-2 pt-3 border-t">
                     <button
                       type="button"
                       onClick={() => setShowAttendanceCorrectionModal(false)}
-                      className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300"
+                      className="px-4 py-2 text-sm text-slate-600"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg"
+                      className="px-4 py-2 bg-indigo-600 hover text-white text-sm font-medium rounded-lg"
                     >
                       Save Correction
                     </button>
@@ -1140,44 +1140,44 @@ const AdminHR = () => {
           {/* MODAL: PUBLISH ANNOUNCEMENT */}
           {showAnnouncementModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl">
+              <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-lg text-slate-900 dark:text-white">Publish HR Announcement</h3>
-                  <button onClick={() => setShowAnnouncementModal(false)} className="text-slate-400 hover:text-slate-600">
+                  <h3 className="font-bold text-lg text-slate-900">Publish HR Announcement</h3>
+                  <button onClick={() => setShowAnnouncementModal(false)} className="text-slate-400 hover">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
                 <form onSubmit={handleCreateAnnouncement} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Title *</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Title *</label>
                     <input
                       type="text"
                       required
                       value={newAnnouncement.title}
                       onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                      className="w-full px-3 py-2 border rounded-lg text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Content *</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Content *</label>
                     <textarea
                       required
                       rows="4"
                       value={newAnnouncement.content}
                       onChange={(e) => setNewAnnouncement({ ...newAnnouncement, content: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                      className="w-full px-3 py-2 border rounded-lg text-sm"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Target Audience</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Target Audience</label>
                       <select
                         value={newAnnouncement.targetAudience}
                         onChange={(e) => setNewAnnouncement({ ...newAnnouncement, targetAudience: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
                       >
                         <option value="all">All Personnel</option>
                         <option value="teaching_faculty">Teaching Faculty</option>
@@ -1186,11 +1186,11 @@ const AdminHR = () => {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Priority</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Priority</label>
                       <select
                         value={newAnnouncement.priority}
                         onChange={(e) => setNewAnnouncement({ ...newAnnouncement, priority: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
                       >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -1200,17 +1200,17 @@ const AdminHR = () => {
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-3 border-t dark:border-slate-700">
+                  <div className="flex justify-end gap-2 pt-3 border-t">
                     <button
                       type="button"
                       onClick={() => setShowAnnouncementModal(false)}
-                      className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300"
+                      className="px-4 py-2 text-sm text-slate-600"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg"
+                      className="px-4 py-2 bg-indigo-600 hover text-white text-sm font-medium rounded-lg"
                     >
                       Publish
                     </button>

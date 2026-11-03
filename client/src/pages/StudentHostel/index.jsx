@@ -535,7 +535,7 @@ const StudentHostel = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {overview.applications.map((app) => (
-                          <tr key={app._id} className="hover:bg-gray-50">
+                          <tr key={app._id} className="hover">
                             <td className="py-3 px-4 font-mono font-medium text-blue-600">
                               {app.applicationNumber}
                             </td>
@@ -627,7 +627,7 @@ const StudentHostel = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {overview.transferRequests.map((tr) => (
-                          <tr key={tr._id} className="hover:bg-gray-50">
+                          <tr key={tr._id} className="hover">
                             <td className="py-3 px-4 font-mono font-medium text-blue-600">{tr.requestNumber}</td>
                             <td className="py-3 px-4 text-xs text-gray-500">
                               {new Date(tr.createdAt).toLocaleDateString()}
@@ -701,7 +701,7 @@ const StudentHostel = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {overview.complaints.map((c) => (
-                          <tr key={c._id} className="hover:bg-gray-50">
+                          <tr key={c._id} className="hover">
                             <td className="py-3 px-4 text-xs text-gray-500">
                               {new Date(c.createdAt).toLocaleDateString()}
                             </td>
@@ -829,7 +829,7 @@ const StudentHostel = () => {
                   <button
                     type="button"
                     onClick={() => setShowApplyModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover"
                   >
                     <X size={20} />
                   </button>
@@ -966,7 +966,7 @@ const StudentHostel = () => {
                   <button
                     type="button"
                     onClick={() => setShowTransferModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover"
                   >
                     <X size={20} />
                   </button>
@@ -1034,7 +1034,7 @@ const StudentHostel = () => {
                   <button
                     type="button"
                     onClick={() => setShowComplaintModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover"
                   >
                     <X size={20} />
                   </button>

@@ -407,19 +407,19 @@ const AdminActivities = () => {
                 <Calendar className="w-7 h-7 text-purple-400" />
                 <span>Events & Student Activities Administration</span>
               </h1>
-              <p className="text-xs text-slate-400">Institutional event governance, clubs, venue bookings, attendance, and certificates.</p>
+              <p className="text-xs text-slate-500">Institutional event governance, clubs, venue bookings, attendance, and certificates.</p>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowCreateEventModal(true)}
-                className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium rounded-xl flex items-center gap-1.5 transition-colors shadow-sm"
+                className="px-3.5 py-2 bg-purple-600 hover text-white text-xs font-medium rounded-xl flex items-center gap-1.5 transition-colors shadow-sm"
               >
                 <Plus className="w-4 h-4" /> Add Event
               </button>
               <button
                 onClick={() => setShowCreateClubModal(true)}
-                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-xl flex items-center gap-1.5 transition-colors shadow-sm"
+                className="px-3.5 py-2 bg-indigo-600 hover text-white text-xs font-medium rounded-xl flex items-center gap-1.5 transition-colors shadow-sm"
               >
                 <Plus className="w-4 h-4" /> Add Club
               </button>
@@ -428,27 +428,27 @@ const AdminActivities = () => {
 
           {/* Metric Cards Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-slate-800/80 border border-slate-700/80 p-4 rounded-xl space-y-1">
-              <span className="text-xs text-slate-400 font-medium">Total Events</span>
+            <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
+              <span className="text-xs text-slate-500 font-medium">Total Events</span>
               <div className="text-2xl font-bold text-white">{metrics.totalEvents}</div>
               <div className="text-[11px] text-purple-400">{metrics.publishedEvents} Published / Active</div>
             </div>
-            <div className="bg-slate-800/80 border border-slate-700/80 p-4 rounded-xl space-y-1">
-              <span className="text-xs text-slate-400 font-medium">Pending Approvals</span>
+            <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
+              <span className="text-xs text-slate-500 font-medium">Pending Approvals</span>
               <div className="text-2xl font-bold text-amber-400">{metrics.pendingApprovals}</div>
-              <div className="text-[11px] text-slate-400">Awaiting faculty review</div>
+              <div className="text-[11px] text-slate-500">Awaiting faculty review</div>
             </div>
-            <div className="bg-slate-800/80 border border-slate-700/80 p-4 rounded-xl space-y-1">
-              <span className="text-xs text-slate-400 font-medium">Registrations</span>
+            <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
+              <span className="text-xs text-slate-500 font-medium">Registrations</span>
               <div className="text-2xl font-bold text-emerald-400">{metrics.totalRegistrations}</div>
-              <div className="text-[11px] text-slate-400">
+              <div className="text-[11px] text-slate-500">
                 {metrics.confirmedParticipants} Confirmed · {metrics.waitlistedParticipants} Waitlisted
               </div>
             </div>
-            <div className="bg-slate-800/80 border border-slate-700/80 p-4 rounded-xl space-y-1">
-              <span className="text-xs text-slate-400 font-medium">Certificates Issued</span>
+            <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-1">
+              <span className="text-xs text-slate-500 font-medium">Certificates Issued</span>
               <div className="text-2xl font-bold text-blue-400">{metrics.certificatesIssued}</div>
-              <div className="text-[11px] text-slate-400">{metrics.activeClubs} Active Clubs</div>
+              <div className="text-[11px] text-slate-500">{metrics.activeClubs} Active Clubs</div>
             </div>
           </div>
 
@@ -470,7 +470,7 @@ const AdminActivities = () => {
                   className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all ${
                     isActive
                       ? 'border-purple-500 text-purple-400 bg-purple-500/10 rounded-t-lg'
-                      : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                      : 'border-transparent text-slate-500 hover hover'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -478,7 +478,7 @@ const AdminActivities = () => {
                   {tab.count !== undefined && (
                     <span
                       className={`ml-1 text-xs px-2 py-0.5 rounded-full ${
-                        isActive ? 'bg-purple-500/30 text-purple-300' : 'bg-slate-800 text-slate-400'
+                        isActive ? 'bg-purple-500/30 text-purple-300' : 'bg-white text-slate-500'
                       }`}
                     >
                       {tab.count}
@@ -498,10 +498,10 @@ const AdminActivities = () => {
               {/* TAB 1: EVENTS DIRECTORY */}
               {activeTab === 'events' && (
                 <div className="space-y-4">
-                  <div className="bg-slate-800/80 border border-slate-700 rounded-2xl overflow-hidden shadow-lg">
+                  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-lg">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs text-slate-300">
-                        <thead className="bg-slate-900/60 uppercase font-mono text-[11px] text-slate-400 border-b border-slate-700">
+                      <table className="w-full text-left text-xs text-slate-700">
+                        <thead className="bg-slate-50 uppercase font-mono text-[11px] text-slate-500 border-b border-slate-200">
                           <tr>
                             <th className="px-4 py-3">Code</th>
                             <th className="px-4 py-3">Event Title</th>
@@ -514,13 +514,13 @@ const AdminActivities = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-800">
                           {events.map((ev) => (
-                            <tr key={ev._id} className="hover:bg-slate-800/40">
+                            <tr key={ev._id} className="hover">
                               <td className="px-4 py-3 font-mono text-purple-400">{ev.eventCode}</td>
                               <td className="px-4 py-3">
                                 <div className="font-semibold text-white">{ev.title}</div>
-                                <div className="text-[11px] text-slate-400">{ev.venueName || ev.location}</div>
+                                <div className="text-[11px] text-slate-500">{ev.venueName || ev.location}</div>
                               </td>
-                              <td className="px-4 py-3 uppercase text-[10px] font-mono text-slate-300">{ev.category}</td>
+                              <td className="px-4 py-3 uppercase text-[10px] font-mono text-slate-700">{ev.category}</td>
                               <td className="px-4 py-3">
                                 <div>{new Date(ev.startDate).toLocaleDateString()}</div>
                                 <div className="text-[10px] text-slate-500">
@@ -544,7 +544,7 @@ const AdminActivities = () => {
                                       ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                                       : ev.status === 'cancelled'
                                       ? 'bg-red-500/20 text-red-300 border border-red-500/30'
-                                      : 'bg-slate-700 text-slate-300'
+                                      : 'bg-slate-100 text-slate-700'
                                   }`}
                                 >
                                   {ev.status}
@@ -554,7 +554,7 @@ const AdminActivities = () => {
                                 {ev.status === 'draft' && (
                                   <button
                                     onClick={() => handleSubmitApproval(ev._id)}
-                                    className="px-2 py-1 text-[11px] bg-slate-700 hover:bg-slate-600 text-slate-200 rounded"
+                                    className="px-2 py-1 text-[11px] bg-slate-100 hover text-slate-900 rounded"
                                   >
                                     Submit
                                   </button>
@@ -563,7 +563,7 @@ const AdminActivities = () => {
                                   <>
                                     <button
                                       onClick={() => handleApproveEvent(ev._id)}
-                                      className="px-2 py-1 text-[11px] bg-emerald-600 hover:bg-emerald-500 text-white rounded"
+                                      className="px-2 py-1 text-[11px] bg-emerald-600 hover text-white rounded"
                                     >
                                       Approve
                                     </button>
@@ -572,7 +572,7 @@ const AdminActivities = () => {
                                         setSelectedEventForAction(ev);
                                         setShowApprovalModal(true);
                                       }}
-                                      className="px-2 py-1 text-[11px] bg-red-600 hover:bg-red-500 text-white rounded"
+                                      className="px-2 py-1 text-[11px] bg-red-600 hover text-white rounded"
                                     >
                                       Reject
                                     </button>
@@ -581,7 +581,7 @@ const AdminActivities = () => {
                                 {['approved', 'draft'].includes(ev.status) && (
                                   <button
                                     onClick={() => handlePublishEvent(ev._id)}
-                                    className="px-2 py-1 text-[11px] bg-purple-600 hover:bg-purple-500 text-white rounded"
+                                    className="px-2 py-1 text-[11px] bg-purple-600 hover text-white rounded"
                                   >
                                     Publish
                                   </button>
@@ -592,7 +592,7 @@ const AdminActivities = () => {
                                       setSelectedEventForAction(ev);
                                       setShowCancelEventModal(true);
                                     }}
-                                    className="px-2 py-1 text-[11px] text-red-400 hover:bg-red-500/10 rounded"
+                                    className="px-2 py-1 text-[11px] text-red-400 hover rounded"
                                   >
                                     Cancel
                                   </button>
@@ -600,7 +600,7 @@ const AdminActivities = () => {
                                 <a
                                   href={eventService.getParticipantsExportUrl(ev._id)}
                                   download
-                                  className="px-2 py-1 text-[11px] bg-slate-700 hover:bg-slate-600 text-slate-300 rounded inline-flex items-center gap-1"
+                                  className="px-2 py-1 text-[11px] bg-slate-100 hover text-slate-700 rounded inline-flex items-center gap-1"
                                 >
                                   <Download className="w-3 h-3" /> CSV
                                 </a>
@@ -618,12 +618,12 @@ const AdminActivities = () => {
               {activeTab === 'attendance' && (
                 <div className="space-y-4">
                   {/* Select Event Bar */}
-                  <div className="bg-slate-800/80 border border-slate-700 p-4 rounded-xl flex items-center gap-4">
-                    <label className="text-xs text-slate-400 font-medium">Select Event:</label>
+                  <div className="bg-white border border-slate-200 p-4 rounded-xl flex items-center gap-4">
+                    <label className="text-xs text-slate-500 font-medium">Select Event:</label>
                     <select
                       value={selectedEventId}
                       onChange={(e) => setSelectedEventId(e.target.value)}
-                      className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500 flex-1 max-w-md"
+                      className="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus flex-1 max-w-md"
                     >
                       {events.map((ev) => (
                         <option key={ev._id} value={ev._id}>
@@ -634,10 +634,10 @@ const AdminActivities = () => {
                   </div>
 
                   {/* Registrations & Attendance Table */}
-                  <div className="bg-slate-800/80 border border-slate-700 rounded-2xl overflow-hidden shadow-lg">
+                  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-lg">
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs text-slate-300">
-                        <thead className="bg-slate-900/60 uppercase font-mono text-[11px] text-slate-400 border-b border-slate-700">
+                      <table className="w-full text-left text-xs text-slate-700">
+                        <thead className="bg-slate-50 uppercase font-mono text-[11px] text-slate-500 border-b border-slate-200">
                           <tr>
                             <th className="px-4 py-3">Reg #</th>
                             <th className="px-4 py-3">Student Name</th>
@@ -657,7 +657,7 @@ const AdminActivities = () => {
                             const isPresent = attRecord?.status === 'present';
 
                             return (
-                              <tr key={reg._id} className="hover:bg-slate-800/40">
+                              <tr key={reg._id} className="hover">
                                 <td className="px-4 py-3 font-mono text-purple-400">{reg.registrationNumber}</td>
                                 <td className="px-4 py-3 font-semibold text-white">{student.fullName || 'N/A'}</td>
                                 <td className="px-4 py-3 font-mono">{student.rollNumber || 'N/A'}</td>
@@ -683,13 +683,13 @@ const AdminActivities = () => {
                                     <>
                                       <button
                                         onClick={() => handleMarkAttendance(student._id, reg._id, 'present')}
-                                        className="px-2 py-1 text-[11px] bg-emerald-600 hover:bg-emerald-500 text-white rounded"
+                                        className="px-2 py-1 text-[11px] bg-emerald-600 hover text-white rounded"
                                       >
                                         Present
                                       </button>
                                       <button
                                         onClick={() => handleMarkAttendance(student._id, reg._id, 'absent')}
-                                        className="px-2 py-1 text-[11px] bg-red-600 hover:bg-red-500 text-white rounded"
+                                        className="px-2 py-1 text-[11px] bg-red-600 hover text-white rounded"
                                       >
                                         Absent
                                       </button>
@@ -703,7 +703,7 @@ const AdminActivities = () => {
                                         });
                                         setShowCorrectAttendanceModal(true);
                                       }}
-                                      className="px-2 py-1 text-[11px] bg-slate-700 hover:bg-slate-600 text-slate-300 rounded"
+                                      className="px-2 py-1 text-[11px] bg-slate-100 hover text-slate-700 rounded"
                                     >
                                       Correct
                                     </button>
@@ -715,7 +715,7 @@ const AdminActivities = () => {
                                         setSelectedAttendeeForCert(student);
                                         setShowIssueCertModal(true);
                                       }}
-                                      className="px-2 py-1 text-[11px] bg-indigo-600 hover:bg-indigo-500 text-white rounded"
+                                      className="px-2 py-1 text-[11px] bg-indigo-600 hover text-white rounded"
                                     >
                                       Cert
                                     </button>
@@ -736,15 +736,15 @@ const AdminActivities = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {clubs.map((club) => (
-                      <div key={club._id} className="bg-slate-800/80 border border-slate-700 p-5 rounded-xl space-y-2">
+                      <div key={club._id} className="bg-white border border-slate-200 p-5 rounded-xl space-y-2">
                         <div className="flex justify-between items-start">
                           <h4 className="font-semibold text-white">{club.name}</h4>
                           <span className="text-[10px] font-mono uppercase bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded">
                             {club.code}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 line-clamp-2">{club.description}</p>
-                        <div className="pt-2 border-t border-slate-700/60 text-xs text-slate-300 flex justify-between">
+                        <p className="text-xs text-slate-500 line-clamp-2">{club.description}</p>
+                        <div className="pt-2 border-t border-slate-200/60 text-xs text-slate-700 flex justify-between">
                           <span>Members:</span>
                           <span className="font-mono">{club.activeMembersCount} / {club.membershipCapacity}</span>
                         </div>
@@ -760,13 +760,13 @@ const AdminActivities = () => {
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => setShowCreateVenueModal(true)}
-                      className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-white rounded-lg"
+                      className="px-3 py-1.5 text-xs bg-slate-100 hover text-white rounded-lg"
                     >
                       + Add Venue
                     </button>
                     <button
                       onClick={() => setShowBookVenueModal(true)}
-                      className="px-3 py-1.5 text-xs bg-purple-600 hover:bg-purple-500 text-white rounded-lg"
+                      className="px-3 py-1.5 text-xs bg-purple-600 hover text-white rounded-lg"
                     >
                       Book Venue
                     </button>
@@ -774,13 +774,13 @@ const AdminActivities = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {venues.map((v) => (
-                      <div key={v._id} className="bg-slate-800/80 border border-slate-700 p-4 rounded-xl space-y-1 text-xs">
+                      <div key={v._id} className="bg-white border border-slate-200 p-4 rounded-xl space-y-1 text-xs">
                         <div className="flex justify-between items-center">
                           <h4 className="font-semibold text-white text-sm">{v.name}</h4>
                           <span className="font-mono text-purple-400 text-[10px]">{v.code}</span>
                         </div>
-                        <div className="text-slate-400">{v.location}</div>
-                        <div className="text-slate-300 pt-1">Capacity: <span className="font-mono">{v.capacity} seats</span></div>
+                        <div className="text-slate-500">{v.location}</div>
+                        <div className="text-slate-700 pt-1">Capacity: <span className="font-mono">{v.capacity} seats</span></div>
                       </div>
                     ))}
                   </div>
@@ -793,7 +793,7 @@ const AdminActivities = () => {
                   <div className="flex justify-end">
                     <button
                       onClick={() => setShowCreateAnnouncementModal(true)}
-                      className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium rounded-xl flex items-center gap-1.5"
+                      className="px-3.5 py-2 bg-purple-600 hover text-white text-xs font-medium rounded-xl flex items-center gap-1.5"
                     >
                       <Plus className="w-4 h-4" /> Post Announcement
                     </button>
@@ -801,12 +801,12 @@ const AdminActivities = () => {
 
                   <div className="space-y-3">
                     {announcements.map((ann) => (
-                      <div key={ann._id} className="bg-slate-800/80 border border-slate-700 p-4 rounded-xl space-y-1 text-xs">
+                      <div key={ann._id} className="bg-white border border-slate-200 p-4 rounded-xl space-y-1 text-xs">
                         <div className="flex justify-between items-center">
                           <h4 className="font-semibold text-white text-sm">{ann.title}</h4>
-                          <span className="text-slate-400">{new Date(ann.publishDate).toLocaleDateString()}</span>
+                          <span className="text-slate-500">{new Date(ann.publishDate).toLocaleDateString()}</span>
                         </div>
-                        <p className="text-slate-300">{ann.content}</p>
+                        <p className="text-slate-700">{ann.content}</p>
                       </div>
                     ))}
                   </div>
@@ -818,36 +818,36 @@ const AdminActivities = () => {
           {/* MODAL: CREATE EVENT */}
           {showCreateEventModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+              <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
                 <h3 className="text-lg font-bold text-white">Create Campus Event</h3>
                 <form onSubmit={handleCreateEvent} className="space-y-3 text-xs">
                   <div>
-                    <label className="text-slate-400 block mb-1">Event Title</label>
+                    <label className="text-slate-500 block mb-1">Event Title</label>
                     <input
                       type="text"
                       required
                       value={newEvent.title}
                       onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                      className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-slate-400 block mb-1">Event Code (Unique)</label>
+                      <label className="text-slate-500 block mb-1">Event Code (Unique)</label>
                       <input
                         type="text"
                         required
                         value={newEvent.eventCode}
                         onChange={(e) => setNewEvent({ ...newEvent, eventCode: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 uppercase font-mono"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900 uppercase font-mono"
                       />
                     </div>
                     <div>
-                      <label className="text-slate-400 block mb-1">Category</label>
+                      <label className="text-slate-500 block mb-1">Category</label>
                       <select
                         value={newEvent.category}
                         onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                       >
                         <option value="technical">Technical</option>
                         <option value="cultural">Cultural</option>
@@ -860,77 +860,77 @@ const AdminActivities = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-slate-400 block mb-1">Description</label>
+                    <label className="text-slate-500 block mb-1">Description</label>
                     <textarea
                       rows={3}
                       required
                       value={newEvent.description}
                       onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                      className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-slate-400 block mb-1">Start Date & Time</label>
+                      <label className="text-slate-500 block mb-1">Start Date & Time</label>
                       <input
                         type="datetime-local"
                         required
                         value={newEvent.startDate}
                         onChange={(e) => setNewEvent({ ...newEvent, startDate: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="text-slate-400 block mb-1">End Date & Time</label>
+                      <label className="text-slate-500 block mb-1">End Date & Time</label>
                       <input
                         type="datetime-local"
                         required
                         value={newEvent.endDate}
                         onChange={(e) => setNewEvent({ ...newEvent, endDate: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-slate-400 block mb-1">Registration Opens</label>
+                      <label className="text-slate-500 block mb-1">Registration Opens</label>
                       <input
                         type="datetime-local"
                         required
                         value={newEvent.registrationOpeningDate}
                         onChange={(e) => setNewEvent({ ...newEvent, registrationOpeningDate: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="text-slate-400 block mb-1">Registration Closes</label>
+                      <label className="text-slate-500 block mb-1">Registration Closes</label>
                       <input
                         type="datetime-local"
                         required
                         value={newEvent.registrationClosingDate}
                         onChange={(e) => setNewEvent({ ...newEvent, registrationClosingDate: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-slate-400 block mb-1">Max Capacity</label>
+                      <label className="text-slate-500 block mb-1">Max Capacity</label>
                       <input
                         type="number"
                         min="1"
                         required
                         value={newEvent.maxParticipants}
                         onChange={(e) => setNewEvent({ ...newEvent, maxParticipants: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="text-slate-400 block mb-1">Venue (Optional)</label>
+                      <label className="text-slate-500 block mb-1">Venue (Optional)</label>
                       <select
                         value={newEvent.venue}
                         onChange={(e) => setNewEvent({ ...newEvent, venue: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                       >
                         <option value="">Select Venue...</option>
                         {venues.map((v) => (
@@ -946,13 +946,13 @@ const AdminActivities = () => {
                     <button
                       type="button"
                       onClick={() => setShowCreateEventModal(false)}
-                      className="px-3 py-1.5 bg-slate-700 text-slate-200 rounded-lg"
+                      className="px-3 py-1.5 bg-slate-100 text-slate-900 rounded-lg"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium"
+                      className="px-4 py-1.5 bg-purple-600 hover text-white rounded-lg font-medium"
                     >
                       Save Event
                     </button>
@@ -965,36 +965,36 @@ const AdminActivities = () => {
           {/* MODAL: CREATE CLUB */}
           {showCreateClubModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
                 <h3 className="text-lg font-bold text-white">Add Student Club</h3>
                 <form onSubmit={handleCreateClub} className="space-y-3 text-xs">
                   <div>
-                    <label className="text-slate-400 block mb-1">Club Name</label>
+                    <label className="text-slate-500 block mb-1">Club Name</label>
                     <input
                       type="text"
                       required
                       value={newClub.name}
                       onChange={(e) => setNewClub({ ...newClub, name: e.target.value })}
-                      className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-slate-400 block mb-1">Club Code</label>
+                      <label className="text-slate-500 block mb-1">Club Code</label>
                       <input
                         type="text"
                         required
                         value={newClub.code}
                         onChange={(e) => setNewClub({ ...newClub, code: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 font-mono uppercase"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900 font-mono uppercase"
                       />
                     </div>
                     <div>
-                      <label className="text-slate-400 block mb-1">Category</label>
+                      <label className="text-slate-500 block mb-1">Category</label>
                       <select
                         value={newClub.category}
                         onChange={(e) => setNewClub({ ...newClub, category: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                       >
                         <option value="technical">Technical</option>
                         <option value="robotics">Robotics</option>
@@ -1006,13 +1006,13 @@ const AdminActivities = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-slate-400 block mb-1">Description</label>
+                    <label className="text-slate-500 block mb-1">Description</label>
                     <textarea
                       rows={3}
                       required
                       value={newClub.description}
                       onChange={(e) => setNewClub({ ...newClub, description: e.target.value })}
-                      className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     />
                   </div>
 
@@ -1020,13 +1020,13 @@ const AdminActivities = () => {
                     <button
                       type="button"
                       onClick={() => setShowCreateClubModal(false)}
-                      className="px-3 py-1.5 bg-slate-700 text-slate-200 rounded-lg"
+                      className="px-3 py-1.5 bg-slate-100 text-slate-900 rounded-lg"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium"
+                      className="px-4 py-1.5 bg-indigo-600 hover text-white rounded-lg font-medium"
                     >
                       Save Club
                     </button>
@@ -1039,50 +1039,50 @@ const AdminActivities = () => {
           {/* MODAL: CREATE VENUE */}
           {showCreateVenueModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
                 <h3 className="text-lg font-bold text-white">Add Campus Venue</h3>
                 <form onSubmit={handleCreateVenue} className="space-y-3 text-xs">
                   <div>
-                    <label className="text-slate-400 block mb-1">Venue Name</label>
+                    <label className="text-slate-500 block mb-1">Venue Name</label>
                     <input
                       type="text"
                       required
                       value={newVenue.name}
                       onChange={(e) => setNewVenue({ ...newVenue, name: e.target.value })}
-                      className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-slate-400 block mb-1">Venue Code</label>
+                      <label className="text-slate-500 block mb-1">Venue Code</label>
                       <input
                         type="text"
                         required
                         value={newVenue.code}
                         onChange={(e) => setNewVenue({ ...newVenue, code: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 font-mono uppercase"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900 font-mono uppercase"
                       />
                     </div>
                     <div>
-                      <label className="text-slate-400 block mb-1">Capacity</label>
+                      <label className="text-slate-500 block mb-1">Capacity</label>
                       <input
                         type="number"
                         min="1"
                         required
                         value={newVenue.capacity}
                         onChange={(e) => setNewVenue({ ...newVenue, capacity: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-slate-400 block mb-1">Location / Building</label>
+                    <label className="text-slate-500 block mb-1">Location / Building</label>
                     <input
                       type="text"
                       required
                       value={newVenue.location}
                       onChange={(e) => setNewVenue({ ...newVenue, location: e.target.value })}
-                      className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     />
                   </div>
 
@@ -1090,13 +1090,13 @@ const AdminActivities = () => {
                     <button
                       type="button"
                       onClick={() => setShowCreateVenueModal(false)}
-                      className="px-3 py-1.5 bg-slate-700 text-slate-200 rounded-lg"
+                      className="px-3 py-1.5 bg-slate-100 text-slate-900 rounded-lg"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium"
+                      className="px-4 py-1.5 bg-purple-600 hover text-white rounded-lg font-medium"
                     >
                       Save Venue
                     </button>
@@ -1109,16 +1109,16 @@ const AdminActivities = () => {
           {/* MODAL: BOOK VENUE */}
           {showBookVenueModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
                 <h3 className="text-lg font-bold text-white">Book Venue for Event</h3>
                 <form onSubmit={handleBookVenue} className="space-y-3 text-xs">
                   <div>
-                    <label className="text-slate-400 block mb-1">Select Venue</label>
+                    <label className="text-slate-500 block mb-1">Select Venue</label>
                     <select
                       required
                       value={newBooking.venueId}
                       onChange={(e) => setNewBooking({ ...newBooking, venueId: e.target.value })}
-                      className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     >
                       <option value="">Select Venue...</option>
                       {venues.map((v) => (
@@ -1129,12 +1129,12 @@ const AdminActivities = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-slate-400 block mb-1">Select Event</label>
+                    <label className="text-slate-500 block mb-1">Select Event</label>
                     <select
                       required
                       value={newBooking.eventId}
                       onChange={(e) => setNewBooking({ ...newBooking, eventId: e.target.value })}
-                      className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     >
                       <option value="">Select Event...</option>
                       {events.map((ev) => (
@@ -1145,34 +1145,34 @@ const AdminActivities = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-slate-400 block mb-1">Booking Date</label>
+                    <label className="text-slate-500 block mb-1">Booking Date</label>
                     <input
                       type="date"
                       required
                       value={newBooking.bookingDate}
                       onChange={(e) => setNewBooking({ ...newBooking, bookingDate: e.target.value })}
-                      className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-slate-400 block mb-1">Start Time (HH:mm)</label>
+                      <label className="text-slate-500 block mb-1">Start Time (HH:mm)</label>
                       <input
                         type="time"
                         required
                         value={newBooking.startTime}
                         onChange={(e) => setNewBooking({ ...newBooking, startTime: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="text-slate-400 block mb-1">End Time (HH:mm)</label>
+                      <label className="text-slate-500 block mb-1">End Time (HH:mm)</label>
                       <input
                         type="time"
                         required
                         value={newBooking.endTime}
                         onChange={(e) => setNewBooking({ ...newBooking, endTime: e.target.value })}
-                        className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                       />
                     </div>
                   </div>
@@ -1181,13 +1181,13 @@ const AdminActivities = () => {
                     <button
                       type="button"
                       onClick={() => setShowBookVenueModal(false)}
-                      className="px-3 py-1.5 bg-slate-700 text-slate-200 rounded-lg"
+                      className="px-3 py-1.5 bg-slate-100 text-slate-900 rounded-lg"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium"
+                      className="px-4 py-1.5 bg-purple-600 hover text-white rounded-lg font-medium"
                     >
                       Confirm Booking
                     </button>
@@ -1200,9 +1200,9 @@ const AdminActivities = () => {
           {/* MODAL: REJECT EVENT */}
           {showApprovalModal && selectedEventForAction && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
                 <h3 className="text-lg font-bold text-white">Reject Event Proposal</h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Provide a mandatory reason for rejecting <span className="text-purple-400 font-semibold">{selectedEventForAction.title}</span>.
                 </p>
                 <textarea
@@ -1210,18 +1210,18 @@ const AdminActivities = () => {
                   placeholder="Reason for rejection (min 5 characters)..."
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
-                  className="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none"
+                  className="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none"
                 />
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     onClick={() => setShowApprovalModal(false)}
-                    className="px-3 py-1.5 bg-slate-700 text-slate-200 rounded-lg text-xs"
+                    className="px-3 py-1.5 bg-slate-100 text-slate-900 rounded-lg text-xs"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleConfirmReject}
-                    className="px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-medium"
+                    className="px-4 py-1.5 bg-red-600 hover text-white rounded-lg text-xs font-medium"
                   >
                     Confirm Rejection
                   </button>
@@ -1233,9 +1233,9 @@ const AdminActivities = () => {
           {/* MODAL: CANCEL EVENT */}
           {showCancelEventModal && selectedEventForAction && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
                 <h3 className="text-lg font-bold text-white">Cancel Event</h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Cancelling will release booked venues and notify all registered participants.
                 </p>
                 <textarea
@@ -1243,18 +1243,18 @@ const AdminActivities = () => {
                   placeholder="Reason for cancellation (min 5 characters)..."
                   value={cancellationReason}
                   onChange={(e) => setCancellationReason(e.target.value)}
-                  className="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none"
+                  className="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none"
                 />
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     onClick={() => setShowCancelEventModal(false)}
-                    className="px-3 py-1.5 bg-slate-700 text-slate-200 rounded-lg text-xs"
+                    className="px-3 py-1.5 bg-slate-100 text-slate-900 rounded-lg text-xs"
                   >
                     Abort
                   </button>
                   <button
                     onClick={handleConfirmCancelEvent}
-                    className="px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-medium"
+                    className="px-4 py-1.5 bg-red-600 hover text-white rounded-lg text-xs font-medium"
                   >
                     Cancel Event
                   </button>
@@ -1266,17 +1266,17 @@ const AdminActivities = () => {
           {/* MODAL: ISSUE CERTIFICATE */}
           {showIssueCertModal && selectedAttendeeForCert && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
                 <h3 className="text-lg font-bold text-white">Issue Verifiable Certificate</h3>
-                <p className="text-xs text-slate-300">
+                <p className="text-xs text-slate-700">
                   Recipient: <span className="font-semibold text-purple-400">{selectedAttendeeForCert.fullName}</span> ({selectedAttendeeForCert.rollNumber})
                 </p>
                 <div className="space-y-2 text-xs">
-                  <label className="text-slate-400 block">Certificate Honor Type</label>
+                  <label className="text-slate-500 block">Certificate Honor Type</label>
                   <select
                     value={certType}
                     onChange={(e) => setCertType(e.target.value)}
-                    className="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                    className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                   >
                     <option value="participation">Participation</option>
                     <option value="completion">Completion</option>
@@ -1289,13 +1289,13 @@ const AdminActivities = () => {
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     onClick={() => setShowIssueCertModal(false)}
-                    className="px-3 py-1.5 bg-slate-700 text-slate-200 rounded-lg text-xs"
+                    className="px-3 py-1.5 bg-slate-100 text-slate-900 rounded-lg text-xs"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleConfirmIssueCert}
-                    className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium"
+                    className="px-4 py-1.5 bg-indigo-600 hover text-white rounded-lg text-xs font-medium"
                   >
                     Issue Certificate
                   </button>
@@ -1307,9 +1307,9 @@ const AdminActivities = () => {
           {/* MODAL: CORRECT ATTENDANCE */}
           {showCorrectAttendanceModal && selectedRegForAction && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
                 <h3 className="text-lg font-bold text-white">Correct Attendance Status</h3>
-                <p className="text-xs text-slate-300">
+                <p className="text-xs text-slate-700">
                   Changing status to <span className="uppercase font-mono font-bold text-purple-400">{selectedRegForAction.newStatus}</span>.
                 </p>
                 <textarea
@@ -1317,18 +1317,18 @@ const AdminActivities = () => {
                   placeholder="Reason for correction (mandatory)..."
                   value={correctionReason}
                   onChange={(e) => setCorrectionReason(e.target.value)}
-                  className="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none"
+                  className="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none"
                 />
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     onClick={() => setShowCorrectAttendanceModal(false)}
-                    className="px-3 py-1.5 bg-slate-700 text-slate-200 rounded-lg text-xs"
+                    className="px-3 py-1.5 bg-slate-100 text-slate-900 rounded-lg text-xs"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleConfirmCorrectAttendance}
-                    className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-medium"
+                    className="px-4 py-1.5 bg-purple-600 hover text-white rounded-lg text-xs font-medium"
                   >
                     Save Correction
                   </button>

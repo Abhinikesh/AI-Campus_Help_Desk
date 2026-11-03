@@ -239,7 +239,7 @@ const StudentAssignments = () => {
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
                     filter === tab.id
                       ? 'bg-blue-600 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      : 'bg-slate-100 text-slate-600 hover'
                   }`}
                 >
                   {tab.label}
@@ -254,7 +254,7 @@ const StudentAssignments = () => {
                 placeholder="Search coursework..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full pl-9 pr-3.5 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus"
               />
             </div>
           </div>
@@ -278,7 +278,7 @@ const StudentAssignments = () => {
                 return (
                   <div
                     key={item._id}
-                    className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5 hover:border-slate-300 transition-all"
+                    className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5 hover transition-all"
                   >
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1 min-w-0">
@@ -339,7 +339,7 @@ const StudentAssignments = () => {
                         <button
                           type="button"
                           onClick={() => openSubmitDrawer(item)}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-all"
+                          className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover shadow-sm transition-all"
                         >
                           {sub ? 'View / Resubmit' : 'View & Submit'}
                         </button>
@@ -368,7 +368,7 @@ const StudentAssignments = () => {
                   <button
                     type="button"
                     onClick={() => setShowSubmitModal(false)}
-                    className="text-slate-400 hover:text-slate-600 p-1"
+                    className="text-slate-400 hover p-1"
                   >
                     <X size={20} />
                   </button>
@@ -401,7 +401,7 @@ const StudentAssignments = () => {
                                 key={att._id}
                                 type="button"
                                 onClick={() => handleDownloadAttachment(selectedAssignment._id, att)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-semibold transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover border border-blue-200 text-xs font-semibold transition-colors"
                               >
                                 <Download size={14} /> {att.name}
                               </button>
@@ -453,7 +453,7 @@ const StudentAssignments = () => {
                                   key={f._id}
                                   type="button"
                                   onClick={() => handleDownloadSubmissionFile(assignmentDetail.submission._id, f)}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded bg-white text-slate-700 border border-slate-200 hover"
                                 >
                                   <Download size={12} /> {f.name}
                                 </button>
@@ -477,7 +477,7 @@ const StudentAssignments = () => {
                             type="file"
                             multiple
                             onChange={(e) => setSubmissionFiles(Array.from(e.target.files))}
-                            className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                            className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file file file:font-semibold file file hover:file cursor-pointer"
                           />
                         </div>
 
@@ -490,7 +490,7 @@ const StudentAssignments = () => {
                             placeholder="Add any remarks or written answer text..."
                             value={studentText}
                             onChange={(e) => setStudentText(e.target.value)}
-                            className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                            className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus"
                           />
                         </div>
 
@@ -498,14 +498,14 @@ const StudentAssignments = () => {
                           <button
                             type="button"
                             onClick={() => setShowSubmitModal(false)}
-                            className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                            className="px-4 py-2 text-sm font-semibold text-slate-600 hover rounded-xl"
                           >
                             Cancel
                           </button>
                           <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition-all disabled:opacity-50"
+                            className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover rounded-xl shadow-sm transition-all disabled:opacity-50"
                           >
                             {isSubmitting
                               ? 'Uploading...'

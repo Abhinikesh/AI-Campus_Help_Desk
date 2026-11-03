@@ -324,7 +324,7 @@ const AdminPlacement = () => {
                 {tab.count !== undefined && (
                   <span
                     className={`text-xs px-2 py-0.5 rounded-full ${
-                      activeTab === tab.id ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-semibold' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                      activeTab === tab.id ? 'bg-indigo-100  text-indigo-600  font-semibold' : 'bg-slate-100  text-slate-500'
                     }`}
                   >
                     {tab.count}

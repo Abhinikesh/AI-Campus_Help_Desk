@@ -315,30 +315,30 @@ const AdminLibrary = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+              <h1 className="text-2xl md font-bold tracking-tight text-white flex items-center gap-3">
                 <Building2 className="w-8 h-8 text-indigo-400" />
                 Library Administration & Circulation Desk
               </h1>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-slate-500 mt-1">
                 Manage physical book inventory, circulation issue/return workflows, reservations, and fine records.
               </p>
             </div>
             <div className="flex flex-wrap gap-2.5">
               <button
                 onClick={() => handleExportCsv('inventory')}
-                className="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 rounded-lg text-xs font-semibold flex items-center gap-2 transition"
+                className="px-3.5 py-2 bg-gray-800 hover text-slate-800 border border-slate-200 rounded-lg text-xs font-semibold flex items-center gap-2 transition"
               >
-                <Download className="w-4 h-4 text-gray-400" /> Inventory CSV
+                <Download className="w-4 h-4 text-slate-500" /> Inventory CSV
               </button>
               <button
                 onClick={() => handleExportCsv('loans')}
-                className="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 rounded-lg text-xs font-semibold flex items-center gap-2 transition"
+                className="px-3.5 py-2 bg-gray-800 hover text-slate-800 border border-slate-200 rounded-lg text-xs font-semibold flex items-center gap-2 transition"
               >
-                <Download className="w-4 h-4 text-gray-400" /> Circulation CSV
+                <Download className="w-4 h-4 text-slate-500" /> Circulation CSV
               </button>
               <button
                 onClick={() => setShowAddBookModal(true)}
-                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-2 transition"
+                className="px-3.5 py-2 bg-indigo-600 hover text-white rounded-lg text-xs font-semibold flex items-center gap-2 transition"
               >
                 <PlusCircle className="w-4 h-4" /> Add Book Title
               </button>
@@ -348,41 +348,41 @@ const AdminLibrary = () => {
           {/* Metric Overview Cards */}
           {metrics && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Book Catalog Titles</p>
-                    <p className="text-2xl font-bold text-white mt-1">{metrics.totalBooks}</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Book Catalog Titles</p>
+                    <p className="text-2xl font-bold text-slate-900 mt-1">{metrics.totalBooks}</p>
                   </div>
                   <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
                     <BookOpen className="w-5 h-5" />
                   </div>
                 </div>
-                <div className="text-[11px] text-gray-400 mt-2 flex justify-between">
+                <div className="text-[11px] text-slate-500 mt-2 flex justify-between">
                   <span>Physical Copies: <b>{metrics.copyStats?.totalCopies || 0}</b></span>
                   <span className="text-emerald-400">Available: <b>{metrics.copyStats?.available || 0}</b></span>
                 </div>
               </div>
 
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Active Circulation Loans</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Active Circulation Loans</p>
                     <p className="text-2xl font-bold text-indigo-400 mt-1">{metrics.circulation?.activeLoansCount || 0}</p>
                   </div>
                   <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
                     <Clock className="w-5 h-5" />
                   </div>
                 </div>
-                <div className="text-[11px] text-gray-400 mt-2">
+                <div className="text-[11px] text-slate-500 mt-2">
                   <span>Copies currently checked out by students</span>
                 </div>
               </div>
 
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Overdue Book Loans</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Overdue Book Loans</p>
                     <p className={`text-2xl font-bold mt-1 ${metrics.circulation?.overdueLoansCount > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
                       {metrics.circulation?.overdueLoansCount || 0}
                     </p>
@@ -391,22 +391,22 @@ const AdminLibrary = () => {
                     <AlertTriangle className="w-5 h-5" />
                   </div>
                 </div>
-                <div className="text-[11px] text-gray-400 mt-2">
+                <div className="text-[11px] text-slate-500 mt-2">
                   <span>Subject to daily overdue fines</span>
                 </div>
               </div>
 
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Outstanding Fines</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Outstanding Fines</p>
                     <p className="text-2xl font-bold text-rose-400 mt-1">₹{metrics.fineStats?.pendingAmountInRupees?.toLocaleString() || 0}</p>
                   </div>
                   <div className="w-10 h-10 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400 border border-rose-500/20">
                     <Receipt className="w-5 h-5" />
                   </div>
                 </div>
-                <div className="text-[11px] text-gray-400 mt-2 flex justify-between">
+                <div className="text-[11px] text-slate-500 mt-2 flex justify-between">
                   <span>Pending: {metrics.fineStats?.pendingCount || 0}</span>
                   <span className="text-emerald-400">Collected: ₹{metrics.fineStats?.paidAmountInRupees || 0}</span>
                 </div>
@@ -415,13 +415,13 @@ const AdminLibrary = () => {
           )}
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-gray-800">
+          <div className="flex border-b border-slate-200">
             <button
               onClick={() => setActiveTab('desk')}
               className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === 'desk'
                   ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <RotateCw className="w-4 h-4" /> Issue / Return Desk
@@ -431,7 +431,7 @@ const AdminLibrary = () => {
               className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === 'catalog'
                   ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <BookOpen className="w-4 h-4" /> Book Catalog ({metrics?.totalBooks || 0})
@@ -441,7 +441,7 @@ const AdminLibrary = () => {
               className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === 'inventory'
                   ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <Layers className="w-4 h-4" /> Physical Copies ({metrics?.copyStats?.totalCopies || 0})
@@ -451,7 +451,7 @@ const AdminLibrary = () => {
               className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === 'fines'
                   ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <Receipt className="w-4 h-4" /> Fines & Penalties
@@ -461,7 +461,7 @@ const AdminLibrary = () => {
               className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === 'policy'
                   ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <Settings className="w-4 h-4" /> Circulation Policy
@@ -472,18 +472,18 @@ const AdminLibrary = () => {
           {activeTab === 'desk' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Issue Desk Form */}
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-5 shadow-sm">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-indigo-400" />
                   Issue Book to Student
                 </h3>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Enforces student eligibility, quota limits, and copy availability checks.
                 </p>
 
                 <form onSubmit={handleIssueBook} className="mt-5 space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
                       Student Roll Number / Login ID *
                     </label>
                     <input
@@ -492,12 +492,12 @@ const AdminLibrary = () => {
                       placeholder="e.g. CSE-2026-001"
                       value={issueForm.rollNumber}
                       onChange={(e) => setIssueForm({ ...issueForm, rollNumber: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-xs text-white uppercase font-mono focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 uppercase font-mono focus:outline-none focus"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
                       Physical Copy Accession Number *
                     </label>
                     <input
@@ -506,24 +506,24 @@ const AdminLibrary = () => {
                       placeholder="e.g. ACC-CS-001"
                       value={issueForm.accessionNumber}
                       onChange={(e) => setIssueForm({ ...issueForm, accessionNumber: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-xs text-white uppercase font-mono focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 uppercase font-mono focus:outline-none focus"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
                       Custom Due Date (Optional — defaults to 14 days)
                     </label>
                     <input
                       type="date"
                       value={issueForm.customDueDate}
                       onChange={(e) => setIssueForm({ ...issueForm, customDueDate: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
                       Librarian Notes (Optional)
                     </label>
                     <input
@@ -531,14 +531,14 @@ const AdminLibrary = () => {
                       placeholder="Special borrowing conditions..."
                       value={issueForm.notes}
                       onChange={(e) => setIssueForm({ ...issueForm, notes: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={actionLoading}
-                    className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-2 transition"
+                    className="w-full py-2.5 bg-indigo-600 hover text-white rounded-lg text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-2 transition"
                   >
                     <CheckCircle className="w-4 h-4" /> Issue Book & Generate Loan Record
                   </button>
@@ -546,18 +546,18 @@ const AdminLibrary = () => {
               </div>
 
               {/* Return Desk Form */}
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-5 shadow-sm">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <RotateCw className="w-5 h-5 text-emerald-400" />
                   Check-in / Return Book Copy
                 </h3>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Processes physical check-in, assesses condition, calculates overdue fines, and triggers reservation queues.
                 </p>
 
                 <form onSubmit={handleReturnBook} className="mt-5 space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
                       Physical Copy Accession Number *
                     </label>
                     <input
@@ -566,18 +566,18 @@ const AdminLibrary = () => {
                       placeholder="e.g. ACC-CS-001"
                       value={returnForm.accessionNumber}
                       onChange={(e) => setReturnForm({ ...returnForm, accessionNumber: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-xs text-white uppercase font-mono focus:outline-none focus:border-emerald-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 uppercase font-mono focus:outline-none focus"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
                       Physical Condition on Return *
                     </label>
                     <select
                       value={returnForm.condition}
                       onChange={(e) => setReturnForm({ ...returnForm, condition: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus"
                     >
                       <option value="good">Good / Normal Wear</option>
                       <option value="new">Like New</option>
@@ -598,13 +598,13 @@ const AdminLibrary = () => {
                         placeholder="e.g. 150"
                         value={returnForm.damageFee}
                         onChange={(e) => setReturnForm({ ...returnForm, damageFee: e.target.value })}
-                        className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-xs text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900"
                       />
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
                       Inspection Notes
                     </label>
                     <input
@@ -612,12 +612,12 @@ const AdminLibrary = () => {
                       placeholder="e.g. Missing dust jacket, torn page 42..."
                       value={returnForm.notes}
                       onChange={(e) => setReturnForm({ ...returnForm, notes: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus"
                     />
                   </div>
 
-                  <div className="p-3 bg-gray-900/60 border border-gray-800 rounded-lg text-xs text-gray-400">
-                    <p className="flex items-center gap-1.5 text-gray-300 font-semibold">
+                  <div className="p-3 bg-gray-900/60 border border-slate-200 rounded-lg text-xs text-slate-500">
+                    <p className="flex items-center gap-1.5 text-slate-600 font-semibold">
                       <ShieldCheck className="w-4 h-4 text-emerald-400" /> Automated Fair Queue Processing
                     </p>
                     <p className="mt-0.5 text-[11px]">
@@ -628,7 +628,7 @@ const AdminLibrary = () => {
                   <button
                     type="submit"
                     disabled={actionLoading}
-                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-2 transition"
+                    className="w-full py-2.5 bg-emerald-600 hover text-white rounded-lg text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-2 transition"
                   >
                     <CheckCheck className="w-4 h-4" /> Check-in Copy & Complete Return
                   </button>
@@ -640,7 +640,7 @@ const AdminLibrary = () => {
           {/* TAB 2: Book Catalog Management */}
           {activeTab === 'catalog' && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#131B2E] border border-gray-800 p-3.5 rounded-xl text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white border border-slate-200 p-3.5 rounded-xl text-xs">
                 <div className="relative">
                   <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-500" />
                   <input
@@ -648,7 +648,7 @@ const AdminLibrary = () => {
                     value={catalogSearch}
                     onChange={(e) => setCatalogSearch(e.target.value)}
                     placeholder="Search by title, author, ISBN..."
-                    className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 focus:outline-none focus"
                   />
                 </div>
 
@@ -656,7 +656,7 @@ const AdminLibrary = () => {
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus"
                   >
                     <option value="all">All Academic Categories</option>
                     <option value="Computer Science">Computer Science</option>
@@ -672,7 +672,7 @@ const AdminLibrary = () => {
                 <div className="flex justify-end items-center">
                   <button
                     onClick={loadLibraryData}
-                    className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium flex items-center gap-1.5 transition"
+                    className="px-3 py-2 bg-gray-800 hover text-slate-600 rounded-lg text-xs font-medium flex items-center gap-1.5 transition"
                   >
                     <RefreshCw className="w-3.5 h-3.5" /> Refresh Catalog
                   </button>
@@ -680,16 +680,16 @@ const AdminLibrary = () => {
               </div>
 
               {books.length === 0 ? (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-12 text-center text-gray-400">
+                <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500">
                   <BookOpen className="w-12 h-12 mx-auto text-gray-600 mb-3" />
-                  <p className="text-base font-semibold text-gray-200">No books found in catalog</p>
+                  <p className="text-base font-semibold text-slate-800">No books found in catalog</p>
                   <p className="text-sm text-gray-500 mt-1">Add book titles and register physical barcoded copies.</p>
                 </div>
               ) : (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl overflow-hidden">
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-gray-300">
-                      <thead className="bg-[#0B0F19] uppercase font-semibold text-gray-400 border-b border-gray-800">
+                    <table className="w-full text-left text-xs text-slate-600">
+                      <thead className="bg-slate-50 uppercase font-semibold text-slate-500 border-b border-slate-200">
                         <tr>
                           <th className="px-4 py-3">Book Title</th>
                           <th className="px-4 py-3">ISBN</th>
@@ -703,14 +703,14 @@ const AdminLibrary = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-800/60">
                         {books.map((b) => (
-                          <tr key={b._id} className="hover:bg-gray-800/30 transition">
+                          <tr key={b._id} className="hover transition">
                             <td className="px-4 py-3 font-semibold text-white">
                               {b.title}
                             </td>
-                            <td className="px-4 py-3 font-mono text-gray-400">
+                            <td className="px-4 py-3 font-mono text-slate-500">
                               {b.isbn || '—'}
                             </td>
-                            <td className="px-4 py-3 text-gray-300">
+                            <td className="px-4 py-3 text-slate-600">
                               {b.authors?.join(', ')}
                             </td>
                             <td className="px-4 py-3">
@@ -718,7 +718,7 @@ const AdminLibrary = () => {
                                 {b.category}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-gray-400">
+                            <td className="px-4 py-3 text-slate-500">
                               {b.shelfNumber ? `Shelf ${b.shelfNumber}` : b.location}
                             </td>
                             <td className="px-4 py-3 font-medium text-white">{b.totalCopies}</td>
@@ -729,7 +729,7 @@ const AdminLibrary = () => {
                                   setSelectedBookForCopy(b);
                                   setShowAddCopyModal(true);
                                 }}
-                                className="px-2.5 py-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded text-xs font-semibold"
+                                className="px-2.5 py-1 bg-indigo-600/20 hover text-indigo-300 border border-indigo-500/30 rounded text-xs font-semibold"
                               >
                                 + Add Copy
                               </button>
@@ -755,28 +755,28 @@ const AdminLibrary = () => {
                     value={inventorySearch}
                     onChange={(e) => setInventorySearch(e.target.value)}
                     placeholder="Search accession #, copy ID..."
-                    className="w-full bg-[#131B2E] border border-gray-800 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 focus:outline-none focus"
                   />
                 </div>
                 <button
                   onClick={loadLibraryData}
-                  className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium flex items-center gap-1.5 transition"
+                  className="px-3 py-1.5 bg-gray-800 hover text-slate-600 rounded-lg text-xs font-medium flex items-center gap-1.5 transition"
                 >
                   <RefreshCw className="w-3.5 h-3.5" /> Refresh
                 </button>
               </div>
 
               {copies.length === 0 ? (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-12 text-center text-gray-400">
+                <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500">
                   <Layers className="w-12 h-12 mx-auto text-gray-600 mb-3" />
-                  <p className="text-base font-semibold text-gray-200">No physical copies found</p>
+                  <p className="text-base font-semibold text-slate-800">No physical copies found</p>
                   <p className="text-sm text-gray-500 mt-1">Register physical copies under catalog titles.</p>
                 </div>
               ) : (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl overflow-hidden">
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-gray-300">
-                      <thead className="bg-[#0B0F19] uppercase font-semibold text-gray-400 border-b border-gray-800">
+                    <table className="w-full text-left text-xs text-slate-600">
+                      <thead className="bg-slate-50 uppercase font-semibold text-slate-500 border-b border-slate-200">
                         <tr>
                           <th className="px-4 py-3">Accession #</th>
                           <th className="px-4 py-3">Copy ID</th>
@@ -788,12 +788,12 @@ const AdminLibrary = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-800/60">
                         {copies.map((c) => (
-                          <tr key={c._id} className="hover:bg-gray-800/30 transition">
+                          <tr key={c._id} className="hover transition">
                             <td className="px-4 py-3 font-mono font-bold text-indigo-400">{c.accessionNumber}</td>
-                            <td className="px-4 py-3 font-mono text-gray-400">{c.copyId}</td>
+                            <td className="px-4 py-3 font-mono text-slate-500">{c.copyId}</td>
                             <td className="px-4 py-3 font-semibold text-white">{c.book?.title}</td>
-                            <td className="px-4 py-3 text-gray-400">{c.shelfLocation || 'Main Stack'}</td>
-                            <td className="px-4 py-3 uppercase text-gray-300">{c.condition}</td>
+                            <td className="px-4 py-3 text-slate-500">{c.shelfLocation || 'Main Stack'}</td>
+                            <td className="px-4 py-3 uppercase text-slate-600">{c.condition}</td>
                             <td className="px-4 py-3">
                               <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
                                 c.status === 'available'
@@ -821,27 +821,27 @@ const AdminLibrary = () => {
           {activeTab === 'fines' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-300">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">
                   Library Penalties & Overdue Fines Ledger
                 </h3>
                 <button
                   onClick={loadLibraryData}
-                  className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium flex items-center gap-1.5 transition"
+                  className="px-3 py-1.5 bg-gray-800 hover text-slate-600 rounded-lg text-xs font-medium flex items-center gap-1.5 transition"
                 >
                   <RefreshCw className="w-3.5 h-3.5" /> Refresh
                 </button>
               </div>
 
               {fines.length === 0 ? (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-12 text-center text-gray-400">
+                <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500">
                   <CheckCheck className="w-12 h-12 mx-auto text-emerald-500 mb-3" />
-                  <p className="text-base font-semibold text-gray-200">No library fines on record</p>
+                  <p className="text-base font-semibold text-slate-800">No library fines on record</p>
                 </div>
               ) : (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl overflow-hidden">
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-gray-300">
-                      <thead className="bg-[#0B0F19] uppercase font-semibold text-gray-400 border-b border-gray-800">
+                    <table className="w-full text-left text-xs text-slate-600">
+                      <thead className="bg-slate-50 uppercase font-semibold text-slate-500 border-b border-slate-200">
                         <tr>
                           <th className="px-4 py-3">Fine #</th>
                           <th className="px-4 py-3">Student</th>
@@ -855,18 +855,18 @@ const AdminLibrary = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-800/60">
                         {fines.map((f) => (
-                          <tr key={f._id} className="hover:bg-gray-800/30 transition">
+                          <tr key={f._id} className="hover transition">
                             <td className="px-4 py-3 font-mono font-medium text-indigo-400">{f.fineNumber}</td>
                             <td className="px-4 py-3">
                               <p className="font-semibold text-white">{f.student?.user?.name || 'Student'}</p>
-                              <p className="text-gray-400 text-[11px] font-mono">{f.student?.rollNumber}</p>
+                              <p className="text-slate-500 text-[11px] font-mono">{f.student?.rollNumber}</p>
                             </td>
-                            <td className="px-4 py-3 font-medium text-gray-200">{f.book?.title || 'Book Copy'}</td>
-                            <td className="px-4 py-3 uppercase text-gray-300">{f.fineType?.replace(/_/g, ' ')}</td>
+                            <td className="px-4 py-3 font-medium text-slate-800">{f.book?.title || 'Book Copy'}</td>
+                            <td className="px-4 py-3 uppercase text-slate-600">{f.fineType?.replace(/_/g, ' ')}</td>
                             <td className="px-4 py-3 font-bold text-rose-400 text-sm">
                               ₹{(f.amountInPaise / 100).toLocaleString()}
                             </td>
-                            <td className="px-4 py-3 text-gray-400">{f.reason}</td>
+                            <td className="px-4 py-3 text-slate-500">{f.reason}</td>
                             <td className="px-4 py-3">
                               <span className={`uppercase text-[10px] font-bold px-2 py-0.5 rounded ${
                                 f.status === 'paid'
@@ -883,7 +883,7 @@ const AdminLibrary = () => {
                                 <>
                                   <button
                                     onClick={() => handleWaiveFine(f._id)}
-                                    className="px-2.5 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded text-xs font-semibold"
+                                    className="px-2.5 py-1 bg-blue-600/20 hover text-blue-300 border border-blue-500/30 rounded text-xs font-semibold"
                                   >
                                     Waive
                                   </button>
@@ -895,7 +895,7 @@ const AdminLibrary = () => {
                                         loadLibraryData();
                                       }
                                     }}
-                                    className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold"
+                                    className="px-2.5 py-1 bg-emerald-600 hover text-white rounded text-xs font-semibold"
                                   >
                                     Mark Paid
                                   </button>
@@ -914,12 +914,12 @@ const AdminLibrary = () => {
 
           {/* TAB 5: Policy Settings */}
           {activeTab === 'policy' && (
-            <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-6 max-w-2xl shadow-sm">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 max-w-2xl shadow-sm">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <Settings className="w-5 h-5 text-indigo-400" />
                 Institutional Library Policy Settings
               </h3>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Configure loan quotas, checkout durations, renewal policies, and overdue fine rates.
               </p>
 
@@ -940,80 +940,80 @@ const AdminLibrary = () => {
               >
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-semibold text-gray-300 mb-1">Max Books per Student</label>
+                    <label className="block font-semibold text-slate-600 mb-1">Max Books per Student</label>
                     <input
                       type="number"
                       min="1"
                       max="10"
                       value={policyForm.maxBooksPerStudent}
                       onChange={(e) => setPolicyForm({ ...policyForm, maxBooksPerStudent: Number(e.target.value) })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-gray-300 mb-1">Standard Loan Duration (Days)</label>
+                    <label className="block font-semibold text-slate-600 mb-1">Standard Loan Duration (Days)</label>
                     <input
                       type="number"
                       min="1"
                       value={policyForm.loanDurationDays}
                       onChange={(e) => setPolicyForm({ ...policyForm, loanDurationDays: Number(e.target.value) })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-semibold text-gray-300 mb-1">Max Renewals Allowed</label>
+                    <label className="block font-semibold text-slate-600 mb-1">Max Renewals Allowed</label>
                     <input
                       type="number"
                       min="0"
                       value={policyForm.maxRenewals}
                       onChange={(e) => setPolicyForm({ ...policyForm, maxRenewals: Number(e.target.value) })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-gray-300 mb-1">Renewal Extension (Days)</label>
+                    <label className="block font-semibold text-slate-600 mb-1">Renewal Extension (Days)</label>
                     <input
                       type="number"
                       min="1"
                       value={policyForm.renewalDurationDays}
                       onChange={(e) => setPolicyForm({ ...policyForm, renewalDurationDays: Number(e.target.value) })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block font-semibold text-gray-300 mb-1">Grace Period (Days)</label>
+                    <label className="block font-semibold text-slate-600 mb-1">Grace Period (Days)</label>
                     <input
                       type="number"
                       min="0"
                       value={policyForm.gracePeriodDays}
                       onChange={(e) => setPolicyForm({ ...policyForm, gracePeriodDays: Number(e.target.value) })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-gray-300 mb-1">Fine per Overdue Day (₹)</label>
+                    <label className="block font-semibold text-slate-600 mb-1">Fine per Overdue Day (₹)</label>
                     <input
                       type="number"
                       min="0"
                       value={policyForm.finePerOverdueDay}
                       onChange={(e) => setPolicyForm({ ...policyForm, finePerOverdueDay: Number(e.target.value) })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-gray-300 mb-1">Max Fine Cap per Book (₹)</label>
+                    <label className="block font-semibold text-slate-600 mb-1">Max Fine Cap per Book (₹)</label>
                     <input
                       type="number"
                       min="0"
                       value={policyForm.maxFinePerBook}
                       onChange={(e) => setPolicyForm({ ...policyForm, maxFinePerBook: Number(e.target.value) })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                     />
                   </div>
                 </div>
@@ -1022,7 +1022,7 @@ const AdminLibrary = () => {
                   <button
                     type="submit"
                     disabled={actionLoading}
-                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold disabled:opacity-50"
+                    className="px-5 py-2 bg-indigo-600 hover text-white rounded-lg text-xs font-semibold disabled:opacity-50"
                   >
                     Save Policy Settings
                   </button>
@@ -1034,63 +1034,63 @@ const AdminLibrary = () => {
           {/* MODAL: Add New Book Title */}
           {showAddBookModal && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-[#131B2E] border border-gray-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
                 <button
                   onClick={() => setShowAddBookModal(false)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                  className="absolute top-4 right-4 text-slate-500 hover"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-indigo-400" />
                   Add Book to Catalog
                 </h3>
 
                 <form onSubmit={handleCreateBook} className="mt-5 space-y-4 text-xs">
                   <div>
-                    <label className="block font-semibold text-gray-300 mb-1">Book Title *</label>
+                    <label className="block font-semibold text-slate-600 mb-1">Book Title *</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Introduction to Algorithms"
                       value={newBookForm.title}
                       onChange={(e) => setNewBookForm({ ...newBookForm, title: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block font-semibold text-gray-300 mb-1">Authors (Comma-separated) *</label>
+                      <label className="block font-semibold text-slate-600 mb-1">Authors (Comma-separated) *</label>
                       <input
                         type="text"
                         required
                         placeholder="e.g. Cormen, Leiserson, Rivest"
                         value={newBookForm.authors}
                         onChange={(e) => setNewBookForm({ ...newBookForm, authors: e.target.value })}
-                        className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-gray-300 mb-1">ISBN (Optional)</label>
+                      <label className="block font-semibold text-slate-600 mb-1">ISBN (Optional)</label>
                       <input
                         type="text"
                         placeholder="e.g. 978-0262033848"
                         value={newBookForm.isbn}
                         onChange={(e) => setNewBookForm({ ...newBookForm, isbn: e.target.value })}
-                        className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white font-mono"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white font-mono"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block font-semibold text-gray-300 mb-1">Category *</label>
+                      <label className="block font-semibold text-slate-600 mb-1">Category *</label>
                       <select
                         value={newBookForm.category}
                         onChange={(e) => setNewBookForm({ ...newBookForm, category: e.target.value })}
-                        className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                       >
                         <option value="Computer Science">Computer Science</option>
                         <option value="Artificial Intelligence">Artificial Intelligence</option>
@@ -1103,36 +1103,36 @@ const AdminLibrary = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block font-semibold text-gray-300 mb-1">Publisher</label>
+                      <label className="block font-semibold text-slate-600 mb-1">Publisher</label>
                       <input
                         type="text"
                         placeholder="e.g. MIT Press"
                         value={newBookForm.publisher}
                         onChange={(e) => setNewBookForm({ ...newBookForm, publisher: e.target.value })}
-                        className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block font-semibold text-gray-300 mb-1">Shelf Number</label>
+                      <label className="block font-semibold text-slate-600 mb-1">Shelf Number</label>
                       <input
                         type="text"
                         placeholder="e.g. CS-04"
                         value={newBookForm.shelfNumber}
                         onChange={(e) => setNewBookForm({ ...newBookForm, shelfNumber: e.target.value })}
-                        className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-gray-300 mb-1">Rack Number</label>
+                      <label className="block font-semibold text-slate-600 mb-1">Rack Number</label>
                       <input
                         type="text"
                         placeholder="e.g. R2"
                         value={newBookForm.rackNumber}
                         onChange={(e) => setNewBookForm({ ...newBookForm, rackNumber: e.target.value })}
-                        className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                       />
                     </div>
                   </div>
@@ -1141,14 +1141,14 @@ const AdminLibrary = () => {
                     <button
                       type="button"
                       onClick={() => setShowAddBookModal(false)}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg font-medium"
+                      className="px-4 py-2 bg-gray-800 hover text-slate-600 rounded-lg font-medium"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={actionLoading}
-                      className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold disabled:opacity-50"
+                      className="px-5 py-2 bg-indigo-600 hover text-white rounded-lg font-semibold disabled:opacity-50"
                     >
                       Add Book to Catalog
                     </button>
@@ -1161,25 +1161,25 @@ const AdminLibrary = () => {
           {/* MODAL: Register Physical Copy */}
           {showAddCopyModal && selectedBookForCopy && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-[#131B2E] border border-gray-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
                 <button
                   onClick={() => setShowAddCopyModal(false)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                  className="absolute top-4 right-4 text-slate-500 hover"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <Layers className="w-5 h-5 text-indigo-400" />
                   Register Physical Copy
                 </h3>
-                <p className="text-xs text-gray-400 mt-1 line-clamp-1">
+                <p className="text-xs text-slate-500 mt-1 line-clamp-1">
                   For: <span className="font-semibold text-white">{selectedBookForCopy.title}</span>
                 </p>
 
                 <form onSubmit={handleAddCopy} className="mt-5 space-y-4 text-xs">
                   <div>
-                    <label className="block font-semibold text-gray-300 mb-1">
+                    <label className="block font-semibold text-slate-600 mb-1">
                       Unique Accession Number *
                     </label>
                     <input
@@ -1188,16 +1188,16 @@ const AdminLibrary = () => {
                       placeholder="e.g. ACC-CS-004-01"
                       value={newCopyForm.accessionNumber}
                       onChange={(e) => setNewCopyForm({ ...newCopyForm, accessionNumber: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white uppercase font-mono"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white uppercase font-mono"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-gray-300 mb-1">Initial Condition</label>
+                    <label className="block font-semibold text-slate-600 mb-1">Initial Condition</label>
                     <select
                       value={newCopyForm.condition}
                       onChange={(e) => setNewCopyForm({ ...newCopyForm, condition: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                     >
                       <option value="new">Brand New</option>
                       <option value="good">Good</option>
@@ -1206,24 +1206,24 @@ const AdminLibrary = () => {
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-gray-300 mb-1">Acquisition Price (₹)</label>
+                    <label className="block font-semibold text-slate-600 mb-1">Acquisition Price (₹)</label>
                     <input
                       type="number"
                       min="0"
                       value={newCopyForm.price}
                       onChange={(e) => setNewCopyForm({ ...newCopyForm, price: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white font-mono"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white font-mono"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-gray-300 mb-1">Shelf Location Override</label>
+                    <label className="block font-semibold text-slate-600 mb-1">Shelf Location Override</label>
                     <input
                       type="text"
                       placeholder={selectedBookForCopy.shelfNumber ? `Shelf: ${selectedBookForCopy.shelfNumber}` : 'e.g. Rack 2 Shelf A'}
                       value={newCopyForm.shelfLocation}
                       onChange={(e) => setNewCopyForm({ ...newCopyForm, shelfLocation: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg p-2 text-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-white"
                     />
                   </div>
 
@@ -1231,14 +1231,14 @@ const AdminLibrary = () => {
                     <button
                       type="button"
                       onClick={() => setShowAddCopyModal(false)}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg font-medium"
+                      className="px-4 py-2 bg-gray-800 hover text-slate-600 rounded-lg font-medium"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={actionLoading}
-                      className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold disabled:opacity-50"
+                      className="px-5 py-2 bg-indigo-600 hover text-white rounded-lg font-semibold disabled:opacity-50"
                     >
                       Register Copy
                     </button>

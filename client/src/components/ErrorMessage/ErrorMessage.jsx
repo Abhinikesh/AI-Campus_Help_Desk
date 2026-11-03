@@ -10,7 +10,7 @@ const ErrorMessage = ({ message, onRetry }) => {
         {message || 'Something went wrong while communicating with the server. Please check your connection.'}
       </p>
       {onRetry && (
-        <button onClick={onRetry} className="btn-outline text-red-400 border-red-400 hover:bg-red-900/30">
+        <button onClick={onRetry} className="btn-outline text-red-400 border-red-400 hover">
           Try Again
         </button>
       )}

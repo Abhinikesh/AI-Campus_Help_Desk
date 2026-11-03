@@ -531,7 +531,7 @@ const AdminHostel = () => {
                   className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                     activeTab === tab.id
                       ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      : 'border-transparent text-gray-500 hover'
                   }`}
                 >
                   <Icon size={16} />
@@ -680,7 +680,7 @@ const AdminHostel = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {applications.map((app) => (
-                          <tr key={app._id} className="hover:bg-gray-50">
+                          <tr key={app._id} className="hover">
                             <td className="py-3 px-4 font-mono font-medium text-blue-600">
                               {app.applicationNumber}
                             </td>
@@ -767,7 +767,7 @@ const AdminHostel = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {allocations.map((alloc) => (
-                          <tr key={alloc._id} className="hover:bg-gray-50">
+                          <tr key={alloc._id} className="hover">
                             <td className="py-3 px-4 font-mono font-medium text-blue-600">
                               {alloc.allocationNumber}
                             </td>
@@ -817,7 +817,7 @@ const AdminHostel = () => {
                   className={`py-2 px-4 rounded-lg font-semibold text-xs transition-colors ${
                     circulationMode === 'check_in'
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-gray-100 text-gray-600 hover'
                   }`}
                 >
                   Student Check-In
@@ -828,7 +828,7 @@ const AdminHostel = () => {
                   className={`py-2 px-4 rounded-lg font-semibold text-xs transition-colors ${
                     circulationMode === 'check_out'
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-gray-100 text-gray-600 hover'
                   }`}
                 >
                   Student Check-Out & Clearance
@@ -997,7 +997,7 @@ const AdminHostel = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {transfers.map((tr) => (
-                          <tr key={tr._id} className="hover:bg-gray-50">
+                          <tr key={tr._id} className="hover">
                             <td className="py-3 px-4 font-mono font-medium text-blue-600">
                               {tr.requestNumber}
                             </td>
@@ -1070,7 +1070,7 @@ const AdminHostel = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {complaints.map((c) => (
-                          <tr key={c._id} className="hover:bg-gray-50">
+                          <tr key={c._id} className="hover">
                             <td className="py-3 px-4 text-xs text-gray-500">
                               {new Date(c.createdAt).toLocaleDateString()}
                             </td>
@@ -1145,7 +1145,7 @@ const AdminHostel = () => {
                   <button
                     type="button"
                     onClick={() => setShowAddHostelModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover"
                   >
                     <X size={20} />
                   </button>
@@ -1245,7 +1245,7 @@ const AdminHostel = () => {
                   <button
                     type="button"
                     onClick={() => setShowAddRoomModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover"
                   >
                     <X size={20} />
                   </button>
@@ -1351,7 +1351,7 @@ const AdminHostel = () => {
                   <button
                     type="button"
                     onClick={() => setShowAddBedModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover"
                   >
                     <X size={20} />
                   </button>
@@ -1419,7 +1419,7 @@ const AdminHostel = () => {
                   <button
                     type="button"
                     onClick={() => setReviewModalOpen(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover"
                   >
                     <X size={20} />
                   </button>
@@ -1530,7 +1530,7 @@ const AdminHostel = () => {
                   <button
                     type="button"
                     onClick={() => setShowAllocateModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover"
                   >
                     <X size={20} />
                   </button>

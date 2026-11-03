@@ -623,14 +623,14 @@ const AdminInventory = () => {
                 <Boxes className="h-7 w-7 text-indigo-400" />
                 Asset, Inventory & Procurement Management
               </h1>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-500">
                 Centralized institutional asset register, consumable stock ledger, multi-tier procurement and maintenance.
               </p>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={inventoryService.exportAssetsCsv}
-                className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg border border-slate-700 transition"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white hover text-slate-900 text-sm font-medium rounded-lg border border-slate-200 transition"
                 title="Download Sanitized Assets CSV"
               >
                 <Download className="h-4 w-4 text-emerald-400" />
@@ -638,7 +638,7 @@ const AdminInventory = () => {
               </button>
               <button
                 onClick={inventoryService.exportStockCsv}
-                className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg border border-slate-700 transition"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white hover text-slate-900 text-sm font-medium rounded-lg border border-slate-200 transition"
                 title="Download Sanitized Stock CSV"
               >
                 <Download className="h-4 w-4 text-amber-400" />
@@ -649,62 +649,62 @@ const AdminInventory = () => {
 
           {/* Metric KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4">
-              <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <div className="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
                 Total Assets
                 <Package className="h-4 w-4 text-indigo-400" />
               </div>
               <div className="text-2xl font-bold text-white mt-1">{metrics.totalAssets}</div>
-              <div className="text-xs text-slate-400 mt-1">
+              <div className="text-xs text-slate-500 mt-1">
                 Store: {metrics.inStoreAssets} | In Use: {metrics.inUseAssets}
               </div>
             </div>
 
-            <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4">
-              <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <div className="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
                 Asset Valuation
                 <DollarSign className="h-4 w-4 text-emerald-400" />
               </div>
               <div className="text-xl font-bold text-emerald-400 mt-1">
                 ₹{((metrics.totalAssetBookValuePaise || 0) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </div>
-              <div className="text-xs text-slate-400 mt-1">Acquisition Base</div>
+              <div className="text-xs text-slate-500 mt-1">Acquisition Base</div>
             </div>
 
-            <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4">
-              <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <div className="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
                 Consumables
                 <Boxes className="h-4 w-4 text-blue-400" />
               </div>
               <div className="text-2xl font-bold text-white mt-1">{metrics.totalStockItems}</div>
-              <div className="text-xs text-slate-400 mt-1">Cataloged SKUs</div>
+              <div className="text-xs text-slate-500 mt-1">Cataloged SKUs</div>
             </div>
 
-            <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4">
-              <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <div className="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
                 Low Stock Alerts
                 <AlertTriangle className="h-4 w-4 text-amber-400" />
               </div>
               <div className="text-2xl font-bold text-amber-400 mt-1">{metrics.lowStockAlerts}</div>
-              <div className="text-xs text-slate-400 mt-1">Needs Reordering</div>
+              <div className="text-xs text-slate-500 mt-1">Needs Reordering</div>
             </div>
 
-            <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4">
-              <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <div className="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
                 Procurement
                 <ShoppingCart className="h-4 w-4 text-cyan-400" />
               </div>
               <div className="text-2xl font-bold text-cyan-400 mt-1">{metrics.pendingPurchaseRequests}</div>
-              <div className="text-xs text-slate-400 mt-1">Active POs: {metrics.activePurchaseOrders}</div>
+              <div className="text-xs text-slate-500 mt-1">Active POs: {metrics.activePurchaseOrders}</div>
             </div>
 
-            <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4">
-              <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <div className="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
                 Maintenance
                 <Wrench className="h-4 w-4 text-rose-400" />
               </div>
               <div className="text-2xl font-bold text-rose-400 mt-1">{metrics.pendingMaintenance}</div>
-              <div className="text-xs text-slate-400 mt-1">
+              <div className="text-xs text-slate-500 mt-1">
                 Exp: ₹{((metrics.completedMaintenanceExpenditurePaise || 0) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </div>
             </div>
@@ -728,8 +728,8 @@ const AdminInventory = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'bg-slate-800 text-indigo-400 border-b-2 border-indigo-500'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                      ? 'bg-white text-indigo-400 border-b-2 border-indigo-500'
+                      : 'text-slate-500 hover hover'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -750,19 +750,19 @@ const AdminInventory = () => {
               <div className="flex flex-col md:flex-row justify-between gap-4">
                 <div className="flex items-center gap-2 flex-1">
                   <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
                     <input
                       type="text"
                       placeholder="Search ID, serial, name..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-slate-800/90 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-sm text-slate-200 rounded-lg px-3 py-2"
+                    className="bg-white border border-slate-200 text-sm text-slate-900 rounded-lg px-3 py-2"
                   >
                     <option value="">All Categories</option>
                     {categories.filter(c => c.classification === 'asset').map(c => (
@@ -771,14 +771,14 @@ const AdminInventory = () => {
                   </select>
                   <button
                     onClick={refreshTabData}
-                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm rounded-lg border border-slate-700"
+                    className="px-3 py-2 bg-white hover text-slate-900 text-sm rounded-lg border border-slate-200"
                   >
                     Filter
                   </button>
                 </div>
                 <button
                   onClick={() => setShowAssetModal(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-sm transition"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover text-white text-sm font-medium rounded-lg shadow-sm transition"
                 >
                   <Plus className="h-4 w-4" />
                   Register Asset
@@ -786,9 +786,9 @@ const AdminInventory = () => {
               </div>
 
               {/* Assets Table */}
-              <div className="bg-slate-800/50 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                <table className="w-full text-left text-sm text-slate-300">
-                  <thead className="bg-slate-800/90 text-xs uppercase font-semibold text-slate-400 border-b border-slate-700">
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <table className="w-full text-left text-sm text-slate-700">
+                  <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                     <tr>
                       <th className="px-4 py-3">Asset ID / Name</th>
                       <th className="px-4 py-3">Category</th>
@@ -803,13 +803,13 @@ const AdminInventory = () => {
                   <tbody className="divide-y divide-slate-700/60">
                     {assets.length === 0 ? (
                       <tr>
-                        <td colSpan="8" className="px-4 py-8 text-center text-slate-400">
+                        <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
                           No assets found. Click "Register Asset" or receive a Purchase Order.
                         </td>
                       </tr>
                     ) : (
                       assets.map((asset) => (
-                        <tr key={asset._id} className="hover:bg-slate-800/40 transition">
+                        <tr key={asset._id} className="hover transition">
                           <td className="px-4 py-3">
                             <div className="font-semibold text-white">{asset.name}</div>
                             <div className="text-xs text-indigo-400 font-mono">{asset.assetId}</div>
@@ -817,7 +817,7 @@ const AdminInventory = () => {
                           <td className="px-4 py-3">{asset.category?.name || 'General'}</td>
                           <td className="px-4 py-3">
                             <div className="text-xs font-mono">{asset.serialNumber || 'N/A'}</div>
-                            <div className="text-xs text-slate-400">{asset.modelNumber || ''}</div>
+                            <div className="text-xs text-slate-500">{asset.modelNumber || ''}</div>
                           </td>
                           <td className="px-4 py-3">
                             <span
@@ -845,7 +845,7 @@ const AdminInventory = () => {
                           <td className="px-4 py-3 text-right space-x-1">
                             <button
                               onClick={() => handleViewAssetDetails(asset)}
-                              className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-xs rounded text-slate-200"
+                              className="px-2 py-1 bg-slate-100 hover text-xs rounded text-slate-900"
                               title="View Details & Depreciation"
                             >
                               <Eye className="h-3.5 w-3.5" />
@@ -856,7 +856,7 @@ const AdminInventory = () => {
                                   setSelectedAsset(asset);
                                   setShowAllocateModal(true);
                                 }}
-                                className="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-xs rounded text-white"
+                                className="px-2 py-1 bg-indigo-600 hover text-xs rounded text-white"
                                 title="Allocate to Custodian"
                               >
                                 Allocate
@@ -868,7 +868,7 @@ const AdminInventory = () => {
                                   setSelectedAsset(asset);
                                   setShowReturnModal(true);
                                 }}
-                                className="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-xs rounded text-white"
+                                className="px-2 py-1 bg-amber-600 hover text-xs rounded text-white"
                                 title="Return to Store"
                               >
                                 Return
@@ -879,7 +879,7 @@ const AdminInventory = () => {
                                 setSelectedAsset(asset);
                                 setShowTransferModal(true);
                               }}
-                              className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-xs rounded text-slate-200"
+                              className="px-2 py-1 bg-slate-100 hover text-xs rounded text-slate-900"
                               title="Transfer Location"
                             >
                               Transfer
@@ -900,25 +900,25 @@ const AdminInventory = () => {
               <div className="flex flex-col md:flex-row justify-between gap-4">
                 <div className="flex items-center gap-2 flex-1">
                   <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
                     <input
                       type="text"
                       placeholder="Search SKU, consumable name..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-slate-800/90 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-400"
+                      className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400"
                     />
                   </div>
                   <button
                     onClick={refreshTabData}
-                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm rounded-lg border border-slate-700"
+                    className="px-3 py-2 bg-white hover text-slate-900 text-sm rounded-lg border border-slate-200"
                   >
                     Search
                   </button>
                 </div>
                 <button
                   onClick={() => setShowStockModal(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg shadow-sm transition"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover text-white text-sm font-medium rounded-lg shadow-sm transition"
                 >
                   <Plus className="h-4 w-4" />
                   Add Stock Item (SKU)
@@ -926,9 +926,9 @@ const AdminInventory = () => {
               </div>
 
               {/* Stock Items Table */}
-              <div className="bg-slate-800/50 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                <table className="w-full text-left text-sm text-slate-300">
-                  <thead className="bg-slate-800/90 text-xs uppercase font-semibold text-slate-400 border-b border-slate-700">
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <table className="w-full text-left text-sm text-slate-700">
+                  <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                     <tr>
                       <th className="px-4 py-3">SKU / Item Name</th>
                       <th className="px-4 py-3">Category</th>
@@ -943,7 +943,7 @@ const AdminInventory = () => {
                   <tbody className="divide-y divide-slate-700/60">
                     {stockItems.length === 0 ? (
                       <tr>
-                        <td colSpan="8" className="px-4 py-8 text-center text-slate-400">
+                        <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
                           No consumable stock items cataloged.
                         </td>
                       </tr>
@@ -952,7 +952,7 @@ const AdminInventory = () => {
                         const isLow = item.currentQuantity <= item.reorderThreshold;
                         const totalVal = ((item.currentQuantity * item.unitCostPaise) / 100).toFixed(2);
                         return (
-                          <tr key={item._id} className="hover:bg-slate-800/40 transition">
+                          <tr key={item._id} className="hover transition">
                             <td className="px-4 py-3">
                               <div className="font-semibold text-white">{item.name}</div>
                               <div className="text-xs text-blue-400 font-mono">{item.sku}</div>
@@ -972,13 +972,13 @@ const AdminInventory = () => {
                                 </span>
                               )}
                             </td>
-                            <td className="px-4 py-3 font-mono text-slate-400">
+                            <td className="px-4 py-3 font-mono text-slate-500">
                               {item.reorderThreshold} {item.unitOfMeasure}
                             </td>
                             <td className="px-4 py-3 font-mono">
                               ₹{((item.unitCostPaise || 0) / 100).toFixed(2)}
                             </td>
-                            <td className="px-4 py-3 font-mono font-semibold text-slate-200">
+                            <td className="px-4 py-3 font-mono font-semibold text-slate-900">
                               ₹{parseFloat(totalVal).toLocaleString('en-IN')}
                             </td>
                             <td className="px-4 py-3 text-xs">
@@ -987,7 +987,7 @@ const AdminInventory = () => {
                             <td className="px-4 py-3 text-right space-x-1">
                               <button
                                 onClick={() => handleViewMovements(item)}
-                                className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-xs rounded text-slate-200"
+                                className="px-2 py-1 bg-slate-100 hover text-xs rounded text-slate-900"
                                 title="Ledger History"
                               >
                                 Ledger
@@ -997,7 +997,7 @@ const AdminInventory = () => {
                                   setSelectedStockItem(item);
                                   setShowIssueModal(true);
                                 }}
-                                className="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-xs rounded text-white"
+                                className="px-2 py-1 bg-indigo-600 hover text-xs rounded text-white"
                                 title="Issue Stock"
                               >
                                 Issue
@@ -1007,7 +1007,7 @@ const AdminInventory = () => {
                                   setSelectedStockItem(item);
                                   setShowAdjustModal(true);
                                 }}
-                                className="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-xs rounded text-white"
+                                className="px-2 py-1 bg-amber-600 hover text-xs rounded text-white"
                                 title="Manual Adjustment"
                               >
                                 Adjust
@@ -1035,15 +1035,15 @@ const AdminInventory = () => {
                   </h3>
                   <button
                     onClick={() => setShowPrModal(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover text-white text-xs font-medium rounded-lg"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     New Request
                   </button>
                 </div>
-                <div className="bg-slate-800/50 border border-slate-700/60 rounded-xl overflow-hidden">
-                  <table className="w-full text-left text-sm text-slate-300">
-                    <thead className="bg-slate-800/90 text-xs uppercase font-semibold text-slate-400 border-b border-slate-700">
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                  <table className="w-full text-left text-sm text-slate-700">
+                    <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                       <tr>
                         <th className="px-4 py-3">PR Number / Title</th>
                         <th className="px-4 py-3">Requested By</th>
@@ -1056,7 +1056,7 @@ const AdminInventory = () => {
                     <tbody className="divide-y divide-slate-700/60">
                       {purchaseRequests.length === 0 ? (
                         <tr>
-                          <td colSpan="6" className="px-4 py-6 text-center text-slate-400">
+                          <td colSpan="6" className="px-4 py-6 text-center text-slate-500">
                             No purchase requests active.
                           </td>
                         </tr>
@@ -1064,14 +1064,14 @@ const AdminInventory = () => {
                         purchaseRequests.map((pr) => {
                           const isOwn = pr.requestedBy?._id === user?._id;
                           return (
-                            <tr key={pr._id} className="hover:bg-slate-800/40 transition">
+                            <tr key={pr._id} className="hover transition">
                               <td className="px-4 py-3">
                                 <div className="font-semibold text-white">{pr.title}</div>
                                 <div className="text-xs text-indigo-400 font-mono">{pr.requestNumber}</div>
                               </td>
                               <td className="px-4 py-3">
-                                <div className="text-xs text-slate-200">{pr.requestedBy?.name || 'User'}</div>
-                                <div className="text-xs text-slate-400">{pr.department?.name || 'Department'}</div>
+                                <div className="text-xs text-slate-900">{pr.requestedBy?.name || 'User'}</div>
+                                <div className="text-xs text-slate-500">{pr.department?.name || 'Department'}</div>
                               </td>
                               <td className="px-4 py-3 font-mono">
                                 <div>{pr.items?.length || 1} items</div>
@@ -1104,8 +1104,8 @@ const AdminInventory = () => {
                                     onClick={() => handleApprovePr(pr._id)}
                                     className={`px-2 py-1 text-xs rounded text-white ${
                                       isOwn
-                                        ? 'bg-slate-700 cursor-not-allowed opacity-50'
-                                        : 'bg-emerald-600 hover:bg-emerald-500'
+                                        ? 'bg-slate-100 cursor-not-allowed opacity-50'
+                                        : 'bg-emerald-600 hover'
                                     }`}
                                     title={isOwn ? 'Separation of Duties: Cannot approve own request' : 'Approve Stage'}
                                   >
@@ -1131,15 +1131,15 @@ const AdminInventory = () => {
                   </h3>
                   <button
                     onClick={() => setShowPoModal(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium rounded-lg"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover text-white text-xs font-medium rounded-lg"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     Issue PO
                   </button>
                 </div>
-                <div className="bg-slate-800/50 border border-slate-700/60 rounded-xl overflow-hidden">
-                  <table className="w-full text-left text-sm text-slate-300">
-                    <thead className="bg-slate-800/90 text-xs uppercase font-semibold text-slate-400 border-b border-slate-700">
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                  <table className="w-full text-left text-sm text-slate-700">
+                    <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                       <tr>
                         <th className="px-4 py-3">PO Number</th>
                         <th className="px-4 py-3">Vendor</th>
@@ -1152,17 +1152,17 @@ const AdminInventory = () => {
                     <tbody className="divide-y divide-slate-700/60">
                       {purchaseOrders.length === 0 ? (
                         <tr>
-                          <td colSpan="6" className="px-4 py-6 text-center text-slate-400">
+                          <td colSpan="6" className="px-4 py-6 text-center text-slate-500">
                             No purchase orders issued yet.
                           </td>
                         </tr>
                       ) : (
                         purchaseOrders.map((po) => (
-                          <tr key={po._id} className="hover:bg-slate-800/40 transition">
+                          <tr key={po._id} className="hover transition">
                             <td className="px-4 py-3 font-mono font-semibold text-cyan-400">{po.poNumber}</td>
                             <td className="px-4 py-3">
                               <div className="text-white font-medium">{po.vendor?.name || 'Vendor'}</div>
-                              <div className="text-xs text-slate-400">{po.vendor?.phone || ''}</div>
+                              <div className="text-xs text-slate-500">{po.vendor?.phone || ''}</div>
                             </td>
                             <td className="px-4 py-3 font-mono text-emerald-400 font-semibold">
                               ₹{((po.totalAmountPaise || 0) / 100).toLocaleString('en-IN')}
@@ -1190,7 +1190,7 @@ const AdminInventory = () => {
                                     setGrnForm((prev) => ({ ...prev, purchaseOrder: po._id }));
                                     setShowGrnModal(true);
                                   }}
-                                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-xs rounded text-white"
+                                  className="px-2 py-1 bg-emerald-600 hover text-xs rounded text-white"
                                   title="Receive Goods (GRN)"
                                 >
                                   Process GRN
@@ -1212,18 +1212,18 @@ const AdminInventory = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
                   <input
                     type="text"
                     placeholder="Search vendor name, code..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-slate-800/90 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-400"
+                    className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400"
                   />
                 </div>
                 <button
                   onClick={() => setShowVendorModal(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover text-white text-sm font-medium rounded-lg"
                 >
                   <Plus className="h-4 w-4" />
                   Add Vendor
@@ -1232,7 +1232,7 @@ const AdminInventory = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {vendors.map((vendor) => (
-                  <div key={vendor._id} className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 space-y-2">
+                  <div key={vendor._id} className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
                     <div className="flex justify-between items-start">
                       <div>
                         <h4 className="font-semibold text-white text-base">{vendor.name}</h4>
@@ -1242,7 +1242,7 @@ const AdminInventory = () => {
                         {vendor.status || 'Active'}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-300 space-y-1">
+                    <div className="text-xs text-slate-700 space-y-1">
                       <div>Contact: {vendor.contactPerson || 'N/A'} ({vendor.phone})</div>
                       <div>Email: {vendor.email || 'N/A'}</div>
                       <div>GST: {vendor.gstNumber || 'Unregistered'}</div>
@@ -1264,16 +1264,16 @@ const AdminInventory = () => {
                 </h3>
                 <button
                   onClick={() => setShowMaintenanceModal(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-sm font-medium rounded-lg"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover text-white text-sm font-medium rounded-lg"
                 >
                   <Plus className="h-4 w-4" />
                   Schedule Service
                 </button>
               </div>
 
-              <div className="bg-slate-800/50 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                <table className="w-full text-left text-sm text-slate-300">
-                  <thead className="bg-slate-800/90 text-xs uppercase font-semibold text-slate-400 border-b border-slate-700">
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <table className="w-full text-left text-sm text-slate-700">
+                  <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                     <tr>
                       <th className="px-4 py-3">Maintenance No. / Title</th>
                       <th className="px-4 py-3">Asset</th>
@@ -1287,20 +1287,20 @@ const AdminInventory = () => {
                   <tbody className="divide-y divide-slate-700/60">
                     {maintenanceRecords.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="px-4 py-6 text-center text-slate-400">
+                        <td colSpan="7" className="px-4 py-6 text-center text-slate-500">
                           No maintenance records found.
                         </td>
                       </tr>
                     ) : (
                       maintenanceRecords.map((m) => (
-                        <tr key={m._id} className="hover:bg-slate-800/40 transition">
+                        <tr key={m._id} className="hover transition">
                           <td className="px-4 py-3">
                             <div className="font-semibold text-white">{m.title}</div>
                             <div className="text-xs text-rose-400 font-mono">{m.maintenanceNumber}</div>
                           </td>
                           <td className="px-4 py-3">
                             <div className="text-white font-medium">{m.asset?.name || 'Asset'}</div>
-                            <div className="text-xs text-slate-400 font-mono">{m.asset?.assetId || ''}</div>
+                            <div className="text-xs text-slate-500 font-mono">{m.asset?.assetId || ''}</div>
                           </td>
                           <td className="px-4 py-3 capitalize text-xs">{m.type}</td>
                           <td className="px-4 py-3 text-xs">
@@ -1326,7 +1326,7 @@ const AdminInventory = () => {
                             {m.status !== 'completed' && (
                               <button
                                 onClick={() => handleCompleteMaintenance(m._id)}
-                                className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-xs rounded text-white"
+                                className="px-2 py-1 bg-emerald-600 hover text-xs rounded text-white"
                               >
                                 Mark Completed
                               </button>
@@ -1351,7 +1351,7 @@ const AdminInventory = () => {
                 </h3>
                 <button
                   onClick={() => setShowAuditModal(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover text-white text-sm font-medium rounded-lg"
                 >
                   <Plus className="h-4 w-4" />
                   Initiate Audit
@@ -1360,7 +1360,7 @@ const AdminInventory = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {audits.map((audit) => (
-                  <div key={audit._id} className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 space-y-3">
+                  <div key={audit._id} className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
                         <h4 className="font-semibold text-white text-base">{audit.title}</h4>
@@ -1378,17 +1378,17 @@ const AdminInventory = () => {
                         {audit.status}
                       </span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 bg-slate-900/50 p-2.5 rounded-lg text-center">
+                    <div className="grid grid-cols-3 gap-2 bg-white/50 p-2.5 rounded-lg text-center">
                       <div>
-                        <div className="text-xs text-slate-400">Total Items</div>
+                        <div className="text-xs text-slate-500">Total Items</div>
                         <div className="text-base font-bold text-white">{audit.summary?.totalItemsAudited || 0}</div>
                       </div>
                       <div>
-                        <div className="text-xs text-slate-400">Matched</div>
+                        <div className="text-xs text-slate-500">Matched</div>
                         <div className="text-base font-bold text-emerald-400">{audit.summary?.matchedCount || 0}</div>
                       </div>
                       <div>
-                        <div className="text-xs text-slate-400">Discrepancies</div>
+                        <div className="text-xs text-slate-500">Discrepancies</div>
                         <div className="text-base font-bold text-rose-400">{audit.summary?.discrepancyCount || 0}</div>
                       </div>
                     </div>
@@ -1408,9 +1408,9 @@ const AdminInventory = () => {
                 </h3>
               </div>
 
-              <div className="bg-slate-800/50 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                <table className="w-full text-left text-sm text-slate-300">
-                  <thead className="bg-slate-800/90 text-xs uppercase font-semibold text-slate-400 border-b border-slate-700">
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <table className="w-full text-left text-sm text-slate-700">
+                  <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                     <tr>
                       <th className="px-4 py-3">SKU / Item</th>
                       <th className="px-4 py-3">Current Balance</th>
@@ -1424,13 +1424,13 @@ const AdminInventory = () => {
                   <tbody className="divide-y divide-slate-700/60">
                     {lowStockAlerts.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="px-4 py-6 text-center text-slate-400">
+                        <td colSpan="7" className="px-4 py-6 text-center text-slate-500">
                           All consumable items have healthy stock levels above reorder thresholds.
                         </td>
                       </tr>
                     ) : (
                       lowStockAlerts.map((alert) => (
-                        <tr key={alert._id} className="hover:bg-slate-800/40 transition">
+                        <tr key={alert._id} className="hover transition">
                           <td className="px-4 py-3">
                             <div className="font-semibold text-white">{alert.name}</div>
                             <div className="text-xs font-mono text-amber-400">{alert.sku}</div>
@@ -1438,7 +1438,7 @@ const AdminInventory = () => {
                           <td className="px-4 py-3 font-mono font-bold text-rose-400">
                             {alert.currentQuantity} {alert.unitOfMeasure}
                           </td>
-                          <td className="px-4 py-3 font-mono text-slate-400">
+                          <td className="px-4 py-3 font-mono text-slate-500">
                             {alert.reorderThreshold} {alert.unitOfMeasure}
                           </td>
                           <td className="px-4 py-3 font-mono font-bold text-indigo-400">
@@ -1465,7 +1465,7 @@ const AdminInventory = () => {
                                 });
                                 setShowPrModal(true);
                               }}
-                              className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-xs font-medium rounded text-white"
+                              className="px-2.5 py-1 bg-amber-600 hover text-xs font-medium rounded text-white"
                             >
                               Generate PR
                             </button>
@@ -1486,31 +1486,31 @@ const AdminInventory = () => {
           {/* REGISTER ASSET MODAL */}
           {showAssetModal && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-lg w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <h3 className="text-lg font-bold text-white">Register Serialized Asset</h3>
-                  <button onClick={() => setShowAssetModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowAssetModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <form onSubmit={handleCreateAsset} className="space-y-3">
                   <div>
-                    <label className="text-xs text-slate-400">Asset Name *</label>
+                    <label className="text-xs text-slate-500">Asset Name *</label>
                     <input
                       required
                       type="text"
                       value={assetForm.name}
                       onChange={(e) => setAssetForm({ ...assetForm, name: e.target.value })}
                       placeholder="e.g. Dell PowerEdge Server R750"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400">Category *</label>
+                      <label className="text-xs text-slate-500">Category *</label>
                       <select
                         required
                         value={assetForm.category}
                         onChange={(e) => setAssetForm({ ...assetForm, category: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       >
                         <option value="">Select Category</option>
                         {categories.filter(c => c.classification === 'asset').map(c => (
@@ -1519,19 +1519,19 @@ const AdminInventory = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Serial Number</label>
+                      <label className="text-xs text-slate-500">Serial Number</label>
                       <input
                         type="text"
                         value={assetForm.serialNumber}
                         onChange={(e) => setAssetForm({ ...assetForm, serialNumber: e.target.value })}
                         placeholder="OEM Serial Tag"
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white font-mono"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white font-mono"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400">Acquisition Cost (INR) *</label>
+                      <label className="text-xs text-slate-500">Acquisition Cost (INR) *</label>
                       <input
                         required
                         type="number"
@@ -1539,25 +1539,25 @@ const AdminInventory = () => {
                         value={assetForm.acquisitionCostRupees}
                         onChange={(e) => setAssetForm({ ...assetForm, acquisitionCostRupees: e.target.value })}
                         placeholder="e.g. 75000"
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Useful Life (Months)</label>
+                      <label className="text-xs text-slate-500">Useful Life (Months)</label>
                       <input
                         type="number"
                         value={assetForm.usefulLifeMonths}
                         onChange={(e) => setAssetForm({ ...assetForm, usefulLifeMonths: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Location</label>
+                    <label className="text-xs text-slate-500">Location</label>
                     <select
                       value={assetForm.location}
                       onChange={(e) => setAssetForm({ ...assetForm, location: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     >
                       <option value="">Central Store / Unassigned</option>
                       {locations.map(loc => (
@@ -1565,17 +1565,17 @@ const AdminInventory = () => {
                       ))}
                     </select>
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowAssetModal(false)}
-                      className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium"
+                      className="px-4 py-2 bg-indigo-600 hover text-white rounded text-sm font-medium"
                     >
                       Save Asset
                     </button>
@@ -1588,55 +1588,55 @@ const AdminInventory = () => {
           {/* ADD STOCK ITEM MODAL */}
           {showStockModal && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-lg w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <h3 className="text-lg font-bold text-white">Add Consumable Stock SKU</h3>
-                  <button onClick={() => setShowStockModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowStockModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <form onSubmit={handleCreateStockItem} className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400">SKU Code *</label>
+                      <label className="text-xs text-slate-500">SKU Code *</label>
                       <input
                         required
                         type="text"
                         value={stockForm.sku}
                         onChange={(e) => setStockForm({ ...stockForm, sku: e.target.value })}
                         placeholder="e.g. STAT-A4-001"
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white font-mono uppercase"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white font-mono uppercase"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Unit of Measure *</label>
+                      <label className="text-xs text-slate-500">Unit of Measure *</label>
                       <input
                         required
                         type="text"
                         value={stockForm.unitOfMeasure}
                         onChange={(e) => setStockForm({ ...stockForm, unitOfMeasure: e.target.value })}
                         placeholder="e.g. reams, pcs, kg"
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Item Name *</label>
+                    <label className="text-xs text-slate-500">Item Name *</label>
                     <input
                       required
                       type="text"
                       value={stockForm.name}
                       onChange={(e) => setStockForm({ ...stockForm, name: e.target.value })}
                       placeholder="e.g. A4 Copier Paper 75GSM"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400">Category *</label>
+                      <label className="text-xs text-slate-500">Category *</label>
                       <select
                         required
                         value={stockForm.category}
                         onChange={(e) => setStockForm({ ...stockForm, category: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       >
                         <option value="">Select Category</option>
                         {categories.filter(c => c.classification === 'consumable').map(c => (
@@ -1645,57 +1645,57 @@ const AdminInventory = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Unit Cost (INR)</label>
+                      <label className="text-xs text-slate-500">Unit Cost (INR)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={stockForm.unitCostRupees}
                         onChange={(e) => setStockForm({ ...stockForm, unitCostRupees: e.target.value })}
                         placeholder="e.g. 250"
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400">Initial Qty</label>
+                      <label className="text-xs text-slate-500">Initial Qty</label>
                       <input
                         type="number"
                         value={stockForm.initialQuantity}
                         onChange={(e) => setStockForm({ ...stockForm, initialQuantity: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Reorder Threshold</label>
+                      <label className="text-xs text-slate-500">Reorder Threshold</label>
                       <input
                         type="number"
                         value={stockForm.reorderThreshold}
                         onChange={(e) => setStockForm({ ...stockForm, reorderThreshold: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Reorder Batch</label>
+                      <label className="text-xs text-slate-500">Reorder Batch</label>
                       <input
                         type="number"
                         value={stockForm.reorderQuantity}
                         onChange={(e) => setStockForm({ ...stockForm, reorderQuantity: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowStockModal(false)}
-                      className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium"
+                      className="px-4 py-2 bg-blue-600 hover text-white rounded text-sm font-medium"
                     >
                       Save SKU
                     </button>
@@ -1708,42 +1708,42 @@ const AdminInventory = () => {
           {/* ALLOCATE ASSET MODAL */}
           {showAllocateModal && selectedAsset && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-md w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <h3 className="text-lg font-bold text-white">Allocate {selectedAsset.name}</h3>
-                  <button onClick={() => setShowAllocateModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowAllocateModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <form onSubmit={handleAllocateAsset} className="space-y-3">
                   <div>
-                    <label className="text-xs text-slate-400">Purpose of Allocation</label>
+                    <label className="text-xs text-slate-500">Purpose of Allocation</label>
                     <input
                       type="text"
                       value={allocateForm.purpose}
                       onChange={(e) => setAllocateForm({ ...allocateForm, purpose: e.target.value })}
                       placeholder="e.g. Faculty lab workstation setup"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Expected Return Date</label>
+                    <label className="text-xs text-slate-500">Expected Return Date</label>
                     <input
                       type="date"
                       value={allocateForm.expectedReturnDate}
                       onChange={(e) => setAllocateForm({ ...allocateForm, expectedReturnDate: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowAllocateModal(false)}
-                      className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium"
+                      className="px-4 py-2 bg-indigo-600 hover text-white rounded text-sm font-medium"
                     >
                       Confirm Allocation
                     </button>
@@ -1756,18 +1756,18 @@ const AdminInventory = () => {
           {/* RETURN ASSET MODAL */}
           {showReturnModal && selectedAsset && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-md w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <h3 className="text-lg font-bold text-white">Return {selectedAsset.name}</h3>
-                  <button onClick={() => setShowReturnModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowReturnModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <form onSubmit={handleReturnAsset} className="space-y-3">
                   <div>
-                    <label className="text-xs text-slate-400">Return Condition</label>
+                    <label className="text-xs text-slate-500">Return Condition</label>
                     <select
                       value={returnForm.returnCondition}
                       onChange={(e) => setReturnForm({ ...returnForm, returnCondition: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     >
                       <option value="good">Good (Normal Wear)</option>
                       <option value="fair">Fair (Minor Wear)</option>
@@ -1775,26 +1775,26 @@ const AdminInventory = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Return Remarks</label>
+                    <label className="text-xs text-slate-500">Return Remarks</label>
                     <textarea
                       rows="2"
                       value={returnForm.notes}
                       onChange={(e) => setReturnForm({ ...returnForm, notes: e.target.value })}
                       placeholder="Inspection remarks..."
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowReturnModal(false)}
-                      className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded text-sm font-medium"
+                      className="px-4 py-2 bg-amber-600 hover text-white rounded text-sm font-medium"
                     >
                       Accept Return
                     </button>
@@ -1807,17 +1807,17 @@ const AdminInventory = () => {
           {/* ISSUE STOCK MODAL */}
           {showIssueModal && selectedStockItem && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-md w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <h3 className="text-lg font-bold text-white">Issue {selectedStockItem.name}</h3>
-                  <button onClick={() => setShowIssueModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowIssueModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <form onSubmit={handleIssueStock} className="space-y-3">
-                  <div className="text-xs text-slate-400">
+                  <div className="text-xs text-slate-500">
                     Available Stock: <span className="font-bold text-emerald-400 font-mono">{selectedStockItem.currentQuantity} {selectedStockItem.unitOfMeasure}</span>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Quantity to Issue *</label>
+                    <label className="text-xs text-slate-500">Quantity to Issue *</label>
                     <input
                       required
                       type="number"
@@ -1826,30 +1826,30 @@ const AdminInventory = () => {
                       max={selectedStockItem.currentQuantity}
                       value={issueForm.quantity}
                       onChange={(e) => setIssueForm({ ...issueForm, quantity: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Recipient / Purpose</label>
+                    <label className="text-xs text-slate-500">Recipient / Purpose</label>
                     <input
                       type="text"
                       value={issueForm.notes}
                       onChange={(e) => setIssueForm({ ...issueForm, notes: e.target.value })}
                       placeholder="e.g. Physics Lab Sem 5 experiment stock"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowIssueModal(false)}
-                      className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium"
+                      className="px-4 py-2 bg-indigo-600 hover text-white rounded text-sm font-medium"
                     >
                       Issue Stock
                     </button>
@@ -1862,17 +1862,17 @@ const AdminInventory = () => {
           {/* STOCK MOVEMENTS LEDGER MODAL */}
           {showMovementsModal && selectedStockItem && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-2xl w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-2xl w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <div>
                     <h3 className="text-lg font-bold text-white">Stock Movement Ledger</h3>
-                    <p className="text-xs text-slate-400">{selectedStockItem.name} ({selectedStockItem.sku})</p>
+                    <p className="text-xs text-slate-500">{selectedStockItem.name} ({selectedStockItem.sku})</p>
                   </div>
-                  <button onClick={() => setShowMovementsModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowMovementsModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <div className="max-h-80 overflow-y-auto">
-                  <table className="w-full text-left text-xs text-slate-300">
-                    <thead className="bg-slate-900 text-slate-400 uppercase font-semibold">
+                  <table className="w-full text-left text-xs text-slate-700">
+                    <thead className="bg-white text-slate-500 uppercase font-semibold">
                       <tr>
                         <th className="px-3 py-2">Movement No</th>
                         <th className="px-3 py-2">Type</th>
@@ -1885,7 +1885,7 @@ const AdminInventory = () => {
                     <tbody className="divide-y divide-slate-700/50">
                       {stockMovements.length === 0 ? (
                         <tr>
-                          <td colSpan="6" className="px-3 py-4 text-center text-slate-400">No movements recorded yet.</td>
+                          <td colSpan="6" className="px-3 py-4 text-center text-slate-500">No movements recorded yet.</td>
                         </tr>
                       ) : (
                         stockMovements.map((mov) => (
@@ -1895,9 +1895,9 @@ const AdminInventory = () => {
                               <span className={mov.type === 'receipt' ? 'text-emerald-400' : 'text-amber-400'}>{mov.type}</span>
                             </td>
                             <td className="px-3 py-2 font-mono">{mov.quantity}</td>
-                            <td className="px-3 py-2 font-mono text-slate-200">{mov.previousQuantity} → {mov.newQuantity}</td>
+                            <td className="px-3 py-2 font-mono text-slate-900">{mov.previousQuantity} → {mov.newQuantity}</td>
                             <td className="px-3 py-2">{new Date(mov.createdAt).toLocaleDateString()}</td>
-                            <td className="px-3 py-2 text-slate-400">{mov.notes}</td>
+                            <td className="px-3 py-2 text-slate-500">{mov.notes}</td>
                           </tr>
                         ))
                       )}
@@ -1911,40 +1911,40 @@ const AdminInventory = () => {
           {/* ASSET DETAIL & DEPRECIATION MODAL */}
           {showAssetDetailModal && selectedAsset && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-xl w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-xl w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <div>
                     <h3 className="text-lg font-bold text-white">{selectedAsset.name}</h3>
                     <p className="text-xs font-mono text-indigo-400">{selectedAsset.assetId}</p>
                   </div>
-                  <button onClick={() => setShowAssetDetailModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowAssetDetailModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <div className="space-y-3 text-sm">
-                  <div className="grid grid-cols-2 gap-3 bg-slate-900/60 p-3 rounded-lg">
+                  <div className="grid grid-cols-2 gap-3 bg-white/60 p-3 rounded-lg">
                     <div>
-                      <span className="text-xs text-slate-400">Acquisition Cost:</span>
+                      <span className="text-xs text-slate-500">Acquisition Cost:</span>
                       <div className="font-mono font-bold text-white">₹{((selectedAsset.acquisitionCost || 0) / 100).toLocaleString('en-IN')}</div>
                     </div>
                     <div>
-                      <span className="text-xs text-slate-400">Estimated Book Value (Straight-Line):</span>
+                      <span className="text-xs text-slate-500">Estimated Book Value (Straight-Line):</span>
                       <div className="font-mono font-bold text-emerald-400">
                         ₹{(((selectedAsset.depreciation?.straightLine?.currentBookValuePaise || 0)) / 100).toLocaleString('en-IN')}
                       </div>
                     </div>
                     <div>
-                      <span className="text-xs text-slate-400">Accumulated Depreciation:</span>
+                      <span className="text-xs text-slate-500">Accumulated Depreciation:</span>
                       <div className="font-mono text-amber-400">
                         ₹{(((selectedAsset.depreciation?.straightLine?.accumulatedDepreciationPaise || 0)) / 100).toLocaleString('en-IN')}
                       </div>
                     </div>
                     <div>
-                      <span className="text-xs text-slate-400">Useful Life / Elapsed:</span>
-                      <div className="font-mono text-slate-200">
+                      <span className="text-xs text-slate-500">Useful Life / Elapsed:</span>
+                      <div className="font-mono text-slate-900">
                         {selectedAsset.usefulLifeMonths || 60} mos / {selectedAsset.depreciation?.elapsedMonths || 0} mos
                       </div>
                     </div>
                   </div>
-                  <div className="text-xs text-slate-300 space-y-1">
+                  <div className="text-xs text-slate-700 space-y-1">
                     <div>Serial: <span className="font-mono text-white">{selectedAsset.serialNumber || 'N/A'}</span></div>
                     <div>Location: {selectedAsset.location ? `${selectedAsset.location.building} - ${selectedAsset.location.name}` : 'Central Store'}</div>
                     <div>Current Custodian: {selectedAsset.currentCustodian?.name || 'Unassigned'}</div>
@@ -1958,19 +1958,19 @@ const AdminInventory = () => {
           {/* PROCESS GRN MODAL */}
           {showGrnModal && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-lg w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <h3 className="text-lg font-bold text-white">Process Goods Receipt Note (GRN)</h3>
-                  <button onClick={() => setShowGrnModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowGrnModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <form onSubmit={handleCreateGrn} className="space-y-3">
                   <div>
-                    <label className="text-xs text-slate-400">Destination Location *</label>
+                    <label className="text-xs text-slate-500">Destination Location *</label>
                     <select
                       required
                       value={grnForm.destinationLocation}
                       onChange={(e) => setGrnForm({ ...grnForm, destinationLocation: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     >
                       <option value="">Select Store Location</option>
                       {locations.map(loc => (
@@ -1980,48 +1980,48 @@ const AdminInventory = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400">Invoice Number</label>
+                      <label className="text-xs text-slate-500">Invoice Number</label>
                       <input
                         type="text"
                         value={grnForm.invoiceNumber}
                         onChange={(e) => setGrnForm({ ...grnForm, invoiceNumber: e.target.value })}
                         placeholder="INV-9982"
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Accepted Quantity *</label>
+                      <label className="text-xs text-slate-500">Accepted Quantity *</label>
                       <input
                         required
                         type="number"
                         min="1"
                         value={grnForm.acceptedQuantity}
                         onChange={(e) => setGrnForm({ ...grnForm, acceptedQuantity: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Serial Numbers (one per line, for assets)</label>
+                    <label className="text-xs text-slate-500">Serial Numbers (one per line, for assets)</label>
                     <textarea
                       rows="3"
                       value={grnForm.serialNumbers}
                       onChange={(e) => setGrnForm({ ...grnForm, serialNumbers: e.target.value })}
                       placeholder="SN-1001&#10;SN-1002"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white font-mono"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white font-mono"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowGrnModal(false)}
-                      className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-sm font-medium"
+                      className="px-4 py-2 bg-emerald-600 hover text-white rounded text-sm font-medium"
                     >
                       Accept & Generate Assets/Stock
                     </button>
@@ -2034,42 +2034,42 @@ const AdminInventory = () => {
           {/* NEW PR MODAL */}
           {showPrModal && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-lg w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <h3 className="text-lg font-bold text-white">Create Purchase Requisition</h3>
-                  <button onClick={() => setShowPrModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowPrModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <form onSubmit={handleCreatePr} className="space-y-3">
                   <div>
-                    <label className="text-xs text-slate-400">Requisition Title *</label>
+                    <label className="text-xs text-slate-500">Requisition Title *</label>
                     <input
                       required
                       type="text"
                       value={prForm.title}
                       onChange={(e) => setPrForm({ ...prForm, title: e.target.value })}
                       placeholder="e.g. Lab Consumables Restock Q3"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400">Item Name *</label>
+                      <label className="text-xs text-slate-500">Item Name *</label>
                       <input
                         required
                         type="text"
                         value={prForm.itemName}
                         onChange={(e) => setPrForm({ ...prForm, itemName: e.target.value })}
                         placeholder="Item name"
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Category *</label>
+                      <label className="text-xs text-slate-500">Category *</label>
                       <select
                         required
                         value={prForm.category}
                         onChange={(e) => setPrForm({ ...prForm, category: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       >
                         <option value="">Select Category</option>
                         {categories.map(c => (
@@ -2080,48 +2080,48 @@ const AdminInventory = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400">Quantity *</label>
+                      <label className="text-xs text-slate-500">Quantity *</label>
                       <input
                         required
                         type="number"
                         min="1"
                         value={prForm.quantity}
                         onChange={(e) => setPrForm({ ...prForm, quantity: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Est. Unit Cost (INR)</label>
+                      <label className="text-xs text-slate-500">Est. Unit Cost (INR)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={prForm.estimatedUnitCostRupees}
                         onChange={(e) => setPrForm({ ...prForm, estimatedUnitCostRupees: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Justification</label>
+                    <label className="text-xs text-slate-500">Justification</label>
                     <textarea
                       rows="2"
                       value={prForm.justification}
                       onChange={(e) => setPrForm({ ...prForm, justification: e.target.value })}
                       placeholder="Academic or operational necessity..."
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowPrModal(false)}
-                      className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium"
+                      className="px-4 py-2 bg-indigo-600 hover text-white rounded text-sm font-medium"
                     >
                       Submit Requisition
                     </button>
@@ -2134,19 +2134,19 @@ const AdminInventory = () => {
           {/* SCHEDULE MAINTENANCE MODAL */}
           {showMaintenanceModal && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-lg w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <h3 className="text-lg font-bold text-white">Schedule Asset Maintenance</h3>
-                  <button onClick={() => setShowMaintenanceModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowMaintenanceModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <form onSubmit={handleCreateMaintenance} className="space-y-3">
                   <div>
-                    <label className="text-xs text-slate-400">Asset *</label>
+                    <label className="text-xs text-slate-500">Asset *</label>
                     <select
                       required
                       value={maintenanceForm.asset}
                       onChange={(e) => setMaintenanceForm({ ...maintenanceForm, asset: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     >
                       <option value="">Select Asset</option>
                       {assets.map(a => (
@@ -2156,11 +2156,11 @@ const AdminInventory = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400">Type *</label>
+                      <label className="text-xs text-slate-500">Type *</label>
                       <select
                         value={maintenanceForm.type}
                         onChange={(e) => setMaintenanceForm({ ...maintenanceForm, type: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       >
                         <option value="corrective">Corrective (Repair)</option>
                         <option value="preventative">Preventative</option>
@@ -2169,38 +2169,38 @@ const AdminInventory = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Scheduled Date *</label>
+                      <label className="text-xs text-slate-500">Scheduled Date *</label>
                       <input
                         required
                         type="date"
                         value={maintenanceForm.scheduledDate}
                         onChange={(e) => setMaintenanceForm({ ...maintenanceForm, scheduledDate: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Task Title *</label>
+                    <label className="text-xs text-slate-500">Task Title *</label>
                     <input
                       required
                       type="text"
                       value={maintenanceForm.title}
                       onChange={(e) => setMaintenanceForm({ ...maintenanceForm, title: e.target.value })}
                       placeholder="e.g. Replace projector bulb & clean filter"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowMaintenanceModal(false)}
-                      className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded text-sm font-medium"
+                      className="px-4 py-2 bg-rose-600 hover text-white rounded text-sm font-medium"
                     >
                       Schedule
                     </button>
@@ -2213,29 +2213,29 @@ const AdminInventory = () => {
           {/* INITIATE AUDIT MODAL */}
           {showAuditModal && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-md w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <h3 className="text-lg font-bold text-white">Initiate Physical Audit</h3>
-                  <button onClick={() => setShowAuditModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowAuditModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <form onSubmit={handleCreateAudit} className="space-y-3">
                   <div>
-                    <label className="text-xs text-slate-400">Audit Title *</label>
+                    <label className="text-xs text-slate-500">Audit Title *</label>
                     <input
                       required
                       type="text"
                       value={auditForm.title}
                       onChange={(e) => setAuditForm({ ...auditForm, title: e.target.value })}
                       placeholder="e.g. Annual IT Lab Stocktaking"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Location</label>
+                    <label className="text-xs text-slate-500">Location</label>
                     <select
                       value={auditForm.location}
                       onChange={(e) => setAuditForm({ ...auditForm, location: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     >
                       <option value="">Campus-wide</option>
                       {locations.map(loc => (
@@ -2243,17 +2243,17 @@ const AdminInventory = () => {
                       ))}
                     </select>
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowAuditModal(false)}
-                      className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium"
+                      className="px-4 py-2 bg-indigo-600 hover text-white rounded text-sm font-medium"
                     >
                       Start Stocktaking
                     </button>
@@ -2266,68 +2266,68 @@ const AdminInventory = () => {
           {/* ADD VENDOR MODAL */}
           {showVendorModal && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-md w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <h3 className="text-lg font-bold text-white">Add Vendor to Directory</h3>
-                  <button onClick={() => setShowVendorModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowVendorModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <form onSubmit={handleCreateVendor} className="space-y-3">
                   <div>
-                    <label className="text-xs text-slate-400">Vendor Name *</label>
+                    <label className="text-xs text-slate-500">Vendor Name *</label>
                     <input
                       required
                       type="text"
                       value={vendorForm.name}
                       onChange={(e) => setVendorForm({ ...vendorForm, name: e.target.value })}
                       placeholder="e.g. Apex Infotech Solutions"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400">Vendor Code *</label>
+                      <label className="text-xs text-slate-500">Vendor Code *</label>
                       <input
                         required
                         type="text"
                         value={vendorForm.vendorCode}
                         onChange={(e) => setVendorForm({ ...vendorForm, vendorCode: e.target.value })}
                         placeholder="VND-APEX"
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white font-mono uppercase"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white font-mono uppercase"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Phone *</label>
+                      <label className="text-xs text-slate-500">Phone *</label>
                       <input
                         required
                         type="text"
                         value={vendorForm.phone}
                         onChange={(e) => setVendorForm({ ...vendorForm, phone: e.target.value })}
                         placeholder="+91 9876543210"
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">GST Number</label>
+                    <label className="text-xs text-slate-500">GST Number</label>
                     <input
                       type="text"
                       value={vendorForm.gstNumber}
                       onChange={(e) => setVendorForm({ ...vendorForm, gstNumber: e.target.value })}
                       placeholder="27AAAAA0000A1Z5"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white font-mono"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white font-mono"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowVendorModal(false)}
-                      className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium"
+                      className="px-4 py-2 bg-indigo-600 hover text-white rounded text-sm font-medium"
                     >
                       Save Vendor
                     </button>

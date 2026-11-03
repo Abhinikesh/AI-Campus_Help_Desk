@@ -1,9 +1,9 @@
 /**
  * client/src/context/ThemeContext.jsx
- * Centralized Theme Context & Provider for CampusSphere AI.
- * Supports persistent Light Mode & Dark Mode across Student, Faculty, and Admin portals.
+ * Light Theme Enforcement Provider for CampusSphere AI.
+ * Enforces pure light mode across all portals, dashboards, and components.
  */
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useCallback } from 'react';
 
 const THEME_STORAGE_KEY = 'campussphere_theme';
 
@@ -15,66 +15,42 @@ const ThemeContext = createContext({
 });
 
 export const ThemeProvider = ({ children }) => {
-  // Initialize theme from localStorage, defaulting to 'light'
-  const [theme, setThemeState] = useState(() => {
-    try {
-      const stored = localStorage.getItem(THEME_STORAGE_KEY);
-      if (stored === 'dark' || stored === 'light') {
-        return stored;
-      }
-      // Check system preference as initial fallback if unconfigured
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-      }
-    } catch {
-      // Fallback for restricted storage environments
-    }
-    return 'light';
-  });
-
-  // Apply theme to document root element
-  const applyTheme = useCallback((targetTheme) => {
+  // Always enforce light mode on DOM root
+  const enforceLightMode = useCallback(() => {
     const root = document.documentElement;
-    if (targetTheme === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-      root.setAttribute('data-theme', 'dark');
-      root.style.colorScheme = 'dark';
-    } else {
-      root.classList.remove('dark');
-      root.classList.add('light');
-      root.setAttribute('data-theme', 'light');
-      root.style.colorScheme = 'light';
+    root.classList.remove('dark');
+    root.classList.add('light');
+    root.setAttribute('data-theme', 'light');
+    root.style.colorScheme = 'light';
+    try {
+      localStorage.removeItem(THEME_STORAGE_KEY);
+      localStorage.setItem(THEME_STORAGE_KEY, 'light');
+    } catch {
+      // Ignore storage errors in restricted environments
     }
   }, []);
 
   useEffect(() => {
-    applyTheme(theme);
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, theme);
-    } catch (err) {
-      console.warn('Unable to persist theme to localStorage:', err);
-    }
-  }, [theme, applyTheme]);
+    enforceLightMode();
+  }, [enforceLightMode]);
 
-  const setTheme = useCallback((newTheme) => {
-    if (newTheme === 'dark' || newTheme === 'light') {
-      setThemeState(newTheme);
-    }
-  }, []);
+  // Backward compatible no-op setters (ensures no component crashes if called)
+  const setTheme = useCallback(() => {
+    enforceLightMode();
+  }, [enforceLightMode]);
 
   const toggleTheme = useCallback(() => {
-    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  }, []);
+    enforceLightMode();
+  }, [enforceLightMode]);
 
   const contextValue = useMemo(
     () => ({
-      theme,
-      isDark: theme === 'dark',
+      theme: 'light',
+      isDark: false,
       setTheme,
       toggleTheme,
     }),
-    [theme, setTheme, toggleTheme]
+    [setTheme, toggleTheme]
   );
 
   return (
@@ -93,4 +69,3 @@ export const useTheme = () => {
 };
 
 export default ThemeContext;
-

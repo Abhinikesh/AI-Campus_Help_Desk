@@ -215,31 +215,31 @@ const StudentActivities = () => {
         
         <main className="p-6 max-w-7xl mx-auto w-full space-y-6">
           {/* Header Banner */}
-          <div className="bg-gradient-to-r from-purple-900/60 via-indigo-900/40 to-slate-800 border border-purple-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-slate-50 border border-purple-200 rounded-2xl p-6 shadow-xl relative overflow-hidden">
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-purple-600/30 border border-purple-400/40 rounded-xl text-purple-300">
+                  <div className="p-3 bg-purple-100 border border-purple-200 rounded-xl text-purple-700">
                     <Sparkles className="w-8 h-8" />
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold tracking-tight text-white">Campus Activities & Clubs</h1>
-                    <p className="text-sm text-slate-300">Explore college fests, technical workshops, student clubs, and verifiable certificates.</p>
+                    <p className="text-sm text-slate-600">Explore college fests, technical workshops, student clubs, and verifiable certificates.</p>
                   </div>
                 </div>
               </div>
 
               {/* Quick Summary Badges */}
               <div className="flex flex-wrap gap-2">
-                <div className="px-3 py-1.5 bg-slate-800/80 border border-slate-700 rounded-lg text-xs flex items-center gap-1.5 text-slate-200">
+                <div className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs flex items-center gap-1.5 text-slate-700 shadow-sm">
                   <Calendar className="w-3.5 h-3.5 text-indigo-400" />
                   <span>{events.length} Upcoming Events</span>
                 </div>
-                <div className="px-3 py-1.5 bg-slate-800/80 border border-slate-700 rounded-lg text-xs flex items-center gap-1.5 text-slate-200">
+                <div className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs flex items-center gap-1.5 text-slate-700 shadow-sm">
                   <Users className="w-3.5 h-3.5 text-emerald-400" />
                   <span>{myMemberships.filter((m) => m.status === 'approved').length} Active Clubs</span>
                 </div>
-                <div className="px-3 py-1.5 bg-slate-800/80 border border-slate-700 rounded-lg text-xs flex items-center gap-1.5 text-slate-200">
+                <div className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs flex items-center gap-1.5 text-slate-700 shadow-sm">
                   <Award className="w-3.5 h-3.5 text-amber-400" />
                   <span>{myCertificates.length} Certificates</span>
                 </div>
@@ -269,7 +269,7 @@ const StudentActivities = () => {
                   {tab.count !== undefined && (
                     <span
                       className={`ml-1 text-xs px-2 py-0.5 rounded-full ${
-                        isActive ? 'bg-purple-500/20 text-purple-600 dark:text-purple-300' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                        isActive ? 'bg-purple-50 text-purple-600 ' : 'bg-slate-200  text-slate-600 '
                       }`}
                     >
                       {tab.count}
@@ -298,7 +298,7 @@ const StudentActivities = () => {
                         placeholder="Search events by title, code, or description..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-purple-500"
+                        className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus"
                       />
                     </div>
                     <div className="flex items-center gap-2 w-full md:w-auto">
@@ -306,7 +306,7 @@ const StudentActivities = () => {
                       <select
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-purple-500"
+                        className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
                       >
                         <option value="">All Categories</option>
                         <option value="technical">Technical</option>
@@ -322,9 +322,9 @@ const StudentActivities = () => {
                   </div>
 
                   {filteredEvents.length === 0 ? (
-                    <div className="text-center py-16 bg-slate-800/40 rounded-2xl border border-slate-800">
+                    <div className="text-center py-16 bg-slate-50 rounded-2xl border border-slate-200">
                       <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                      <h3 className="text-lg font-medium text-slate-300">No events found</h3>
+                      <h3 className="text-lg font-medium text-slate-700">No events found</h3>
                       <p className="text-sm text-slate-500 mt-1">Try adjusting your search criteria or category filter.</p>
                     </div>
                   ) : (
@@ -342,13 +342,13 @@ const StudentActivities = () => {
                         return (
                           <div
                             key={ev._id}
-                            className="bg-slate-800/60 border border-slate-700/60 hover:border-purple-500/50 rounded-2xl overflow-hidden shadow-lg transition-all flex flex-col justify-between"
+                            className="bg-white border border-slate-200 hover rounded-2xl overflow-hidden shadow-lg transition-all flex flex-col justify-between"
                           >
                             <div>
                               {/* Event Card Header */}
                               <div className="p-5 pb-3">
                                 <div className="flex items-center justify-between gap-2 mb-2">
-                                  <span className="text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                  <span className="text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
                                     {ev.category}
                                   </span>
                                   <span className="text-xs text-slate-400 font-mono">{ev.eventCode}</span>
@@ -358,7 +358,7 @@ const StudentActivities = () => {
                               </div>
 
                               {/* Event Details Grid */}
-                              <div className="px-5 py-3 bg-slate-900/40 border-y border-slate-800/60 space-y-2 text-xs text-slate-300">
+                              <div className="px-5 py-3 bg-slate-50 border-y border-slate-200 space-y-2 text-xs text-slate-700">
                                 <div className="flex items-center gap-2">
                                   <Calendar className="w-3.5 h-3.5 text-purple-400" />
                                   <span>{startDateFormatted} at {startTime}</span>
@@ -378,35 +378,35 @@ const StudentActivities = () => {
                             </div>
 
                             {/* Card Actions */}
-                            <div className="p-4 bg-slate-800/90 flex items-center justify-between gap-2">
+                            <div className="p-4 bg-slate-50 flex items-center justify-between gap-2">
                               <button
                                 onClick={() => handleCheckEligibility(ev)}
-                                className="px-3 py-1.5 text-xs text-slate-300 bg-slate-700/60 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-1"
+                                className="px-3 py-1.5 text-xs text-slate-700 bg-slate-100 hover rounded-lg transition-colors flex items-center gap-1"
                               >
                                 <span>Eligibility</span>
                               </button>
 
                               {registered ? (
-                                <span className="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                                <span className="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                                   <CheckCircle2 className="w-3.5 h-3.5" /> Registered
                                 </span>
                               ) : isFull ? (
                                 ev.isWaitlistEnabled ? (
                                   <button
                                     onClick={() => handleOpenRegister(ev)}
-                                    className="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-colors"
+                                    className="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-600 hover text-white transition-colors"
                                   >
                                     Join Waitlist
                                   </button>
                                 ) : (
-                                  <span className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-700 text-slate-400">
+                                  <span className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-400">
                                     Full
                                   </span>
                                 )
                               ) : (
                                 <button
                                   onClick={() => handleOpenRegister(ev)}
-                                  className="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-purple-600 hover:bg-purple-500 text-white transition-colors shadow-sm"
+                                  className="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-purple-600 hover text-white transition-colors shadow-sm"
                                 >
                                   Register Now
                                 </button>
@@ -424,9 +424,9 @@ const StudentActivities = () => {
               {activeTab === 'my_registrations' && (
                 <div className="space-y-4">
                   {myRegistrations.length === 0 ? (
-                    <div className="text-center py-16 bg-slate-800/40 rounded-2xl border border-slate-800">
+                    <div className="text-center py-16 bg-slate-50 rounded-2xl border border-slate-200">
                       <Clock className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                      <h3 className="text-lg font-medium text-slate-300">No active event registrations</h3>
+                      <h3 className="text-lg font-medium text-slate-700">No active event registrations</h3>
                       <p className="text-sm text-slate-500 mt-1">Browse upcoming events and register to participate.</p>
                     </div>
                   ) : (
@@ -440,7 +440,7 @@ const StudentActivities = () => {
                         return (
                           <div
                             key={reg._id}
-                            className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                            className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
                           >
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
@@ -448,12 +448,12 @@ const StudentActivities = () => {
                                 <span
                                   className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
                                     isConfirmed
-                                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                       : isWaitlisted
-                                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
                                       : isAttended
-                                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                                      : 'bg-slate-700 text-slate-300'
+                                      ? 'bg-blue-500/20 text-blue-700 border border-blue-500/30'
+                                      : 'bg-slate-100 text-slate-700'
                                   }`}
                                 >
                                   {isWaitlisted ? `Waitlist #${reg.waitlistNumber}` : reg.status.toUpperCase()}
@@ -474,7 +474,7 @@ const StudentActivities = () => {
                                     setSelectedEvent(ev);
                                     setShowFeedbackModal(true);
                                   }}
-                                  className="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors flex items-center gap-1"
+                                  className="px-3 py-1.5 text-xs bg-indigo-600 hover text-white rounded-lg transition-colors flex items-center gap-1"
                                 >
                                   <Star className="w-3.5 h-3.5" /> Submit Feedback
                                 </button>
@@ -482,7 +482,7 @@ const StudentActivities = () => {
                               {['registered', 'confirmed', 'waitlisted'].includes(reg.status) && (
                                 <button
                                   onClick={() => handleCancelRegistration(ev._id, reg._id)}
-                                  className="px-3 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/30 rounded-lg transition-colors"
+                                  className="px-3 py-1.5 text-xs text-red-400 hover hover border border-red-500/30 rounded-lg transition-colors"
                                 >
                                   Cancel Registration
                                 </button>
@@ -508,11 +508,11 @@ const StudentActivities = () => {
                       return (
                         <div
                           key={club._id}
-                          className="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-6 flex flex-col justify-between shadow-lg"
+                          className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between shadow-lg"
                         >
                           <div>
                             <div className="flex items-center justify-between mb-3">
-                              <span className="text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                              <span className="text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
                                 {club.category}
                               </span>
                               <span className="text-xs text-slate-400 font-mono">{club.code}</span>
@@ -520,7 +520,7 @@ const StudentActivities = () => {
                             <h3 className="text-lg font-semibold text-white">{club.name}</h3>
                             <p className="text-xs text-slate-400 mt-2 line-clamp-3">{club.description}</p>
 
-                            <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-1.5 text-xs text-slate-300">
+                            <div className="mt-4 pt-3 border-t border-slate-200 space-y-1.5 text-xs text-slate-700">
                               <div className="flex justify-between">
                                 <span className="text-slate-400">Meeting:</span>
                                 <span>{club.meetingSchedule}</span>
@@ -534,17 +534,17 @@ const StudentActivities = () => {
 
                           <div className="mt-5 pt-3">
                             {isMember ? (
-                              <span className="w-full block text-center py-2 text-xs font-medium rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              <span className="w-full block text-center py-2 text-xs font-medium rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200">
                                 ✓ Member ({myMembership.role})
                               </span>
                             ) : isPending ? (
-                              <span className="w-full block text-center py-2 text-xs font-medium rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              <span className="w-full block text-center py-2 text-xs font-medium rounded-xl bg-amber-50 text-amber-700 border border-amber-200">
                                 Application Under Review
                               </span>
                             ) : (
                               <button
                                 onClick={() => handleApplyClub(club)}
-                                className="w-full py-2 text-xs font-medium rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
+                                className="w-full py-2 text-xs font-medium rounded-xl bg-indigo-600 hover text-white transition-colors"
                               >
                                 Join Club
                               </button>
@@ -561,9 +561,9 @@ const StudentActivities = () => {
               {activeTab === 'certificates' && (
                 <div className="space-y-4">
                   {myCertificates.length === 0 ? (
-                    <div className="text-center py-16 bg-slate-800/40 rounded-2xl border border-slate-800">
+                    <div className="text-center py-16 bg-slate-50 rounded-2xl border border-slate-200">
                       <Award className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                      <h3 className="text-lg font-medium text-slate-300">No participation certificates issued yet</h3>
+                      <h3 className="text-lg font-medium text-slate-700">No participation certificates issued yet</h3>
                       <p className="text-sm text-slate-500 mt-1">Attend campus events to earn verified participation and achievement honors.</p>
                     </div>
                   ) : (
@@ -571,28 +571,28 @@ const StudentActivities = () => {
                       {myCertificates.map((cert) => (
                         <div
                           key={cert._id}
-                          className="bg-gradient-to-br from-slate-800 to-slate-800/90 border border-amber-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden"
+                          className="bg-gradient-to-br from-slate-800 to-slate-800/90 border border-amber-200 rounded-2xl p-5 shadow-lg relative overflow-hidden"
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div className="space-y-1">
-                              <span className="text-xs uppercase font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              <span className="text-xs uppercase font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
                                 {cert.certificateType}
                               </span>
                               <h4 className="text-base font-bold text-white pt-1">{cert.eventTitle}</h4>
-                              <p className="text-xs text-slate-300">Awarded to: <span className="font-semibold">{cert.participantName}</span> ({cert.studentRollNumber})</p>
+                              <p className="text-xs text-slate-700">Awarded to: <span className="font-semibold">{cert.participantName}</span> ({cert.studentRollNumber})</p>
                               <p className="text-xs text-slate-400">Issued by: {cert.issuerName}</p>
                               <p className="text-xs font-mono text-purple-400 pt-1">ID: {cert.certificateNumber}</p>
                             </div>
                             <Award className="w-10 h-10 text-amber-400/80 shrink-0" />
                           </div>
 
-                          <div className="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between">
+                          <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between">
                             <span className="text-xs text-slate-400">
                               Issued: {new Date(cert.issueDate).toLocaleDateString()}
                             </span>
                             <button
                               onClick={() => handleVerifyCertificate(cert.certificateNumber)}
-                              className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg flex items-center gap-1 transition-colors"
+                              className="px-3 py-1.5 text-xs bg-slate-100 hover text-slate-900 rounded-lg flex items-center gap-1 transition-colors"
                             >
                               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Verify Authenticity
                             </button>
@@ -608,22 +608,22 @@ const StudentActivities = () => {
               {activeTab === 'announcements' && (
                 <div className="space-y-4">
                   {announcements.length === 0 ? (
-                    <div className="text-center py-16 bg-slate-800/40 rounded-2xl border border-slate-800">
+                    <div className="text-center py-16 bg-slate-50 rounded-2xl border border-slate-200">
                       <Bell className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                      <h3 className="text-lg font-medium text-slate-300">No event announcements</h3>
+                      <h3 className="text-lg font-medium text-slate-700">No event announcements</h3>
                       <p className="text-sm text-slate-500 mt-1">Institutional and club notices will appear here.</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {announcements.map((ann) => (
-                        <div key={ann._id} className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-2">
+                        <div key={ann._id} className="bg-white border border-slate-200 rounded-xl p-5 space-y-2">
                           <div className="flex items-center justify-between">
                             <h4 className="text-base font-semibold text-white">{ann.title}</h4>
                             <span className="text-xs text-slate-400">
                               {new Date(ann.publishDate).toLocaleDateString()}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-300 leading-relaxed">{ann.content}</p>
+                          <p className="text-xs text-slate-700 leading-relaxed">{ann.content}</p>
                           <div className="text-xs text-slate-500 pt-1">
                             Audience: <span className="font-mono text-purple-400">{ann.targetAudience}</span>
                           </div>
@@ -639,10 +639,10 @@ const StudentActivities = () => {
           {/* MODAL: ELIGIBILITY CHECK */}
           {showEligibilityModal && selectedEvent && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-white">Eligibility Criteria</h3>
-                  <button onClick={() => setShowEligibilityModal(false)} className="text-slate-400 hover:text-slate-200">
+                  <button onClick={() => setShowEligibilityModal(false)} className="text-slate-400 hover">
                     ✕
                   </button>
                 </div>
@@ -653,7 +653,7 @@ const StudentActivities = () => {
 
                 <div className="space-y-2 text-xs">
                   {eligibilityData?.eligible ? (
-                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-2 text-emerald-300">
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-200 rounded-xl flex items-center gap-2 text-emerald-700">
                       <CheckCircle2 className="w-5 h-5 shrink-0" />
                       <span>You meet all eligibility requirements for this event!</span>
                     </div>
@@ -675,7 +675,7 @@ const StudentActivities = () => {
                 <div className="pt-2 flex justify-end">
                   <button
                     onClick={() => setShowEligibilityModal(false)}
-                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded-xl transition-colors"
+                    className="px-4 py-2 bg-slate-100 hover text-white text-xs rounded-xl transition-colors"
                   >
                     Close
                   </button>
@@ -687,28 +687,28 @@ const StudentActivities = () => {
           {/* MODAL: EVENT REGISTRATION CONFIRMATION */}
           {showRegisterModal && selectedEvent && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
                 <h3 className="text-lg font-bold text-white">Confirm Event Registration</h3>
-                <p className="text-xs text-slate-300">
+                <p className="text-xs text-slate-700">
                   You are about to register for <span className="font-semibold text-purple-400">{selectedEvent.title}</span>.
                 </p>
 
-                <div className="p-3 bg-slate-900/60 rounded-xl space-y-1.5 text-xs text-slate-400">
-                  <div>Date: <span className="text-slate-200">{new Date(selectedEvent.startDate).toLocaleDateString()}</span></div>
-                  <div>Venue: <span className="text-slate-200">{selectedEvent.venueName || selectedEvent.location}</span></div>
-                  <div>Category: <span className="text-slate-200 uppercase">{selectedEvent.category}</span></div>
+                <div className="p-3 bg-white/60 rounded-xl space-y-1.5 text-xs text-slate-400">
+                  <div>Date: <span className="text-slate-900">{new Date(selectedEvent.startDate).toLocaleDateString()}</span></div>
+                  <div>Venue: <span className="text-slate-900">{selectedEvent.venueName || selectedEvent.location}</span></div>
+                  <div>Category: <span className="text-slate-900 uppercase">{selectedEvent.category}</span></div>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     onClick={() => setShowRegisterModal(false)}
-                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded-xl"
+                    className="px-4 py-2 bg-slate-100 hover text-slate-900 text-xs rounded-xl"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleConfirmRegister}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded-xl font-medium shadow-sm"
+                    className="px-4 py-2 bg-purple-600 hover text-white text-xs rounded-xl font-medium shadow-sm"
                   >
                     Confirm Registration
                   </button>
@@ -720,7 +720,7 @@ const StudentActivities = () => {
           {/* MODAL: CLUB MEMBERSHIP APPLICATION */}
           {showClubModal && selectedClub && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
                 <h3 className="text-lg font-bold text-white">Join {selectedClub.name}</h3>
                 <p className="text-xs text-slate-400">Please provide a brief statement of purpose for your membership application.</p>
 
@@ -729,19 +729,19 @@ const StudentActivities = () => {
                   placeholder="Why do you want to join this club? What skills or interests do you bring?"
                   value={statementOfPurpose}
                   onChange={(e) => setStatementOfPurpose(e.target.value)}
-                  className="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                  className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus"
                 />
 
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     onClick={() => setShowClubModal(false)}
-                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded-xl"
+                    className="px-4 py-2 bg-slate-100 hover text-slate-900 text-xs rounded-xl"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleConfirmApplyClub}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-xl font-medium shadow-sm"
+                    className="px-4 py-2 bg-indigo-600 hover text-white text-xs rounded-xl font-medium shadow-sm"
                   >
                     Submit Application
                   </button>
@@ -753,30 +753,30 @@ const StudentActivities = () => {
           {/* MODAL: CERTIFICATE VERIFICATION VIEW */}
           {verifyingCert && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-amber-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="bg-white border border-amber-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-emerald-400">
                     <ShieldCheck className="w-5 h-5" />
                     <span className="font-bold text-sm">Authentic Verified Certificate</span>
                   </div>
-                  <button onClick={() => setVerifyingCert(null)} className="text-slate-400 hover:text-slate-200">
+                  <button onClick={() => setVerifyingCert(null)} className="text-slate-400 hover">
                     ✕
                   </button>
                 </div>
 
-                <div className="p-4 bg-slate-900/80 rounded-xl space-y-2 text-xs">
+                <div className="p-4 bg-white/80 rounded-xl space-y-2 text-xs">
                   <div><span className="text-slate-400">Certificate #:</span> <span className="font-mono text-purple-400 font-bold">{verifyingCert.certificateNumber}</span></div>
                   <div><span className="text-slate-400">Recipient:</span> <span className="text-white font-semibold">{verifyingCert.participantName}</span></div>
                   <div><span className="text-slate-400">Event:</span> <span className="text-white">{verifyingCert.eventTitle}</span></div>
-                  <div><span className="text-slate-400">Honor Type:</span> <span className="uppercase text-amber-300 font-medium">{verifyingCert.certificateType}</span></div>
-                  <div><span className="text-slate-400">Issuer:</span> <span className="text-slate-200">{verifyingCert.issuerName}</span></div>
-                  <div><span className="text-slate-400">Issue Date:</span> <span className="text-slate-200">{new Date(verifyingCert.issueDate).toLocaleDateString()}</span></div>
+                  <div><span className="text-slate-400">Honor Type:</span> <span className="uppercase text-amber-700 font-medium">{verifyingCert.certificateType}</span></div>
+                  <div><span className="text-slate-400">Issuer:</span> <span className="text-slate-900">{verifyingCert.issuerName}</span></div>
+                  <div><span className="text-slate-400">Issue Date:</span> <span className="text-slate-900">{new Date(verifyingCert.issueDate).toLocaleDateString()}</span></div>
                 </div>
 
                 <div className="pt-2 flex justify-end">
                   <button
                     onClick={() => setVerifyingCert(null)}
-                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded-xl"
+                    className="px-4 py-2 bg-slate-100 hover text-white text-xs rounded-xl"
                   >
                     Close
                   </button>
@@ -788,9 +788,9 @@ const StudentActivities = () => {
           {/* MODAL: EVENT FEEDBACK */}
           {showFeedbackModal && selectedEvent && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+              <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
                 <h3 className="text-lg font-bold text-white">Event Feedback</h3>
-                <p className="text-xs text-slate-300">Share your thoughts on <span className="text-purple-400 font-semibold">{selectedEvent.title}</span>.</p>
+                <p className="text-xs text-slate-700">Share your thoughts on <span className="text-purple-400 font-semibold">{selectedEvent.title}</span>.</p>
 
                 <div className="space-y-3 text-xs">
                   <div>
@@ -817,7 +817,7 @@ const StudentActivities = () => {
                       placeholder="What did you like best or how can we improve?"
                       value={feedbackComments}
                       onChange={(e) => setFeedbackComments(e.target.value)}
-                      className="w-full p-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none"
+                      className="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -825,13 +825,13 @@ const StudentActivities = () => {
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     onClick={() => setShowFeedbackModal(false)}
-                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded-xl"
+                    className="px-4 py-2 bg-slate-100 hover text-slate-900 text-xs rounded-xl"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSubmitFeedback}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-xl font-medium"
+                    className="px-4 py-2 bg-indigo-600 hover text-white text-xs rounded-xl font-medium"
                   >
                     Submit Feedback
                   </button>

@@ -42,12 +42,12 @@ const LoginPage = () => {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        background: '#0B0F19',
+        background: '#F8FAFC',
         gap: '14px',
         flexDirection: 'column',
       }}>
         <div className="spinner" style={{ width: 36, height: 36, borderWidth: 3 }} />
-        <p style={{ color: '#94A3B8', fontFamily: 'Inter, sans-serif', fontSize: 14 }}>
+        <p style={{ color: '#64748B', fontFamily: 'Inter, sans-serif', fontSize: 14 }}>
           Verifying session…
         </p>
       </div>

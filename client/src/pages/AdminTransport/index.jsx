@@ -361,15 +361,15 @@ const AdminTransport = () => {
         
         <main className="p-6 max-w-7xl mx-auto w-full space-y-6">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
             <div>
               <div className="flex items-center gap-2 text-indigo-400 font-semibold tracking-wide text-xs uppercase mb-1">
                 <Bus size={16} /> Campus Transport Administration
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+              <h1 className="text-2xl md font-bold text-slate-900 tracking-tight">
                 Transport & Fleet Desk
               </h1>
-              <p className="text-sm text-slate-400 mt-0.5">
+              <p className="text-sm text-slate-500 mt-0.5">
                 Centralized fleet inventory, route allocation, staff assignments, daily trips, and regulatory compliance.
               </p>
             </div>
@@ -378,7 +378,7 @@ const AdminTransport = () => {
               <button
                 onClick={loadData}
                 disabled={loading}
-                className="p-2.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-300 transition"
+                className="p-2.5 rounded-lg border border-slate-200 bg-white hover text-slate-700 transition"
                 title="Refresh Metrics"
               >
                 <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
@@ -388,14 +388,14 @@ const AdminTransport = () => {
                 <a
                   href={transportService.exportCsvUrl('routes')}
                   download
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-slate-300 transition"
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white hover text-xs font-semibold text-slate-700 transition"
                 >
                   <Download size={14} /> Export Routes
                 </a>
                 <a
                   href={transportService.exportCsvUrl('allocations')}
                   download
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-slate-300 transition"
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white hover text-xs font-semibold text-slate-700 transition"
                 >
                   <Download size={14} /> Export Allocations
                 </a>
@@ -433,38 +433,38 @@ const AdminTransport = () => {
           {/* Metrics Overview */}
           {metrics && (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-              <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/50">
-                <span className="text-xs text-slate-400 block mb-1">Total Fleet</span>
-                <span className="text-2xl font-bold text-white">{metrics.totalVehicles || 0}</span>
+              <div className="p-4 rounded-xl border border-slate-200 bg-white">
+                <span className="text-xs text-slate-500 block mb-1">Total Fleet</span>
+                <span className="text-2xl font-bold text-slate-900">{metrics.totalVehicles || 0}</span>
                 <span className="text-xs text-slate-500 block mt-0.5">{metrics.activeVehicles || 0} active</span>
               </div>
 
-              <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/50">
-                <span className="text-xs text-slate-400 block mb-1">Active Routes</span>
+              <div className="p-4 rounded-xl border border-slate-200 bg-white">
+                <span className="text-xs text-slate-500 block mb-1">Active Routes</span>
                 <span className="text-2xl font-bold text-indigo-400">{metrics.activeRoutes || 0}</span>
                 <span className="text-xs text-slate-500 block mt-0.5">Of {metrics.totalRoutes || 0} total</span>
               </div>
 
-              <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/50">
-                <span className="text-xs text-slate-400 block mb-1">Fleet Capacity</span>
-                <span className="text-2xl font-bold text-white">{metrics.totalCapacity || 0}</span>
+              <div className="p-4 rounded-xl border border-slate-200 bg-white">
+                <span className="text-xs text-slate-500 block mb-1">Fleet Capacity</span>
+                <span className="text-2xl font-bold text-slate-900">{metrics.totalCapacity || 0}</span>
                 <span className="text-xs text-slate-500 block mt-0.5">Passenger seats</span>
               </div>
 
-              <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/50">
-                <span className="text-xs text-slate-400 block mb-1">Allocated Students</span>
+              <div className="p-4 rounded-xl border border-slate-200 bg-white">
+                <span className="text-xs text-slate-500 block mb-1">Allocated Students</span>
                 <span className="text-2xl font-bold text-emerald-400">{metrics.allocatedStudents || 0}</span>
                 <span className="text-xs text-slate-500 block mt-0.5">Active passes</span>
               </div>
 
-              <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/50">
-                <span className="text-xs text-slate-400 block mb-1">Occupancy Rate</span>
+              <div className="p-4 rounded-xl border border-slate-200 bg-white">
+                <span className="text-xs text-slate-500 block mb-1">Occupancy Rate</span>
                 <span className="text-2xl font-bold text-purple-400">{metrics.occupancyRate || 0}%</span>
                 <span className="text-xs text-slate-500 block mt-0.5">{metrics.availableCapacity || 0} seats open</span>
               </div>
 
-              <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/50">
-                <span className="text-xs text-slate-400 block mb-1">Pending Apps</span>
+              <div className="p-4 rounded-xl border border-slate-200 bg-white">
+                <span className="text-xs text-slate-500 block mb-1">Pending Apps</span>
                 <span className="text-2xl font-bold text-amber-400">{metrics.pendingApps || 0}</span>
                 <span className="text-xs text-slate-500 block mt-0.5">Awaiting review</span>
               </div>
@@ -472,13 +472,13 @@ const AdminTransport = () => {
           )}
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-slate-800 text-sm font-medium gap-2 overflow-x-auto">
+          <div className="flex border-b border-slate-200 text-sm font-medium gap-2 overflow-x-auto">
             <button
               onClick={() => setActiveTab('routes')}
               className={`pb-3 px-3 flex items-center gap-2 border-b-2 whitespace-nowrap transition ${
                 activeTab === 'routes'
                   ? 'border-indigo-500 text-indigo-400 font-semibold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <MapPin size={16} /> Routes & Stops ({routes.length})
@@ -488,7 +488,7 @@ const AdminTransport = () => {
               className={`pb-3 px-3 flex items-center gap-2 border-b-2 whitespace-nowrap transition ${
                 activeTab === 'vehicles'
                   ? 'border-indigo-500 text-indigo-400 font-semibold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <Bus size={16} /> Fleet Inventory ({vehicles.length})
@@ -498,7 +498,7 @@ const AdminTransport = () => {
               className={`pb-3 px-3 flex items-center gap-2 border-b-2 whitespace-nowrap transition ${
                 activeTab === 'staff'
                   ? 'border-indigo-500 text-indigo-400 font-semibold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <Users size={16} /> Drivers & Attendants ({staff.length})
@@ -508,7 +508,7 @@ const AdminTransport = () => {
               className={`pb-3 px-3 flex items-center gap-2 border-b-2 whitespace-nowrap transition ${
                 activeTab === 'applications'
                   ? 'border-indigo-500 text-indigo-400 font-semibold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <Calendar size={16} /> Applications ({applications.length})
@@ -518,7 +518,7 @@ const AdminTransport = () => {
               className={`pb-3 px-3 flex items-center gap-2 border-b-2 whitespace-nowrap transition ${
                 activeTab === 'allocations'
                   ? 'border-indigo-500 text-indigo-400 font-semibold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <CheckCircle2 size={16} /> Active Allocations ({allocations.length})
@@ -528,7 +528,7 @@ const AdminTransport = () => {
               className={`pb-3 px-3 flex items-center gap-2 border-b-2 whitespace-nowrap transition ${
                 activeTab === 'trips'
                   ? 'border-indigo-500 text-indigo-400 font-semibold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <Clock size={16} /> Daily Trips ({trips.length})
@@ -538,7 +538,7 @@ const AdminTransport = () => {
               className={`pb-3 px-3 flex items-center gap-2 border-b-2 whitespace-nowrap transition ${
                 activeTab === 'maintenance'
                   ? 'border-indigo-500 text-indigo-400 font-semibold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <Wrench size={16} /> Maintenance & Incidents
@@ -555,18 +555,18 @@ const AdminTransport = () => {
               {activeTab === 'routes' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-white">Configured Transport Routes</h3>
+                    <h3 className="text-base font-semibold text-slate-900">Configured Transport Routes</h3>
                     <button
                       onClick={() => setShowAddRouteModal(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium text-xs text-white"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover font-medium text-xs text-slate-900"
                     >
                       <Plus size={15} /> Add New Route
                     </button>
                   </div>
 
-                  <div className="border border-slate-800 rounded-xl bg-slate-900/40 overflow-hidden">
+                  <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                      <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                         <tr>
                           <th className="p-3.5">Code</th>
                           <th className="p-3.5">Route Name</th>
@@ -578,12 +578,12 @@ const AdminTransport = () => {
                           <th className="p-3.5 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                      <tbody className="divide-y divide-slate-800/60 text-slate-700">
                         {routes.map((r) => (
-                          <tr key={r._id} className="hover:bg-slate-900/60 transition">
+                          <tr key={r._id} className="hover transition">
                             <td className="p-3.5 font-bold text-indigo-400">{r.code}</td>
-                            <td className="p-3.5 font-medium text-white">{r.name}</td>
-                            <td className="p-3.5 text-slate-400">
+                            <td className="p-3.5 font-medium text-slate-900">{r.name}</td>
+                            <td className="p-3.5 text-slate-500">
                               {r.startLocation} → {r.endLocation}
                             </td>
                             <td className="p-3.5">
@@ -602,7 +602,7 @@ const AdminTransport = () => {
                               {r.assignedDriver ? r.assignedDriver.name : <span className="text-slate-500 italic">Unassigned</span>}
                             </td>
                             <td className="p-3.5">
-                              <span className="font-semibold text-white">{r.allocatedStudentsCount}</span> / {r.maxCapacity}
+                              <span className="font-semibold text-slate-900">{r.allocatedStudentsCount}</span> / {r.maxCapacity}
                             </td>
                             <td className="p-3.5 text-right space-x-2">
                               <button
@@ -610,7 +610,7 @@ const AdminTransport = () => {
                                   setSelectedRoute(r);
                                   setShowAddStopModal(true);
                                 }}
-                                className="px-2.5 py-1 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
+                                className="px-2.5 py-1 rounded border border-slate-200 bg-slate-100 hover text-slate-200"
                               >
                                 + Stop
                               </button>
@@ -619,7 +619,7 @@ const AdminTransport = () => {
                                   setSelectedRoute(r);
                                   setShowAssignModal(true);
                                 }}
-                                className="px-2.5 py-1 rounded bg-indigo-600/80 hover:bg-indigo-600 text-white font-medium"
+                                className="px-2.5 py-1 rounded bg-indigo-600/80 hover text-slate-900 font-medium"
                               >
                                 Assign
                               </button>
@@ -636,18 +636,18 @@ const AdminTransport = () => {
               {activeTab === 'vehicles' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-white">Centralized Fleet Inventory</h3>
+                    <h3 className="text-base font-semibold text-slate-900">Centralized Fleet Inventory</h3>
                     <button
                       onClick={() => setShowAddVehicleModal(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium text-xs text-white"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover font-medium text-xs text-slate-900"
                     >
                       <Plus size={15} /> Register Vehicle
                     </button>
                   </div>
 
-                  <div className="border border-slate-800 rounded-xl bg-slate-900/40 overflow-hidden">
+                  <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                      <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                         <tr>
                           <th className="p-3.5">Code</th>
                           <th className="p-3.5">Registration</th>
@@ -658,11 +658,11 @@ const AdminTransport = () => {
                           <th className="p-3.5">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                      <tbody className="divide-y divide-slate-800/60 text-slate-700">
                         {vehicles.map((v) => (
-                          <tr key={v._id} className="hover:bg-slate-900/60 transition">
+                          <tr key={v._id} className="hover transition">
                             <td className="p-3.5 font-bold text-indigo-400">{v.vehicleCode}</td>
-                            <td className="p-3.5 font-semibold text-white">{v.registrationNumber}</td>
+                            <td className="p-3.5 font-semibold text-slate-900">{v.registrationNumber}</td>
                             <td className="p-3.5">{v.makeAndModel}</td>
                             <td className="p-3.5 font-medium">{v.seatingCapacity} seats</td>
                             <td className="p-3.5 capitalize">{v.vehicleType} ({v.fuelType})</td>
@@ -698,18 +698,18 @@ const AdminTransport = () => {
               {activeTab === 'staff' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-white">Transport Operations Staff</h3>
+                    <h3 className="text-base font-semibold text-slate-900">Transport Operations Staff</h3>
                     <button
                       onClick={() => setShowAddStaffModal(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium text-xs text-white"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover font-medium text-xs text-slate-900"
                     >
                       <Plus size={15} /> Add Staff Profile
                     </button>
                   </div>
 
-                  <div className="border border-slate-800 rounded-xl bg-slate-900/40 overflow-hidden">
+                  <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                      <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                         <tr>
                           <th className="p-3.5">Role</th>
                           <th className="p-3.5">Name</th>
@@ -720,11 +720,11 @@ const AdminTransport = () => {
                           <th className="p-3.5">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                      <tbody className="divide-y divide-slate-800/60 text-slate-700">
                         {staff.map((s) => (
-                          <tr key={s._id} className="hover:bg-slate-900/60 transition">
+                          <tr key={s._id} className="hover transition">
                             <td className="p-3.5 font-bold uppercase text-indigo-400">{s.staffRole}</td>
-                            <td className="p-3.5 font-medium text-white">{s.fullName}</td>
+                            <td className="p-3.5 font-medium text-slate-900">{s.fullName}</td>
                             <td className="p-3.5">{s.phone}</td>
                             <td className="p-3.5 font-mono">{s.licenseNumber || 'N/A'}</td>
                             <td className="p-3.5">
@@ -746,12 +746,12 @@ const AdminTransport = () => {
               {activeTab === 'applications' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-white">Student Transport Applications</h3>
+                    <h3 className="text-base font-semibold text-slate-900">Student Transport Applications</h3>
                   </div>
 
-                  <div className="border border-slate-800 rounded-xl bg-slate-900/40 overflow-hidden">
+                  <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                      <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                         <tr>
                           <th className="p-3.5">App Number</th>
                           <th className="p-3.5">Student</th>
@@ -762,11 +762,11 @@ const AdminTransport = () => {
                           <th className="p-3.5 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                      <tbody className="divide-y divide-slate-800/60 text-slate-700">
                         {applications.map((app) => (
-                          <tr key={app._id} className="hover:bg-slate-900/60 transition">
+                          <tr key={app._id} className="hover transition">
                             <td className="p-3.5 font-mono text-indigo-400">#{app.applicationNumber}</td>
-                            <td className="p-3.5 font-semibold text-white">{app.student?.fullName}</td>
+                            <td className="p-3.5 font-semibold text-slate-900">{app.student?.fullName}</td>
                             <td className="p-3.5 font-mono">{app.student?.rollNumber}</td>
                             <td className="p-3.5">{app.preferredRoute?.code} ({app.preferredRoute?.name})</td>
                             <td className="p-3.5">{app.preferredPickupStop?.stopName}</td>
@@ -790,7 +790,7 @@ const AdminTransport = () => {
                                     setSelectedApp(app);
                                     setShowReviewAppModal(true);
                                   }}
-                                  className="px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-medium"
+                                  className="px-3 py-1 rounded bg-indigo-600 hover text-slate-900 font-medium"
                                 >
                                   Review
                                 </button>
@@ -808,18 +808,18 @@ const AdminTransport = () => {
               {activeTab === 'allocations' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-white">Active Passenger Allocations</h3>
+                    <h3 className="text-base font-semibold text-slate-900">Active Passenger Allocations</h3>
                     <button
                       onClick={() => setShowAllocateModal(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium text-xs text-white"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover font-medium text-xs text-slate-900"
                     >
                       <Plus size={15} /> + Allocate Student
                     </button>
                   </div>
 
-                  <div className="border border-slate-800 rounded-xl bg-slate-900/40 overflow-hidden">
+                  <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                      <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                         <tr>
                           <th className="p-3.5">Pass ID</th>
                           <th className="p-3.5">Student</th>
@@ -831,11 +831,11 @@ const AdminTransport = () => {
                           <th className="p-3.5 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                      <tbody className="divide-y divide-slate-800/60 text-slate-700">
                         {allocations.map((a) => (
-                          <tr key={a._id} className="hover:bg-slate-900/60 transition">
+                          <tr key={a._id} className="hover transition">
                             <td className="p-3.5 font-mono text-indigo-400">{a.allocationNumber}</td>
-                            <td className="p-3.5 font-semibold text-white">{a.student?.fullName}</td>
+                            <td className="p-3.5 font-semibold text-slate-900">{a.student?.fullName}</td>
                             <td className="p-3.5 font-mono">{a.student?.rollNumber}</td>
                             <td className="p-3.5">{a.route?.code} ({a.route?.name})</td>
                             <td className="p-3.5">{a.pickupStop?.stopName}</td>
@@ -845,7 +845,7 @@ const AdminTransport = () => {
                               {a.status !== 'cancelled' && (
                                 <button
                                   onClick={() => handleCancelAllocation(a._id)}
-                                  className="px-2.5 py-1 rounded border border-rose-800 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60"
+                                  className="px-2.5 py-1 rounded border border-rose-800 bg-rose-950/40 text-rose-300 hover"
                                 >
                                   Cancel Pass
                                 </button>
@@ -862,10 +862,10 @@ const AdminTransport = () => {
               {/* TAB 6: TRIPS */}
               {activeTab === 'trips' && (
                 <div className="space-y-4">
-                  <h3 className="text-base font-semibold text-white">Daily Operational Trips</h3>
-                  <div className="border border-slate-800 rounded-xl bg-slate-900/40 overflow-hidden">
+                  <h3 className="text-base font-semibold text-slate-900">Daily Operational Trips</h3>
+                  <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                      <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                         <tr>
                           <th className="p-3.5">Route</th>
                           <th className="p-3.5">Vehicle</th>
@@ -876,9 +876,9 @@ const AdminTransport = () => {
                           <th className="p-3.5">Delay</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                      <tbody className="divide-y divide-slate-800/60 text-slate-700">
                         {trips.map((t) => (
-                          <tr key={t._id} className="hover:bg-slate-900/60 transition">
+                          <tr key={t._id} className="hover transition">
                             <td className="p-3.5 font-semibold text-indigo-400">{t.route?.code}</td>
                             <td className="p-3.5">{t.vehicle?.vehicleCode}</td>
                             <td className="p-3.5">{t.driver?.name}</td>
@@ -898,18 +898,18 @@ const AdminTransport = () => {
               {activeTab === 'maintenance' && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-white">Fleet Maintenance Logs</h3>
+                    <h3 className="text-base font-semibold text-slate-900">Fleet Maintenance Logs</h3>
                     <button
                       onClick={() => setShowMaintenanceModal(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium text-xs text-white"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover font-medium text-xs text-slate-900"
                     >
                       <Plus size={15} /> + Record Service
                     </button>
                   </div>
 
-                  <div className="border border-slate-800 rounded-xl bg-slate-900/40 overflow-hidden">
+                  <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-900/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                      <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                         <tr>
                           <th className="p-3.5">Vehicle</th>
                           <th className="p-3.5">Service Type</th>
@@ -919,10 +919,10 @@ const AdminTransport = () => {
                           <th className="p-3.5">Date</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                      <tbody className="divide-y divide-slate-800/60 text-slate-700">
                         {maintenance.map((m) => (
-                          <tr key={m._id} className="hover:bg-slate-900/60 transition">
-                            <td className="p-3.5 font-bold text-white">{m.vehicle?.vehicleCode}</td>
+                          <tr key={m._id} className="hover transition">
+                            <td className="p-3.5 font-bold text-slate-900">{m.vehicle?.vehicleCode}</td>
                             <td className="p-3.5 capitalize">{m.maintenanceType?.replace('_', ' ')}</td>
                             <td className="p-3.5">{m.description}</td>
                             <td className="p-3.5">{m.serviceProvider}</td>
@@ -943,74 +943,74 @@ const AdminTransport = () => {
           {/* ADD ROUTE MODAL */}
           {showAddRouteModal && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h3 className="font-bold text-lg text-white">Create New Transport Route</h3>
-                  <button onClick={() => setShowAddRouteModal(false)} className="text-slate-400 hover:text-white">✕</button>
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <h3 className="font-bold text-lg text-slate-900">Create New Transport Route</h3>
+                  <button onClick={() => setShowAddRouteModal(false)} className="text-slate-500 hover">✕</button>
                 </div>
                 <form onSubmit={handleAddRoute} className="space-y-3.5 text-sm">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Route Code</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Route Code</label>
                       <input
                         type="text"
                         placeholder="TR-01"
                         value={routeForm.code}
                         onChange={(e) => setRouteForm({ ...routeForm, code: e.target.value })}
                         required
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Max Passenger Capacity</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Max Passenger Capacity</label>
                       <input
                         type="number"
                         min="1"
                         value={routeForm.maxCapacity}
                         onChange={(e) => setRouteForm({ ...routeForm, maxCapacity: e.target.value })}
                         required
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Route Name</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Route Name</label>
                     <input
                       type="text"
                       placeholder="Route 1 — Downtown Express"
                       value={routeForm.name}
                       onChange={(e) => setRouteForm({ ...routeForm, name: e.target.value })}
                       required
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Start Location</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Start Location</label>
                       <input
                         type="text"
                         placeholder="North Metro Terminal"
                         value={routeForm.startLocation}
                         onChange={(e) => setRouteForm({ ...routeForm, startLocation: e.target.value })}
                         required
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">End Destination</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">End Destination</label>
                       <input
                         type="text"
                         placeholder="Main Campus South Gate"
                         value={routeForm.endLocation}
                         onChange={(e) => setRouteForm({ ...routeForm, endLocation: e.target.value })}
                         required
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                       />
                     </div>
                   </div>
                   <div className="flex justify-end gap-3 pt-3">
-                    <button type="button" onClick={() => setShowAddRouteModal(false)} className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-white">Save Route</button>
+                    <button type="button" onClick={() => setShowAddRouteModal(false)} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700">Cancel</button>
+                    <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-indigo-600 hover font-semibold text-slate-900">Save Route</button>
                   </div>
                 </form>
               </div>
@@ -1020,65 +1020,65 @@ const AdminTransport = () => {
           {/* ADD VEHICLE MODAL */}
           {showAddVehicleModal && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h3 className="font-bold text-lg text-white">Register Fleet Vehicle</h3>
-                  <button onClick={() => setShowAddVehicleModal(false)} className="text-slate-400 hover:text-white">✕</button>
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <h3 className="font-bold text-lg text-slate-900">Register Fleet Vehicle</h3>
+                  <button onClick={() => setShowAddVehicleModal(false)} className="text-slate-500 hover">✕</button>
                 </div>
                 <form onSubmit={handleAddVehicle} className="space-y-3.5 text-sm">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Vehicle Code</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Vehicle Code</label>
                       <input
                         type="text"
                         placeholder="BUS-01"
                         value={vehicleForm.vehicleCode}
                         onChange={(e) => setVehicleForm({ ...vehicleForm, vehicleCode: e.target.value })}
                         required
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Registration Number</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Registration Number</label>
                       <input
                         type="text"
                         placeholder="DL-01-AB-1234"
                         value={vehicleForm.registrationNumber}
                         onChange={(e) => setVehicleForm({ ...vehicleForm, registrationNumber: e.target.value })}
                         required
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Make & Model</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Make & Model</label>
                     <input
                       type="text"
                       placeholder="Tata Starbus Ultra 40-Seater"
                       value={vehicleForm.makeAndModel}
                       onChange={(e) => setVehicleForm({ ...vehicleForm, makeAndModel: e.target.value })}
                       required
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Seating Capacity</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Seating Capacity</label>
                       <input
                         type="number"
                         min="1"
                         value={vehicleForm.seatingCapacity}
                         onChange={(e) => setVehicleForm({ ...vehicleForm, seatingCapacity: e.target.value })}
                         required
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Fuel Type</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Fuel Type</label>
                       <select
                         value={vehicleForm.fuelType}
                         onChange={(e) => setVehicleForm({ ...vehicleForm, fuelType: e.target.value })}
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                       >
                         <option value="diesel">Diesel</option>
                         <option value="cng">CNG</option>
@@ -1088,8 +1088,8 @@ const AdminTransport = () => {
                     </div>
                   </div>
                   <div className="flex justify-end gap-3 pt-3">
-                    <button type="button" onClick={() => setShowAddVehicleModal(false)} className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-white">Save Vehicle</button>
+                    <button type="button" onClick={() => setShowAddVehicleModal(false)} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700">Cancel</button>
+                    <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-indigo-600 hover font-semibold text-slate-900">Save Vehicle</button>
                   </div>
                 </form>
               </div>
@@ -1099,50 +1099,50 @@ const AdminTransport = () => {
           {/* ADD STOP MODAL */}
           {showAddStopModal && selectedRoute && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h3 className="font-bold text-lg text-white">Add Stop to {selectedRoute.code}</h3>
-                  <button onClick={() => setShowAddStopModal(false)} className="text-slate-400 hover:text-white">✕</button>
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <h3 className="font-bold text-lg text-slate-900">Add Stop to {selectedRoute.code}</h3>
+                  <button onClick={() => setShowAddStopModal(false)} className="text-slate-500 hover">✕</button>
                 </div>
                 <form onSubmit={handleAddStop} className="space-y-3.5 text-sm">
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Stop Name</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Stop Name</label>
                     <input
                       type="text"
                       placeholder="Connaught Place Metro Gate 2"
                       value={stopForm.stopName}
                       onChange={(e) => setStopForm({ ...stopForm, stopName: e.target.value })}
                       required
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Sequence Number</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Sequence Number</label>
                       <input
                         type="number"
                         min="1"
                         value={stopForm.sequence}
                         onChange={(e) => setStopForm({ ...stopForm, sequence: e.target.value })}
                         required
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Morning Pickup Time</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Morning Pickup Time</label>
                       <input
                         type="text"
                         placeholder="07:45"
                         value={stopForm.scheduledMorningPickupTime}
                         onChange={(e) => setStopForm({ ...stopForm, scheduledMorningPickupTime: e.target.value })}
                         required
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                       />
                     </div>
                   </div>
                   <div className="flex justify-end gap-3 pt-3">
-                    <button type="button" onClick={() => setShowAddStopModal(false)} className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-white">Add Stop</button>
+                    <button type="button" onClick={() => setShowAddStopModal(false)} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700">Cancel</button>
+                    <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-indigo-600 hover font-semibold text-slate-900">Add Stop</button>
                   </div>
                 </form>
               </div>
@@ -1152,19 +1152,19 @@ const AdminTransport = () => {
           {/* ASSIGN VEHICLE & STAFF MODAL */}
           {showAssignModal && selectedRoute && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h3 className="font-bold text-lg text-white">Assign Vehicle & Staff: {selectedRoute.code}</h3>
-                  <button onClick={() => setShowAssignModal(false)} className="text-slate-400 hover:text-white">✕</button>
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <h3 className="font-bold text-lg text-slate-900">Assign Vehicle & Staff: {selectedRoute.code}</h3>
+                  <button onClick={() => setShowAssignModal(false)} className="text-slate-500 hover">✕</button>
                 </div>
                 <form onSubmit={handleAssignVehicleStaff} className="space-y-3.5 text-sm">
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Select Fleet Vehicle</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Select Fleet Vehicle</label>
                     <select
                       value={assignForm.vehicleId}
                       onChange={(e) => setAssignForm({ ...assignForm, vehicleId: e.target.value })}
                       required
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                     >
                       <option value="">-- Choose active vehicle --</option>
                       {vehicles.filter(v => v.status === 'active').map(v => (
@@ -1176,12 +1176,12 @@ const AdminTransport = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Assign Driver</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Assign Driver</label>
                     <select
                       value={assignForm.driverUserId}
                       onChange={(e) => setAssignForm({ ...assignForm, driverUserId: e.target.value })}
                       required
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                     >
                       <option value="">-- Choose licensed driver --</option>
                       {staff.filter(s => s.staffRole === 'driver').map(s => (
@@ -1193,8 +1193,8 @@ const AdminTransport = () => {
                   </div>
 
                   <div className="flex justify-end gap-3 pt-3">
-                    <button type="button" onClick={() => setShowAssignModal(false)} className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-white">Confirm Assignment</button>
+                    <button type="button" onClick={() => setShowAssignModal(false)} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700">Cancel</button>
+                    <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-indigo-600 hover font-semibold text-slate-900">Confirm Assignment</button>
                   </div>
                 </form>
               </div>
@@ -1204,23 +1204,23 @@ const AdminTransport = () => {
           {/* REVIEW APPLICATION MODAL */}
           {showReviewAppModal && selectedApp && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h3 className="font-bold text-lg text-white">Review Application #{selectedApp.applicationNumber}</h3>
-                  <button onClick={() => setShowReviewAppModal(false)} className="text-slate-400 hover:text-white">✕</button>
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <h3 className="font-bold text-lg text-slate-900">Review Application #{selectedApp.applicationNumber}</h3>
+                  <button onClick={() => setShowReviewAppModal(false)} className="text-slate-500 hover">✕</button>
                 </div>
                 <form onSubmit={handleReviewApplication} className="space-y-3.5 text-sm">
-                  <div className="p-3 rounded bg-slate-950 border border-slate-800 text-xs text-slate-300 space-y-1">
-                    <div>Student: <span className="font-semibold text-white">{selectedApp.student?.fullName}</span></div>
-                    <div>Roll: <span className="font-mono text-white">{selectedApp.student?.rollNumber}</span></div>
+                  <div className="p-3 rounded bg-white border border-slate-200 text-xs text-slate-700 space-y-1">
+                    <div>Student: <span className="font-semibold text-slate-900">{selectedApp.student?.fullName}</span></div>
+                    <div>Roll: <span className="font-mono text-slate-900">{selectedApp.student?.rollNumber}</span></div>
                     <div>Route: <span className="font-semibold text-indigo-400">{selectedApp.preferredRoute?.code}</span></div>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Decision</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Decision</label>
                     <select
                       value={reviewForm.decision}
                       onChange={(e) => setReviewForm({ ...reviewForm, decision: e.target.value })}
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                     >
                       <option value="approved">Approve Application</option>
                       <option value="rejected">Reject Application</option>
@@ -1229,19 +1229,19 @@ const AdminTransport = () => {
                   </div>
                   {reviewForm.decision === 'rejected' && (
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Rejection Reason (min 5 chars)</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Rejection Reason (min 5 chars)</label>
                       <textarea
                         rows={2}
                         value={reviewForm.rejectionReason}
                         onChange={(e) => setReviewForm({ ...reviewForm, rejectionReason: e.target.value })}
                         required
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                       />
                     </div>
                   )}
                   <div className="flex justify-end gap-3 pt-3">
-                    <button type="button" onClick={() => setShowReviewAppModal(false)} className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-white">Save Decision</button>
+                    <button type="button" onClick={() => setShowReviewAppModal(false)} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700">Cancel</button>
+                    <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-indigo-600 hover font-semibold text-slate-900">Save Decision</button>
                   </div>
                 </form>
               </div>
@@ -1251,14 +1251,14 @@ const AdminTransport = () => {
           {/* ALLOCATE STUDENT MODAL */}
           {showAllocateModal && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h3 className="font-bold text-lg text-white">Allocate Passenger Seat</h3>
-                  <button onClick={() => setShowAllocateModal(false)} className="text-slate-400 hover:text-white">✕</button>
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <h3 className="font-bold text-lg text-slate-900">Allocate Passenger Seat</h3>
+                  <button onClick={() => setShowAllocateModal(false)} className="text-slate-500 hover">✕</button>
                 </div>
                 <form onSubmit={handleAllocateStudent} className="space-y-3.5 text-sm">
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Select Approved Application</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Select Approved Application</label>
                     <select
                       value={allocateForm.studentId}
                       onChange={(e) => {
@@ -1272,7 +1272,7 @@ const AdminTransport = () => {
                         });
                       }}
                       required
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                     >
                       <option value="">-- Choose student application --</option>
                       {applications.filter(a => a.status === 'approved').map(a => (
@@ -1284,12 +1284,12 @@ const AdminTransport = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Target Route</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Target Route</label>
                     <select
                       value={allocateForm.routeId}
                       onChange={(e) => setAllocateForm({ ...allocateForm, routeId: e.target.value })}
                       required
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                     >
                       <option value="">-- Choose Route --</option>
                       {routes.filter(r => r.status === 'active').map(r => (
@@ -1301,13 +1301,13 @@ const AdminTransport = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Select Boarding Stop</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Select Boarding Stop</label>
                     <select
                       value={allocateForm.pickupStopId}
                       onChange={(e) => setAllocateForm({ ...allocateForm, pickupStopId: e.target.value })}
                       required
                       disabled={!allocateForm.routeId}
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white disabled:opacity-50"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 disabled:opacity-50"
                     >
                       <option value="">-- Choose Stop --</option>
                       {stopsList.map(s => (
@@ -1319,8 +1319,8 @@ const AdminTransport = () => {
                   </div>
 
                   <div className="flex justify-end gap-3 pt-3">
-                    <button type="button" onClick={() => setShowAllocateModal(false)} className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-white">Confirm Allocation</button>
+                    <button type="button" onClick={() => setShowAllocateModal(false)} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700">Cancel</button>
+                    <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-indigo-600 hover font-semibold text-slate-900">Confirm Allocation</button>
                   </div>
                 </form>
               </div>

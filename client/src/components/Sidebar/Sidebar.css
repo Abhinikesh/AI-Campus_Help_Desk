@@ -209,20 +209,6 @@
 .badge-parent     { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; }
 .badge-admission  { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
 
-html.dark .badge-student    { background: rgba(29, 78, 216, 0.2); color: #93C5FD; border-color: rgba(147, 197, 253, 0.3); }
-html.dark .badge-faculty    { background: rgba(126, 34, 206, 0.2); color: #D8B4FE; border-color: rgba(216, 180, 254, 0.3); }
-html.dark .badge-admin      { background: rgba(220, 38, 38, 0.2); color: #FCA5A5; border-color: rgba(252, 165, 165, 0.3); }
-html.dark .badge-warden     { background: rgba(21, 128, 61, 0.2); color: #86EFAC; border-color: rgba(134, 239, 172, 0.3); }
-html.dark .badge-librarian  { background: rgba(180, 83, 9, 0.2); color: #FDE68A; border-color: rgba(253, 230, 138, 0.3); }
-html.dark .badge-transport  { background: rgba(14, 116, 144, 0.2); color: #67E8F9; border-color: rgba(103, 232, 249, 0.3); }
-html.dark .badge-placement  { background: rgba(126, 34, 206, 0.2); color: #D8B4FE; border-color: rgba(216, 180, 254, 0.3); }
-html.dark .badge-activities { background: rgba(162, 28, 175, 0.2); color: #F0ABFC; border-color: rgba(240, 171, 252, 0.3); }
-html.dark .badge-inventory  { background: rgba(22, 101, 52, 0.2); color: #86EFAC; border-color: rgba(134, 239, 172, 0.3); }
-html.dark .badge-hr         { background: rgba(37, 99, 235, 0.2); color: #93C5FD; border-color: rgba(147, 197, 253, 0.3); }
-html.dark .badge-staff      { background: rgba(71, 85, 105, 0.2); color: #CBD5E1; border-color: rgba(203, 213, 225, 0.3); }
-html.dark .badge-parent     { background: rgba(22, 163, 74, 0.2); color: #86EFAC; border-color: rgba(134, 239, 172, 0.3); }
-html.dark .badge-admission  { background: rgba(217, 119, 6, 0.2); color: #FDE68A; border-color: rgba(253, 230, 138, 0.3); }
-
 .cs-sidebar-toggle-btn {
   background: var(--cs-bg-subtle, #F8F9FA);
   border: 1px solid var(--cs-border-subtle, #E2E8F0);

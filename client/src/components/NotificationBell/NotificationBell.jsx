@@ -73,7 +73,7 @@ const NotificationBell = () => {
       {/* Bell Button */}
       <button
         type="button"
-        className="relative p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors focus:outline-none"
+        className="relative p-2 text-gray-600 hover hover rounded-full transition-colors focus:outline-none"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="View notifications"
         title="Notifications"
@@ -103,7 +103,7 @@ const NotificationBell = () => {
               <button
                 type="button"
                 onClick={markAllAsRead}
-                className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition-colors"
+                className="text-xs text-blue-600 hover font-medium flex items-center gap-1 transition-colors"
               >
                 <CheckCheck size={14} /> Mark all read
               </button>
@@ -122,7 +122,7 @@ const NotificationBell = () => {
                 <div
                   key={notif._id}
                   onClick={() => handleNotificationClick(notif)}
-                  className={`px-4 py-3 cursor-pointer transition-colors flex items-start gap-3 hover:bg-gray-50 ${
+                  className={`px-4 py-3 cursor-pointer transition-colors flex items-start gap-3 hover ${
                     !notif.isRead ? 'bg-blue-50/40' : 'bg-white'
                   }`}
                 >
@@ -162,7 +162,7 @@ const NotificationBell = () => {
                 setIsOpen(false);
                 navigate('/notifications');
               }}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors inline-flex items-center gap-1"
+              className="text-xs font-semibold text-blue-600 hover transition-colors inline-flex items-center gap-1"
             >
               View Notification Center <ExternalLink size={12} />
             </button>

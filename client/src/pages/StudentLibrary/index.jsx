@@ -181,11 +181,11 @@ const StudentLibrary = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+              <h1 className="text-2xl md font-bold tracking-tight text-white flex items-center gap-3">
                 <BookOpen className="w-8 h-8 text-indigo-400" />
                 Library & Circulation Portal
               </h1>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-slate-500 mt-1">
                 Explore the Central Library catalog, manage your active book loans, and track reservations.
               </p>
             </div>
@@ -195,17 +195,17 @@ const StudentLibrary = () => {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 animate-pulse">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-24 bg-[#131B2E] rounded-xl border border-gray-800"></div>
+                <div key={i} className="h-24 bg-white rounded-xl border border-slate-200"></div>
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Active Book Loans</p>
-                  <p className="text-2xl font-bold text-white mt-1">
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Active Book Loans</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-1">
                     {overview?.metrics?.activeLoansCount || 0}{' '}
-                    <span className="text-xs text-gray-400 font-normal">/ {overview?.metrics?.maxPermittedLoans || 3} allowed</span>
+                    <span className="text-xs text-slate-500 font-normal">/ {overview?.metrics?.maxPermittedLoans || 3} allowed</span>
                   </p>
                   <p className="text-[11px] text-gray-500 mt-0.5">Quota remaining: {overview?.metrics?.remainingBorrowQuota} books</p>
                 </div>
@@ -214,9 +214,9 @@ const StudentLibrary = () => {
                 </div>
               </div>
 
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Overdue Books</p>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Overdue Books</p>
                   <p className={`text-2xl font-bold mt-1 ${overview?.metrics?.overdueCount > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
                     {overview?.metrics?.overdueCount || 0}
                   </p>
@@ -229,9 +229,9 @@ const StudentLibrary = () => {
                 </div>
               </div>
 
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Active Reservations</p>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Active Reservations</p>
                   <p className="text-2xl font-bold text-amber-400 mt-1">{overview?.metrics?.pendingReservationsCount || 0}</p>
                   <p className="text-[11px] text-gray-500 mt-0.5">Queued title holds</p>
                 </div>
@@ -240,15 +240,15 @@ const StudentLibrary = () => {
                 </div>
               </div>
 
-              <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Outstanding Fines</p>
-                  <p className={`text-2xl font-bold mt-1 ${overview?.metrics?.totalOutstandingFinesInRupees > 0 ? 'text-rose-400' : 'text-gray-200'}`}>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Outstanding Fines</p>
+                  <p className={`text-2xl font-bold mt-1 ${overview?.metrics?.totalOutstandingFinesInRupees > 0 ? 'text-rose-400' : 'text-slate-800'}`}>
                     ₹{overview?.metrics?.totalOutstandingFinesInRupees || 0}
                   </p>
                   <p className="text-[11px] text-gray-500 mt-0.5">Payable at accounts / desk</p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-gray-800/60 flex items-center justify-center text-gray-300 border border-gray-700/50">
+                <div className="w-12 h-12 rounded-lg bg-gray-800/60 flex items-center justify-center text-slate-600 border border-slate-200/50">
                   <Receipt className="w-6 h-6" />
                 </div>
               </div>
@@ -256,13 +256,13 @@ const StudentLibrary = () => {
           )}
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-gray-800">
+          <div className="flex border-b border-slate-200">
             <button
               onClick={() => setActiveTab('loans')}
               className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === 'loans'
                   ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <BookOpen className="w-4 h-4" /> My Issued Books ({overview?.activeLoans?.length || 0})
@@ -272,7 +272,7 @@ const StudentLibrary = () => {
               className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === 'catalog'
                   ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <Search className="w-4 h-4" /> Search Catalog
@@ -282,7 +282,7 @@ const StudentLibrary = () => {
               className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === 'reservations'
                   ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <Bookmark className="w-4 h-4" /> Holds & Reservations ({overview?.pendingReservations?.length || 0})
@@ -292,7 +292,7 @@ const StudentLibrary = () => {
               className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === 'fines'
                   ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
+                  : 'border-transparent text-slate-500 hover'
               }`}
             >
               <Receipt className="w-4 h-4" /> Library Fines ({overview?.unpaidFines?.length || 0})
@@ -303,13 +303,13 @@ const StudentLibrary = () => {
           {activeTab === 'loans' && (
             <div className="space-y-4">
               {!overview?.activeLoans || overview.activeLoans.length === 0 ? (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-12 text-center text-gray-400">
+                <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500">
                   <BookOpen className="w-12 h-12 mx-auto text-gray-600 mb-3" />
-                  <p className="text-base font-semibold text-gray-200">No books currently checked out</p>
+                  <p className="text-base font-semibold text-slate-800">No books currently checked out</p>
                   <p className="text-sm text-gray-500 mt-1">Browse the catalog to discover books available on shelf for borrowing.</p>
                   <button
                     onClick={() => setActiveTab('catalog')}
-                    className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition"
+                    className="mt-4 px-4 py-2 bg-indigo-600 hover text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition"
                   >
                     <Search className="w-3.5 h-3.5" /> Explore Book Catalog
                   </button>
@@ -319,7 +319,7 @@ const StudentLibrary = () => {
                   {overview.activeLoans.map((loan) => (
                     <div
                       key={loan._id}
-                      className="bg-[#131B2E] border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition flex flex-col justify-between"
+                      className="bg-white border border-slate-200 rounded-xl p-5 hover transition flex flex-col justify-between"
                     >
                       <div>
                         <div className="flex justify-between items-start gap-2 mb-2">
@@ -327,34 +327,34 @@ const StudentLibrary = () => {
                           {getDueCountdownBadge(loan.dueDate)}
                         </div>
 
-                        <h3 className="text-base font-bold text-white line-clamp-1">{loan.book?.title}</h3>
-                        <p className="text-xs text-gray-400 mt-0.5">By {loan.book?.authors?.join(', ')}</p>
+                        <h3 className="text-base font-bold text-slate-900 line-clamp-1">{loan.book?.title}</h3>
+                        <p className="text-xs text-slate-500 mt-0.5">By {loan.book?.authors?.join(', ')}</p>
 
-                        <div className="mt-4 bg-[#0B0F19] rounded-lg p-3 space-y-1.5 text-xs border border-gray-800/80">
-                          <div className="flex justify-between text-gray-400">
+                        <div className="mt-4 bg-slate-50 rounded-lg p-3 space-y-1.5 text-xs border border-slate-200">
+                          <div className="flex justify-between text-slate-500">
                             <span>Copy Accession:</span>
-                            <span className="font-mono text-gray-200">{loan.copy?.accessionNumber}</span>
+                            <span className="font-mono text-slate-800">{loan.copy?.accessionNumber}</span>
                           </div>
-                          <div className="flex justify-between text-gray-400">
+                          <div className="flex justify-between text-slate-500">
                             <span>Issued On:</span>
                             <span>{new Date(loan.issueDate).toLocaleDateString()}</span>
                           </div>
-                          <div className="flex justify-between text-gray-400">
+                          <div className="flex justify-between text-slate-500">
                             <span>Return Deadline:</span>
                             <span className="font-semibold text-white">{new Date(loan.dueDate).toLocaleDateString()}</span>
                           </div>
-                          <div className="flex justify-between text-gray-400 pt-1 border-t border-gray-800">
+                          <div className="flex justify-between text-slate-500 pt-1 border-t border-slate-200">
                             <span>Renewals Used:</span>
                             <span>{loan.renewalCount} of {loan.policySnapshot?.maxRenewals || 2}</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-gray-800 flex gap-2">
+                      <div className="mt-4 pt-3 border-t border-slate-200 flex gap-2">
                         <button
                           disabled={actionLoading || loan.renewalCount >= (loan.policySnapshot?.maxRenewals || 2)}
                           onClick={() => handleRenewLoan(loan)}
-                          className="w-full py-2 px-3 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 transition"
+                          className="w-full py-2 px-3 bg-indigo-600/20 hover text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 transition"
                         >
                           <RotateCw className="w-3.5 h-3.5" /> Extend / Renew Loan
                         </button>
@@ -370,7 +370,7 @@ const StudentLibrary = () => {
           {activeTab === 'catalog' && (
             <div className="space-y-4">
               {/* Search & Filter Toolbar */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#131B2E] border border-gray-800 p-3.5 rounded-xl text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white border border-slate-200 p-3.5 rounded-xl text-xs">
                 <div className="relative">
                   <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-500" />
                   <input
@@ -378,7 +378,7 @@ const StudentLibrary = () => {
                     value={catalogSearch}
                     onChange={(e) => setCatalogSearch(e.target.value)}
                     placeholder="Search by title, author, ISBN..."
-                    className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 focus:outline-none focus"
                   />
                 </div>
 
@@ -386,7 +386,7 @@ const StudentLibrary = () => {
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus"
                   >
                     <option value="all">All Academic Categories</option>
                     <option value="Computer Science">Computer Science</option>
@@ -400,12 +400,12 @@ const StudentLibrary = () => {
                 </div>
 
                 <div className="flex items-center gap-2 px-2">
-                  <label className="flex items-center gap-2 cursor-pointer text-gray-300 select-none">
+                  <label className="flex items-center gap-2 cursor-pointer text-slate-600 select-none">
                     <input
                       type="checkbox"
                       checked={availableOnly}
                       onChange={(e) => setAvailableOnly(e.target.checked)}
-                      className="rounded bg-gray-900 border-gray-800 text-indigo-600 focus:ring-0"
+                      className="rounded bg-gray-900 border-slate-200 text-indigo-600 focus:ring-0"
                     />
                     <span>Available copies on shelf only</span>
                   </label>
@@ -416,13 +416,13 @@ const StudentLibrary = () => {
               {catalogLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="h-44 bg-[#131B2E] rounded-xl border border-gray-800"></div>
+                    <div key={i} className="h-44 bg-white rounded-xl border border-slate-200"></div>
                   ))}
                 </div>
               ) : books.length === 0 ? (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-12 text-center text-gray-400">
+                <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500">
                   <Search className="w-12 h-12 mx-auto text-gray-600 mb-3" />
-                  <p className="text-base font-semibold text-gray-200">No books found</p>
+                  <p className="text-base font-semibold text-slate-800">No books found</p>
                   <p className="text-sm text-gray-500 mt-1">Try broadening your search terms or clearing category filters.</p>
                 </div>
               ) : (
@@ -430,7 +430,7 @@ const StudentLibrary = () => {
                   {books.map((b) => (
                     <div
                       key={b._id}
-                      className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition flex flex-col justify-between"
+                      className="bg-white border border-slate-200 rounded-xl p-4 hover transition flex flex-col justify-between"
                     >
                       <div>
                         <div className="flex justify-between items-start gap-2">
@@ -448,10 +448,10 @@ const StudentLibrary = () => {
                           )}
                         </div>
 
-                        <h4 className="text-sm font-bold text-white mt-2 line-clamp-1">{b.title}</h4>
-                        <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">By {b.authors?.join(', ')}</p>
+                        <h4 className="text-sm font-bold text-slate-900 mt-2 line-clamp-1">{b.title}</h4>
+                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">By {b.authors?.join(', ')}</p>
 
-                        <div className="mt-3 text-xs text-gray-400 space-y-1">
+                        <div className="mt-3 text-xs text-slate-500 space-y-1">
                           {b.isbn && <p className="font-mono text-[11px]">ISBN: {b.isbn}</p>}
                           <p className="flex items-center gap-1">
                             <MapPin className="w-3.5 h-3.5 text-gray-500" />
@@ -460,14 +460,14 @@ const StudentLibrary = () => {
                         </div>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
+                      <div className="mt-4 pt-3 border-t border-slate-200 flex justify-between items-center text-xs">
                         {b.availableCopies > 0 ? (
-                          <span className="text-gray-400 text-[11px]">Direct borrow at Issue Desk</span>
+                          <span className="text-slate-500 text-[11px]">Direct borrow at Issue Desk</span>
                         ) : (
                           <button
                             onClick={() => handlePlaceReservation(b)}
                             disabled={actionLoading}
-                            className="px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition"
+                            className="px-3 py-1.5 bg-amber-600/20 hover text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition"
                           >
                             <Bookmark className="w-3.5 h-3.5" /> Place Hold / Reserve
                           </button>
@@ -477,7 +477,7 @@ const StudentLibrary = () => {
                             setSelectedBook(b);
                             setShowDetailModal(true);
                           }}
-                          className="text-indigo-400 hover:text-indigo-300 font-medium"
+                          className="text-indigo-400 hover font-medium"
                         >
                           Details →
                         </button>
@@ -493,15 +493,15 @@ const StudentLibrary = () => {
           {activeTab === 'reservations' && (
             <div className="space-y-4">
               {!overview?.pendingReservations || overview.pendingReservations.length === 0 ? (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-12 text-center text-gray-400">
+                <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500">
                   <Bookmark className="w-12 h-12 mx-auto text-gray-600 mb-3" />
-                  <p className="text-base font-semibold text-gray-200">No active book reservations</p>
+                  <p className="text-base font-semibold text-slate-800">No active book reservations</p>
                   <p className="text-sm text-gray-500 mt-1">When all copies of a book are checked out, you can reserve it to queue for the next return.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {overview.pendingReservations.map((res) => (
-                    <div key={res._id} className="bg-[#131B2E] border border-gray-800 rounded-xl p-4 flex flex-col justify-between">
+                    <div key={res._id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start">
                           <span className="text-xs font-mono font-bold text-indigo-400">{res.reservationNumber}</span>
@@ -516,8 +516,8 @@ const StudentLibrary = () => {
                           )}
                         </div>
 
-                        <h4 className="text-sm font-bold text-white mt-2 line-clamp-1">{res.book?.title}</h4>
-                        <p className="text-xs text-gray-400 mt-0.5">By {res.book?.authors?.join(', ')}</p>
+                        <h4 className="text-sm font-bold text-slate-900 mt-2 line-clamp-1">{res.book?.title}</h4>
+                        <p className="text-xs text-slate-500 mt-0.5">By {res.book?.authors?.join(', ')}</p>
 
                         {res.status === 'available_for_pickup' && (
                           <div className="mt-3 p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs text-emerald-300">
@@ -526,7 +526,7 @@ const StudentLibrary = () => {
                           </div>
                         )}
 
-                        <div className="mt-3 text-xs text-gray-400 space-y-1">
+                        <div className="mt-3 text-xs text-slate-500 space-y-1">
                           <p>Requested On: {new Date(res.requestDate).toLocaleDateString()}</p>
                           {res.queuePosition && (
                             <p className="text-amber-300 font-semibold">Queue Position: #{res.queuePosition}</p>
@@ -534,10 +534,10 @@ const StudentLibrary = () => {
                         </div>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-gray-800 flex justify-end">
+                      <div className="mt-4 pt-3 border-t border-slate-200 flex justify-end">
                         <button
                           onClick={() => handleCancelReservation(res._id)}
-                          className="text-xs text-rose-400 hover:text-rose-300 font-medium"
+                          className="text-xs text-rose-400 hover font-medium"
                         >
                           Cancel Hold
                         </button>
@@ -553,16 +553,16 @@ const StudentLibrary = () => {
           {activeTab === 'fines' && (
             <div className="space-y-4">
               {!overview?.unpaidFines || overview.unpaidFines.length === 0 ? (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl p-12 text-center text-gray-400">
+                <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500">
                   <CheckCircle className="w-12 h-12 mx-auto text-emerald-500 mb-3" />
-                  <p className="text-base font-semibold text-gray-200">No outstanding library fines</p>
+                  <p className="text-base font-semibold text-slate-800">No outstanding library fines</p>
                   <p className="text-sm text-gray-500 mt-1">Your library account is in good standing with zero overdue penalties.</p>
                 </div>
               ) : (
-                <div className="bg-[#131B2E] border border-gray-800 rounded-xl overflow-hidden">
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-gray-300">
-                      <thead className="bg-[#0B0F19] uppercase font-semibold text-gray-400 border-b border-gray-800">
+                    <table className="w-full text-left text-xs text-slate-600">
+                      <thead className="bg-slate-50 uppercase font-semibold text-slate-500 border-b border-slate-200">
                         <tr>
                           <th className="px-4 py-3">Fine #</th>
                           <th className="px-4 py-3">Book</th>
@@ -574,14 +574,14 @@ const StudentLibrary = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-800/60">
                         {overview.unpaidFines.map((f) => (
-                          <tr key={f._id} className="hover:bg-gray-800/30 transition">
+                          <tr key={f._id} className="hover transition">
                             <td className="px-4 py-3 font-mono font-medium text-indigo-400">{f.fineNumber}</td>
                             <td className="px-4 py-3 font-medium text-white">{f.book?.title || 'Library Copy'}</td>
-                            <td className="px-4 py-3 uppercase text-gray-300">{f.fineType?.replace(/_/g, ' ')}</td>
+                            <td className="px-4 py-3 uppercase text-slate-600">{f.fineType?.replace(/_/g, ' ')}</td>
                             <td className="px-4 py-3 font-bold text-rose-400 text-sm">
                               ₹{(f.amountInPaise / 100).toLocaleString()}
                             </td>
-                            <td className="px-4 py-3 text-gray-400">{f.reason}</td>
+                            <td className="px-4 py-3 text-slate-500">{f.reason}</td>
                             <td className="px-4 py-3">
                               <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
                                 {f.status}
@@ -600,22 +600,22 @@ const StudentLibrary = () => {
           {/* MODAL: Book Details */}
           {showDetailModal && selectedBook && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-[#131B2E] border border-gray-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                  className="absolute top-4 right-4 text-slate-500 hover"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-indigo-400" />
                   {selectedBook.title}
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">By {selectedBook.authors?.join(', ')}</p>
+                <p className="text-xs text-slate-500 mt-0.5">By {selectedBook.authors?.join(', ')}</p>
 
-                <div className="mt-4 space-y-3 text-xs text-gray-300">
-                  <div className="grid grid-cols-2 gap-2 bg-[#0B0F19] p-3 rounded-lg border border-gray-800">
+                <div className="mt-4 space-y-3 text-xs text-slate-600">
+                  <div className="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
                     <div>
                       <p className="text-gray-500">Category:</p>
                       <p className="font-medium text-white">{selectedBook.category}</p>
@@ -644,15 +644,15 @@ const StudentLibrary = () => {
                   {selectedBook.description && (
                     <div>
                       <p className="text-gray-500">Description:</p>
-                      <p className="text-gray-300 mt-1 leading-relaxed">{selectedBook.description}</p>
+                      <p className="text-slate-600 mt-1 leading-relaxed">{selectedBook.description}</p>
                     </div>
                   )}
                 </div>
 
-                <div className="flex justify-end gap-3 mt-6 pt-3 border-t border-gray-800">
+                <div className="flex justify-end gap-3 mt-6 pt-3 border-t border-slate-200">
                   <button
                     onClick={() => setShowDetailModal(false)}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium"
+                    className="px-4 py-2 bg-gray-800 hover text-slate-600 rounded-lg text-xs font-medium"
                   >
                     Close
                   </button>
@@ -660,7 +660,7 @@ const StudentLibrary = () => {
                     <button
                       onClick={() => handlePlaceReservation(selectedBook)}
                       disabled={actionLoading}
-                      className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-semibold disabled:opacity-50"
+                      className="px-4 py-2 bg-amber-600 hover text-white rounded-lg text-xs font-semibold disabled:opacity-50"
                     >
                       Place Hold / Reserve
                     </button>

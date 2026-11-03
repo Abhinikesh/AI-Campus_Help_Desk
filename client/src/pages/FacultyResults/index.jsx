@@ -368,7 +368,7 @@ const FacultyResults = () => {
             <button
               type="button"
               onClick={() => setShowScheduleModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 hover rounded-xl shadow-sm transition-all"
             >
               <Plus size={18} /> Schedule Examination
             </button>
@@ -457,7 +457,7 @@ const FacultyResults = () => {
                     type="button"
                     disabled={isSaving}
                     onClick={handleSaveDraft}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover text-slate-700 transition-colors"
                   >
                     <Save size={14} /> Save Draft
                   </button>
@@ -468,7 +468,7 @@ const FacultyResults = () => {
                     type="button"
                     disabled={isSaving}
                     onClick={handleSubmitForReview}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover text-white shadow-sm transition-colors"
                   >
                     <Send size={14} /> Submit for Review
                   </button>
@@ -479,7 +479,7 @@ const FacultyResults = () => {
                     type="button"
                     disabled={isSaving}
                     onClick={handleApprove}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 hover text-white shadow-sm transition-colors"
                   >
                     <CheckCircle size={14} /> Approve Marks
                   </button>
@@ -491,7 +491,7 @@ const FacultyResults = () => {
                       type="button"
                       disabled={isSaving}
                       onClick={handlePublishResults}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover text-white shadow-sm transition-colors"
                     >
                       <CheckCheck size={14} /> Publish Results
                     </button>
@@ -555,7 +555,7 @@ const FacultyResults = () => {
                       const isPublished = selectedExam?.evaluationStatus === 'published';
 
                       return (
-                        <tr key={st.studentId} className="hover:bg-slate-50/50 transition-colors">
+                        <tr key={st.studentId} className="hover transition-colors">
                           <td className="px-4 py-3 font-mono font-semibold text-xs text-slate-800">
                             {st.rollNumber}
                           </td>
@@ -634,7 +634,7 @@ const FacultyResults = () => {
                               <button
                                 type="button"
                                 onClick={() => openCorrection(st)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded bg-amber-50 text-amber-700 border border-amber-200 hover"
                               >
                                 <Edit size={12} /> Correct
                               </button>
@@ -661,7 +661,7 @@ const FacultyResults = () => {
                   <button
                     type="button"
                     onClick={() => setShowScheduleModal(false)}
-                    className="text-slate-400 hover:text-slate-600 p-1"
+                    className="text-slate-400 hover p-1"
                   >
                     <X size={20} />
                   </button>
@@ -809,14 +809,14 @@ const FacultyResults = () => {
                     <button
                       type="button"
                       onClick={() => setShowScheduleModal(false)}
-                      className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                      className="px-4 py-2 text-sm font-semibold text-slate-600 hover rounded-xl"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm disabled:opacity-50"
+                      className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover rounded-xl shadow-sm disabled:opacity-50"
                     >
                       {isSaving ? 'Scheduling...' : 'Schedule Exam'}
                     </button>
@@ -838,7 +838,7 @@ const FacultyResults = () => {
                   <button
                     type="button"
                     onClick={() => setCorrectionModal(null)}
-                    className="text-slate-400 hover:text-slate-600"
+                    className="text-slate-400 hover"
                   >
                     <X size={18} />
                   </button>
@@ -895,7 +895,7 @@ const FacultyResults = () => {
                   <button
                     type="button"
                     onClick={() => setCorrectionModal(null)}
-                    className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover rounded-lg"
                   >
                     Cancel
                   </button>
@@ -903,7 +903,7 @@ const FacultyResults = () => {
                     type="button"
                     disabled={isCorrecting}
                     onClick={handleSaveCorrection}
-                    className="px-4 py-1.5 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-sm disabled:opacity-50"
+                    className="px-4 py-1.5 text-xs font-semibold text-white bg-amber-600 hover rounded-lg shadow-sm disabled:opacity-50"
                   >
                     {isCorrecting ? 'Recording...' : 'Record Correction & Republish'}
                   </button>

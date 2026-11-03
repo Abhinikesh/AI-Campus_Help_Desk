@@ -146,14 +146,14 @@ const FacultyInventory = () => {
                 <Package className="h-7 w-7 text-indigo-400" />
                 Faculty Asset & Resource Requisitions
               </h1>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-500">
                 Track assets in your custody, view departmental lab consumables, and request procurement or repairs.
               </p>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowPrModal(true)}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-sm transition"
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover text-white text-sm font-medium rounded-lg shadow-sm transition"
               >
                 <Plus className="h-4 w-4" />
                 New Requisition (PR)
@@ -167,8 +167,8 @@ const FacultyInventory = () => {
               onClick={() => setActiveTab('my_assets')}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition ${
                 activeTab === 'my_assets'
-                  ? 'bg-slate-800 text-indigo-400 border-b-2 border-indigo-500'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-indigo-400 border-b-2 border-indigo-500'
+                  : 'text-slate-500 hover'
               }`}
             >
               <Package className="h-4 w-4" />
@@ -178,8 +178,8 @@ const FacultyInventory = () => {
               onClick={() => setActiveTab('dept_stock')}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition ${
                 activeTab === 'dept_stock'
-                  ? 'bg-slate-800 text-indigo-400 border-b-2 border-indigo-500'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-indigo-400 border-b-2 border-indigo-500'
+                  : 'text-slate-500 hover'
               }`}
             >
               <Boxes className="h-4 w-4" />
@@ -189,8 +189,8 @@ const FacultyInventory = () => {
               onClick={() => setActiveTab('my_prs')}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition ${
                 activeTab === 'my_prs'
-                  ? 'bg-slate-800 text-indigo-400 border-b-2 border-indigo-500'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-indigo-400 border-b-2 border-indigo-500'
+                  : 'text-slate-500 hover'
               }`}
             >
               <FileText className="h-4 w-4" />
@@ -200,8 +200,8 @@ const FacultyInventory = () => {
               onClick={() => setActiveTab('maintenance')}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition ${
                 activeTab === 'maintenance'
-                  ? 'bg-slate-800 text-indigo-400 border-b-2 border-indigo-500'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-indigo-400 border-b-2 border-indigo-500'
+                  : 'text-slate-500 hover'
               }`}
             >
               <Wrench className="h-4 w-4" />
@@ -213,13 +213,13 @@ const FacultyInventory = () => {
           {activeTab === 'my_assets' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {myAssets.length === 0 ? (
-                <div className="col-span-full py-12 text-center text-slate-400 bg-slate-800/40 rounded-xl border border-slate-700/60">
+                <div className="col-span-full py-12 text-center text-slate-500 bg-slate-50 rounded-xl border border-slate-200">
                   <Package className="h-10 w-10 text-slate-500 mx-auto mb-2 opacity-50" />
                   <p>You have no equipment or physical assets currently allocated in your custody.</p>
                 </div>
               ) : (
                 myAssets.map((asset) => (
-                  <div key={asset._id} className="bg-slate-800/70 border border-slate-700/60 rounded-xl p-4 space-y-3">
+                  <div key={asset._id} className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
                         <h4 className="font-semibold text-white text-base">{asset.name}</h4>
@@ -229,18 +229,18 @@ const FacultyInventory = () => {
                         {asset.condition}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-300 space-y-1">
-                      <div>Serial Number: <span className="font-mono text-slate-200">{asset.serialNumber || 'N/A'}</span></div>
+                    <div className="text-xs text-slate-700 space-y-1">
+                      <div>Serial Number: <span className="font-mono text-slate-900">{asset.serialNumber || 'N/A'}</span></div>
                       <div>Location: {asset.location ? `${asset.location.building} - ${asset.location.name}` : 'Faculty Office'}</div>
                       <div>Model: {asset.modelNumber || 'Standard issue'}</div>
                     </div>
-                    <div className="pt-2 border-t border-slate-700 flex justify-end">
+                    <div className="pt-2 border-t border-slate-200 flex justify-end">
                       <button
                         onClick={() => {
                           setMaintForm((prev) => ({ ...prev, asset: asset._id, title: `Issue with ${asset.name}` }));
                           setShowMaintModal(true);
                         }}
-                        className="flex items-center gap-1 px-3 py-1 bg-rose-600/80 hover:bg-rose-500 text-xs font-medium rounded text-white"
+                        className="flex items-center gap-1 px-3 py-1 bg-rose-600/80 hover text-xs font-medium rounded text-white"
                       >
                         <Wrench className="h-3.5 w-3.5" />
                         Report Breakdown
@@ -254,9 +254,9 @@ const FacultyInventory = () => {
 
           {/* TAB 2: DEPARTMENT STOCK */}
           {activeTab === 'dept_stock' && (
-            <div className="bg-slate-800/50 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-              <table className="w-full text-left text-sm text-slate-300">
-                <thead className="bg-slate-800/90 text-xs uppercase font-semibold text-slate-400 border-b border-slate-700">
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+              <table className="w-full text-left text-sm text-slate-700">
+                <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                   <tr>
                     <th className="px-4 py-3">Consumable Item</th>
                     <th className="px-4 py-3">SKU</th>
@@ -267,10 +267,10 @@ const FacultyInventory = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-700/60">
                   {departmentStock.map((item) => (
-                    <tr key={item._id} className="hover:bg-slate-800/40 transition">
+                    <tr key={item._id} className="hover transition">
                       <td className="px-4 py-3 font-semibold text-white">{item.name}</td>
                       <td className="px-4 py-3 font-mono text-xs text-blue-400">{item.sku}</td>
-                      <td className="px-4 py-3 font-mono font-bold text-slate-200">
+                      <td className="px-4 py-3 font-mono font-bold text-slate-900">
                         {item.currentQuantity} {item.unitOfMeasure}
                       </td>
                       <td className="px-4 py-3 text-xs">
@@ -292,9 +292,9 @@ const FacultyInventory = () => {
 
           {/* TAB 3: MY REQUISITIONS */}
           {activeTab === 'my_prs' && (
-            <div className="bg-slate-800/50 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-              <table className="w-full text-left text-sm text-slate-300">
-                <thead className="bg-slate-800/90 text-xs uppercase font-semibold text-slate-400 border-b border-slate-700">
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+              <table className="w-full text-left text-sm text-slate-700">
+                <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                   <tr>
                     <th className="px-4 py-3">PR Number / Title</th>
                     <th className="px-4 py-3">Items Requested</th>
@@ -306,13 +306,13 @@ const FacultyInventory = () => {
                 <tbody className="divide-y divide-slate-700/60">
                   {myRequests.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="px-4 py-6 text-center text-slate-400">
+                      <td colSpan="5" className="px-4 py-6 text-center text-slate-500">
                         You have not submitted any purchase requisitions yet.
                       </td>
                     </tr>
                   ) : (
                     myRequests.map((pr) => (
-                      <tr key={pr._id} className="hover:bg-slate-800/40 transition">
+                      <tr key={pr._id} className="hover transition">
                         <td className="px-4 py-3">
                           <div className="font-semibold text-white">{pr.title}</div>
                           <div className="text-xs font-mono text-indigo-400">{pr.requestNumber}</div>
@@ -340,7 +340,7 @@ const FacultyInventory = () => {
                             {pr.status.replace('_', ' ')}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-400">
+                        <td className="px-4 py-3 text-xs text-slate-500">
                           {new Date(pr.createdAt).toLocaleDateString()}
                         </td>
                       </tr>
@@ -358,16 +358,16 @@ const FacultyInventory = () => {
                 <h3 className="text-base font-semibold text-white">Reported Equipment Issues</h3>
                 <button
                   onClick={() => setShowMaintModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium rounded-lg"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover text-white text-xs font-medium rounded-lg"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Report Issue
                 </button>
               </div>
 
-              <div className="bg-slate-800/50 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                <table className="w-full text-left text-sm text-slate-300">
-                  <thead className="bg-slate-800/90 text-xs uppercase font-semibold text-slate-400 border-b border-slate-700">
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <table className="w-full text-left text-sm text-slate-700">
+                  <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                     <tr>
                       <th className="px-4 py-3">Maintenance No / Title</th>
                       <th className="px-4 py-3">Asset</th>
@@ -379,23 +379,23 @@ const FacultyInventory = () => {
                   <tbody className="divide-y divide-slate-700/60">
                     {maintenanceReports.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="px-4 py-6 text-center text-slate-400">
+                        <td colSpan="5" className="px-4 py-6 text-center text-slate-500">
                           No reported maintenance issues.
                         </td>
                       </tr>
                     ) : (
                       maintenanceReports.map((m) => (
-                        <tr key={m._id} className="hover:bg-slate-800/40 transition">
+                        <tr key={m._id} className="hover transition">
                           <td className="px-4 py-3">
                             <div className="font-semibold text-white">{m.title}</div>
                             <div className="text-xs text-rose-400 font-mono">{m.maintenanceNumber}</div>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="text-slate-200">{m.asset?.name || 'Asset'}</div>
-                            <div className="text-xs text-slate-400 font-mono">{m.asset?.assetId || ''}</div>
+                            <div className="text-slate-900">{m.asset?.name || 'Asset'}</div>
+                            <div className="text-xs text-slate-500 font-mono">{m.asset?.assetId || ''}</div>
                           </td>
                           <td className="px-4 py-3 uppercase text-xs font-semibold">{m.priority}</td>
-                          <td className="px-4 py-3 text-xs text-slate-400">
+                          <td className="px-4 py-3 text-xs text-slate-500">
                             {new Date(m.createdAt).toLocaleDateString()}
                           </td>
                           <td className="px-4 py-3">
@@ -421,42 +421,42 @@ const FacultyInventory = () => {
           {/* CREATE PR MODAL */}
           {showPrModal && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-lg w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <h3 className="text-lg font-bold text-white">Create Purchase Requisition</h3>
-                  <button onClick={() => setShowPrModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowPrModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <form onSubmit={handleCreatePr} className="space-y-3">
                   <div>
-                    <label className="text-xs text-slate-400">Title / Purpose *</label>
+                    <label className="text-xs text-slate-500">Title / Purpose *</label>
                     <input
                       required
                       type="text"
                       value={prForm.title}
                       onChange={(e) => setPrForm({ ...prForm, title: e.target.value })}
                       placeholder="e.g. Lab Chemicals & Microcontrollers for Sem 4"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400">Item Name *</label>
+                      <label className="text-xs text-slate-500">Item Name *</label>
                       <input
                         required
                         type="text"
                         value={prForm.itemName}
                         onChange={(e) => setPrForm({ ...prForm, itemName: e.target.value })}
                         placeholder="Item name"
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Category *</label>
+                      <label className="text-xs text-slate-500">Category *</label>
                       <select
                         required
                         value={prForm.category}
                         onChange={(e) => setPrForm({ ...prForm, category: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       >
                         <option value="">Select Category</option>
                         {categories.map(c => (
@@ -467,50 +467,50 @@ const FacultyInventory = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400">Quantity *</label>
+                      <label className="text-xs text-slate-500">Quantity *</label>
                       <input
                         required
                         type="number"
                         min="1"
                         value={prForm.quantity}
                         onChange={(e) => setPrForm({ ...prForm, quantity: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Est. Unit Cost (INR)</label>
+                      <label className="text-xs text-slate-500">Est. Unit Cost (INR)</label>
                       <input
                         type="number"
                         step="0.01"
                         value={prForm.estimatedUnitCostRupees}
                         onChange={(e) => setPrForm({ ...prForm, estimatedUnitCostRupees: e.target.value })}
                         placeholder="500"
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Academic Justification *</label>
+                    <label className="text-xs text-slate-500">Academic Justification *</label>
                     <textarea
                       required
                       rows="2"
                       value={prForm.justification}
                       onChange={(e) => setPrForm({ ...prForm, justification: e.target.value })}
                       placeholder="Why is this purchase required for curriculum or lab operation?"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowPrModal(false)}
-                      className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium"
+                      className="px-4 py-2 bg-indigo-600 hover text-white rounded text-sm font-medium"
                     >
                       Submit Requisition
                     </button>
@@ -523,19 +523,19 @@ const FacultyInventory = () => {
           {/* REPORT MAINTENANCE MODAL */}
           {showMaintModal && (
             <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-6 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
+              <div className="bg-white border border-slate-200 rounded-xl max-w-lg w-full p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <h3 className="text-lg font-bold text-white">Report Equipment Breakdown</h3>
-                  <button onClick={() => setShowMaintModal(false)}><X className="h-5 w-5 text-slate-400" /></button>
+                  <button onClick={() => setShowMaintModal(false)}><X className="h-5 w-5 text-slate-500" /></button>
                 </div>
                 <form onSubmit={handleReportMaintenance} className="space-y-3">
                   <div>
-                    <label className="text-xs text-slate-400">Select Equipment / Asset *</label>
+                    <label className="text-xs text-slate-500">Select Equipment / Asset *</label>
                     <select
                       required
                       value={maintForm.asset}
                       onChange={(e) => setMaintForm({ ...maintForm, asset: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     >
                       <option value="">Select Asset</option>
                       {myAssets.map(a => (
@@ -544,37 +544,37 @@ const FacultyInventory = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Issue Summary *</label>
+                    <label className="text-xs text-slate-500">Issue Summary *</label>
                     <input
                       required
                       type="text"
                       value={maintForm.title}
                       onChange={(e) => setMaintForm({ ...maintForm, title: e.target.value })}
                       placeholder="e.g. Display backlight flickering"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400">Detailed Description</label>
+                    <label className="text-xs text-slate-500">Detailed Description</label>
                     <textarea
                       rows="3"
                       value={maintForm.description}
                       onChange={(e) => setMaintForm({ ...maintForm, description: e.target.value })}
                       placeholder="When did the issue start? Any error codes displayed?"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-white"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowMaintModal(false)}
-                      className="px-4 py-2 bg-slate-700 text-slate-300 rounded text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded text-sm font-medium"
+                      className="px-4 py-2 bg-rose-600 hover text-white rounded text-sm font-medium"
                     >
                       Log Breakdown
                     </button>

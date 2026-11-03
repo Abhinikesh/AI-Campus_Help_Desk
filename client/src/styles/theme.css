@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
-   theme.css — Global Semantic Theme System for CampusSphere AI
-   Supports seamless instant switching between Light Mode & Dark Mode.
+   theme.css — Global Semantic Light Theme System for CampusSphere AI
+   Enforces permanent, clean, accessible enterprise light mode ERP.
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
   /* ── Canvas & Surface ── */
-  --cs-bg-canvas: #F8F9FA;
+  --cs-bg-canvas: #F8FAFC;
   --cs-bg-surface: #FFFFFF;
   --cs-bg-surface-elevated: #FFFFFF;
   --cs-bg-subtle: #F1F5F9;
@@ -56,7 +56,7 @@
   /* ── Modals & Drawers ── */
   --cs-modal-bg: #FFFFFF;
   --cs-modal-border: #E2E8F0;
-  --cs-modal-overlay: rgba(15, 23, 42, 0.55);
+  --cs-modal-overlay: rgba(15, 23, 42, 0.45);
 
   /* ── Cards & Containers ── */
   --cs-card-bg: #FFFFFF;
@@ -73,78 +73,6 @@
   --cs-warning-bg: rgba(217, 119, 6, 0.1);
   --cs-danger: #DC2626;
   --cs-danger-bg: rgba(220, 38, 38, 0.1);
-}
-
-html.dark {
-  /* ── Canvas & Surface ── */
-  --cs-bg-canvas: #0B0F19;
-  --cs-bg-surface: #111827;
-  --cs-bg-surface-elevated: #1F2937;
-  --cs-bg-subtle: #1E293B;
-  --cs-bg-muted: #334155;
-  --cs-bg-hover: #1E293B;
-  --cs-bg-active: rgba(26, 86, 219, 0.2);
-
-  /* ── Typography & Text ── */
-  --cs-text-primary: #F8FAFC;
-  --cs-text-secondary: #CBD5E1;
-  --cs-text-muted: #94A3B8;
-  --cs-text-inverse: #0F172A;
-
-  /* ── Borders & Dividers ── */
-  --cs-border-subtle: #1F2937;
-  --cs-border-strong: #374151;
-  --cs-border-focus: #3B82F6;
-
-  /* ── Sidebar System ── */
-  --cs-sidebar-bg: #0F172A;
-  --cs-sidebar-border: #1E293B;
-  --cs-sidebar-text: #CBD5E1;
-  --cs-sidebar-text-muted: #94A3B8;
-  --cs-sidebar-hover-bg: #1E293B;
-  --cs-sidebar-active-bg: rgba(26, 86, 219, 0.22);
-  --cs-sidebar-active-text: #60A5FA;
-  --cs-sidebar-active-border: #3B82F6;
-
-  /* ── Top Header Bar ── */
-  --cs-header-bg: #0F172A;
-  --cs-header-border: #1E293B;
-  --cs-header-text: #F8FAFC;
-
-  /* ── Inputs & Form Controls ── */
-  --cs-input-bg: #111827;
-  --cs-input-border: #374151;
-  --cs-input-text: #F8FAFC;
-  --cs-input-placeholder: #64748B;
-  --cs-input-focus-border: #3B82F6;
-
-  /* ── Tables ── */
-  --cs-table-bg: #111827;
-  --cs-table-header-bg: #1E293B;
-  --cs-table-header-text: #94A3B8;
-  --cs-table-row-hover: #1E293B;
-  --cs-table-border: #1F2937;
-
-  /* ── Modals & Drawers ── */
-  --cs-modal-bg: #111827;
-  --cs-modal-border: #1F2937;
-  --cs-modal-overlay: rgba(0, 0, 0, 0.75);
-
-  /* ── Cards & Containers ── */
-  --cs-card-bg: #111827;
-  --cs-card-border: #1F2937;
-  --cs-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-
-  /* ── Brand & Semantic Accents ── */
-  --cs-primary: #3B82F6;
-  --cs-primary-hover: #60A5FA;
-  --cs-primary-light: rgba(59, 130, 246, 0.15);
-  --cs-success: #22C55E;
-  --cs-success-bg: rgba(34, 197, 94, 0.12);
-  --cs-warning: #F59E0B;
-  --cs-warning-bg: rgba(245, 158, 11, 0.12);
-  --cs-danger: #EF4444;
-  --cs-danger-bg: rgba(239, 68, 68, 0.12);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -258,247 +186,134 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   THEME-BREAKING OVERRIDE NORMALIZERS
-   Ensures pages created with hardcoded dark or light classes adapt seamlessly
+   LIGHT-THEME UNIVERSAL OVERRIDE NORMALIZERS
+   Guarantees that legacy dark classes render with crisp, beautiful light styles.
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Light Mode Normalizers for Dark-Styled Pages ─────────── */
-html.light .bg-\[\#0B0F19\],
-html.light .bg-\[\#0b0f19\],
-html.light .bg-slate-900,
-html.light .bg-slate-950,
-html.light .bg-slate-900\/40,
-:root:not(.dark) .bg-\[\#0B0F19\],
-:root:not(.dark) .bg-\[\#0b0f19\] {
-  background-color: var(--cs-bg-canvas) !important;
-  color: var(--cs-text-primary) !important;
+/* Universal canvas overrides */
+.bg-\[\#0B0F19\],
+.bg-\[\#0b0f19\],
+.bg-\[\#0F172A\],
+.bg-slate-950,
+.bg-slate-900 {
+  background-color: var(--cs-bg-canvas, #F8FAFC) !important;
+  color: var(--cs-text-primary, #0F172A) !important;
 }
 
-html.light .bg-\[\#131B2E\],
-html.light .bg-slate-800,
-html.light .bg-slate-800\/40,
-html.light .bg-slate-800\/60,
-html.light .bg-slate-800\/70,
-html.light .bg-slate-800\/80,
-html.light .bg-slate-900\/60,
-html.light .bg-slate-900\/70,
-html.light .bg-gray-900,
-:root:not(.dark) .bg-\[\#131B2E\] {
-  background-color: var(--cs-card-bg) !important;
-  border-color: var(--cs-border-subtle) !important;
-  color: var(--cs-text-primary) !important;
+/* Universal card & container overrides */
+.bg-\[\#131B2E\],
+.bg-slate-800,
+.bg-slate-800\/40,
+.bg-slate-800\/50,
+.bg-slate-800\/60,
+.bg-slate-800\/70,
+.bg-slate-800\/80,
+.bg-slate-800\/90,
+.bg-slate-900\/20,
+.bg-slate-900\/40,
+.bg-slate-900\/50,
+.bg-slate-900\/60,
+.bg-slate-900\/70,
+.bg-slate-900\/80,
+.bg-gray-900,
+.bg-gray-800 {
+  background-color: var(--cs-card-bg, #FFFFFF) !important;
+  border-color: var(--cs-border-subtle, #E2E8F0) !important;
+  color: var(--cs-text-primary, #0F172A) !important;
 }
 
-html.light .border-gray-800,
-html.light .border-slate-800,
-html.light .border-slate-700,
-html.light .border-slate-700\/60,
-html.light .border-slate-700\/70 {
-  border-color: var(--cs-border-subtle) !important;
+/* Universal border normalization */
+.border-gray-800,
+.border-slate-800,
+.border-slate-700,
+.border-slate-700\/60,
+.border-slate-700\/70,
+.border-slate-700\/80,
+.border-slate-800\/60,
+.border-slate-800\/80 {
+  border-color: var(--cs-border-subtle, #E2E8F0) !important;
 }
 
-html.light .text-slate-100,
-html.light .text-gray-100 {
-  color: var(--cs-text-primary) !important;
+/* Universal text contrast normalization */
+.text-slate-100,
+.text-gray-100 {
+  color: var(--cs-text-primary, #0F172A) !important;
 }
 
-html.light .text-slate-400,
-html.light .text-gray-400 {
-  color: var(--cs-text-muted) !important;
+.text-slate-400,
+.text-gray-400 {
+  color: var(--cs-text-muted, #64748B) !important;
 }
 
-html.light .text-slate-300,
-html.light .text-gray-300 {
-  color: var(--cs-text-secondary) !important;
+.text-slate-300,
+.text-gray-300 {
+  color: var(--cs-text-secondary, #475569) !important;
 }
 
-html.light h1.text-white,
-html.light h2.text-white,
-html.light h3.text-white,
-html.light h4.text-white,
-html.light div.text-white,
-html.light p.text-white,
-html.light span.text-white:not([class*="bg-indigo"]):not([class*="bg-blue"]):not([class*="bg-rose"]):not([class*="bg-emerald"]):not([class*="bg-purple"]):not([class*="bg-amber"]),
-html.light strong.text-white,
-html.light td.text-white,
-html.light th.text-white {
-  color: var(--cs-text-primary) !important;
+.text-slate-200 {
+  color: var(--cs-text-primary, #0F172A) !important;
 }
 
-/* Form inputs inside previously dark pages */
-html.light input.bg-\[\#0B0F19\],
-html.light select.bg-\[\#0B0F19\],
-html.light textarea.bg-\[\#0B0F19\],
-html.light input.bg-slate-950,
-html.light select.bg-slate-950,
-html.light textarea.bg-slate-950,
-html.light input.bg-slate-900,
-html.light select.bg-slate-900,
-html.light textarea.bg-slate-900 {
-  background-color: var(--cs-input-bg) !important;
-  border-color: var(--cs-input-border) !important;
-  color: var(--cs-input-text) !important;
+/* Headings and body copy that used white text */
+h1.text-white,
+h2.text-white,
+h3.text-white,
+h4.text-white,
+div.text-white,
+p.text-white,
+strong.text-white,
+td.text-white,
+th.text-white {
+  color: var(--cs-text-primary, #0F172A) !important;
 }
 
-/* Modals inside previously dark pages */
-html.light [class*="modal"] .bg-\[\#131B2E\],
-html.light [class*="modal"] .bg-slate-900,
-html.light [class*="modal"] .bg-slate-950,
-html.light [class*="modal"] .bg-gray-900,
-html.light [class*="modal"] .bg-\[\#0B0F19\],
-html.light .fixed.inset-0 .bg-\[\#131B2E\],
-html.light .fixed.inset-0 .bg-slate-900,
-html.light .fixed.inset-0 .bg-slate-950,
-html.light .fixed.inset-0 .bg-gray-900,
-html.light .fixed.inset-0 .bg-\[\#0B0F19\],
-html.light .fixed .bg-\[\#131B2E\],
-html.light .fixed .bg-slate-900 {
-  background-color: var(--cs-modal-bg) !important;
-  border-color: var(--cs-modal-border) !important;
-  color: var(--cs-text-primary) !important;
+/* Form inputs */
+input.bg-\[\#0B0F19\],
+select.bg-\[\#0B0F19\],
+textarea.bg-\[\#0B0F19\],
+input.bg-slate-950,
+select.bg-slate-950,
+textarea.bg-slate-950,
+input.bg-slate-900,
+select.bg-slate-900,
+textarea.bg-slate-900,
+input.bg-slate-800,
+select.bg-slate-800,
+textarea.bg-slate-800 {
+  background-color: var(--cs-input-bg, #FFFFFF) !important;
+  border-color: var(--cs-input-border, #CBD5E1) !important;
+  color: var(--cs-input-text, #0F172A) !important;
 }
 
-html.light .fixed.inset-0 label,
-html.light [class*="modal"] label {
-  color: var(--cs-text-secondary) !important;
+/* Modals & Dialogs */
+[class*="modal"] .bg-\[\#131B2E\],
+[class*="modal"] .bg-slate-900,
+[class*="modal"] .bg-slate-950,
+[class*="modal"] .bg-gray-900,
+[class*="modal"] .bg-\[\#0B0F19\],
+.fixed.inset-0 .bg-\[\#131B2E\],
+.fixed.inset-0 .bg-slate-900,
+.fixed.inset-0 .bg-slate-950,
+.fixed.inset-0 .bg-gray-900,
+.fixed.inset-0 .bg-\[\#0B0F19\],
+.fixed.inset-0 .bg-slate-800,
+.fixed .bg-\[\#131B2E\],
+.fixed .bg-slate-900 {
+  background-color: var(--cs-modal-bg, #FFFFFF) !important;
+  border-color: var(--cs-modal-border, #E2E8F0) !important;
+  color: var(--cs-text-primary, #0F172A) !important;
 }
 
-/* ── Dark Mode Normalizers for Light-Styled Pages ─────────── */
-html.dark .bg-slate-50,
-html.dark [style*="backgroundColor: rgb(249, 250, 251)"],
-html.dark [style*="background-color: rgb(249, 250, 251)"],
-html.dark [style*="backgroundColor: #F9FAFB"],
-html.dark [style*="background-color: #F9FAFB"] {
-  background-color: var(--cs-bg-canvas) !important;
-  color: var(--cs-text-primary) !important;
+.fixed.inset-0 label,
+[class*="modal"] label {
+  color: var(--cs-text-secondary, #475569) !important;
 }
 
-html.dark .bg-white:not(button):not(.cs-sidebar-avatar):not(.cs-sidebar-avatar-small):not(.ds-step-circle.done):not(.ds-step-circle.active) {
-  background-color: var(--cs-card-bg) !important;
-  color: var(--cs-text-primary) !important;
-}
-
-html.dark .border-slate-200,
-html.dark .border-slate-200\/80,
-html.dark .border-gray-200 {
-  border-color: var(--cs-border-subtle) !important;
-}
-
-html.dark .text-slate-900,
-html.dark .text-gray-900,
-html.dark .text-gray-800 {
-  color: var(--cs-text-primary) !important;
-}
-
-html.dark .text-slate-500,
-html.dark .text-gray-500 {
-  color: var(--cs-text-muted) !important;
-}
-
-html.dark .text-slate-600,
-html.dark .text-gray-600 {
-  color: var(--cs-text-secondary) !important;
-}
-
-/* Form inputs inside previously light pages */
-html.dark input.bg-white,
-html.dark select.bg-white,
-html.dark textarea.bg-white {
-  background-color: var(--cs-input-bg) !important;
-  border-color: var(--cs-input-border) !important;
-  color: var(--cs-input-text) !important;
-}
-
-/* Modals inside previously light pages */
-html.dark [class*="modal"] .bg-white,
-html.dark [class*="drawer"] .bg-white {
-  background-color: var(--cs-modal-bg) !important;
-  border-color: var(--cs-modal-border) !important;
-  color: var(--cs-text-primary) !important;
-}
-
-/* Metric background accents in dark mode */
-html.dark .bg-blue-50 {
-  background-color: rgba(59, 130, 246, 0.15) !important;
-}
-
-html.dark .bg-emerald-50 {
-  background-color: rgba(34, 197, 94, 0.15) !important;
-}
-
-html.dark .bg-amber-50 {
-  background-color: rgba(245, 158, 11, 0.15) !important;
-}
-
-html.dark .bg-purple-50 {
-  background-color: rgba(168, 85, 247, 0.15) !important;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   THEME TOGGLE CONTROLS
-   ═══════════════════════════════════════════════════════════════ */
-
-.cs-theme-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--cs-sidebar-text);
-  background: transparent;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  user-select: none;
-  margin-bottom: 4px;
-}
-
-.cs-theme-toggle-btn:hover {
-  background: var(--cs-sidebar-hover-bg);
-  color: var(--cs-text-primary);
-}
-
-.cs-theme-toggle-btn.collapsed {
-  justify-content: center;
-  padding: 9px 0;
-}
-
+/* Permanently hide any remaining theme toggle controls */
+.cs-theme-toggle-btn,
+.cs-mobile-theme-btn,
 .cs-theme-toggle-pill {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-size: 10px;
-  font-weight: 600;
-  background: var(--cs-bg-subtle);
-  color: var(--cs-text-muted);
-  border: 1px solid var(--cs-border-subtle);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Mobile Topbar Toggle */
-.cs-mobile-theme-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: var(--cs-bg-subtle);
-  border: 1px solid var(--cs-border-subtle);
-  color: var(--cs-text-primary);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.cs-mobile-theme-btn:hover {
-  background: var(--cs-bg-hover);
+  display: none !important;
 }
 
 

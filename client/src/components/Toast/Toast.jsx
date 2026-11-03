@@ -20,7 +20,7 @@ const Toast = ({ message, type = 'info', onClose }) => {
     }`}>
       {getIcon()}
       <p className="text-sm text-slate-200 font-inter font-medium flex-1 m-0">{message}</p>
-      <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors bg-transparent border-none cursor-pointer">
+      <button onClick={onClose} className="text-slate-400 hover transition-colors bg-transparent border-none cursor-pointer">
         <X size={16} />
       </button>
     </div>

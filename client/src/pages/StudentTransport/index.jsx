@@ -176,15 +176,15 @@ const StudentTransport = () => {
         
         <main className="p-6 max-w-7xl mx-auto w-full space-y-6">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
             <div>
               <div className="flex items-center gap-2 text-indigo-400 font-semibold tracking-wide text-xs uppercase mb-1">
                 <Bus size={16} /> Campus Transit & Fleet
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+              <h1 className="text-2xl md font-bold text-slate-900 tracking-tight">
                 Campus Transport Portal
               </h1>
-              <p className="text-sm text-slate-400 mt-0.5">
+              <p className="text-sm text-slate-500 mt-0.5">
                 Manage your daily commute, route schedules, bus stops, and travel alerts.
               </p>
             </div>
@@ -193,7 +193,7 @@ const StudentTransport = () => {
               <button
                 onClick={loadData}
                 disabled={loading}
-                className="p-2.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-300 transition"
+                className="p-2.5 rounded-lg border border-slate-200 bg-white hover text-slate-700 transition"
                 title="Refresh Transport Data"
               >
                 <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
@@ -202,7 +202,7 @@ const StudentTransport = () => {
               {!allocation && (
                 <button
                   onClick={() => setShowApplyModal(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium text-white shadow-lg shadow-indigo-600/20 transition"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover font-medium text-slate-900 shadow-lg shadow-indigo-600/20 transition"
                 >
                   <Plus size={16} /> Apply for Transport
                 </button>
@@ -211,7 +211,7 @@ const StudentTransport = () => {
               {allocation && (
                 <button
                   onClick={() => setShowIncidentModal(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-rose-800 bg-rose-950/40 hover:bg-rose-900/60 font-medium text-rose-300 transition"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-rose-800 bg-rose-950/40 hover font-medium text-rose-300 transition"
                 >
                   <AlertTriangle size={16} /> Report Issue
                 </button>
@@ -227,37 +227,37 @@ const StudentTransport = () => {
             <>
               {/* Quick Status Bar */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 flex items-center gap-3.5">
+                <div className="p-4 rounded-xl border border-slate-200 bg-white flex items-center gap-3.5">
                   <div className="w-11 h-11 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
                     <Bus size={22} />
                   </div>
                   <div>
-                    <div className="text-xs font-medium text-slate-400">Allocated Route</div>
-                    <div className="text-sm font-semibold text-white">
+                    <div className="text-xs font-medium text-slate-500">Allocated Route</div>
+                    <div className="text-sm font-semibold text-slate-900">
                       {allocation?.route ? `${allocation.route.code} — ${allocation.route.name}` : 'Not Allocated'}
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 flex items-center gap-3.5">
+                <div className="p-4 rounded-xl border border-slate-200 bg-white flex items-center gap-3.5">
                   <div className="w-11 h-11 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                     <MapPin size={22} />
                   </div>
                   <div>
-                    <div className="text-xs font-medium text-slate-400">Pickup Stop</div>
-                    <div className="text-sm font-semibold text-white">
+                    <div className="text-xs font-medium text-slate-500">Pickup Stop</div>
+                    <div className="text-sm font-semibold text-slate-900">
                       {allocation?.pickupStop?.stopName || 'No Stop Assigned'}
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 flex items-center gap-3.5">
+                <div className="p-4 rounded-xl border border-slate-200 bg-white flex items-center gap-3.5">
                   <div className="w-11 h-11 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
                     <Clock size={22} />
                   </div>
                   <div>
-                    <div className="text-xs font-medium text-slate-400">Morning Pickup</div>
-                    <div className="text-sm font-semibold text-white">
+                    <div className="text-xs font-medium text-slate-500">Morning Pickup</div>
+                    <div className="text-sm font-semibold text-slate-900">
                       {allocation?.pickupStop?.scheduledMorningPickupTime ||
                         allocation?.route?.schedule?.morningDepartureTime ||
                         '--:--'}
@@ -265,13 +265,13 @@ const StudentTransport = () => {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 flex items-center gap-3.5">
+                <div className="p-4 rounded-xl border border-slate-200 bg-white flex items-center gap-3.5">
                   <div className="w-11 h-11 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
                     <FileText size={22} />
                   </div>
                   <div>
-                    <div className="text-xs font-medium text-slate-400">Transit Pass Fee</div>
-                    <div className="text-sm font-semibold text-white">
+                    <div className="text-xs font-medium text-slate-500">Transit Pass Fee</div>
+                    <div className="text-sm font-semibold text-slate-900">
                       ₹{((allocation?.feeAmountInPaise || overview?.policy?.defaultFeeInPaise || 1800000) / 100).toLocaleString('en-IN')}
                     </div>
                   </div>
@@ -279,13 +279,13 @@ const StudentTransport = () => {
               </div>
 
               {/* Navigation Tabs */}
-              <div className="flex border-b border-slate-200 dark:border-slate-800 text-sm font-medium gap-2 overflow-x-auto whitespace-nowrap scrollbar-none pb-0.5">
+              <div className="flex border-b border-slate-200 text-sm font-medium gap-2 overflow-x-auto whitespace-nowrap scrollbar-none pb-0.5">
                 <button
                   onClick={() => setActiveTab('my_transport')}
                   className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition ${
                     activeTab === 'my_transport'
                       ? 'border-indigo-500 text-indigo-400 font-semibold'
-                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                      : 'border-transparent text-slate-500 hover'
                   }`}
                 >
                   <Bus size={16} /> My Commute
@@ -295,7 +295,7 @@ const StudentTransport = () => {
                   className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition ${
                     activeTab === 'routes'
                       ? 'border-indigo-500 text-indigo-400 font-semibold'
-                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                      : 'border-transparent text-slate-500 hover'
                   }`}
                 >
                   <MapPin size={16} /> Campus Routes ({routes.length})
@@ -305,7 +305,7 @@ const StudentTransport = () => {
                   className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition ${
                     activeTab === 'trips'
                       ? 'border-indigo-500 text-indigo-400 font-semibold'
-                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                      : 'border-transparent text-slate-500 hover'
                   }`}
                 >
                   <Clock size={16} /> Daily Trips & Delays
@@ -315,7 +315,7 @@ const StudentTransport = () => {
                   className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition ${
                     activeTab === 'applications'
                       ? 'border-indigo-500 text-indigo-400 font-semibold'
-                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                      : 'border-transparent text-slate-500 hover'
                   }`}
                 >
                   <Calendar size={16} /> Applications ({applications.length})
@@ -328,17 +328,17 @@ const StudentTransport = () => {
                   {allocation ? (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                       {/* Left: Allocation Card */}
-                      <div className="lg:col-span-2 p-6 rounded-xl border border-slate-800 bg-slate-900/40 space-y-5">
-                        <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+                      <div className="lg:col-span-2 p-6 rounded-xl border border-slate-200 bg-white space-y-5">
+                        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                           <div>
                             <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
                               Active Pass #{allocation.allocationNumber}
                             </span>
-                            <h2 className="text-xl font-bold text-white mt-1.5">
+                            <h2 className="text-xl font-bold text-slate-900 mt-1.5">
                               {allocation.route?.name} ({allocation.route?.code})
                             </h2>
                           </div>
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-slate-500">
                             Valid: {new Date(allocation.startDate).toLocaleDateString()} –{' '}
                             {new Date(allocation.endDate).toLocaleDateString()}
                           </span>
@@ -346,17 +346,17 @@ const StudentTransport = () => {
 
                         {/* Route details grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                          <div className="p-3.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
-                            <span className="text-slate-400 text-xs block mb-1">Boarding Stop</span>
-                            <span className="font-semibold text-white flex items-center gap-1.5">
+                          <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                            <span className="text-slate-500 text-xs block mb-1">Boarding Stop</span>
+                            <span className="font-semibold text-slate-900 flex items-center gap-1.5">
                               <MapPin size={15} className="text-indigo-400" />
                               {allocation.pickupStop?.stopName} (Seq #{allocation.pickupStop?.sequence})
                             </span>
                           </div>
 
-                          <div className="p-3.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
-                            <span className="text-slate-400 text-xs block mb-1">Morning Pickup Time</span>
-                            <span className="font-semibold text-white flex items-center gap-1.5">
+                          <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                            <span className="text-slate-500 text-xs block mb-1">Morning Pickup Time</span>
+                            <span className="font-semibold text-slate-900 flex items-center gap-1.5">
                               <Clock size={15} className="text-amber-400" />
                               {allocation.pickupStop?.scheduledMorningPickupTime ||
                                 allocation.route?.schedule?.morningDepartureTime ||
@@ -364,9 +364,9 @@ const StudentTransport = () => {
                             </span>
                           </div>
 
-                          <div className="p-3.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
-                            <span className="text-slate-400 text-xs block mb-1">Assigned Vehicle</span>
-                            <span className="font-semibold text-white flex items-center gap-1.5">
+                          <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                            <span className="text-slate-500 text-xs block mb-1">Assigned Vehicle</span>
+                            <span className="font-semibold text-slate-900 flex items-center gap-1.5">
                               <Bus size={15} className="text-purple-400" />
                               {allocation.vehicle
                                 ? `${allocation.vehicle.vehicleCode} (${allocation.vehicle.registrationNumber})`
@@ -376,13 +376,13 @@ const StudentTransport = () => {
                             </span>
                           </div>
 
-                          <div className="p-3.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
-                            <span className="text-slate-400 text-xs block mb-1">Driver In-Charge</span>
-                            <span className="font-semibold text-white flex items-center gap-1.5">
+                          <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                            <span className="text-slate-500 text-xs block mb-1">Driver In-Charge</span>
+                            <span className="font-semibold text-slate-900 flex items-center gap-1.5">
                               <User size={15} className="text-emerald-400" />
                               {allocation.route?.assignedDriver?.name || 'Assigned Driver TBA'}
                               {allocation.route?.assignedDriver?.phone && (
-                                <span className="text-xs text-slate-400">
+                                <span className="text-xs text-slate-500">
                                   ({allocation.route.assignedDriver.phone})
                                 </span>
                               )}
@@ -392,7 +392,7 @@ const StudentTransport = () => {
 
                         {/* Route Stops Sequence */}
                         <div>
-                          <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                          <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
                             <MapPin size={16} className="text-indigo-400" /> Route Stops Timeline
                           </h3>
                           <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
@@ -403,14 +403,14 @@ const StudentTransport = () => {
                                   key={s._id}
                                   className={`flex items-center justify-between p-2.5 rounded-lg border text-sm transition ${
                                     isMyStop
-                                      ? 'bg-indigo-950/30 border-indigo-500/50 text-white font-medium'
-                                      : 'bg-slate-950/40 border-slate-800/60 text-slate-300'
+                                      ? 'bg-indigo-950/30 border-indigo-500/50 text-slate-900 font-medium'
+                                      : 'bg-slate-50 border-slate-200 text-slate-700'
                                   }`}
                                 >
                                   <div className="flex items-center gap-2.5">
                                     <span
                                       className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                                        isMyStop ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'
+                                        isMyStop ? 'bg-indigo-600 text-slate-900' : 'bg-slate-100 text-slate-500'
                                       }`}
                                     >
                                       {s.sequence}
@@ -422,7 +422,7 @@ const StudentTransport = () => {
                                       </span>
                                     )}
                                   </div>
-                                  <div className="text-xs text-slate-400 flex items-center gap-3">
+                                  <div className="text-xs text-slate-500 flex items-center gap-3">
                                     {s.scheduledMorningPickupTime && (
                                       <span>Pickup: {s.scheduledMorningPickupTime}</span>
                                     )}
@@ -439,11 +439,11 @@ const StudentTransport = () => {
 
                       {/* Right: Operational Notices & Support */}
                       <div className="space-y-4">
-                        <div className="p-5 rounded-xl border border-slate-800 bg-slate-900/40 space-y-3">
-                          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                        <div className="p-5 rounded-xl border border-slate-200 bg-white space-y-3">
+                          <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
                             <Info size={16} className="text-indigo-400" /> Commute Guidelines
                           </h3>
-                          <ul className="text-xs text-slate-400 space-y-2 list-disc pl-4">
+                          <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4">
                             <li>Please arrive at your boarding stop 5 minutes prior to scheduled pickup.</li>
                             <li>Carry your student digital identity card at all times while boarding.</li>
                             <li>Daily delays due to traffic are notified in real-time under Daily Trips.</li>
@@ -464,17 +464,17 @@ const StudentTransport = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="p-12 text-center rounded-xl border border-slate-800 bg-slate-900/20 max-w-xl mx-auto space-y-4">
+                    <div className="p-12 text-center rounded-xl border border-slate-200 bg-slate-50 max-w-xl mx-auto space-y-4">
                       <div className="w-16 h-16 rounded-full bg-indigo-600/10 border border-indigo-600/20 flex items-center justify-center text-indigo-400 mx-auto">
                         <Bus size={32} />
                       </div>
-                      <h2 className="text-xl font-bold text-white">No Active Transport Allocation</h2>
-                      <p className="text-sm text-slate-400">
+                      <h2 className="text-xl font-bold text-slate-900">No Active Transport Allocation</h2>
+                      <p className="text-sm text-slate-500">
                         You are currently not enrolled in college transit services. Browse available routes and apply for an academic transport pass.
                       </p>
                       <button
                         onClick={() => setShowApplyModal(true)}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-white shadow-lg shadow-indigo-600/20 transition"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-indigo-600 hover font-semibold text-slate-900 shadow-lg shadow-indigo-600/20 transition"
                       >
                         <Plus size={16} /> Apply for Transport Pass
                       </button>
@@ -488,16 +488,16 @@ const StudentTransport = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="relative flex-1 max-w-md">
-                      <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                       <input
                         type="text"
                         placeholder="Search by route code, location, or name..."
                         value={routeSearch}
                         onChange={(e) => setRouteSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full pl-10 pr-4 py-2 rounded-lg bg-white border border-slate-200 text-sm text-slate-900 focus:outline-none focus"
                       />
                     </div>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-500">
                       Showing {filteredRoutes.length} active routes
                     </span>
                   </div>
@@ -508,7 +508,7 @@ const StudentTransport = () => {
                       return (
                         <div
                           key={r._id}
-                          className="p-5 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-slate-700 transition flex flex-col justify-between space-y-4"
+                          className="p-5 rounded-xl border border-slate-200 bg-white hover transition flex flex-col justify-between space-y-4"
                         >
                           <div>
                             <div className="flex items-center justify-between mb-2">
@@ -525,30 +525,30 @@ const StudentTransport = () => {
                                 {isFull ? 'Capacity Full' : `${r.maxCapacity - r.allocatedStudentsCount} seats left`}
                               </span>
                             </div>
-                            <h3 className="font-semibold text-white text-base leading-snug">{r.name}</h3>
-                            <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                            <h3 className="font-semibold text-slate-900 text-base leading-snug">{r.name}</h3>
+                            <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
                               <span>{r.startLocation}</span>
                               <ChevronRight size={12} />
                               <span>{r.endLocation}</span>
                             </p>
                           </div>
 
-                          <div className="space-y-2 border-t border-slate-800/80 pt-3 text-xs text-slate-300">
+                          <div className="space-y-2 border-t border-slate-200 pt-3 text-xs text-slate-700">
                             <div className="flex items-center justify-between">
-                              <span className="text-slate-400">Morning Departure:</span>
-                              <span className="font-medium text-white">
+                              <span className="text-slate-500">Morning Departure:</span>
+                              <span className="font-medium text-slate-900">
                                 {r.schedule?.morningDepartureTime || '07:30 AM'}
                               </span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-slate-400">Evening Departure:</span>
-                              <span className="font-medium text-white">
+                              <span className="text-slate-500">Evening Departure:</span>
+                              <span className="font-medium text-slate-900">
                                 {r.schedule?.eveningDepartureTime || '05:15 PM'}
                               </span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-slate-400">Assigned Bus:</span>
-                              <span className="font-medium text-white">
+                              <span className="text-slate-500">Assigned Bus:</span>
+                              <span className="font-medium text-slate-900">
                                 {r.assignedVehicle?.vehicleCode || 'Standard Transit Bus'}
                               </span>
                             </div>
@@ -564,8 +564,8 @@ const StudentTransport = () => {
               {activeTab === 'trips' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-white">Today's Operating Route Trips</h3>
-                    <span className="text-xs text-slate-400">Real-time departure and arrival records</span>
+                    <h3 className="text-base font-semibold text-slate-900">Today's Operating Route Trips</h3>
+                    <span className="text-xs text-slate-500">Real-time departure and arrival records</span>
                   </div>
 
                   {trips.length > 0 ? (
@@ -573,7 +573,7 @@ const StudentTransport = () => {
                       {trips.map((t) => (
                         <div
                           key={t._id}
-                          className="p-4 rounded-xl border border-slate-800 bg-slate-900/40 space-y-3"
+                          className="p-4 rounded-xl border border-slate-200 bg-white space-y-3"
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-indigo-400">
@@ -587,14 +587,14 @@ const StudentTransport = () => {
                                   ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
                                   : t.status === 'delayed'
                                   ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                  : 'bg-slate-800 text-slate-400'
+                                  : 'bg-slate-100 text-slate-500'
                               }`}
                             >
                               {t.status.toUpperCase()}
                             </span>
                           </div>
 
-                          <div className="text-xs text-slate-300 space-y-1">
+                          <div className="text-xs text-slate-700 space-y-1">
                             <div>Route: {t.route?.name}</div>
                             <div>Vehicle: {t.vehicle?.vehicleCode} ({t.vehicle?.registrationNumber})</div>
                             <div>Driver: {t.driver?.name || 'On Duty'}</div>
@@ -609,7 +609,7 @@ const StudentTransport = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="p-8 text-center rounded-xl border border-slate-800 bg-slate-900/20 text-slate-400 text-sm">
+                    <div className="p-8 text-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm">
                       No active trips scheduled for today yet.
                     </div>
                   )}
@@ -620,11 +620,11 @@ const StudentTransport = () => {
               {activeTab === 'applications' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-white">Application History</h3>
+                    <h3 className="text-base font-semibold text-slate-900">Application History</h3>
                     {!allocation && (
                       <button
                         onClick={() => setShowApplyModal(true)}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium"
+                        className="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover text-slate-900 font-medium"
                       >
                         + New Application
                       </button>
@@ -632,12 +632,12 @@ const StudentTransport = () => {
                   </div>
 
                   {applications.length > 0 ? (
-                    <div className="divide-y divide-slate-800 border border-slate-800 rounded-xl bg-slate-900/40 overflow-hidden">
+                    <div className="divide-y divide-slate-800 border border-slate-200 rounded-xl bg-white overflow-hidden">
                       {applications.map((app) => (
                         <div key={app._id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-sm">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold text-white">#{app.applicationNumber}</span>
+                              <span className="font-semibold text-slate-900">#{app.applicationNumber}</span>
                               <span
                                 className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                                   app.status === 'allocated' || app.status === 'approved'
@@ -650,7 +650,7 @@ const StudentTransport = () => {
                                 {app.status.toUpperCase()}
                               </span>
                             </div>
-                            <div className="text-xs text-slate-400 mt-1">
+                            <div className="text-xs text-slate-500 mt-1">
                               Preferred Route: {app.preferredRoute?.code} ({app.preferredRoute?.name}) | Stop: {app.preferredPickupStop?.stopName}
                             </div>
                             {app.reviewDetails?.rejectionReason && (
@@ -666,7 +666,7 @@ const StudentTransport = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="p-8 text-center rounded-xl border border-slate-800 bg-slate-900/20 text-slate-400 text-sm">
+                    <div className="p-8 text-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm">
                       No previous transport applications submitted.
                     </div>
                   )}
@@ -678,20 +678,20 @@ const StudentTransport = () => {
           {/* APPLY MODAL */}
           {showApplyModal && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h3 className="font-bold text-lg text-white">Apply for College Transit</h3>
-                  <button onClick={() => setShowApplyModal(false)} className="text-slate-400 hover:text-white">✕</button>
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <h3 className="font-bold text-lg text-slate-900">Apply for College Transit</h3>
+                  <button onClick={() => setShowApplyModal(false)} className="text-slate-500 hover">✕</button>
                 </div>
 
                 <form onSubmit={handleApplySubmit} className="space-y-4 text-sm">
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Select Route</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Select Route</label>
                     <select
                       value={selectedRouteId}
                       onChange={(e) => setSelectedRouteId(e.target.value)}
                       required
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus"
                     >
                       <option value="">-- Choose an active route --</option>
                       {routes.map((r) => (
@@ -703,13 +703,13 @@ const StudentTransport = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Select Boarding Stop</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Select Boarding Stop</label>
                     <select
                       value={applyForm.pickupStopId}
                       onChange={(e) => setApplyForm({ ...applyForm, pickupStopId: e.target.value })}
                       required
                       disabled={!selectedRouteId || availableStops.length === 0}
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus disabled:opacity-50"
                     >
                       <option value="">-- Choose your pickup stop --</option>
                       {availableStops.map((s) => (
@@ -722,25 +722,25 @@ const StudentTransport = () => {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Emergency Contact Name</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Emergency Contact Name</label>
                       <input
                         type="text"
                         placeholder="Parent / Guardian"
                         value={applyForm.emergencyContactName}
                         onChange={(e) => setApplyForm({ ...applyForm, emergencyContactName: e.target.value })}
                         required
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Emergency Phone</label>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Emergency Phone</label>
                       <input
                         type="tel"
                         placeholder="+91 9876543210"
                         value={applyForm.emergencyContactPhone}
                         onChange={(e) => setApplyForm({ ...applyForm, emergencyContactPhone: e.target.value })}
                         required
-                        className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus"
                       />
                     </div>
                   </div>
@@ -753,14 +753,14 @@ const StudentTransport = () => {
                     <button
                       type="button"
                       onClick={() => setShowApplyModal(false)}
-                      className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800"
+                      className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={submittingApply}
-                      className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-white"
+                      className="px-4 py-2 rounded-lg bg-indigo-600 hover font-semibold text-slate-900"
                     >
                       {submittingApply ? 'Submitting...' : 'Submit Application'}
                     </button>
@@ -773,19 +773,19 @@ const StudentTransport = () => {
           {/* REPORT INCIDENT MODAL */}
           {showIncidentModal && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h3 className="font-bold text-lg text-white">Report Transit Incident</h3>
-                  <button onClick={() => setShowIncidentModal(false)} className="text-slate-400 hover:text-white">✕</button>
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <h3 className="font-bold text-lg text-slate-900">Report Transit Incident</h3>
+                  <button onClick={() => setShowIncidentModal(false)} className="text-slate-500 hover">✕</button>
                 </div>
 
                 <form onSubmit={handleIncidentSubmit} className="space-y-4 text-sm">
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Issue Category</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Issue Category</label>
                     <select
                       value={incidentForm.category}
                       onChange={(e) => setIncidentForm({ ...incidentForm, category: e.target.value })}
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                     >
                       <option value="traffic_delay">Traffic Delay</option>
                       <option value="breakdown">Vehicle Breakdown</option>
@@ -796,26 +796,26 @@ const StudentTransport = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Title</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Title</label>
                     <input
                       type="text"
                       placeholder="e.g. Bus arrived 30 mins late at stop"
                       value={incidentForm.title}
                       onChange={(e) => setIncidentForm({ ...incidentForm, title: e.target.value })}
                       required
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Detailed Description</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Detailed Description</label>
                     <textarea
                       rows={3}
                       placeholder="Provide specific details..."
                       value={incidentForm.description}
                       onChange={(e) => setIncidentForm({ ...incidentForm, description: e.target.value })}
                       required
-                      className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                      className="w-full p-2.5 rounded-lg bg-white border border-slate-200 text-slate-900"
                     />
                   </div>
 
@@ -823,14 +823,14 @@ const StudentTransport = () => {
                     <button
                       type="button"
                       onClick={() => setShowIncidentModal(false)}
-                      className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800"
+                      className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={submittingIncident}
-                      className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 font-semibold text-white"
+                      className="px-4 py-2 rounded-lg bg-rose-600 hover font-semibold text-slate-900"
                     >
                       {submittingIncident ? 'Reporting...' : 'Submit Incident Report'}
                     </button>

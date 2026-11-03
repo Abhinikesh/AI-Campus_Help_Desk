@@ -258,11 +258,11 @@ const StudentFees = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-                <CreditCard className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+              <h1 className="text-2xl md font-bold tracking-tight text-slate-900 flex items-center gap-3">
+                <CreditCard className="w-8 h-8 text-indigo-600" />
                 Fee & Payment Management
               </h1>
-              <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-slate-500 mt-1">
                 View your academic fee invoices, submit offline payment proofs, and download verified receipts.
               </p>
             </div>
@@ -272,48 +272,48 @@ const StudentFees = () => {
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-pulse">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-24 bg-slate-100 dark:bg-[#131B2E] rounded-xl border border-slate-200 dark:border-gray-800"></div>
+                <div key={i} className="h-24 bg-slate-100 rounded-xl border border-slate-200"></div>
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Total Net Billed</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">₹{overview?.totalBilledInRupees?.toLocaleString() || 0}</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Net Billed</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-1">₹{overview?.totalBilledInRupees?.toLocaleString() || 0}</p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20">
+                <div className="w-12 h-12 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
                   <FileText className="w-6 h-6" />
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Total Verified Paid</p>
-                  <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">₹{overview?.totalPaidInRupees?.toLocaleString() || 0}</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Verified Paid</p>
+                  <p className="text-2xl font-bold text-emerald-600 mt-1">₹{overview?.totalPaidInRupees?.toLocaleString() || 0}</p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20">
+                <div className="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100">
                   <CheckCircle className="w-6 h-6" />
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Outstanding Balance</p>
-                  <p className="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-1">₹{overview?.totalOutstandingInRupees?.toLocaleString() || 0}</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Outstanding Balance</p>
+                  <p className="text-2xl font-bold text-rose-600 mt-1">₹{overview?.totalOutstandingInRupees?.toLocaleString() || 0}</p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-500/20">
+                <div className="w-12 h-12 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600 border border-rose-100">
                   <IndianRupee className="w-6 h-6" />
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Pending Verification</p>
-                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{overview?.pendingPaymentsCount || 0}</p>
-                  <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-0.5">Transactions under review</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Verification</p>
+                  <p className="text-2xl font-bold text-amber-600 mt-1">{overview?.pendingPaymentsCount || 0}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Transactions under review</p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-500/20">
+                <div className="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-100">
                   <Clock className="w-6 h-6" />
                 </div>
               </div>
@@ -355,7 +355,7 @@ const StudentFees = () => {
                     className="cs-search-input"
                   />
                 </div>
-                <div className="text-xs text-slate-500 dark:text-gray-400 flex items-center gap-1.5 self-start sm:self-auto bg-slate-100 dark:bg-gray-800/40 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-gray-700/50">
+                <div className="text-xs text-slate-500 flex items-center gap-1.5 self-start sm:self-auto bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
                   Payments are securely recorded in paise and reconciled by the Finance Office.
                 </div>
@@ -374,54 +374,54 @@ const StudentFees = () => {
                   {filteredInvoices.map((inv) => (
                     <div
                       key={inv._id}
-                      className="bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-gray-800 rounded-xl p-5 hover:border-slate-300 dark:hover:border-gray-700 shadow-sm transition flex flex-col justify-between"
+                      className="bg-white border border-slate-200 rounded-xl p-5 hover shadow-sm transition flex flex-col justify-between"
                     >
                       <div>
                         <div className="flex justify-between items-start gap-2 mb-3">
                           <div>
-                            <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">
+                            <span className="text-xs font-mono font-bold text-indigo-600 tracking-wider">
                               {inv.invoiceNumber}
                             </span>
-                            <h3 className="text-base font-semibold text-slate-900 dark:text-white mt-0.5">
+                            <h3 className="text-base font-semibold text-slate-900 mt-0.5">
                               {inv.feeStructure?.name || `Semester ${inv.semester} Fees`}
                             </h3>
                           </div>
                           {getStatusBadge(inv.status)}
                         </div>
 
-                        <div className="text-xs text-slate-500 dark:text-gray-400 space-y-1 mb-4">
-                          <p>Department: <span className="text-slate-800 dark:text-gray-200 font-medium">{inv.department}</span></p>
-                          <p>Academic Term: <span className="text-slate-800 dark:text-gray-200 font-medium">{inv.academicYear} (Sem {inv.semester})</span></p>
-                          <p>Due Date: <span className="text-slate-800 dark:text-gray-200 font-medium">{new Date(inv.dueDate).toLocaleDateString()}</span></p>
+                        <div className="text-xs text-slate-500 space-y-1 mb-4">
+                          <p>Department: <span className="text-slate-800 font-medium">{inv.department}</span></p>
+                          <p>Academic Term: <span className="text-slate-800 font-medium">{inv.academicYear} (Sem {inv.semester})</span></p>
+                          <p>Due Date: <span className="text-slate-800 font-medium">{new Date(inv.dueDate).toLocaleDateString()}</span></p>
                         </div>
 
                         {/* Financial Ledger Mini Summary */}
-                        <div className="bg-slate-50 dark:bg-[#0B0F19] rounded-lg p-3 space-y-1.5 text-xs border border-slate-200 dark:border-gray-800/70 mb-4">
-                          <div className="flex justify-between text-slate-500 dark:text-gray-400">
+                        <div className="bg-slate-50 rounded-lg p-3 space-y-1.5 text-xs border border-slate-200 mb-4">
+                          <div className="flex justify-between text-slate-500">
                             <span>Gross Billed:</span>
                             <span>₹{inv.grossAmount?.toLocaleString()}</span>
                           </div>
                           {inv.concessionAmount > 0 && (
-                            <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                            <div className="flex justify-between text-emerald-600">
                               <span>Scholarship/Concession:</span>
                               <span>- ₹{inv.concessionAmount?.toLocaleString()}</span>
                             </div>
                           )}
                           {inv.lateFeeAmount > 0 && (
-                            <div className="flex justify-between text-rose-600 dark:text-rose-400">
+                            <div className="flex justify-between text-rose-600">
                               <span>Late Fee:</span>
                               <span>+ ₹{inv.lateFeeAmount?.toLocaleString()}</span>
                             </div>
                           )}
-                          <div className="flex justify-between text-slate-800 dark:text-gray-200 font-semibold pt-1 border-t border-slate-200 dark:border-gray-800">
+                          <div className="flex justify-between text-slate-800 font-semibold pt-1 border-t border-slate-200">
                             <span>Net Payable:</span>
                             <span>₹{inv.netPayable?.toLocaleString()}</span>
                           </div>
-                          <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                          <div className="flex justify-between text-emerald-600">
                             <span>Amount Paid:</span>
                             <span>₹{inv.amountPaid?.toLocaleString()}</span>
                           </div>
-                          <div className="flex justify-between text-rose-600 dark:text-rose-400 font-bold pt-1 border-t border-slate-200 dark:border-gray-800 text-sm">
+                          <div className="flex justify-between text-rose-600 font-bold pt-1 border-t border-slate-200 text-sm">
                             <span>Outstanding:</span>
                             <span>₹{inv.outstandingBalance?.toLocaleString()}</span>
                           </div>
@@ -429,11 +429,11 @@ const StudentFees = () => {
                       </div>
 
                       {/* Action buttons */}
-                      <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-gray-800">
+                      <div className="space-y-2 pt-2 border-t border-slate-200">
                         {inv.outstandingBalance > 0 && inv.status !== 'cancelled' ? (
                           <button
                             onClick={() => handleOpenPayment(inv)}
-                            className="w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+                            className="w-full py-2 px-3 bg-indigo-600 hover text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition"
                           >
                             <CreditCard className="w-4 h-4" /> Record Offline Payment
                           </button>
@@ -449,14 +449,14 @@ const StudentFees = () => {
                               setSelectedInvoice(inv);
                               setShowDetailModal(true);
                             }}
-                            className="flex-1 py-1.5 px-2 bg-gray-800/80 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium text-center transition"
+                            className="flex-1 py-1.5 px-2 bg-gray-800/80 hover text-gray-300 rounded-lg text-xs font-medium text-center transition"
                           >
                             Breakdown
                           </button>
                           {inv.status !== 'paid' && (
                             <button
                               onClick={() => handleOpenConcession(inv)}
-                              className="flex-1 py-1.5 px-2 bg-gray-800/80 hover:bg-gray-700 text-indigo-300 rounded-lg text-xs font-medium text-center transition"
+                              className="flex-1 py-1.5 px-2 bg-gray-800/80 hover text-indigo-300 rounded-lg text-xs font-medium text-center transition"
                             >
                               Apply Waiver
                             </button>
@@ -497,11 +497,11 @@ const StudentFees = () => {
                     </thead>
                     <tbody>
                         {receipts.map((rcp) => (
-                          <tr key={rcp._id} className="hover:bg-gray-800/30 transition">
+                          <tr key={rcp._id} className="hover transition">
                             <td className="px-5 py-3.5 font-mono font-medium text-indigo-400">
                               {rcp.receiptNumber}
                             </td>
-                            <td className="px-5 py-3.5 font-mono text-xs text-gray-400">
+                            <td className="px-5 py-3.5 font-mono text-xs text-slate-500">
                               {rcp.transactionId}
                             </td>
                             <td className="px-5 py-3.5 text-xs text-gray-300">
@@ -511,18 +511,18 @@ const StudentFees = () => {
                               ₹{(rcp.amountInPaise / 100).toLocaleString()}
                             </td>
                             <td className="px-5 py-3.5 text-xs">
-                              <span className="uppercase font-semibold text-gray-200">{rcp.paymentMethod}</span>
+                              <span className="uppercase font-semibold text-slate-800">{rcp.paymentMethod}</span>
                               {rcp.externalReference && (
-                                <p className="text-gray-400 font-mono text-[11px]">Ref: {rcp.externalReference}</p>
+                                <p className="text-slate-500 font-mono text-[11px]">Ref: {rcp.externalReference}</p>
                               )}
                             </td>
-                            <td className="px-5 py-3.5 text-xs text-gray-400">
+                            <td className="px-5 py-3.5 text-xs text-slate-500">
                               {new Date(rcp.paymentDate).toLocaleDateString()}
                             </td>
                             <td className="px-5 py-3.5 text-right">
                               <button
                                 onClick={() => handleViewReceipt(rcp)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-medium transition"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/20 hover text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-medium transition"
                               >
                                 <Printer className="w-3.5 h-3.5" /> View Receipt
                               </button>
@@ -539,10 +539,10 @@ const StudentFees = () => {
           {/* MODAL: Offline Payment Submission */}
           {showPayModal && selectedInvoice && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-[#131B2E] border border-gray-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
                 <button
                   onClick={() => setShowPayModal(false)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                  className="absolute top-4 right-4 text-slate-500 hover"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -551,7 +551,7 @@ const StudentFees = () => {
                   <CreditCard className="w-5 h-5 text-indigo-400" />
                   Submit Offline Payment Proof
                 </h2>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Invoice <span className="font-mono text-indigo-400">{selectedInvoice.invoiceNumber}</span> | Outstanding: <span className="text-rose-400 font-bold">₹{selectedInvoice.outstandingBalance}</span>
                 </p>
 
@@ -568,7 +568,7 @@ const StudentFees = () => {
                       min="1"
                       value={paymentForm.amount}
                       onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
                     />
                     <span className="text-[11px] text-gray-500">Cannot exceed remaining balance of ₹{selectedInvoice.outstandingBalance}</span>
                   </div>
@@ -580,7 +580,7 @@ const StudentFees = () => {
                     <select
                       value={paymentForm.paymentMethod}
                       onChange={(e) => setPaymentForm({ ...paymentForm, paymentMethod: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
                     >
                       <option value="upi">UPI Transfer (Google Pay, PhonePe, Paytm, BHIM)</option>
                       <option value="bank_transfer">Direct Bank Transfer</option>
@@ -601,7 +601,7 @@ const StudentFees = () => {
                       placeholder="e.g. 12-digit UTR 428901238910 or Cheque # 001928"
                       value={paymentForm.externalReference}
                       onChange={(e) => setPaymentForm({ ...paymentForm, externalReference: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus"
                     />
                   </div>
 
@@ -614,7 +614,7 @@ const StudentFees = () => {
                       required
                       value={paymentForm.paymentDate}
                       onChange={(e) => setPaymentForm({ ...paymentForm, paymentDate: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
                     />
                   </div>
 
@@ -627,7 +627,7 @@ const StudentFees = () => {
                       placeholder="Optional notes for the Accounts Department..."
                       value={paymentForm.notes}
                       onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
                     ></textarea>
                   </div>
 
@@ -642,14 +642,14 @@ const StudentFees = () => {
                     <button
                       type="button"
                       onClick={() => setShowPayModal(false)}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium"
+                      className="px-4 py-2 bg-gray-800 hover text-gray-300 rounded-lg text-xs font-medium"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold disabled:opacity-50 flex items-center gap-1.5"
+                      className="px-5 py-2 bg-indigo-600 hover text-white rounded-lg text-xs font-semibold disabled:opacity-50 flex items-center gap-1.5"
                     >
                       {submitting ? 'Submitting...' : 'Submit Payment Proof'}
                     </button>
@@ -662,10 +662,10 @@ const StudentFees = () => {
           {/* MODAL: Fee Breakdown Detail */}
           {showDetailModal && selectedInvoice && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-[#131B2E] border border-gray-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                  className="absolute top-4 right-4 text-slate-500 hover"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -674,14 +674,14 @@ const StudentFees = () => {
                   <FileText className="w-5 h-5 text-indigo-400" />
                   Fee Invoice Breakdown
                 </h2>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Invoice <span className="font-mono text-indigo-400">{selectedInvoice.invoiceNumber}</span> | Term: {selectedInvoice.academicYear} Sem {selectedInvoice.semester}
                 </p>
 
                 <div className="mt-5 space-y-4">
-                  <div className="border border-gray-800 rounded-xl overflow-hidden">
+                  <div className="border border-slate-200 rounded-xl overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-[#0B0F19] text-gray-400 font-semibold uppercase">
+                      <thead className="bg-slate-50 text-slate-500 font-semibold uppercase">
                         <tr>
                           <th className="px-4 py-2.5">Component</th>
                           <th className="px-4 py-2.5">Type</th>
@@ -692,7 +692,7 @@ const StudentFees = () => {
                         {selectedInvoice.components?.map((c, i) => (
                           <tr key={i}>
                             <td className="px-4 py-2.5 font-medium">{c.name}</td>
-                            <td className="px-4 py-2.5 text-gray-400">
+                            <td className="px-4 py-2.5 text-slate-500">
                               {c.isMandatory ? 'Mandatory' : 'Optional'}
                             </td>
                             <td className="px-4 py-2.5 text-right font-mono">
@@ -704,8 +704,8 @@ const StudentFees = () => {
                     </table>
                   </div>
 
-                  <div className="bg-[#0B0F19] p-4 rounded-xl space-y-2 text-xs border border-gray-800">
-                    <div className="flex justify-between text-gray-400">
+                  <div className="bg-slate-50 p-4 rounded-xl space-y-2 text-xs border border-slate-200">
+                    <div className="flex justify-between text-slate-500">
                       <span>Gross Components Total:</span>
                       <span className="font-mono">₹{selectedInvoice.grossAmount?.toLocaleString()}</span>
                     </div>
@@ -721,7 +721,7 @@ const StudentFees = () => {
                         <span className="font-mono">+ ₹{selectedInvoice.lateFeeAmount?.toLocaleString()}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-white font-bold pt-1 border-t border-gray-800">
+                    <div className="flex justify-between text-slate-900 font-bold pt-1 border-t border-slate-200">
                       <span>Net Payable:</span>
                       <span className="font-mono">₹{selectedInvoice.netPayable?.toLocaleString()}</span>
                     </div>
@@ -729,7 +729,7 @@ const StudentFees = () => {
                       <span>Verified Amount Paid:</span>
                       <span className="font-mono">₹{selectedInvoice.amountPaid?.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between text-rose-400 font-bold pt-1 border-t border-gray-800 text-sm">
+                    <div className="flex justify-between text-rose-400 font-bold pt-1 border-t border-slate-200 text-sm">
                       <span>Outstanding Balance:</span>
                       <span className="font-mono">₹{selectedInvoice.outstandingBalance?.toLocaleString()}</span>
                     </div>
@@ -739,7 +739,7 @@ const StudentFees = () => {
                 <div className="flex justify-end gap-3 pt-4">
                   <button
                     onClick={() => setShowDetailModal(false)}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium"
+                    className="px-4 py-2 bg-gray-800 hover text-gray-300 rounded-lg text-xs font-medium"
                   >
                     Close
                   </button>
@@ -751,10 +751,10 @@ const StudentFees = () => {
           {/* MODAL: Concession / Scholarship Application */}
           {showConcessionModal && selectedInvoice && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-[#131B2E] border border-gray-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
                 <button
                   onClick={() => setShowConcessionModal(false)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                  className="absolute top-4 right-4 text-slate-500 hover"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -763,7 +763,7 @@ const StudentFees = () => {
                   <ShieldCheck className="w-5 h-5 text-indigo-400" />
                   Apply for Fee Concession / Scholarship
                 </h2>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Invoice <span className="font-mono text-indigo-400">{selectedInvoice.invoiceNumber}</span> | Gross: ₹{selectedInvoice.grossAmount}
                 </p>
 
@@ -775,7 +775,7 @@ const StudentFees = () => {
                     <select
                       value={concessionForm.adjustmentType}
                       onChange={(e) => setConcessionForm({ ...concessionForm, adjustmentType: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
                     >
                       <option value="need_based_concession">Need-based Financial Concession</option>
                       <option value="merit_scholarship">Academic Merit Scholarship</option>
@@ -797,7 +797,7 @@ const StudentFees = () => {
                       min="1"
                       value={concessionForm.amount}
                       onChange={(e) => setConcessionForm({ ...concessionForm, amount: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
                     />
                     <span className="text-[11px] text-gray-500">Cannot exceed invoice gross amount of ₹{selectedInvoice.grossAmount}</span>
                   </div>
@@ -812,7 +812,7 @@ const StudentFees = () => {
                       placeholder="Explain the background, scholarship award criteria, or financial hardship..."
                       value={concessionForm.reason}
                       onChange={(e) => setConcessionForm({ ...concessionForm, reason: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
                     ></textarea>
                   </div>
 
@@ -825,7 +825,7 @@ const StudentFees = () => {
                       placeholder="e.g. Merit Order #CS-2026/89 or Gov Application ID"
                       value={concessionForm.supportingDocReference}
                       onChange={(e) => setConcessionForm({ ...concessionForm, supportingDocReference: e.target.value })}
-                      className="w-full bg-[#0B0F19] border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
                     />
                   </div>
 
@@ -833,14 +833,14 @@ const StudentFees = () => {
                     <button
                       type="button"
                       onClick={() => setShowConcessionModal(false)}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium"
+                      className="px-4 py-2 bg-gray-800 hover text-gray-300 rounded-lg text-xs font-medium"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold disabled:opacity-50"
+                      className="px-5 py-2 bg-indigo-600 hover text-white rounded-lg text-xs font-semibold disabled:opacity-50"
                     >
                       {submitting ? 'Submitting...' : 'Submit Concession Request'}
                     </button>
@@ -853,25 +853,25 @@ const StudentFees = () => {
           {/* MODAL: Printable Official Receipt */}
           {showReceiptModal && selectedReceipt && (
             <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-              <div className="bg-[#131B2E] border border-gray-800 rounded-2xl w-full max-w-xl p-6 shadow-2xl relative text-gray-100">
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-xl p-6 shadow-2xl relative text-slate-800">
                 <button
                   onClick={() => setShowReceiptModal(false)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                  className="absolute top-4 right-4 text-slate-500 hover"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
                 {/* Receipt Content for Display / Printing */}
-                <div ref={receiptPrintRef} className="p-6 bg-[#0B0F19] rounded-xl border border-gray-800 space-y-5">
+                <div ref={receiptPrintRef} className="p-6 bg-slate-50 rounded-xl border border-slate-200 space-y-5">
                   {/* Header */}
-                  <div className="flex justify-between items-start border-b border-gray-800 pb-4">
+                  <div className="flex justify-between items-start border-b border-slate-200 pb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
                         <Building2 className="w-6 h-6" />
                       </div>
                       <div>
                         <h2 className="text-base font-bold text-white tracking-wide">CampusSphere AI College</h2>
-                        <p className="text-xs text-gray-400">Office of the Accounts & Financial Administration</p>
+                        <p className="text-xs text-slate-500">Office of the Accounts & Financial Administration</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -893,34 +893,34 @@ const StudentFees = () => {
                     </div>
                     <div>
                       <p className="text-gray-500">Payment Date:</p>
-                      <p className="font-medium text-gray-200">{new Date(selectedReceipt.paymentDate).toLocaleDateString()}</p>
+                      <p className="font-medium text-slate-800">{new Date(selectedReceipt.paymentDate).toLocaleDateString()}</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Invoice Number:</p>
-                      <p className="font-mono text-gray-200">{selectedReceipt.invoice?.invoiceNumber || '—'}</p>
+                      <p className="font-mono text-slate-800">{selectedReceipt.invoice?.invoiceNumber || '—'}</p>
                     </div>
                   </div>
 
                   {/* Payment Details */}
-                  <div className="bg-[#131B2E] p-4 rounded-lg space-y-2 text-xs border border-gray-800">
+                  <div className="bg-white p-4 rounded-lg space-y-2 text-xs border border-slate-200">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Payment Mode:</span>
-                      <span className="font-semibold uppercase text-gray-200">{selectedReceipt.paymentMethod}</span>
+                      <span className="text-slate-500">Payment Mode:</span>
+                      <span className="font-semibold uppercase text-slate-800">{selectedReceipt.paymentMethod}</span>
                     </div>
                     {selectedReceipt.externalReference && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Bank Reference (UTR / Cheque):</span>
-                        <span className="font-mono text-gray-200">{selectedReceipt.externalReference}</span>
+                        <span className="text-slate-500">Bank Reference (UTR / Cheque):</span>
+                        <span className="font-mono text-slate-800">{selectedReceipt.externalReference}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-base font-bold pt-2 border-t border-gray-800 text-emerald-400">
+                    <div className="flex justify-between text-base font-bold pt-2 border-t border-slate-200 text-emerald-400">
                       <span>Total Amount Paid:</span>
                       <span>₹{(selectedReceipt.amountInPaise / 100).toLocaleString()}</span>
                     </div>
                   </div>
 
                   {/* Verification Signature Block */}
-                  <div className="flex justify-between items-end pt-3 text-xs text-gray-500 border-t border-gray-800">
+                  <div className="flex justify-between items-end pt-3 text-xs text-gray-500 border-t border-slate-200">
                     <div>
                       <p className="flex items-center gap-1.5 text-emerald-400 font-semibold">
                         <ShieldCheck className="w-4 h-4" /> System Verified Transaction
@@ -937,13 +937,13 @@ const StudentFees = () => {
                 <div className="flex justify-end gap-3 mt-4">
                   <button
                     onClick={() => window.print()}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition"
+                    className="px-4 py-2 bg-indigo-600 hover text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition"
                   >
                     <Printer className="w-4 h-4" /> Print / Save PDF
                   </button>
                   <button
                     onClick={() => setShowReceiptModal(false)}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium"
+                    className="px-4 py-2 bg-gray-800 hover text-gray-300 rounded-lg text-xs font-medium"
                   >
                     Close
                   </button>
