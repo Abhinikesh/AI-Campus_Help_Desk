@@ -173,12 +173,12 @@ async function runTests() {
       }, targetPath);
 
       if (clicked) {
-        await page.waitForFunction((p) => window.location.pathname.startsWith(p), { timeout: 10000 }, targetPath).catch(() => {});
+        await page.waitForFunction((p) => window.location.pathname.startsWith(p), { timeout: 10000 }, targetPath).catch(() => { });
       } else {
         await page.goto(`${BASE_URL}${targetPath}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
       }
       if (selectorToWait) {
-        await page.waitForSelector(selectorToWait, { timeout: 10000 }).catch(() => {});
+        await page.waitForSelector(selectorToWait, { timeout: 10000 }).catch(() => { });
       }
       await new Promise(r => setTimeout(r, 600));
     }
@@ -222,11 +222,11 @@ async function runTests() {
     // Test Activity Category Filter Dropdown
     const categorySelect = await page.$('select');
     if (categorySelect) {
-      await categorySelect.select('workshop').catch(() => {});
+      await categorySelect.select('workshop').catch(() => { });
       await new Promise(r => setTimeout(r, 400));
       const selectedValue = await page.evaluate(() => document.querySelector('select')?.value);
       recordTest('Activities category filter dropdown interactive', 'Student', !!selectedValue, `Selected: ${selectedValue}`);
-      await categorySelect.select('').catch(() => {});
+      await categorySelect.select('').catch(() => { });
     }
     await page.screenshot({ path: path.join(SCREENSHOTS_DIR, '07_student_activities_page.png') });
 
@@ -335,13 +335,13 @@ async function runTests() {
     // ═══════════════════════════════════════════════════════════════
     console.log('\n--- 5. Testing Role-Based Access Boundaries ---');
     // Student tries accessing Faculty Dashboard
-    await page.goto(`${BASE_URL}/faculty/dashboard`, { waitUntil: 'domcontentloaded', timeout: 10000 }).catch(() => {});
+    await page.goto(`${BASE_URL}/faculty/dashboard`, { waitUntil: 'domcontentloaded', timeout: 10000 }).catch(() => { });
     await new Promise(r => setTimeout(r, 600));
     const facultyBlocked = !page.url().includes('/faculty/dashboard') || await page.evaluate(() => document.body.innerText.includes('Access Denied') || document.body.innerText.includes('Unauthorized') || document.body.innerText.includes('Sign in'));
     recordTest('Student strictly blocked from /faculty/dashboard', 'Security', facultyBlocked, `Redirected or blocked. URL: ${page.url()}`);
 
     // Student tries accessing Admin Dashboard
-    await page.goto(`${BASE_URL}/admin/dashboard`, { waitUntil: 'domcontentloaded', timeout: 10000 }).catch(() => {});
+    await page.goto(`${BASE_URL}/admin/dashboard`, { waitUntil: 'domcontentloaded', timeout: 10000 }).catch(() => { });
     await new Promise(r => setTimeout(r, 600));
     const adminBlocked = !page.url().includes('/admin/dashboard') || await page.evaluate(() => document.body.innerText.includes('Access Denied') || document.body.innerText.includes('Unauthorized') || document.body.innerText.includes('Sign in'));
     recordTest('Student strictly blocked from /admin/dashboard', 'Security', adminBlocked, `Redirected or blocked. URL: ${page.url()}`);
@@ -352,7 +352,7 @@ async function runTests() {
     console.log('\n--- 6. Testing Faculty Portal ---');
     // Clear student session and go to login
     await page.evaluate(async () => {
-      try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) {}
+      try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) { }
       localStorage.clear();
     });
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -397,7 +397,7 @@ async function runTests() {
     console.log('\n--- 7. Testing Admin Portal ---');
     // Clear faculty session and go to login
     await page.evaluate(async () => {
-      try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) {}
+      try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) { }
       localStorage.clear();
     });
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });

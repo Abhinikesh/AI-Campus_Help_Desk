@@ -35,9 +35,11 @@ const connectDB = async () => {
           port: 27018,
           dbPath,
           storageEngine: 'wiredTiger',
+          dbName: 'campus-erp',
         },
       });
-      uri = mongod.getUri();
+      const baseUri = mongod.getUri();
+      uri = baseUri.endsWith('/') ? `${baseUri}campus-erp` : `${baseUri}/campus-erp`;
       console.log(`⚠️  No MONGODB_URI set — using persistent in-memory server at ${uri}`);
       console.log(`   Data stored in: ${dbPath}`);
     } catch (memErr) {
