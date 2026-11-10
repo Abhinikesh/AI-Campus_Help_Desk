@@ -121,7 +121,12 @@ test('Smart Attendance Backend & API Test Suite', async (t) => {
 
   // Test 2: Student cannot retrieve another student's records
   await t.test('2. Student cannot retrieve another student\'s records', async () => {
-    const testDate = `2029-01-${String(Math.floor(Math.random() * 20) + 10).padStart(2, '0')}`;
+    const uniqueYear = 2030 + Math.floor(Math.random() * 20);
+    const uniqueMonth = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+    const uniqueDay = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+    const testDate = `${uniqueYear}-${uniqueMonth}-${uniqueDay}`;
+
+    await Attendance.deleteMany({ subject: testSubject._id, student: student2Doc._id, date: testDate, period: 1 });
 
     const otherRec = await Attendance.create({
       subject: testSubject._id,

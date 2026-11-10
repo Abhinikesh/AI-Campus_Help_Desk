@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"6a0258699d40499795d20fc16fe8edcb","collectionName":"transportpolicies","type":"collection"}
