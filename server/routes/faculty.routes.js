@@ -31,15 +31,68 @@ const authMiddleware = require('../middleware/auth.middleware');
 const { allowRoles } = require('../middleware/role.middleware');
 
 /**
- * Intercepts unauthenticated (401) requests targeted specifically at Student 360 endpoints (Fix Phase 2.3).
- * Logs a STUDENT_360_UNAUTHENTICATED audit event without logging passwords, tokens, cookies, or headers.
- * Does not alter the original 401 response or expose internal exceptions.
+ * Bounded in-memory sliding window limiter to prevent audit-log write amplification
+ * from repeated unauthenticated scanning or brute-force requests (Phase 2.4 Hardening).
+ * Capped at MAX_AUDIT_TRACKED_IPS to guarantee bounded memory usage (zero memory leaks).
  */
-const auditUnauthenticatedStudent360 = (req, res, next) => {
-  const path = req.originalUrl || req.path || '';
-  const isStudent360Target = path.includes('/students') && (path.includes('/360') || path.includes('/search'));
+const MAX_AUDIT_TRACKED_IPS = 500;
+const AUDIT_WINDOW_MS = 60 * 1000; // 1 minute window
+const MAX_UNAUTH_AUDITS_PER_WINDOW = 10; // max 10 audit logs per IP per minute
 
-  if (!isStudent360Target) {
+const unauthAuditRateMap = new Map();
+
+const shouldRecordUnauthAudit = (ip) => {
+  const clientIp = ip || 'unknown';
+  const now = Date.now();
+
+  // Periodic cleanup of expired entries
+  if (unauthAuditRateMap.size > 0 && Math.random() < 0.05) {
+    for (const [key, record] of unauthAuditRateMap.entries()) {
+      if (now > record.resetTime) {
+        unauthAuditRateMap.delete(key);
+      }
+    }
+  }
+
+  let record = unauthAuditRateMap.get(clientIp);
+  if (!record || now > record.resetTime) {
+    // Evict oldest if map exceeds cap
+    if (unauthAuditRateMap.size >= MAX_AUDIT_TRACKED_IPS) {
+      const oldestKey = unauthAuditRateMap.keys().next().value;
+      unauthAuditRateMap.delete(oldestKey);
+    }
+    record = { count: 1, resetTime: now + AUDIT_WINDOW_MS };
+    unauthAuditRateMap.set(clientIp, record);
+    return { record: true, isCapped: false };
+  }
+
+  record.count += 1;
+  if (record.count <= MAX_UNAUTH_AUDITS_PER_WINDOW) {
+    return { record: true, isCapped: false };
+  }
+
+  // Once threshold is reached, log exactly one notice indicating threshold reached, then suppress
+  if (record.count === MAX_UNAUTH_AUDITS_PER_WINDOW + 1) {
+    return { record: true, isCapped: true };
+  }
+
+  return { record: false, isCapped: true };
+};
+
+/**
+ * Hardened audit middleware for unauthenticated requests (Phase 2.4).
+ * Replaces response method interception with standard Express response 'finish' listener.
+ * Generates distinct audit events for student search vs Student 360:
+ * - FACULTY_STUDENT_SEARCH_UNAUTHENTICATED
+ * - STUDENT_360_UNAUTHENTICATED
+ * Safe, non-blocking, non-monkey-patching, and protected against write amplification.
+ */
+const auditUnauthenticatedFacultyAccess = (req, res, next) => {
+  const path = req.originalUrl || req.path || '';
+  const isSearchTarget = path.includes('/students/search');
+  const is360Target = path.includes('/students') && path.includes('/360');
+
+  if (!isSearchTarget && !is360Target) {
     return next();
   }
 
@@ -47,26 +100,41 @@ const auditUnauthenticatedStudent360 = (req, res, next) => {
   const idMatch = path.match(/\/students\/([a-fA-F0-9]{24})\/360/);
   const potentialEntityId = idMatch ? idMatch[1] : null;
 
-  const originalStatus = res.status.bind(res);
-  res.status = function (statusCode) {
-    if (statusCode === 401) {
+  // Use standard Express 'finish' lifecycle listener instead of intercepting methods
+  res.on('finish', () => {
+    if (res.statusCode === 401) {
+      const clientIp = req.ip || req.connection?.remoteAddress || '';
+      const { record: shouldLog, isCapped } = shouldRecordUnauthAudit(clientIp);
+      if (!shouldLog) return;
+
+      const action = isSearchTarget
+        ? 'FACULTY_STUDENT_SEARCH_UNAUTHENTICATED'
+        : 'STUDENT_360_UNAUTHENTICATED';
+
+      const baseSummary = isSearchTarget
+        ? 'Unauthenticated access attempt on faculty student search endpoint'
+        : 'Unauthenticated access attempt on Student 360 endpoint';
+
+      const summary = isCapped
+        ? `${baseSummary} (amplification threshold reached; throttling audit writes)`
+        : baseSummary;
+
       safeAuditLog({
         actor: null,
-        action: 'STUDENT_360_UNAUTHENTICATED',
+        action,
         entityType: 'Student',
-        entityId: potentialEntityId,
-        summary: 'Unauthenticated access attempt on Student 360 endpoint',
-        ip: req.ip || '',
+        entityId: isSearchTarget ? null : potentialEntityId,
+        summary,
+        ip: clientIp,
       });
     }
-    return originalStatus(statusCode);
-  };
+  });
 
   next();
 };
 
 // All faculty routes require auth + faculty role
-router.use(auditUnauthenticatedStudent360, authMiddleware, allowRoles('faculty'));
+router.use(auditUnauthenticatedFacultyAccess, authMiddleware, allowRoles('faculty'));
 
 router.get('/profile',              getProfile);
 router.get('/overview',             getOverview);

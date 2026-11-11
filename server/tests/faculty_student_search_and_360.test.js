@@ -586,6 +586,9 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     const body = await res.json();
     assert.equal(body.success, false);
 
+    // Wait a brief moment for res.on('finish') async callback
+    await new Promise((r) => setTimeout(r, 50));
+
     const unauthLogs = await AuditLog.find({ action: 'STUDENT_360_UNAUTHENTICATED' }).sort({ createdAt: -1 }).lean();
     assert.equal(unauthLogs.length, countBefore + 1, 'Exactly one unauthenticated audit event must be generated');
     assert.equal(unauthLogs[0].actor, null, 'Actor must be null for unauthenticated request');
@@ -622,8 +625,47 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     const res = await fetch(`${baseUrl}/api/faculty/profile`);
     assert.equal(res.status, 401);
 
+    await new Promise((r) => setTimeout(r, 50));
     const countAfter = await AuditLog.countDocuments({ action: 'STUDENT_360_UNAUTHENTICATED' });
     assert.equal(countAfter, countBefore, 'Unrelated route 401 must not trigger STUDENT_360_UNAUTHENTICATED');
+  });
+
+  // ── TEST 19: Unauthenticated Search creates FACULTY_STUDENT_SEARCH_UNAUTHENTICATED ──
+  await t.test('19. Unauthenticated Search creates FACULTY_STUDENT_SEARCH_UNAUTHENTICATED event', async () => {
+    const countBefore = await AuditLog.countDocuments({ action: 'FACULTY_STUDENT_SEARCH_UNAUTHENTICATED' });
+
+    const res = await fetch(`${baseUrl}/api/faculty/students/search?q=Arjun`);
+    assert.equal(res.status, 401);
+    const body = await res.json();
+    assert.equal(body.success, false);
+
+    await new Promise((r) => setTimeout(r, 50));
+    const searchLogs = await AuditLog.find({ action: 'FACULTY_STUDENT_SEARCH_UNAUTHENTICATED' }).sort({ createdAt: -1 }).lean();
+    assert.equal(searchLogs.length, countBefore + 1, 'Exactly one search unauthenticated event must be generated');
+    assert.equal(searchLogs[0].actor, null);
+    assert.equal(searchLogs[0].entityId, null);
+    assert.equal(searchLogs[0].entityType, 'Student');
+    assert.match(searchLogs[0].summary, /Unauthenticated access attempt on faculty student search endpoint/i);
+    assert.doesNotMatch(searchLogs[0].summary, /Arjun/, 'Query string must not leak into summary');
+  });
+
+  // ── TEST 20: Audit-write amplification protection ───────────────────────
+  await t.test('20. Audit-write amplification limiter throttles excessive unauthenticated writes', async () => {
+    const action = 'STUDENT_360_UNAUTHENTICATED';
+    const countStart = await AuditLog.countDocuments({ action });
+
+    // Send 15 unauthenticated requests in succession
+    for (let i = 0; i < 15; i++) {
+      const res = await fetch(`${baseUrl}/api/faculty/students/${student1._id}/360`);
+      assert.equal(res.status, 401, 'Every request must still receive standard 401 response');
+    }
+
+    await new Promise((r) => setTimeout(r, 100));
+    const countEnd = await AuditLog.countDocuments({ action });
+    const newlyCreated = countEnd - countStart;
+
+    // Must be bounded to at most 11 (10 normal + 1 throttled notice) and definitely less than 15
+    assert.ok(newlyCreated <= 11, `Audit writes must be throttled (created ${newlyCreated} logs for 15 requests)`);
   });
 
   await t.test('Teardown: Close server and disconnect test database', async () => {
