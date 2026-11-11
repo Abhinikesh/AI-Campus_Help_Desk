@@ -48,3 +48,6 @@ pnpm-debug.log*
 
 # ── Misc ──────────────────────────────────────────────────────
 *.local
+
+# Private student import datasets — never commit
+/data/student_import/
