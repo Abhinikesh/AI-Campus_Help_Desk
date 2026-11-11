@@ -448,5 +448,88 @@ class TestPhase3_2_2AuditArtifacts(unittest.TestCase):
         self.assertEqual(len(src["benchmarkManualSamples"]), 10)
 
 
+class TestPhase3_2_3DiscrepancyReconciliation(unittest.TestCase):
+    """Verifies that all Phase 3.2.3 discrepancy reconciliations are mathematically sound and concordant."""
+    STAGING_DIR = "/tmp/campussphere-timetable-staging-phase3_2_3"
+
+    def test_all_8_artifacts_exist_and_non_empty(self):
+        artifacts = [
+            "source_identity_reconciliation.json",
+            "period_timing_reconciliation.json",
+            "faculty_reconciliation_final.json",
+            "source_verification_assessment.json",
+            "conflict_evidence_reconciliation.json",
+            "count_consistency_report.json",
+            "final_audit_report.md",
+            "checksums.sha256",
+        ]
+        for art in artifacts:
+            fpath = os.path.join(self.STAGING_DIR, art)
+            self.assertTrue(os.path.exists(fpath), f"Artifact missing: {art}")
+            self.assertGreater(os.path.getsize(fpath), 0, f"Artifact empty: {art}")
+
+    def test_checksums_integrity(self):
+        csum_path = os.path.join(self.STAGING_DIR, "checksums.sha256")
+        with open(csum_path) as f:
+            lines = f.readlines()
+        self.assertEqual(len(lines), 7)
+
+        for line in lines:
+            parts = line.strip().split()
+            self.assertEqual(len(parts), 2)
+            expected_hash, fname = parts[0], parts[1]
+            fpath = os.path.join(self.STAGING_DIR, fname)
+            h = hashlib.sha256()
+            with open(fpath, "rb") as f:
+                while chunk := f.read(65536):
+                    h.update(chunk)
+            self.assertEqual(h.hexdigest(), expected_hash, f"SHA-256 mismatch for {fname}")
+
+    def test_source_identity_reconciliation(self):
+        with open(os.path.join(self.STAGING_DIR, "source_identity_reconciliation.json")) as f:
+            src = json.load(f)
+        self.assertEqual(src["actualPhysicalFileProperties"]["sha256"], "8e296e026a4f1eaad3ab3103154663d758050d9cfe8c8ee98111d11d324d4cf0")
+        self.assertEqual(src["actualPhysicalFileProperties"]["totalPages"], 50)
+        self.assertEqual(src["checksumDiscrepancyInvestigation"]["finalConclusion"], "SAME_SOURCE_CONFIRMED")
+
+    def test_period_timing_reconciliation(self):
+        with open(os.path.join(self.STAGING_DIR, "period_timing_reconciliation.json")) as f:
+            t = json.load(f)
+        self.assertEqual(t["dailySpan"]["dayStartTime"], "08:10")
+        self.assertEqual(t["dailySpan"]["dayEndTime"], "16:30")
+        self.assertEqual(t["periodSlotMathematicalIdentityReconciliation"]["occupiedPeriodSlots"], 1194)
+        self.assertEqual(t["finalConclusion"], "PERIOD_TIMINGS_VERIFIED")
+
+    def test_faculty_reconciliation_final(self):
+        with open(os.path.join(self.STAGING_DIR, "faculty_reconciliation_final.json")) as f:
+            fac = json.load(f)
+        summary = fac["summary"]
+        self.assertEqual(summary["totalAbbreviations"], 113)
+        self.assertEqual(summary["verifiedCount"], 18)
+        self.assertEqual(summary["aliasConfirmedCount"], 3)
+        self.assertEqual(summary["unmatchedCount"], 92)
+        self.assertEqual(summary["ambiguousCount"], 0)
+        self.assertEqual(summary["deduplicatedPhysicalIndividuals"], 110)
+        self.assertEqual(18 + 92 + 3, 113)
+
+    def test_source_verification_assessment(self):
+        with open(os.path.join(self.STAGING_DIR, "source_verification_assessment.json")) as f:
+            v = json.load(f)
+        self.assertEqual(v["coverageMetrics"]["tokenLevelVerificationRate"]["percentage"], 100.0)
+        self.assertEqual(v["coverageMetrics"]["cellLevelLocalizationRate"]["percentage"], 100.0)
+        self.assertEqual(v["coverageMetrics"]["fieldLevelSemanticAttributionRate"]["count"], 936)
+        self.assertAlmostEqual(v["coverageMetrics"]["fieldLevelSemanticAttributionRate"]["percentage"], 95.80, places=1)
+        self.assertEqual(v["semanticAttributionAnomalies"]["totalAnomaliesCount"], 41)
+
+    def test_conflict_evidence_reconciliation(self):
+        with open(os.path.join(self.STAGING_DIR, "conflict_evidence_reconciliation.json")) as f:
+            c = json.load(f)
+        self.assertEqual(c["facultyOverlapsReconciliation"]["POTENTIAL_CONFLICT"], 1)
+        conflict = c["facultyOverlapsReconciliation"]["potentialConflicts"][0]
+        self.assertEqual(conflict["facultyAbbreviation"], "SJ")
+        self.assertEqual(conflict["day"], "Wednesday")
+        self.assertEqual(conflict["period"], 8)
+
+
 if __name__ == "__main__":
     unittest.main()
