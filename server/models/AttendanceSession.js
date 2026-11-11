@@ -201,6 +201,32 @@ attendanceSessionSchema.pre('save', function (next) {
     }
   }
 
+  // Attendance readiness guard: an unresolved faculty or subject cannot create or link an AttendanceSession
+  if (this.timetableEntry) {
+    const Timetable = mongoose.model('Timetable');
+    return Timetable.findById(this.timetableEntry)
+      .then((entry) => {
+        if (entry) {
+          if (!entry.subject || entry.isSubjectResolved === false) {
+            return next(
+              new Error(
+                'ATTENDANCE_NOT_CONFIGURED: Timetable entry has an unresolved subject. Attendance sessions cannot be created for unresolved timetable slots.'
+              )
+            );
+          }
+          if (!entry.faculty || entry.isFacultyResolved === false) {
+            return next(
+              new Error(
+                'ATTENDANCE_NOT_CONFIGURED: Timetable entry has unresolved faculty. Attendance sessions cannot be created for unresolved timetable slots.'
+              )
+            );
+          }
+        }
+        return next();
+      })
+      .catch((err) => next(err));
+  }
+
   next();
 });
 

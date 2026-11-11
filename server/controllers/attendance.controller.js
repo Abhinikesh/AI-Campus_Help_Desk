@@ -98,8 +98,20 @@ const createSession = asyncHandler(async (req, res) => {
     }
   }
 
-  // Prevent duplicate attendance sessions for the same scheduled timetable slot on the same day
+  // Validate linked timetableEntry readiness: unresolved faculty or subject cannot create attendance session
   if (req.body.timetableEntry) {
+    const Timetable = require('../models/Timetable');
+    const ttEntry = await Timetable.findById(req.body.timetableEntry);
+    if (ttEntry) {
+      if (!ttEntry.subject || ttEntry.isSubjectResolved === false) {
+        throw new ApiError(422, 'Cannot create attendance session: Timetable entry has an unresolved subject.');
+      }
+      if (!ttEntry.faculty || ttEntry.isFacultyResolved === false) {
+        throw new ApiError(422, 'Cannot create attendance session: Timetable entry has unresolved faculty.');
+      }
+    }
+
+    // Prevent duplicate attendance sessions for the same scheduled timetable slot on the same day
     const ttConflict = await AttendanceSession.findOne({
       timetableEntry: req.body.timetableEntry,
       date,
