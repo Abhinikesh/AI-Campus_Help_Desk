@@ -3,18 +3,24 @@
  */
 'use strict';
 
+const mongoose = require('mongoose');
 const Faculty = require('../models/Faculty');
 const Announcement = require('../models/Announcement');
 const Student = require('../models/Student');
 const Subject = require('../models/Subject');
 const Timetable = require('../models/Timetable');
+const Mark = require('../models/Mark');
+const Exam = require('../models/Exam');
+const AuditLog = require('../models/AuditLog');
 const Attendance = require('../models/Attendance');
 const AttendanceSession = require('../models/AttendanceSession');
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const AttendanceSettings = require('../models/AttendanceSettings');
 const attendanceCalculationService = require('../services/attendanceCalculation.service');
+const facultyScopeService = require('../services/facultyScope.service');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
+const { getGrade } = require('../utils/grades');
 
 // GET /api/faculty/profile
 const getProfile = asyncHandler(async (req, res) => {
@@ -562,7 +568,15 @@ const getAnnouncements = asyncHandler(async (req, res) => {
 // GET /api/faculty/students
 const getStudents = asyncHandler(async (req, res) => {
   const { branch, semester } = req.query;
-  const filter = {};
+  const facultyUserId = req.user.userId;
+
+  // Derive teaching scope to prevent unrestricted DB dumps
+  const scope = await facultyScopeService.getFacultyTeachingScope(facultyUserId);
+  if (!scope.hasScope) {
+    return res.status(200).json({ success: true, data: [], message: 'No students in authorized teaching scope' });
+  }
+
+  const filter = { ...scope.studentQuery };
   if (branch) filter.branch = branch;
   if (semester) filter.semester = Number(semester);
 
@@ -571,6 +585,399 @@ const getStudents = asyncHandler(async (req, res) => {
     .sort({ rollNumber: 1 });
 
   return res.status(200).json({ success: true, data: students, message: 'OK' });
+});
+
+// ─────────────────────────────────────────────────────────────
+// Student Search & Student 360 Helpers (Phase 2.2 Maintenance)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Safely masks a phone number for directory search results (Fix F-03).
+ * Preserves the final 4 digits (e.g. '••••••0001').
+ * Safely handles null, empty, short, and non-numeric values.
+ */
+const maskPhoneNumber = (rawPhone) => {
+  if (rawPhone == null) return null;
+  const str = String(rawPhone).trim();
+  if (!str) return null;
+  if (str.length <= 4) return '••••';
+  const lastFour = str.slice(-4);
+  const dotCount = Math.max(2, Math.min(6, str.length - 4));
+  return `${'•'.repeat(dotCount)}${lastFour}`;
+};
+
+/**
+ * Safely records security and access audit logs for Student 360 operations (Fix F-05).
+ * Fails gracefully without leaking internal errors to clients or crashing endpoints.
+ */
+const safeAuditLog = async ({ actor = null, action, entityType = 'Student', entityId = null, summary = '', ip = '' }) => {
+  try {
+    let validEntityId = null;
+    if (entityId && mongoose.Types.ObjectId.isValid(entityId)) {
+      validEntityId = new mongoose.Types.ObjectId(entityId);
+    }
+    let validActor = null;
+    if (actor && mongoose.Types.ObjectId.isValid(actor)) {
+      validActor = new mongoose.Types.ObjectId(actor);
+    }
+
+    await AuditLog.create({
+      actor: validActor,
+      action,
+      entityType,
+      entityId: validEntityId,
+      summary: String(summary || '').slice(0, 500),
+      ip: String(ip || ''),
+    });
+  } catch (err) {
+    // Non-blocking: audit failure must not crash the endpoint or leak internals
+    console.warn(`[AuditLog] Non-critical audit logging failed for ${action}: ${err.message}`);
+  }
+};
+
+// GET /api/faculty/students/search
+const searchStudents = asyncHandler(async (req, res) => {
+  const { q, branch, semester, section, myClassesOnly, page = 1, limit = 20 } = req.query;
+  const facultyUserId = req.user.userId;
+
+  // Check institutional access policy: 'institution_wide' (default) or 'teaching_scope'
+  const accessPolicy = process.env.FACULTY_STUDENT_ACCESS_POLICY || 'institution_wide';
+  const enforceTeachingScope = accessPolicy === 'teaching_scope' || myClassesOnly === 'true' || myClassesOnly === true;
+
+  const andConditions = [];
+
+  if (enforceTeachingScope) {
+    const scope = await facultyScopeService.getFacultyTeachingScope(facultyUserId);
+    if (!scope.hasScope) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total: 0,
+          totalPages: 0,
+        },
+        message: 'No students in authorized teaching scope',
+      });
+    }
+    if (scope.studentQuery) {
+      andConditions.push(scope.studentQuery);
+    }
+  }
+
+  if (branch) andConditions.push({ branch });
+  if (semester) andConditions.push({ semester: Number(semester) });
+  if (section) andConditions.push({ section });
+
+  const queryStr = typeof q === 'string' ? q.trim() : '';
+  if (queryStr) {
+    const escaped = queryStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'i');
+    const orClauses = [
+      { rollNumber: regex },
+      { fullName: regex },
+      { phone: regex },
+      { email: regex },
+    ];
+    // Support normalized digits search if query contains digits
+    const cleanDigits = queryStr.replace(/\D/g, '');
+    if (cleanDigits.length >= 3 && cleanDigits !== queryStr) {
+      orClauses.push({ phone: new RegExp(cleanDigits, 'i') });
+    }
+    if (mongoose.Types.ObjectId.isValid(queryStr)) {
+      orClauses.push({ _id: new mongoose.Types.ObjectId(queryStr) });
+    }
+    andConditions.push({ $or: orClauses });
+  }
+
+  const filter = andConditions.length === 0 ? {} : (andConditions.length === 1 ? andConditions[0] : { $and: andConditions });
+
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
+  const skip = (pageNum - 1) * limitNum;
+
+  // 3. Query students with selective projection (distinguish similar names, no sensitive auth data)
+  const [students, total] = await Promise.all([
+    Student.find(filter)
+      .select('_id rollNumber fullName phone email branch semester section program status')
+      .sort({ rollNumber: 1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+    Student.countDocuments(filter),
+  ]);
+
+  // Rank exact roll-number matches above partial matches, then exact name matches
+  if (queryStr) {
+    const queryLower = queryStr.toLowerCase();
+    students.sort((a, b) => {
+      const aExactRoll = String(a.rollNumber || '').toLowerCase() === queryLower;
+      const bExactRoll = String(b.rollNumber || '').toLowerCase() === queryLower;
+      if (aExactRoll && !bExactRoll) return -1;
+      if (!aExactRoll && bExactRoll) return 1;
+
+      const aExactName = String(a.fullName || '').toLowerCase() === queryLower;
+      const bExactName = String(b.fullName || '').toLowerCase() === queryLower;
+      if (aExactName && !bExactName) return -1;
+      if (!aExactName && bExactName) return 1;
+
+      return 0;
+    });
+  }
+
+  // Mask phone numbers in search results (Fix F-03)
+  const sanitizedStudents = students.map((s) => ({
+    ...s,
+    phone: maskPhoneNumber(s.phone),
+    phoneNumber: maskPhoneNumber(s.phone),
+  }));
+
+  return res.status(200).json({
+    success: true,
+    data: sanitizedStudents,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total,
+      totalPages: Math.ceil(total / limitNum) || 0,
+    },
+    message: 'Students fetched successfully',
+  });
+});
+
+// GET /api/faculty/students/:id/360
+const getStudent360 = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const facultyUserId = req.user.userId;
+
+  // 1. Validate ObjectId
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    await safeAuditLog({
+      actor: facultyUserId,
+      action: 'STUDENT_360_INVALID_ID',
+      entityType: 'Student',
+      entityId: null,
+      summary: 'Faculty requested Student 360 profile with an invalid identifier format',
+      ip: req.ip || '',
+    });
+    throw new ApiError(400, 'Invalid student identifier format');
+  }
+
+  // 2. Fetch student
+  const student = await Student.findById(id).lean();
+  if (!student) {
+    await safeAuditLog({
+      actor: facultyUserId,
+      action: 'STUDENT_360_NOT_FOUND',
+      entityType: 'Student',
+      entityId: id,
+      summary: 'Faculty requested non-existent Student 360 profile',
+      ip: req.ip || '',
+    });
+    throw new ApiError(404, 'Student not found');
+  }
+
+  // 3. Access Policy evaluation
+  const accessPolicy = process.env.FACULTY_STUDENT_ACCESS_POLICY || 'institution_wide';
+  if (accessPolicy === 'teaching_scope') {
+    const scope = await facultyScopeService.getFacultyTeachingScope(facultyUserId);
+    const inScope = facultyScopeService.isStudentInScope(student, scope);
+    if (!inScope) {
+      await safeAuditLog({
+        actor: facultyUserId,
+        action: 'STUDENT_360_ACCESS_DENIED',
+        entityType: 'Student',
+        entityId: student._id,
+        summary: 'Faculty access denied under teaching-scope authorization policy',
+        ip: req.ip || '',
+      });
+      throw new ApiError(403, 'Access denied: You are not authorized to view this student profile');
+    }
+  }
+
+  // 4. Fetch 4 sections in parallel using actual database relationships
+  const [subjects, publishedMarks, timetableSlots] = await Promise.all([
+    // Section 2: Academic Details -> Enrolled subjects matching student branch & semester
+    Subject.find({
+      branch: student.branch,
+      semester: student.semester,
+    })
+      .populate('faculty', 'name email')
+      .lean(),
+
+    // Section 3: Marks & Results -> Published marks only
+    Mark.find({
+      student: student._id,
+      status: 'published',
+    })
+      .populate('subject', 'name code credits')
+      .populate('exam', 'title examinationType maximumMarks passingMarks')
+      .lean(),
+
+    // Section 4: Timetable -> Published weekly timetable slots
+    Timetable.find({
+      branch: student.branch,
+      semester: student.semester,
+      $or: [{ section: student.section }, { section: 'All' }, { section: null }, { section: '' }],
+      status: { $in: ['published', 'updated'] },
+    })
+      .populate({
+        path: 'subject',
+        select: 'name code credits',
+        populate: { path: 'faculty', select: 'name email' },
+      })
+      .populate('faculty', 'name email')
+      .sort({ dayOfWeek: 1, startTime: 1 })
+      .lean(),
+  ]);
+
+  // Section 1: Basic Profile — STRICT LIMITATION: ONLY rollNumber, phoneNumber, class
+  const classLabel = [
+    student.semester ? `Semester ${student.semester}` : '',
+    student.branch || '',
+    student.section ? `Section ${student.section}` : '',
+  ]
+    .filter(Boolean)
+    .join(' ') || (student.semester && student.branch ? `${student.semester} ${student.branch}-${student.section || 'A'}` : null);
+
+  const basicProfile = {
+    rollNumber: student.rollNumber || null,
+    phoneNumber: student.phone || null,
+    class: classLabel,
+  };
+
+  // Section 2: Academic Details — verified relationships only, preserve nulls
+  const academicDetails = {
+    academicSession: '2026-2027 (Odd Semester)',
+    programme: student.program || null,
+    course: student.program || null,
+    department: student.branch || null,
+    branch: student.branch || null,
+    semester: student.semester != null ? student.semester : null,
+    section: student.section || null,
+    enrollmentBasis: 'Prescribed Departmental Curriculum',
+    enrolledSubjects: subjects.map((s) => ({
+      code: s.code || null,
+      name: s.name || null,
+      credits: s.credits != null ? s.credits : null,
+      subjectType: s.type || 'Theory',
+      assignedFaculty: s.faculty?.name || 'To Be Announced',
+      facultyEmail: s.faculty?.email || null,
+    })),
+  };
+
+  // Section 3: Marks & Results — real persisted published marks only
+  let marksAndResults;
+  if (!publishedMarks || publishedMarks.length === 0) {
+    marksAndResults = {
+      status: 'unreleased',
+      message: 'Marks have not been published for this examination.',
+      sgpa: null,
+      cgpa: null,
+      subjectMarks: [],
+    };
+  } else {
+    let totalCredits = 0;
+    let earnedPoints = 0;
+
+    const subjectMarks = publishedMarks.map((m) => {
+      const cred = m.subject?.credits || 0;
+      const rawMarks = m.marksObtained != null ? m.marksObtained : (m.internal || 0) + (m.external || 0);
+      const max = m.maxMarks != null ? m.maxMarks : (m.exam?.maximumMarks || 100);
+      const pct = max > 0 && rawMarks != null ? (rawMarks / max) * 100 : 0;
+      const gradeInfo = getGrade(pct);
+
+      if (cred > 0 && !m.isAbsent) {
+        totalCredits += cred;
+        earnedPoints += gradeInfo.points * cred;
+      }
+
+      return {
+        subjectCode: m.subject?.code || null,
+        subjectName: m.subject?.name || null,
+        examTitle: m.exam?.title || 'Semester Examination',
+        internalMarks: m.internal != null ? m.internal : null,
+        externalMarks: m.external != null ? m.external : null,
+        marksObtained: rawMarks,
+        maxMarks: max,
+        grade: m.isAbsent ? 'F' : gradeInfo.grade,
+        isPassed: m.isAbsent ? false : (rawMarks >= (m.passingMarks || 40)),
+      };
+    });
+
+    let sgpa = null;
+    if (totalCredits > 0) {
+      sgpa = Math.round((earnedPoints / totalCredits) * 100) / 100;
+    }
+
+    marksAndResults = {
+      status: 'published',
+      message: null,
+      sgpa,
+      cgpa: sgpa,
+      subjectMarks,
+    };
+  }
+
+  // Section 4: Timetable — verified published schedule
+  let timetable;
+  if (!timetableSlots || timetableSlots.length === 0) {
+    timetable = {
+      status: 'no_schedule',
+      message: 'No published timetable available for this section.',
+      slots: [],
+    };
+  } else {
+    const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const slots = timetableSlots.map((t) => ({
+      weekday: t.dayName || daysMap[t.dayOfWeek] || 'Scheduled Day',
+      day: t.dayName || daysMap[t.dayOfWeek] || 'Scheduled Day',
+      period: t.period || null,
+      periodNumber: t.period || null,
+      startTime: t.startTime || null,
+      endTime: t.endTime || null,
+      time: t.startTime && t.endTime ? `${t.startTime} – ${t.endTime}` : null,
+      subject: t.subject?.name || null,
+      subjectName: t.subject?.name || null,
+      subjectCode: t.subject?.code || null,
+      room: t.room || null,
+      classroom: t.room || null,
+      faculty: t.faculty?.name || t.subject?.faculty?.name || null,
+      facultyName: t.faculty?.name || t.subject?.faculty?.name || null,
+      group: t.batch || t.subgroup || 'All',
+      subgroup: t.batch || t.subgroup || 'All',
+      sessionType: t.sessionType || 'Lecture',
+    }));
+
+    timetable = {
+      status: 'published',
+      message: null,
+      slots,
+    };
+  }
+
+  // 5. Audit Logging (non-blocking)
+  await safeAuditLog({
+    actor: facultyUserId,
+    action: 'STUDENT_360_VIEW',
+    entityType: 'Student',
+    entityId: student._id,
+    summary: 'Faculty viewed verified Student 360 profile',
+    ip: req.ip || '',
+  });
+
+  // 6. Return standard structured response
+  return res.status(200).json({
+    success: true,
+    data: {
+      basicProfile,
+      academicDetails,
+      marksAndResults,
+      timetable,
+    },
+    message: 'Student 360 profile loaded successfully',
+  });
 });
 
 // POST /api/faculty/complaints
@@ -617,5 +1024,8 @@ module.exports = {
   createAnnouncement,
   getAnnouncements,
   getStudents,
+  searchStudents,
+  getStudent360,
   raiseComplaint,
+  safeAuditLog,
 };

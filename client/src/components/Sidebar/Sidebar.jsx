@@ -31,6 +31,7 @@ const NAV_CONFIG = {
   ],
   faculty: [
     { label: 'Dashboard',          icon: LayoutDashboard, to: '/faculty/dashboard'   },
+    { label: 'Student 360',        icon: Users,           to: '/faculty/students'    },
     { label: 'Smart Attendance',   icon: CalendarCheck,   to: '/faculty/attendance'  },
     { label: 'Assignments',        icon: BookOpen,        to: '/faculty/assignments' },
     { label: 'Notifications',      icon: Bell,            to: '/notifications'       },

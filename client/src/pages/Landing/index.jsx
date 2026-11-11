@@ -207,7 +207,7 @@ const Landing = () => {
       <section className="hero-section">
         <div className="hero-content">
           <div className="hero-pill">
-            Powered by Gemini AI
+            CampusSphere AI Assistant
           </div>
 
           <h1 className="hero-title">

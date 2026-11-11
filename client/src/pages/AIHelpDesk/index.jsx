@@ -138,12 +138,14 @@ const AIHelpDesk = () => {
         ts: now(),
       };
       setSessions(prev => prev.map(s => s.id !== sid ? s : { ...s, messages: [...s.messages, aiMsg] }));
-    } catch {
+    } catch (err) {
+      const serverMessage = err.response?.data?.message;
+      const fallbackContent = serverMessage || "AI Assistant is currently unavailable. Please try again later.";
       setSessions(prev => prev.map(s => s.id !== sid ? s : {
         ...s,
         messages: [...s.messages, {
           id: Date.now() + 1, role: 'ai', agentKey,
-          content: "Sorry, I couldn't connect. Please try again.",
+          content: fallbackContent,
           ts: now(),
         }]
       }));
@@ -331,7 +333,7 @@ const AIHelpDesk = () => {
               <Send size={16} />
             </button>
           </div>
-          <div className="ai-powered">Powered by Gemini AI</div>
+          <div className="ai-powered">CampusSphere AI Assistant</div>
         </div>
       </div>
     </div>

@@ -7,7 +7,7 @@ import { facultyService } from '../../services/faculty.service';
 import {
   LayoutDashboard, BookOpen, CalendarCheck, Users, Megaphone,
   Folder, Flag, MessageCircle, LogOut, Bell, ChevronRight,
-  GraduationCap, X, Loader2
+  GraduationCap, X, Loader2, Search, ArrowRight
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Faculty.css';
@@ -48,6 +48,15 @@ const FacultyDashboard = () => {
   const [annTitle, setAnnTitle] = useState('');
   const [annTarget,setAnnTarget]= useState('student');
   const [posting,  setPosting]  = useState(false);
+
+  // Quick Student 360 search state
+  const [quickSearchQuery, setQuickSearchQuery] = useState('');
+
+  const handleQuickSearch = (e) => {
+    e.preventDefault();
+    if (!quickSearchQuery.trim()) return;
+    navigate(`/faculty/students?q=${encodeURIComponent(quickSearchQuery.trim())}`);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -148,6 +157,33 @@ const FacultyDashboard = () => {
         </header>
 
         <div className="ds-content">
+
+          {/* QUICK STUDENT SEARCH ENTRY POINT */}
+          <div className="ds-card" style={{ marginBottom: '1.25rem', padding: '0.85rem 1.25rem', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+            <form onSubmit={handleQuickSearch} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1e293b', fontWeight: 600, fontSize: '0.92rem', minWidth: '130px' }}>
+                <Search size={18} style={{ color: '#0284c7' }} />
+                <span>Student 360:</span>
+              </div>
+              <div style={{ flex: '1', minWidth: '220px' }}>
+                <input
+                  type="text"
+                  className="ds-input"
+                  placeholder="Quick search by Roll Number (e.g. 20240001) or Name…"
+                  value={quickSearchQuery}
+                  onChange={(e) => setQuickSearchQuery(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem 0.75rem', fontSize: '0.88rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                />
+              </div>
+              <button type="submit" className="ds-btn primary sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                <span>Search</span>
+                <ArrowRight size={14} />
+              </button>
+              <Link to="/faculty/students" className="ds-btn outline sm" style={{ textDecoration: 'none' }}>
+                Directory
+              </Link>
+            </form>
+          </div>
 
           {/* STAT CARDS */}
           <div className="ds-stat-row">

@@ -21,6 +21,14 @@ export const facultyService = {
     const response = await api.get('/api/faculty/students');
     return response.data;
   },
+  searchStudents: async (params = {}) => {
+    const response = await api.get('/api/faculty/students/search', { params });
+    return response.data;
+  },
+  getStudent360: async (studentId) => {
+    const response = await api.get(`/api/faculty/students/${studentId}/360`);
+    return response.data;
+  },
   markAttendance: async (data) => {
     const response = await api.post('/api/faculty/attendance', data);
     return response.data;

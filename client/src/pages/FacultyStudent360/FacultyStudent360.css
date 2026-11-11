@@ -1,0 +1,236 @@
+/* ═══════════════════════════════════════════════════════════════
+   FacultyStudent360.css — Styling for Faculty Student 360 Profile
+   Strict 4-section layout, permanent light-mode tokens
+   ═══════════════════════════════════════════════════════════════ */
+
+.f360-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cs-text-secondary, #475569);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.f360-back-btn:hover {
+  background: var(--cs-bg-subtle, #F1F5F9);
+  color: var(--cs-text-primary, #0F172A);
+}
+
+.f360-loading-box {
+  padding: 80px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.f360-error-card {
+  background: var(--cs-bg-surface, #FFFFFF);
+  border: 1px solid var(--cs-border-subtle, #E2E8F0);
+  border-radius: 12px;
+  padding: 56px 24px;
+  text-align: center;
+  max-width: 560px;
+  margin: 40px auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.f360-error-icon-box {
+  margin-bottom: 16px;
+}
+
+.f360-error-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cs-text-primary, #0F172A);
+  margin-bottom: 8px;
+}
+
+.f360-error-desc {
+  font-size: 14px;
+  color: var(--cs-text-secondary, #475569);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.f360-error-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* ── Banner Overview ── */
+.f360-profile-banner {
+  background: var(--cs-bg-surface, #FFFFFF);
+  border: 1px solid var(--cs-border-subtle, #E2E8F0);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.f360-avatar-large {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.f360-banner-meta {
+  flex: 1;
+}
+
+.f360-banner-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.f360-student-roll {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cs-text-primary, #0F172A);
+  margin: 0;
+}
+
+.f360-banner-sub {
+  font-size: 13px;
+  color: var(--cs-text-secondary, #475569);
+}
+
+/* ── Tabs Bar ── */
+.f360-tabs-bar {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--cs-border-subtle, #E2E8F0);
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.f360-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cs-text-secondary, #475569);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.f360-tab-btn:hover {
+  color: var(--cs-primary, #1A56DB);
+  background: var(--cs-bg-subtle, #F1F5F9);
+}
+
+.f360-tab-btn.active {
+  color: var(--cs-primary, #1A56DB);
+  border-bottom-color: var(--cs-primary, #1A56DB);
+  font-weight: 600;
+}
+
+/* ── Section 1 Fields Grid ── */
+.f360-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.f360-field-item {
+  background: var(--cs-bg-canvas, #F8FAFC);
+  border: 1px solid var(--cs-border-subtle, #E2E8F0);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.f360-field-label {
+  font-size: 12px;
+  color: var(--cs-text-muted, #64748B);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.f360-field-value {
+  font-size: 15px;
+  color: var(--cs-text-primary, #0F172A);
+}
+
+.f360-null {
+  color: var(--cs-text-muted, #94A3B8);
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* ── Section 2 Academic Meta ── */
+.f360-academic-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cs-border-subtle, #E2E8F0);
+  margin-bottom: 16px;
+}
+
+.f360-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.f360-meta-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--cs-text-muted, #64748B);
+  font-weight: 600;
+}
+
+.f360-meta-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cs-text-primary, #0F172A);
+}
+
+.f360-subheading {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cs-text-primary, #0F172A);
+  margin-bottom: 12px;
+}
+
+.f360-time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cs-text-secondary, #475569);
+  background: var(--cs-bg-subtle, #F1F5F9);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+

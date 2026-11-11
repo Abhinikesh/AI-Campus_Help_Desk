@@ -42,6 +42,8 @@ const FacultyAttendanceRecords  = lazyWithRetry(() => import('./pages/FacultyAtt
 const FacultyAttendanceReports  = lazyWithRetry(() => import('./pages/FacultyAttendance/AttendanceReports'));
 const FacultyTimetable          = lazyWithRetry(() => import('./pages/FacultyTimetable/index'));
 const FacultyResults            = lazyWithRetry(() => import('./pages/FacultyResults/index'));
+const FacultyStudentSearch      = lazyWithRetry(() => import('./pages/FacultyStudentSearch/index'));
+const FacultyStudent360         = lazyWithRetry(() => import('./pages/FacultyStudent360/index'));
 const FacultyInventory          = lazyWithRetry(() => import('./pages/FacultyInventory/index'));
 
 // Admin Pages
@@ -123,6 +125,10 @@ const App = () => (
           {/* ── Faculty ── */}
           <Route path="/faculty/dashboard"
             element={<ProtectedRoute role="faculty"><FacultyDashboard /></ProtectedRoute>} />
+          <Route path="/faculty/students"
+            element={<ProtectedRoute role="faculty"><FacultyStudentSearch /></ProtectedRoute>} />
+          <Route path="/faculty/students/:id"
+            element={<ProtectedRoute role="faculty"><FacultyStudent360 /></ProtectedRoute>} />
           <Route path="/faculty/assignments"
             element={<ProtectedRoute role="faculty"><FacultyAssignments /></ProtectedRoute>} />
           <Route path="/faculty/attendance"

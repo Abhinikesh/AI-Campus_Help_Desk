@@ -1,0 +1,212 @@
+/* ═══════════════════════════════════════════════════════════════
+   FacultyStudentSearch.css — Styling for Faculty Student Directory
+   Complies with permanent light-mode enterprise tokens
+   ═══════════════════════════════════════════════════════════════ */
+
+.fss-search-card {
+  background: var(--cs-bg-surface, #FFFFFF);
+  border: 1px solid var(--cs-border-subtle, #E2E8F0);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.fss-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.fss-search-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--cs-text-muted, #64748B);
+  pointer-events: none;
+}
+
+.fss-search-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 40px 0 42px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--cs-text-primary, #0F172A);
+  background: var(--cs-input-bg, #FFFFFF);
+  border: 1px solid var(--cs-border-strong, #CBD5E1);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fss-search-input:focus {
+  border-color: var(--cs-border-focus, #1A56DB);
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+}
+
+.fss-search-input::placeholder {
+  color: var(--cs-input-placeholder, #94A3B8);
+}
+
+.fss-clear-btn {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--cs-bg-subtle, #F1F5F9);
+  color: var(--cs-text-muted, #64748B);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fss-clear-btn:hover {
+  background: var(--cs-border-strong, #CBD5E1);
+  color: var(--cs-text-primary, #0F172A);
+}
+
+.fss-scope-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--cs-text-muted, #64748B);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fss-student-link {
+  color: var(--cs-text-primary, #0F172A);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.fss-student-link:hover {
+  color: var(--cs-primary, #1A56DB);
+  text-decoration: underline;
+}
+
+.fss-error-banner {
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.fss-error-icon {
+  color: #DC2626;
+  flex-shrink: 0;
+}
+
+.fss-error-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fss-error-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #991B1B;
+}
+
+.fss-error-desc {
+  font-size: 13px;
+  color: #B91C1C;
+}
+
+.fss-loading-container {
+  padding: 48px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.fss-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-top: 1px solid var(--cs-border-subtle, #E2E8F0);
+  background: var(--cs-bg-surface, #FFFFFF);
+}
+
+.fss-page-indicator {
+  font-size: 13px;
+  color: var(--cs-text-secondary, #475569);
+  font-weight: 500;
+}
+
+.fss-filters-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--cs-border-subtle, #E2E8F0);
+}
+
+.fss-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--cs-text-secondary, #475569);
+}
+
+.fss-filter-icon {
+  color: var(--cs-text-muted, #64748B);
+}
+
+.fss-filter-label {
+  font-weight: 500;
+}
+
+.fss-select {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid var(--cs-border-strong, #CBD5E1);
+  background: var(--cs-bg-surface, #FFFFFF);
+  color: var(--cs-text-primary, #0F172A);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.fss-select:focus {
+  border-color: var(--cs-primary, #1A56DB);
+}
+
+.fss-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cs-text-primary, #0F172A);
+  cursor: pointer;
+}
+
+.fss-checkbox-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--cs-primary, #1A56DB);
+  cursor: pointer;
+}
+
+

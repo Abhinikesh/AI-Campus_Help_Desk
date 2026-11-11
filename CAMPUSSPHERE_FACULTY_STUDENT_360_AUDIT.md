@@ -1,356 +1,193 @@
-# CampusSphere AI — Faculty Student 360 Audit & Architecture Specification
-
-**Audit Date:** 2026-11-11  
-**Target Environment:** CampusSphere AI ERP (`/Users/abhinikesh/AI-Campus_Help_Desk`)  
-**Phase:** Phase 1 — Architecture Audit & Implementation Specification  
-**Status:** Strictly READ-ONLY Planning & Audit  
-
----
-
-## 1. Executive Summary & Core Objective
-
-The Faculty Portal currently lacks a unified, dedicated student search and comprehensive profile viewer. While local filtering exists inside grading tables (`FacultyResults/index.jsx:344`) and classroom attendance session rosters (`FacultyAttendance/`), a faculty member cannot quickly look up a student across their classes, review academic standing, inspect subject-wise marks, or check a student's daily schedule.
-
-This audit establishes the architecture, backend authorization boundaries, database query patterns, and UI/UX design for a **Faculty Student Search & Student 360 Profile**.
-
-### Critical Scope Constraint Enforced
-Per institutional specification, the Student 360 Profile is strictly scoped to **EXACTLY FOUR MAIN SECTIONS**:
-1. **Basic Profile** (Demographics, identification, batch, contact, address)
-2. **Academic Details** (Session, programme, department, semester, section, enrolled subjects)
-3. **Marks & Results** (Subject-wise internal, external, practical/lab, grades, SGPA/CGPA, exam history)
-4. **Timetable** (Day, period, timing, subject, faculty, room, group-specific schedule)
-
-> [!IMPORTANT]
-> **Strict Scope Exclusions:** In compliance with explicit project instructions, sections for **Attendance, Assignments, Certificates, and Learning Progress are NOT included** in the Faculty Student 360 profile.
+# CampusSphere AI — Faculty Student Search & Student 360 Architecture Audit
+**Document ID:** `CAMPUSSPHERE_FACULTY_STUDENT_360_AUDIT.md`  
+**Revision:** Phase 1.1 Corrected Edition  
+**Date:** November 11, 2026  
+**Auditor & Lead Architect:** Antigravity AI Engineering & Architecture Team  
+**Scope:** Faculty Portal Student Search & 4-Section Student 360 Profile  
+**Compliance Mandate:** Exact 4 Sections, Strict Field Limits, Fail-Closed Authorization, Zero Fabricated Fallbacks  
 
 ---
 
-## 2. Existing System Inspection & Integration Location
+## 1. Executive Summary & Mandatory Scope Corrections
 
-### 2.1 Current Frontend Faculty Architecture
-Inspection of `client/src/App.jsx:123-152` and `client/src/pages/FacultyDashboard/index.jsx:15-24` reveals:
-- Current Faculty Portal navigation includes:
-  - `/faculty/dashboard` — Overview cards, today's schedule, quick actions.
-  - `/faculty/timetable` — Class-wise weekly teaching schedule.
-  - `/faculty/attendance` — Session creation, live QR/biometric tracking, attendance records.
-  - `/faculty/results` — Gradebook and marks entry (contains local `searchRoster` state).
-  - `/faculty/assignments` — Course assignment creation and grading.
-  - `/faculty/drive` — Course material uploads.
-  - `/faculty/inventory` — Department asset requests.
-  - `/faculty/hr` — Faculty leave and payroll self-service.
-- **Identified Gap:** No dedicated route or unified navigation item exists for Student Search or Student 360.
-- **Recommended Integration Location:**
-  1. **Primary Dedicated Route:** Add `/faculty/students` (Student Search Directory) and `/faculty/students/:id` (Student 360 Profile).
-  2. **Sidebar Navigation Item:** Add `Student 360` with icon `GraduationCap` into `Sidebar.jsx` under the Faculty navigation menu.
-  3. **Dashboard Quick Link:** Add a "Student 360 Search" search bar and quick action card directly on the `FacultyDashboard` top banner.
+This corrected audit establishes the definitive architectural specification for the **Faculty Student Search** and **Student 360 Profile** within CampusSphere AI ERP.
 
-### 2.2 Current Backend Faculty Controller Audit
-Inspection of `server/controllers/faculty.controller.js:563-574`:
+### Mandatory Phase 1.1 Scope Corrections:
+1. **Strict 4-Section Layout:** The profile must contain **EXACTLY** four sections:
+   - Section 1: **Basic Profile**
+   - Section 2: **Academic Details**
+   - Section 3: **Marks & Results**
+   - Section 4: **Timetable**
+   *(Explicitly excluding Attendance, Assignments, Certificates, and Learning Progress).*
+2. **Basic Profile — Strict Field Restrictions:**
+   The Basic Profile section must display **ONLY**:
+   - **Roll Number** (`student.rollNumber`)
+   - **Phone Number** (`student.phone`)
+   - **Class** (Derived from `student.semester`, `student.branch`, `student.section`, e.g. `"5 CSE-A"`)
+   *Do NOT display email, date of birth, address, guardian details, gender, attendance, fees, or unverified demographic fields.*
+3. **Elimination of All Proposed Hardcoded Defaults:**
+   Remove all hardcoded fallbacks previously suggested (e.g. defaulting batch to `'2024-2028'`, programme to `'B.Tech'`, academic session to `'2026-2027'`, grade to `'A'`, grade point to `8`, max marks to `100`). All fields must be real database values or display an explicit empty/unavailable state.
+4. **Fail-Closed Backend Teaching Scope Authorization:**
+   Branch and semester matching alone must NOT grant unrestricted access. Faculty search and profile access must strictly derive from verified teaching assignments (`Subject.find({ faculty: facultyUserId })` and `Timetable.find({ faculty: facultyUserId })`). If teaching scope cannot be verified, the backend must fail closed and return zero students.
+
+---
+
+## 2. Faculty Teaching-Scope Authorization Architecture
+
+### 2.1 The Vulnerability in Existing `getStudents`
+In `server/controllers/faculty.controller.js` (lines 566–574):
 ```javascript
-// Current implementation in server/controllers/faculty.controller.js
 const getStudents = asyncHandler(async (req, res) => {
   const { branch, semester } = req.query;
   const filter = {};
   if (branch) filter.branch = branch;
   if (semester) filter.semester = Number(semester);
 
-  const students = await Student.find(filter)
-    .populate('user', 'name email loginId')
-    .sort({ rollNumber: 1 });
+  const students = await Student.find(filter)...
+```
+When `branch` and `semester` are omitted, `filter = {}`, returning **every student in the database** across all branches. This violates institutional privacy and student data governance.
 
-  return res.status(200).json({ success: true, data: students, message: 'OK' });
-});
+### 2.2 Grounded Teaching Scope Derivation
+The faculty member's authorized teaching scope is derived dynamically from verified database records:
+
+```
+                            AUTHENTICATED FACULTY USER
+                                       │
+                                       ▼
+                       [Query 1: Assigned Subjects]
+                   Subject.find({ faculty: req.user.userId })
+                                       │
+                                       ▼
+                       [Query 2: Assigned Timetable]
+                  Timetable.find({ faculty: req.user.userId })
+                                       │
+                                       ▼
+                   [Compile Teaching Jurisdiction Scope]
+               • Authorized Semesters: [ s.semester, ... ]
+               • Authorized Branches:  [ s.branch, ... ]
+               • Authorized Sections:  [ slot.section, ... ]
+                                       │
+                    ┌──────────────────┴──────────────────┐
+                    ▼                                     ▼
+          [Scope IS Established]               [Scope IS EMPTY (0 subjects)]
+                    │                                     │
+                    ▼                                     ▼
+     Query Student within Scope:                   [FAIL CLOSED]
+     { branch: { $in: branches },                  • Search: return [] (0 results)
+       semester: { $in: semesters } }              • Profile: return 403 Forbidden
 ```
 
-#### Deficiencies in Existing Backend Implementation:
-1. **No Keyword / Identifying Search:** Does not support searching by student name, roll number, student ID, email, or section.
-2. **Missing Authorization Scoping:** If no `branch` or `semester` is provided, it performs an unrestricted dump of all students in the database, violating faculty data boundaries.
-3. **No Student 360 Aggregation Endpoint:** No endpoint exists to consolidate student identity, academic enrolment, marks/results, and class timetable in a single authorized call.
+### 2.3 Strict Authorization Rules
+1. **Backend Enforcement:** Authorization is enforced in backend controllers and middleware, never solely in frontend UI.
+2. **Double Verification:** Scope is verified during search (`/api/faculty/students/search`) AND re-verified upon opening a Student 360 profile (`/api/faculty/students/:id/360`).
+3. **Fail-Closed Principle:** If a faculty member has no assigned subjects or timetable slots, the system fails closed (returns 0 search results; rejects profile access with HTTP 403).
+4. **URL Tampering Protection:** Manually typing an unauthorized student ID in the URL `/faculty/students/:id` produces a safe, generic unauthorized message without revealing whether the student exists.
+5. **No Data Leakage:** Responses must never expose password hashes, biometric data, consent records, or financial ledgers.
+6. **Audit Trail:** Every Student 360 profile access is logged via `AuditLog.create({ actor: facultyUserId, action: 'STUDENT_360_VIEW', entityType: 'Student', entityId: studentId })`.
 
 ---
 
-## 3. Search Engine Design & Ranking Algorithm
+## 3. Four-Section Data Requirements & Field Mapping
 
-### 3.1 Supported Identifying Fields
-The search query will match against verified database fields in `Student` and `User` models:
-- **Student Name:** `Student.fullName` and `User.name` (case-insensitive regex and text match).
-- **University Roll Number:** `Student.rollNumber` (e.g., `1/24/SET/BCS/231` or `20240001` — exact match and prefix match).
-- **Student ID:** `Student._id` (exact BSON ObjectId lookup if valid).
-- **Institutional Email:** `Student.email` or `User.email` (lowercase prefix/exact match).
-- **Academic Coordinates:** `Student.branch` (Department/Branch), `Student.semester`, `Student.section`.
-- **Phone Number:** `Student.phone` (only if authorized; masked in preview unless full profile is viewed).
-
-### 3.2 Ranking & Relevancy Precedence
-When a faculty member types into the search box, results are ranked deterministically:
-1. **Tier 1 (Exact Match):** Exact match on `rollNumber` or `email` (Weight: 100).
-2. **Tier 2 (Prefix Match):** `rollNumber` begins with query (e.g. typing `1/24/SET` or `2024`) (Weight: 80).
-3. **Tier 3 (Name Match):** `fullName` starts with or exactly contains query tokens (Weight: 60).
-4. **Tier 4 (Class Match):** Student belongs to faculty's currently active semester and section (Weight: 40).
-5. **Tier 5 (Alphabetical):** Fallback sort by `fullName` ascending.
-
----
-
-## 4. The Four Exact Student 360 Profile Sections
-
-```mermaid
-flowchart TD
-    S360["Faculty Student 360 Profile (/faculty/students/:id)"]
-    
-    SEC1["Section 1: Basic Profile<br/>• Full Name & Roll Number<br/>• Email & Phone Number<br/>• Program & Department<br/>• Semester & Section<br/>• Batch & Admission Year<br/>• Address & Demographics"]
-    
-    SEC2["Section 2: Academic Details<br/>• Current Academic Session (2026-2027)<br/>• Enrolled Curriculum Courses<br/>• Subject Codes & Course Titles<br/>• Theory / Lab Designation<br/>• Credit Allocations"]
-    
-    SEC3["Section 3: Marks & Results<br/>• Internal Evaluation (Max 30)<br/>• External Examination (Max 70)<br/>• Practical / Lab Marks<br/>• Subject Letter Grades<br/>• SGPA & Cumulative CGPA<br/>• Examination History"]
-    
-    SEC4["Section 4: Timetable<br/>• Weekly Class Schedule (Mon-Fri)<br/>• Period Number & Exact Timings<br/>• Subject Code & Room Number<br/>• Assigned Faculty Details<br/>• Subgroup / Batch Schedule (A1/A2)"]
-
-    S360 --> SEC1
-    S360 --> SEC2
-    S360 --> SEC3
-    S360 --> SEC4
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                   FACULTY STUDENT 360 PROFILE SECTIONS                 │
+├───────────────────────────────────┬────────────────────────────────────┤
+│ 1. Basic Profile (STRICT LIMIT)   │ 2. Academic Details                │
+│ • Roll Number (student.rollNumber)│ • Academic Session (real/null)     │
+│ • Phone Number (student.phone)    │ • Programme & Department (real)    │
+│ • Class (e.g. "5 CSE-A")          │ • Semester & Section (real)        │
+│                                   │ • Enrolled Subjects (catalog)      │
+│ ✗ No email, address, DOB, fees    │ • Subject Codes & Credits (real)   │
+├───────────────────────────────────┼────────────────────────────────────┤
+│ 3. Marks & Results                │ 4. Timetable                       │
+│ • Real Published Marks only       │ • Published Timetable slots only   │
+│ • Subject-Wise Evaluation         │ • Day of Week & Period Number      │
+│ • Internal & External Marks (real)│ • Start & End Times                │
+│ • Total & Maximum Marks           │ • Subject, Room & Assigned Faculty │
+│ • Explicit "Pending Evaluation"   │ • Group / Batch Filter (real)      │
+│   if unpublished; zero hardcoding │ • "No schedule published" state    │
+└───────────────────────────────────┴────────────────────────────────────┘
 ```
 
-### 4.1 Section 1: Basic Profile
-- **Source Model:** `Student` populated with `User`.
-- **Displayed Fields:**
-  - Full Name (`Student.fullName`)
-  - University Roll Number (`Student.rollNumber`)
-  - Institutional Email (`Student.email` / `User.email`)
-  - Phone Number (`Student.phone` — displayed with appropriate privacy masking for unauthorized roles)
-  - Programme (`Student.program`, e.g. "B.Tech")
-  - Department / Branch (`Student.branch`, e.g. "Computer Science & Engineering")
-  - Semester & Section (`Student.semester`, `Student.section`, e.g. "5th Semester, Section A")
-  - Batch / Admission Year (`Student.admissionYear`, e.g. "Batch 2024–2028")
-  - Status (`Student.status`, e.g. "Active")
-  - Residential Address (`Student.address`)
-  - Guardian Name & Contact (`Student.guardianName`, `Student.guardianPhone`)
-
-### 4.2 Section 2: Academic Details
-- **Source Models:** `Student`, `Subject`, `Department`.
-- **Displayed Fields:**
-  - Academic Session: `2026–2027 (Odd Semester)`
-  - Enrolled Curriculum Subjects:
-    - Queries `Subject.find({ branch: student.branch, semester: student.semester })`.
-    - Subject Code (e.g. `CS501`, `CS502`, `CS508L`)
-    - Subject Title (e.g. "Design Analysis of Algorithms", "Formal Languages & Automata Theory")
-    - Course Type: Theory vs Practical / Laboratory
-    - Credit Hours: e.g. 4 Credits
-    - Assigned Faculty In-Charge: Instructor name and department.
-
-### 4.3 Section 3: Marks & Results
-- **Source Models:** `Mark` populated with `Subject` and `Exam`.
-- **Displayed Fields:**
-  - Subject-wise Mark Breakdown:
-    - Internal Continuous Assessment (e.g. Scored / 30)
-    - End-Semester External Examination (e.g. Scored / 70)
-    - Practical / Lab Examination Marks (where applicable)
-    - Total Marks Scored (e.g. Scored / 100)
-    - Letter Grade (UGC 10-point scale: `O`, `A+`, `A`, `B+`, `B`, `C`, `P`, `F` computed via `server/utils/grades.js`)
-    - Pass / Fail Status
-  - Cumulative Academic Standing:
-    - Current Semester SGPA (Credit-weighted grade point average)
-    - Cumulative CGPA across completed semesters
-  - Historical Examination Ledger:
-    - List of examinations (`Exam` titles, dates, semester, evaluation status).
-
-### 4.4 Section 4: Timetable
-- **Source Model:** `Timetable` populated with `Subject` and `User` (Faculty).
-- **Displayed Fields:**
-  - Student's Weekly Schedule:
-    - Queries `Timetable.find({ department: student.branch, semester: student.semester, section: student.section, status: 'published' })`.
-    - Handles subgroup filtering: displays `batch: 'All'` plus the student's assigned group (e.g. `3CSE-A1`).
-  - Period-by-Period Grid (Monday through Friday):
-    - Period Number (1 to 10) & Start/End Timings (e.g. `08:10 AM – 09:00 AM`)
-    - Subject Name and Code Badge (`CS501`)
-    - Classroom / Laboratory Hall (`AF13`, `CF09`, `AS11`)
-    - Faculty Name / Instructor abbreviation
-    - Session Type badge (`Lecture` vs `Lab`)
-
----
-
-## 5. Security & Authorization Enforcement Architecture
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Faculty as Faculty User
-    participant Route as Express Router (/api/faculty/students/:id/360)
-    participant Auth as Auth & Scope Middleware
-    participant DB as MongoDB (Student, Subject, Mark, Timetable)
-    participant Audit as AuditLog Service
-
-    Faculty->>Route: GET /api/faculty/students/:id/360
-    Route->>Auth: Verify JWT & Role ('faculty')
-    Auth->>DB: Query Faculty's Assigned Teaching Scope (Subjects & Timetables)
-    DB-->>Auth: Teaching Semesters, Branches, Sections
-    
-    alt Student is outside Faculty's Teaching Scope
-        Auth-->>Faculty: 403 Forbidden ("Student outside your academic teaching scope")
-    else Student is within Authorized Scope
-        Auth->>DB: Fetch Basic Profile (Exclude passwordHash, tokens, biometric templates)
-        Auth->>DB: Fetch Academic Enrolment & Subjects
-        Auth->>DB: Fetch Marks & Results
-        Auth->>DB: Fetch Timetable for Student's Class
-        DB-->>Auth: Aggregated Data (4 Sections)
-        Auth->>Audit: Record Student 360 Access (Actor, Student, IP, Timestamp)
-        Auth-->>Faculty: 200 OK (Clean 4-Section Student 360 JSON)
-    end
+### Section 1: Basic Profile (Strict Field Limits)
+```json
+{
+  "basicProfile": {
+    "rollNumber": "20240001",
+    "phoneNumber": "9876543210",
+    "class": "5 CSE-A"
+  }
+}
 ```
+*Note: If `phone` is empty in the database, it returns `null` and the UI renders `"Not provided"`.*
 
-### 5.1 Strict Backend Scoping Rules
-1. **Teaching Scope Derivation:**
-   - Identify all classes taught by the faculty member:
-     ```javascript
-     const assignedSubjects = await Subject.find({ faculty: req.user.userId });
-     const assignedTimetables = await Timetable.find({ faculty: req.user.userId });
-     ```
-   - Build a permissible scope set of `(branch, semester, section)` tuples.
-2. **Access Control Evaluation:**
-   - A faculty member can only query students whose `branch`, `semester`, and `section` match their assigned teaching scope (or who are enrolled in their specific subjects).
-   - If an unauthorized student ID is requested, return `403 Forbidden` with a generic message to prevent ID enumeration.
-3. **Data Sanitization & Privacy:**
-   - Strictly exclude sensitive authentication fields: `passwordHash`, `resetPasswordToken`, `refreshToken`.
-   - Strictly exclude biometric data: `FaceEmbedding` records, encrypted vectors, and consent history are never projected.
-   - Financial fee ledgers, disciplinary actions, and complaint histories are excluded from the Student 360 response.
-4. **Audit Logging:**
-   - Record every Student 360 profile view in `AuditLog` with `actorId`, `actorRole: "faculty"`, `targetStudentId`, `action: "view_student_360"`, `ipAddress`, and `timestamp`.
+### Section 2: Academic Details
+- Fetches real curriculum data matching student's branch and semester from `Subject`.
+- Displays `code`, `name`, `credits`, `semester`, and assigned faculty name if mapped.
+- If curriculum records do not exist for the student's cohort, returns an empty array with explicit state `"No enrolled subjects found"`.
+
+### Section 3: Marks & Results
+- Fetches only persisted records from `Mark.find({ student: studentId, status: 'published' })`.
+- Displays real `internal`, `external`, `marksObtained`, `maxMarks`, and `grade`.
+- **Zero Fabrication:** If marks are unreleased, displays:
+  > *"Marks have not been published for this examination."*
+- SGPA/CGPA is only calculated when backed by complete, published results; otherwise displays `null` and UI shows `"Evaluation in progress"`.
+
+### Section 4: Timetable
+- Fetches verified weekly schedule from `Timetable.find({ branch: student.branch, semester: student.semester, section: student.section, status: 'published' })`.
+- Sorted by `dayOfWeek` (Monday to Friday) and `period` (1 to 10).
+- If no timetable is published, renders `.cs-empty-state` with `"No published timetable available"`.
 
 ---
 
-## 6. API Endpoint Design
+## 4. API Endpoints Specification
 
-### 6.1 Search Endpoint
+### 4.1 Search Endpoint
 - **Route:** `GET /api/faculty/students/search`
-- **Auth:** Bearer JWT (`role: 'faculty'`)
+- **Headers:** `Authorization: Bearer <token>`
 - **Query Parameters:**
-  - `q` (string, required): Search query (roll number, name, email).
-  - `semester` (number, optional): Filter by semester.
-  - `section` (string, optional): Filter by section.
-  - `limit` (number, default: 20, max: 50).
-- **Response Format:**
-  ```json
-  {
-    "success": true,
-    "count": 2,
-    "data": [
-      {
-        "_id": "6ae46faf9e9e56f71ecccdd5",
-        "rollNumber": "20240001",
-        "fullName": "Arjun Sharma",
-        "email": "arjun.sharma@campus.edu",
-        "program": "B.Tech",
-        "branch": "CSE",
-        "semester": 5,
-        "section": "A",
-        "status": "active"
-      }
-    ]
-  }
-  ```
+  - `q`: Search string (roll number prefix, partial name).
+  - `page`: Page number (default: 1).
+  - `limit`: Results per page (default: 20, max: 50).
+- **Processing Logic:**
+  1. Authenticate user; verify `role === 'faculty'`.
+  2. Derive teaching scope from `Subject` and `Timetable`.
+  3. If scope is empty, return `{ success: true, data: [], total: 0 }`.
+  4. Query `Student` constrained by scope + sanitized search regex on `fullName` and `rollNumber`.
+  5. Project only: `_id`, `fullName`, `rollNumber`, `branch`, `semester`, `section`.
 
-### 6.2 Consolidated Student 360 Endpoint
+### 4.2 Student 360 Profile Endpoint
 - **Route:** `GET /api/faculty/students/:id/360`
-- **Auth:** Bearer JWT (`role: 'faculty'`) + `authorizeFacultyStudentAccess` middleware.
-- **Response Format:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      "basicProfile": {
-        "_id": "6ae46faf9e9e56f71ecccdd5",
-        "fullName": "Arjun Sharma",
-        "rollNumber": "20240001",
-        "email": "arjun.sharma@campus.edu",
-        "phone": "+91 98765 43210",
-        "program": "B.Tech",
-        "department": "Computer Science & Engineering",
-        "branch": "CSE",
-        "semester": 5,
-        "section": "A",
-        "batch": "2024-2028",
-        "admissionYear": 2024,
-        "gender": "male",
-        "dateOfBirth": "2005-04-12T00:00:00.000Z",
-        "address": "14/2 Park Street, New Delhi",
-        "guardianName": "Ramesh Sharma",
-        "guardianPhone": "+91 98765 11223",
-        "status": "active"
-      },
-      "academicDetails": {
-        "academicSession": "2026-2027",
-        "program": "B.Tech",
-        "department": "Computer Science & Engineering",
-        "semester": 5,
-        "section": "A",
-        "enrolledSubjects": [
-          {
-            "_id": "6ae62db1dddbc260975cb0be",
-            "code": "CS501",
-            "name": "Design Analysis of Algorithms",
-            "credits": 4,
-            "type": "Theory",
-            "faculty": "Prof. Neha Singh"
-          }
-        ]
-      },
-      "marksAndResults": {
-        "cgpa": 8.6,
-        "sgpa": 8.8,
-        "subjects": [
-          {
-            "subjectCode": "CS501",
-            "subjectName": "Design Analysis of Algorithms",
-            "credits": 4,
-            "internalMarks": 27,
-            "maxInternal": 30,
-            "externalMarks": 62,
-            "maxExternal": 70,
-            "totalMarks": 89,
-            "maxMarks": 100,
-            "grade": "A+",
-            "isPassed": true
-          }
-        ],
-        "examHistory": []
-      },
-      "timetable": {
-        "effectiveDate": "2026-10-21",
-        "schedule": [
-          {
-            "dayOfWeek": 1,
-            "dayName": "Monday",
-            "period": 1,
-            "startTime": "08:10 AM",
-            "endTime": "09:00 AM",
-            "subjectCode": "CS501",
-            "subjectName": "Design Analysis of Algorithms",
-            "room": "AF13",
-            "faculty": "Prof. Neha Singh",
-            "batch": "All"
-          }
-        ]
-      }
-    }
-  }
-  ```
+- **Headers:** `Authorization: Bearer <token>`
+- **Processing Logic:**
+  1. Authenticate faculty.
+  2. Fetch target student by `_id`. If not found, return 404.
+  3. Verify student's `branch` and `semester` fall within faculty's derived teaching scope. If not, return HTTP 403 Forbidden.
+  4. Query Sections 1, 2, 3, and 4 in parallel using `Promise.all`.
+  5. Log audit trail to `AuditLog`.
+  6. Return structured 4-section payload.
 
 ---
 
-## 7. Frontend UI/UX Design Specifications
+## 5. UI/UX & Frontend Integration
 
-1. **Light Mode Consistency:** Pure light surfaces (`#FFFFFF` cards, `#F8FAFC` canvas, subtle `#E2E8F0` borders). Zero dark-mode classes.
-2. **Tabbed Navigation:**
-   - 4 accessible tabs using ARIA tab pattern:
-     - `Tab 1: Basic Profile` (Demographic summary, contact info, guardian cards).
-     - `Tab 2: Academic Details` (Session overview, enrolled curriculum subject list table).
-     - `Tab 3: Marks & Results` (SGPA/CGPA metric pills, subject-wise score table, grade badges).
-     - `Tab 4: Timetable` (Weekly Monday-to-Friday schedule grid with time and room badges).
-3. **Empty & Error States:**
-   - Search: Clean empty state ("No students found matching query within your teaching scope").
-   - Profile tabs: If marks are unreleased, display "Marks pending evaluation" badge rather than blank screen.
-   - Skeletons: Shimmering loading skeletons for cards and tables during fetch.
+1. **New Route:** `/faculty/students` (Student Search Directory) and `/faculty/students/:id` (Student 360 Profile).
+2. **Sidebar Entry:** Add "Student 360" with `Users` icon under Faculty navigation in [`Sidebar.jsx`](file:///Users/abhinikesh/AI-Campus_Help_Desk/client/src/components/Sidebar/Sidebar.jsx).
+3. **Faculty Dashboard Quick Action:** Compact search bar in [`FacultyDashboard/index.jsx`](file:///Users/abhinikesh/AI-Campus_Help_Desk/client/src/pages/FacultyDashboard/index.jsx) allowing faculty to search and jump directly to a student's profile.
+4. **Visual Design:** Permanent light mode, white cards (`#FFFFFF`), subtle slate borders (`#E2E8F0`), four accessible tabs, `.cs-empty-state` for unavailable data.
 
 ---
 
-**Report Authored By:** Antigravity AI Engineering Specialist  
-**Deliverable Status:** COMPLETE & READY FOR PHASE 1 IMPLEMENTATION
+## 6. Verification Test Protocols
+
+| Test ID | Test Category | Execution Action | Expected Result |
+| :--- | :--- | :--- | :--- |
+| **TEST-AUTH-01** | Authorization (Negative) | Non-faculty user requests `/api/faculty/students/search`. | HTTP 403 Forbidden. |
+| **TEST-AUTH-02** | Authorization (Negative) | Faculty with 0 assigned subjects executes search. | Returns empty array `[]` (fails closed). |
+| **TEST-AUTH-03** | Authorization (Negative) | CSE faculty attempts direct URL access to MECH student profile. | HTTP 403 Forbidden. Zero student data returned. |
+| **TEST-AUTH-04** | Authorization (Positive) | Dr. Priya Mehta (teaches CSE Sem 5) searches `"Arjun"`. | Returns `Arjun Sharma` (Roll: `20240001`). |
+| **TEST-AUTH-05** | Authorization (Positive) | Dr. Priya Mehta opens Student 360 for Arjun Sharma. | HTTP 200 OK. Returns 4 sections. |
+| **TEST-DATA-01** | Scope Integrity | Inspect `basicProfile` in response. | Contains **ONLY** `rollNumber`, `phoneNumber`, and `class`. |
+| **TEST-DATA-02** | Marks Truthfulness | Inspect student with no published marks. | Returns empty array. Zero hardcoded grades or GPA. |
+| **TEST-AUDIT-01** | Audit Logging | Inspect `AuditLog` collection after opening profile. | Entry recorded with `actor: facultyUserId`, `action: 'STUDENT_360_VIEW'`. |

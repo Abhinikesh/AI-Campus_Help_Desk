@@ -63,8 +63,14 @@ const ChatWidget = () => {
         content: res?.reply || "Sorry, an error occurred.", 
         agent: res?.agent || 'academic' 
       }]);
-    } catch {
-      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'ai', content: "Connection error.", agent: 'academic' }]);
+    } catch (err) {
+      const serverMessage = err.response?.data?.message;
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        role: 'ai',
+        content: serverMessage || "AI Assistant is currently unavailable.",
+        agent: 'academic',
+      }]);
     } finally {
       setIsLoading(false);
     }

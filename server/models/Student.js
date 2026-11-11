@@ -98,6 +98,9 @@ studentSchema.index({ fullName: 'text', rollNumber: 'text', email: 'text', phone
 // Standard lookup indexes
 studentSchema.index({ phone: 1 });
 studentSchema.index({ email: 1 });
+studentSchema.index({ fullName: 1 });
 studentSchema.index({ branch: 1, semester: 1 });
+studentSchema.index({ branch: 1, semester: 1, section: 1 });
+studentSchema.index({ rollNumber: 1, fullName: 1 });
 
 module.exports = mongoose.model('Student', studentSchema);
