@@ -30,7 +30,8 @@ const eventCertificateSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
+      default: null,
       index: true,
     },
     participantName: {
@@ -104,7 +105,11 @@ const eventCertificateSchema = new mongoose.Schema(
       default: null,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    autoIndex: false,
+    autoCreate: false,
+  }
 );
 
 // Unique compound index preventing duplicate active certificates of the same type for a student in an event

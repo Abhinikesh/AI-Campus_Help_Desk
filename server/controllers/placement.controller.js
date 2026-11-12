@@ -390,7 +390,8 @@ exports.getStudentProfileById = async (req, res, next) => {
     }
 
     // Role check: Admin, Placement Officer, or Coordinator
-    if (req.user.role === 'student' && student.user.toString() !== req.user._id.toString()) {
+    const studentUserId = student.user?._id ? student.user._id.toString() : student.user?.toString();
+    if (req.user.role === 'student' && (!studentUserId || studentUserId !== req.user._id.toString())) {
       throw new ApiError(403, 'Access denied: Cross-profile access is strictly prohibited');
     }
 

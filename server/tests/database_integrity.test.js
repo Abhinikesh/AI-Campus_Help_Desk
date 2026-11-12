@@ -40,10 +40,10 @@ test('Part 4 Database Integrity & Schema Verification Suite', async (t) => {
     await mongoose.connect(ISOLATED_TEST_DB);
     assert.equal(mongoose.connection.db.databaseName, 'campus-erp-test-isolated');
 
-    // Clean all collections in test database
+    // Clean all collections in test database (drop to prevent IndexKeySpecsConflict from stale indexes)
     const collections = await mongoose.connection.db.collections();
     for (const coll of collections) {
-      await coll.deleteMany({});
+      await coll.drop().catch(() => {});
     }
 
     // 1. Create Student User & Profile

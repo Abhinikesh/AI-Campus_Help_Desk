@@ -58,7 +58,13 @@ function runSuite(file) {
       console.log(`${ok ? '✅' : '❌'} [${status}] ${file} (${duration}s) — ${passed} passed, ${failed} failed`);
 
       if (!ok) {
-        console.error(`   Error details:`, stderr.slice(0, 300) || stdout.slice(0, 300));
+        console.error(`   Error details for ${file}:`);
+        if (stderr.trim()) {
+          console.error(`   [STDERR]\n${stderr.trim()}`);
+        }
+        if (stdout.trim()) {
+          console.error(`   [STDOUT]\n${stdout.trim()}`);
+        }
       }
 
       resolve({ file, status, ok, passed, failed, duration });

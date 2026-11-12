@@ -1348,7 +1348,7 @@ exports.issueCertificate = async (req, res) => {
       certificateNumber: certNumber,
       event: event._id,
       student: student._id,
-      user: student.user ? student.user._id : req.user._id,
+      user: student.user ? (student.user._id || student.user) : null,
       participantName: student.fullName,
       studentRollNumber: student.rollNumber,
       eventTitle: event.title,
@@ -1363,9 +1363,10 @@ exports.issueCertificate = async (req, res) => {
 
     // Notify student
     try {
-      if (student.user) {
+      const recipientId = student.user?._id || student.user;
+      if (recipientId) {
         await notificationService.createNotification({
-          recipient: student.user._id,
+          recipient: recipientId,
           title: 'Certificate Issued!',
           message: `Your ${certificateType} certificate for "${event.title}" is ready. Certificate #: ${certNumber}`,
           category: 'event',
