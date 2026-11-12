@@ -51,3 +51,7 @@ pnpm-debug.log*
 
 # Private student import datasets — never commit
 /data/student_import/
+
+# Database backups — never commit
+server/backups/
+backups/
