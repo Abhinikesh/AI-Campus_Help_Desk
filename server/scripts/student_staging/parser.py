@@ -343,11 +343,67 @@ def parse_student_master_sheet(rows: List[List[Any]], batch_id: str) -> Tuple[Li
 
     return records, errors
 
+def normalize_header_name(val: Any) -> str:
+    """Normalizes header string for alias comparison: lowercase, alphanumeric and % only."""
+    if val is None:
+        return ""
+    s = str(val).strip().lower()
+    s = re.sub(r"[^\w\s%]", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+def build_admission_header_map(header_row: List[Any]) -> Dict[str, int]:
+    """Header-driven column mapper for Admission Records (Standard and Migration)."""
+    mapping: Dict[str, int] = {}
+    for idx, h in enumerate(header_row):
+        nh = normalize_header_name(h)
+        if not nh:
+            continue
+        # Excluded privacy columns (password, credentials)
+        if any(p in nh for p in ["password", "credential", "pwd"]):
+            continue
+        if any(k in nh for k in ["application no", "application number", "app no", "application"]):
+            if "application_number" not in mapping:
+                mapping["application_number"] = idx
+        elif any(k in nh for k in ["student name", "students name", "applicant name", "name"]):
+            if "student_name" not in mapping:
+                mapping["student_name"] = idx
+        elif any(k in nh for k in ["course", "program", "programme", "branch"]):
+            if "course" not in mapping:
+                mapping["course"] = idx
+        elif any(k in nh for k in ["school", "faculty", "department"]):
+            if "school" not in mapping:
+                mapping["school"] = idx
+        elif any(k in nh for k in ["email id", "email", "email_id", "mail"]):
+            if "email" not in mapping:
+                mapping["email"] = idx
+        elif any(k in nh for k in ["teams id", "teams", "teams_id"]):
+            if "teams_id" not in mapping:
+                mapping["teams_id"] = idx
+        elif any(k in nh for k in ["date of reporting", "reporting date"]):
+            if "date_of_reporting" not in mapping:
+                mapping["date_of_reporting"] = idx
+    return mapping
+
+def is_admission_sub_header(row: List[Any]) -> bool:
+    """Detects embedded admission sub-headers (e.g. Migration Sub-Header at Row 845)."""
+    row_str = " ".join(str(c or "").strip() for c in row).strip().upper()
+    return "APPLICATION" in row_str and (
+        "STUDENT NAME" in row_str or "DATE OF REPORTING" in row_str or "APPLICANT" in row_str
+    )
+
+def is_admission_divider_row(row: List[Any]) -> bool:
+    """Detects divider rows, section banners, or empty tables."""
+    row_str = " ".join(str(c or "").strip() for c in row).strip()
+    if not row_str:
+        return True
+    return bool(re.search(r"(sheet\s*\d+|table\s*\d+|migration\s*:|lateral\s*entry)", row_str, re.IGNORECASE))
+
 def parse_admission_records_sheet(rows: List[List[Any]], batch_id: str) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Parses 'Admission Records' sheet:
-    - Filters divider rows (rows 841-845)
-    - Detects shifted columns for Migration students (rows 846-849)
+    - Uses header-driven column mapping via build_admission_header_map
+    - Detects and adapts to embedded sub-headers (e.g. Migration sub-header at Row 845)
+    - Excludes divider rows (e.g. rows 841-844) and sub-headers from applicant emission
     - Drops Admission Passwords / credentials permanently
     - Retains duplicate application numbers safely
     """
@@ -357,51 +413,34 @@ def parse_admission_records_sheet(rows: List[List[Any]], batch_id: str) -> Tuple
     if not rows or len(rows) < 2:
         return records, errors
 
+    active_map = build_admission_header_map(rows[0])
+
     for row_idx, row in enumerate(rows[1:], start=2):
         if is_row_completely_empty(row):
             continue
 
-        first_val = str(row[0]).strip() if len(row) > 0 and row[0] is not None else ""
-        second_val = str(row[1]).strip() if len(row) > 1 and row[1] is not None else ""
-
-        # Section Divider / Title / Sub-header detection (e.g. 'Migration Students', sub-headers)
-        if (
-            "MIGRATION" in first_val.upper()
-            or "LATERAL ENTRY" in first_val.upper()
-            or "SECTION" in first_val.upper()
-            or "APPLICATION NO" in first_val.upper()
-            or "APPLICATION NO" in second_val.upper()
-            or "APPLICANT NAME" in second_val.upper()
-            or "STUDENT NAME" in second_val.upper()
-            or "DATE OF REPORTING" in first_val.upper()
-            or "REPORTING DATE" in first_val.upper()
-        ):
+        if is_admission_sub_header(row):
+            active_map = build_admission_header_map(row)
             continue
 
-        # Column Shift Detection for Migration Students (Rows 846-849)
-        # In shifted migration rows, Col 2 contains a date ('Date of Reporting'),
-        # pushing Application No into Col 3 and Student Name into Col 4.
-        is_shifted = False
-        date_pattern = re.compile(r"^\d{1,4}[-/]\d{1,2}[-/]\d{1,4}")
-        if len(row) > 2 and row[1] is not None and date_pattern.match(str(row[1]).strip()):
-            is_shifted = True
+        if is_admission_divider_row(row):
+            continue
 
-        if is_shifted:
-            reporting_date = str(row[1]).strip() if row[1] is not None else None
-            app_no = str(row[2]).strip() if len(row) > 2 and row[2] is not None else None
-            name = str(row[3]).strip() if len(row) > 3 and row[3] is not None else None
-            course = str(row[4]).strip() if len(row) > 4 and row[4] is not None else None
-            school = str(row[5]).strip() if len(row) > 5 and row[5] is not None else None
-            email = str(row[6]).strip() if len(row) > 6 and row[6] is not None else None
-            teams_id = str(row[7]).strip() if len(row) > 7 and row[7] is not None else None
-        else:
-            app_no = str(row[0]).strip() if len(row) > 0 and row[0] is not None else None
-            name = str(row[1]).strip() if len(row) > 1 and row[1] is not None else None
-            course = str(row[2]).strip() if len(row) > 2 and row[2] is not None else None
-            school = str(row[3]).strip() if len(row) > 3 and row[3] is not None else None
-            email = str(row[4]).strip() if len(row) > 4 and row[4] is not None else None
-            teams_id = str(row[5]).strip() if len(row) > 5 and row[5] is not None else None
-            reporting_date = str(row[6]).strip() if len(row) > 6 and row[6] is not None else None
+        def get_val(key: str) -> Optional[str]:
+            if key in active_map and active_map[key] < len(row):
+                v = row[active_map[key]]
+                if v is not None:
+                    s = str(v).strip()
+                    return s if s != "" else None
+            return None
+
+        app_no = get_val("application_number")
+        name = get_val("student_name")
+        course = get_val("course")
+        school = get_val("school")
+        email = get_val("email")
+        teams_id = get_val("teams_id")
+        reporting_date = get_val("date_of_reporting")
 
         # Mandatory Validation: applicationNumber and studentName must not be empty
         if not app_no or not name:
@@ -427,14 +466,6 @@ def parse_admission_records_sheet(rows: List[List[Any]], batch_id: str) -> Tuple
         })
 
     return records, errors
-
-def normalize_header_name(val: Any) -> str:
-    """Normalizes header string for alias comparison: lowercase, alphanumeric and % only."""
-    if val is None:
-        return ""
-    s = str(val).strip().lower()
-    s = re.sub(r"[^\w\s%]", " ", s)
-    return re.sub(r"\s+", " ", s).strip()
 
 def build_internship_header_map(header_row: List[Any]) -> Dict[str, int]:
     """Header-driven column mapper for Internship Records."""

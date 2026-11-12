@@ -106,35 +106,37 @@ def generate_synthetic_workbook(output_path: str) -> str:
     ])
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Sheet 2: Admission Records
+    # Sheet 2: Admission Records (Authentic Multi-Column Layout)
     # ─────────────────────────────────────────────────────────────────────────
     ws_adm = wb.create_sheet("Admission Records")
     adm_headers = [
-        "Application No", "Student Name", "Course", "School",
-        "Email", "Teams ID", "Date of Reporting", "Admit Password"
+        "S.no", "Application No", "Student Name", "Course", "SCHOOL",
+        "Email Id", "Teams -id", "Admit Password"
     ]
     ws_adm.append(adm_headers)
 
     # Standard clean records
-    ws_adm.append(["APP-2021-001", "Aarav Sharma", "B.Tech CSE", "SOET", "aarav@adm.edu", "aarav@teams.edu", "2021-08-15", "SECRET_PW_1"])
-    ws_adm.append(["APP-2021-002", "Bhavya Patel", "B.Tech AIML", "SOET", "bhavya@adm.edu", "bhavya@teams.edu", "2021-08-16", "SECRET_PW_2"])
+    ws_adm.append([1, "APP-2021-001", "Aarav Sharma", "B.Tech CSE", "SOET", "aarav@adm.edu", "aarav@teams.edu", "SECRET_PW_1"])
+    ws_adm.append([2, "APP-2021-002", "Bhavya Patel", "B.Tech AIML", "SOET", "bhavya@adm.edu", "bhavya@teams.edu", "SECRET_PW_2"])
 
     # Duplicate Application Number Pair (preserves authentic duplicates)
-    ws_adm.append(["APP-2021-DUP", "Deepak Gupta (Entry 1)", "B.Tech CSE", "SOET", "deepak1@adm.edu", "deepak@teams.edu", "2021-08-17", "SECRET_PW_3"])
-    ws_adm.append(["APP-2021-DUP", "Deepak Gupta (Entry 2)", "B.Tech CSE", "SOET", "deepak2@adm.edu", "deepak@teams.edu", "2021-08-18", "SECRET_PW_4"])
+    ws_adm.append([3, "APP-2021-DUP", "Deepak Gupta (Entry 1)", "B.Tech CSE", "SOET", "deepak1@adm.edu", "deepak@teams.edu", "SECRET_PW_3"])
+    ws_adm.append([4, "APP-2021-DUP", "Deepak Gupta (Entry 2)", "B.Tech CSE", "SOET", "deepak2@adm.edu", "deepak@teams.edu", "SECRET_PW_4"])
 
-    # Divider Rows (simulating rows 841-845 in authentic workbook)
-    ws_adm.append(["Migration Students - Academic Session 2021", None, None, None, None, None, None, None])
-    ws_adm.append(["Section Header: Lateral Transfers", None, None, None, None, None, None, None])
-    ws_adm.append(["Date of Reporting", "Application No", "Student Name", "Course", "School", "Email", "Teams ID", "Admit Password"])
+    # Divider Rows (simulating rows 841-844 in authentic workbook)
+    ws_adm.append(["Sheet5: Table 1", None, None, None, None, None, None, None])
+    ws_adm.append(["Migration: Table 1", None, None, None, None, None, None, None])
+
+    # Migration Sub-Header Row (simulating Row 845 in authentic workbook)
+    ws_adm.append(["S.no", "Date of Reporting", "Application No", "Student Name", "Course", "SCHOOL", "Email Id", "Source Row"])
 
     # Shifted Column Rows for Migration Students (simulating rows 846-849)
-    # Col 1 is empty or s.no, Col 2 is Date, Col 3 is Application No, Col 4 is Student Name...
+    # Col 0 is S.no, Col 1 is Date of Reporting, Col 2 is Application No, Col 3 is Student Name...
     ws_adm.append([
-        None, "2021-09-01", "APP-2021-MIG1", "Manish Rao", "B.Tech CSE", "SOET", "manish@adm.edu", "manish@teams.edu"
+        1, "2021-09-01", "APP-2021-MIG1", "Manish Rao", "B.Tech CSE", "SOET", "manish@adm.edu", "manish@teams.edu"
     ])
     ws_adm.append([
-        None, "2021-09-02", "APP-2021-MIG2", "Neha Joshi", "B.Tech AIML", "SOET", "neha@adm.edu", "neha@teams.edu"
+        2, "2021-09-02", "APP-2021-MIG2", "Neha Joshi", "B.Tech AIML", "SOET", "neha@adm.edu", "neha@teams.edu"
     ])
 
     # ─────────────────────────────────────────────────────────────────────────

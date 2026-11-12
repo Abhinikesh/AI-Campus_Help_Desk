@@ -274,6 +274,69 @@ class TestStudentStagingPipeline(unittest.TestCase):
 
         self.assertEqual(hash1, hash2, "Repeated parser runs must produce byte-for-byte identical output")
 
+    # 14. Phase 3.4B: Comprehensive 10-Scenario Admission Parser Verification
+    def test_admission_ten_scenarios(self):
+        admissions = self.parsed_data["records"]["admissionApplications"]
+
+        # Scenario 1: Standard applicant row mapping
+        aarav_adm = next((a for a in admissions if a["applicationNumber"] == "APP-2021-001"), None)
+        self.assertIsNotNone(aarav_adm)
+        self.assertEqual(aarav_adm["studentName"], "Aarav Sharma")
+        self.assertEqual(aarav_adm["course"], "B.Tech CSE")
+        self.assertEqual(aarav_adm["school"], "SOET")
+        self.assertEqual(aarav_adm["email"], "aarav@adm.edu")
+        self.assertEqual(aarav_adm["teamsId"], "aarav@teams.edu")
+
+        # Scenario 2: S.no in Col 0 is not confused with Application No
+        self.assertNotEqual(aarav_adm["applicationNumber"], "1")
+        self.assertNotEqual(aarav_adm["studentName"], "APP-2021-001")
+
+        # Scenario 3: Duplicate application number preservation
+        dup_apps = [a for a in admissions if a["applicationNumber"] == "APP-2021-DUP"]
+        self.assertEqual(len(dup_apps), 2)
+        self.assertEqual(dup_apps[0]["studentName"], "Deepak Gupta (Entry 1)")
+        self.assertEqual(dup_apps[1]["studentName"], "Deepak Gupta (Entry 2)")
+
+        # Scenario 4: Divider banner exclusion (e.g. 'Sheet5: Table 1', 'Migration: Table 1')
+        for a in admissions:
+            self.assertFalse("Sheet5" in (a["applicationNumber"] or ""))
+            self.assertFalse("Migration: Table 1" in (a["applicationNumber"] or ""))
+
+        # Scenario 5: Migration sub-header exclusion (Row with 'Date of Reporting', 'Application No')
+        for a in admissions:
+            self.assertNotEqual((a["studentName"] or "").upper(), "STUDENT NAME")
+            self.assertNotEqual((a["applicationNumber"] or "").upper(), "APPLICATION NO")
+
+        # Scenario 6 & 7: Shifted column migration students correctly mapped
+        mig1 = next((a for a in admissions if a["applicationNumber"] == "APP-2021-MIG1"), None)
+        self.assertIsNotNone(mig1)
+        self.assertEqual(mig1["studentName"], "Manish Rao")
+        self.assertEqual(mig1["course"], "B.Tech CSE")
+        self.assertEqual(mig1["school"], "SOET")
+        self.assertEqual(mig1["dateOfReporting"], "2021-09-01")
+
+        # Scenario 8: Privacy protection - Admit Password is never extracted
+        for a in admissions:
+            self.assertNotIn("admitPassword", a)
+            self.assertNotIn("password", a)
+            self.assertNotIn("SECRET_PW", str(a))
+
+        # Scenario 9: Total authentic count in synthetic fixture = 6
+        # (2 standard + 2 duplicate + 2 migration)
+        self.assertEqual(len(admissions), 6)
+
+        # Scenario 10: Missing mandatory fields fail safely, and blank rows are skipped
+        from parser import parse_admission_records_sheet
+        malformed_sheet = [
+            ["S.no", "Application No", "Student Name", "Course"],
+            [1, "", "Missing App No", "CSE"],
+            [2, "APP-999", "", "CSE"],
+            [None, None, None, None],
+        ]
+        recs, errs = parse_admission_records_sheet(malformed_sheet, "BATCH-ERR-TEST")
+        self.assertEqual(len(recs), 0)
+        self.assertEqual(len(errs), 2)
+
 if __name__ == "__main__":
     unittest.main()
 
