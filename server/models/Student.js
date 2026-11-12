@@ -173,13 +173,17 @@ const studentSchema = new mongoose.Schema(
   }
 );
 
-// Intended partial unique index for user (Enforced in MongoDB via migration script)
+// Intended partial unique index for user (Enforced in MongoDB via migration script).
+// Permanent canonical name is 'user_partial_1' so the zero-gap migration can build
+// it alongside the legacy 'user_1' index without triggering IndexOptionsConflict
+// (MongoDB error code 85). MongoDB query plans use key patterns, not index names,
+// so this rename has zero query-planner impact.
 studentSchema.index(
   { user: 1 },
   {
     unique: true,
     partialFilterExpression: { user: { $type: 'objectId' } },
-    name: 'user_1',
+    name: 'user_partial_1',
   }
 );
 
