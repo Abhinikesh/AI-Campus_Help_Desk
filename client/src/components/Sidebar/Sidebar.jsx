@@ -40,9 +40,6 @@ const NAV_CONFIG = {
     { label: 'Activities & Clubs', icon: Sparkles,        to: '/admin/activities'    },
     { label: 'Assets & Supplies',  icon: Boxes,           to: '/faculty/inventory'   },
     { label: 'Student Results',    icon: BarChart2,       to: '/faculty/results'     },
-    { label: 'Academic Drive',     icon: Folder,          to: '/faculty/drive'       },
-    { label: 'Complaints',         icon: Flag,            to: '/faculty/complaints'  },
-    { label: 'AI Help Desk',       icon: MessageCircle,   to: '/faculty/ai-help'     },
   ],
   admin: [
     { label: 'Dashboard',          icon: LayoutDashboard, to: '/admin/dashboard'     },
@@ -143,7 +140,7 @@ const NAV_CONFIG = {
   employee: [
     { label: 'HR Self-Service',    icon: Users,           to: '/employee/self-service'},
     { label: 'Notifications',      icon: Bell,            to: '/notifications'       },
-    { label: 'AI Help Desk',       icon: MessageCircle,   to: '/faculty/ai-help'     },
+    { label: 'AI Help Desk',       icon: MessageCircle,   to: '/admin/ai-help'       },
   ],
   parent: [
     { label: 'Dashboard',          icon: LayoutDashboard, to: '/parent/dashboard'    },

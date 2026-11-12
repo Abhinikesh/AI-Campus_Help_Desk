@@ -143,10 +143,11 @@ const App = () => (
             element={<ProtectedRoute role="faculty"><FacultyTimetable /></ProtectedRoute>} />
           <Route path="/faculty/results"
             element={<ProtectedRoute role="faculty"><FacultyResults /></ProtectedRoute>} />
+          {/* ── Faculty Modules with Access Removed (Redirects to Faculty Dashboard) ── */}
           <Route path="/faculty/complaints"
-            element={<ProtectedRoute role="faculty"><Complaints /></ProtectedRoute>} />
+            element={<ProtectedRoute role={[]}><Complaints /></ProtectedRoute>} />
           <Route path="/faculty/drive"
-            element={<ProtectedRoute role="faculty"><StudentDrive /></ProtectedRoute>} />
+            element={<ProtectedRoute role={[]}><StudentDrive /></ProtectedRoute>} />
           <Route path="/faculty/inventory"
             element={<ProtectedRoute role="faculty"><FacultyInventory /></ProtectedRoute>} />
           <Route path="/faculty/hr"
@@ -154,7 +155,7 @@ const App = () => (
           <Route path="/employee/self-service"
             element={<ProtectedRoute role={['faculty', 'employee', 'department_head', 'hr_officer', 'hr_admin']}><FacultyHR /></ProtectedRoute>} />
           <Route path="/faculty/ai-help"
-            element={<ProtectedRoute role="faculty"><AIHelpDesk /></ProtectedRoute>} />
+            element={<ProtectedRoute role={[]}><AIHelpDesk /></ProtectedRoute>} />
 
           {/* ── Admin ── */}
           <Route path="/admin/dashboard"

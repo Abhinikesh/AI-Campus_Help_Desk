@@ -6,7 +6,7 @@ import Sidebar from '../../components/Sidebar/Sidebar';
 import { facultyService } from '../../services/faculty.service';
 import {
   LayoutDashboard, BookOpen, CalendarCheck, Users, Megaphone,
-  Folder, Flag, MessageCircle, LogOut, Bell, ChevronRight,
+  LogOut, Bell, ChevronRight,
   GraduationCap, X, Loader2, Search, ArrowRight
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
@@ -18,9 +18,6 @@ const NAV = [
   { label: 'Attendance Mgmt',      icon: CalendarCheck,   to: '/faculty/attendance' },
   { label: 'Student Results',      icon: Users,           to: '/faculty/results'    },
   { label: 'Announcements',        icon: Megaphone,       to: '#'                   },
-  { label: 'Academic Drive',       icon: Folder,          to: '/faculty/drive'      },
-  { label: 'Complaints',           icon: Flag,            to: '/faculty/complaints' },
-  { label: 'AI Help Desk',         icon: MessageCircle,   to: '/faculty/ai-help'    },
 ];
 
 const initials = (name = '') =>
@@ -312,7 +309,7 @@ const FacultyDashboard = () => {
                 {[
                   { label: 'Attendance Records', to: '/faculty/attendance', desc: 'Review and update student presence' },
                   { label: 'Results Portal',     to: '/faculty/results',    desc: 'Submit internal and semester marks' },
-                  { label: 'Student Complaints', to: '/faculty/complaints', desc: 'Review academic grievances' },
+                  { label: 'Student Directory',  to: '/faculty/students',   desc: 'Search and inspect Student 360 profiles' },
                 ].map(({ label, to, desc }) => (
                   <Link key={label} to={to} className="ds-quicklink" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>

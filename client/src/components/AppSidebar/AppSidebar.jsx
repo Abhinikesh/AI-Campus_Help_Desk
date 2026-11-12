@@ -28,9 +28,6 @@ const FACULTY_NAV = [
   { label: 'Attendance',     icon: CalendarCheck,   to: '/faculty/attendance'          },
   { label: 'Timetable',      icon: Clock,           to: '/faculty/timetable'           },
   { label: 'Student Results',icon: BarChart2,        to: '/faculty/results'             },
-  { label: 'Drive',          icon: Folder,          to: '/faculty/drive'               },
-  { label: 'Complaints',     icon: Flag,            to: '/faculty/complaints'          },
-  { label: 'AI Help Desk',   icon: MessageCircle,   to: '/faculty/ai-help'             },
 ];
 
 const ADMIN_NAV = [

@@ -10,7 +10,7 @@ import AttendanceSummaryCard from '../../components/AttendanceShared/AttendanceS
 import EmptyState from '../../components/AttendanceShared/EmptyState';
 import {
   GraduationCap, LayoutDashboard, BookOpen, CalendarCheck, Users,
-  Megaphone, Folder, Flag, MessageCircle, LogOut, Plus, Clock,
+  Megaphone, LogOut, Plus, Clock,
   Camera, ArrowRight, BarChart2, CheckCircle2, ChevronRight, X
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
@@ -21,9 +21,6 @@ const NAV = [
   { label: 'Attendance Mgmt',  icon: CalendarCheck,   to: '/faculty/attendance' },
   { label: 'Student Results',  icon: Users,           to: '/faculty/results'    },
   { label: 'Announcements',    icon: Megaphone,       to: '/faculty/dashboard'  },
-  { label: 'Academic Drive',   icon: Folder,          to: '/faculty/drive'      },
-  { label: 'Complaints',       icon: Flag,            to: '/faculty/complaints' },
-  { label: 'AI Help Desk',     icon: MessageCircle,   to: '/faculty/ai-help'    },
 ];
 
 const initials = (name = '') =>
