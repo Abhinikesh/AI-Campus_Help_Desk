@@ -17,7 +17,7 @@ const mongoose = require('mongoose');
 const BATCH_ID = 'BATCH-20261112-STAGING-003';
 
 const IMPORT_STATUSES = ['PENDING_MAPPING', 'MAPPED', 'IMPORTED', 'CANCELLED'];
-const FILE_TYPES      = ['csv', 'xlsx'];
+const FILE_TYPES      = ['csv', 'xlsx', 'json'];
 
 /**
  * Column-mapping sub-document.

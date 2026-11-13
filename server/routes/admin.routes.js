@@ -54,6 +54,8 @@ const {
 
 const {
   uploadRegisterFile,
+  listLocalRegisterFiles,
+  loadLocalRegisterFile,
   previewColumnMapping,
   executeImport,
   getImportList,
@@ -117,8 +119,10 @@ router.get('/staging/promotion/preview/:rollNumber',       getPromotionPreview);
 router.post('/staging/promotion/:rollNumber',              promoteStudent);
 router.get('/staging/promotion/history',                   getPromotionHistory);
 
-// ── Phase 3.9A: Official Enrollment Register Import & Reconciliation ──────────
+// ── Phase 3.9A/B: Official Enrollment Register Import & Reconciliation ────────
 // multer upload middleware applied only to the file-upload endpoint.
+router.get('/staging/register/local-files',                  listLocalRegisterFiles);
+router.post('/staging/register/load-local',                  loadLocalRegisterFile);
 router.post('/staging/register/upload',                      upload.single('file'), uploadRegisterFile);
 router.post('/staging/register/preview/:importId',           previewColumnMapping);
 router.post('/staging/register/import/:importId',            executeImport);

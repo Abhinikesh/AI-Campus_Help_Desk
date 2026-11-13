@@ -12,7 +12,7 @@
 const multer = require('multer');
 const path   = require('path');
 
-const ALLOWED_EXTENSIONS = new Set(['.csv', '.xlsx', '.xls']);
+const ALLOWED_EXTENSIONS = new Set(['.csv', '.xlsx', '.xls', '.json']);
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 const upload = multer({
@@ -24,7 +24,7 @@ const upload = multer({
       cb(null, true);
     } else {
       cb(
-        Object.assign(new Error('Only CSV and XLSX files are allowed.'), { status: 400 }),
+        Object.assign(new Error('Only CSV, XLSX, and JSON files are allowed.'), { status: 400 }),
         false
       );
     }

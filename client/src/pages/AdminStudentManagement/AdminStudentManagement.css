@@ -1192,3 +1192,25 @@ tr.sm-row-selected td {
 .sm-register-preview {
   margin-top: 4px;
 }
+
+/* Local file picker card in register tab */
+.sm-local-picker-card {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed #E5E7EB;
+}
+.sm-local-picker-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+.sm-local-picker-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}

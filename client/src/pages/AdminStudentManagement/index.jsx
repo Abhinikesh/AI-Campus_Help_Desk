@@ -875,10 +875,45 @@ function RegisterImportTab() {
   const [importList, setImportList]         = useState([]);
   const [importListLoading, setImportListLoading] = useState(false);
 
-  // Load history on mount
+  // ── Local files in data/student_import/ ──
+  const [localFiles, setLocalFiles]                 = useState([]);
+  const [selectedLocalFile, setSelectedLocalFile]   = useState('');
+  const [localFilesLoading, setLocalFilesLoading]   = useState(false);
+
+  // Load history and local files on mount
   useEffect(() => {
     loadImportHistory();
+    loadLocalFiles();
   }, []);
+
+  async function loadLocalFiles() {
+    setLocalFilesLoading(true);
+    try {
+      const data = await adminService.listLocalRegisterFiles();
+      setLocalFiles(data.files || []);
+      if (data.files && data.files.length > 0) {
+        setSelectedLocalFile(data.files[0].filename);
+      }
+    } catch { /* silent */ }
+    setLocalFilesLoading(false);
+  }
+
+  async function handleLoadLocal() {
+    if (!selectedLocalFile) { setUploadError('Please choose a local file.'); return; }
+    setUploadPhase('uploading');
+    setUploadError('');
+    try {
+      const data = await adminService.loadLocalRegisterFile(selectedLocalFile);
+      setImportId(data.importId);
+      setHeaders(data.headers || []);
+      setRowCount(data.rowCount || 0);
+      setFilename(data.filename);
+      setUploadPhase('mapping');
+    } catch (err) {
+      setUploadError(err?.response?.data?.message || 'Failed to load local file.');
+      setUploadPhase('idle');
+    }
+  }
 
   async function loadImportHistory() {
     setImportListLoading(true);
@@ -981,10 +1016,10 @@ function RegisterImportTab() {
       {uploadPhase === 'idle' && (
         <div className="ds-card sm-register-section">
           <div className="sm-register-section-title">
-            <FileText size={18} /> Upload Enrollment Register
+            <FileText size={18} /> Upload or Select Enrollment Register
           </div>
           <p className="sm-register-hint">
-            Upload an official enrollment register (CSV or XLSX, max 10 MB). Column names are mapped in the next step.
+            Upload an official enrollment register (CSV, XLSX, or JSON, max 15 MB), or choose an existing local file from <code>data/student_import/</code>. Column names are mapped in the next step.
           </p>
           <div
             className="sm-upload-zone"
@@ -994,12 +1029,12 @@ function RegisterImportTab() {
           >
             <FileText size={32} style={{ color: '#9CA3AF' }} />
             <div className="sm-upload-zone-label">
-              {selectedFile ? selectedFile.name : 'Click or drag & drop CSV / XLSX file here'}
+              {selectedFile ? selectedFile.name : 'Click or drag & drop CSV / XLSX / JSON file here'}
             </div>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".csv,.xlsx,.xls"
+              accept=".csv,.xlsx,.xls,.json"
               style={{ display: 'none' }}
               onChange={handleFileChange}
             />
@@ -1008,6 +1043,39 @@ function RegisterImportTab() {
           <button className="ds-btn-primary sm-register-upload-btn" onClick={handleUpload} disabled={!selectedFile}>
             Upload File
           </button>
+
+          {/* ── Local file picker from data/student_import/ ── */}
+          <div className="sm-local-picker-card">
+            <div className="sm-local-picker-title">
+              <BookOpen size={16} /> Or select existing file from <code>data/student_import/</code>
+            </div>
+            <div className="sm-local-picker-row">
+              <select
+                className="sm-mapping-select"
+                style={{ flex: 1, maxWidth: 450 }}
+                value={selectedLocalFile}
+                onChange={(e) => setSelectedLocalFile(e.target.value)}
+                disabled={localFilesLoading || localFiles.length === 0}
+              >
+                {localFiles.length === 0 ? (
+                  <option value="">{localFilesLoading ? 'Scanning folder…' : 'No local files available'}</option>
+                ) : (
+                  localFiles.map((f) => (
+                    <option key={f.filename} value={f.filename}>
+                      {f.filename} ({f.fileType.toUpperCase()}, {(f.size / 1024).toFixed(1)} KB)
+                    </option>
+                  ))
+                )}
+              </select>
+              <button
+                className="ds-btn-secondary"
+                onClick={handleLoadLocal}
+                disabled={!selectedLocalFile || localFilesLoading}
+              >
+                Load Local File
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

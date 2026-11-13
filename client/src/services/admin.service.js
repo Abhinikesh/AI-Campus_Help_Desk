@@ -118,7 +118,15 @@ export const adminService = {
     return response.data;
   },
 
-  // ── Phase 3.9A: Enrollment Register Import ────────────────────────────────
+  // ── Phase 3.9A/B: Enrollment Register Import ──────────────────────────────
+  listLocalRegisterFiles: async () => {
+    const response = await api.get('/api/admin/staging/register/local-files');
+    return response.data;
+  },
+  loadLocalRegisterFile: async (filename) => {
+    const response = await api.post('/api/admin/staging/register/load-local', { filename });
+    return response.data;
+  },
   uploadEnrollmentRegister: async (file) => {
     const formData = new FormData();
     formData.append('file', file);

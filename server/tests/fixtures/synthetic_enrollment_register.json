@@ -1,0 +1,84 @@
+[
+  {
+    "Roll No": "REG_MATCH_01",
+    "Student Name": "Alpha Student",
+    "Program": "B.Tech",
+    "Branch": "Computer Science",
+    "Semester": "3",
+    "Section": "A",
+    "Academic Year": "2026-27",
+    "Registration ID": "REGID-001",
+    "password": "SHOULD_BE_EXCLUDED",
+    "parentPhone": "SHOULD_BE_EXCLUDED"
+  },
+  {
+    "Roll No": "REG_MATCH_02",
+    "Student Name": "Beta Student",
+    "Program": "B.Tech",
+    "Branch": "Electronics",
+    "Semester": "3",
+    "Section": "B",
+    "Academic Year": "2026-27",
+    "Registration ID": "REGID-002"
+  },
+  {
+    "Roll No": "REG_MATCH_03",
+    "Student Name": "Gamma Student",
+    "Program": "B.Tech",
+    "Branch": "Mechanical",
+    "Semester": "5",
+    "Section": "A",
+    "Academic Year": "2026-27",
+    "Registration ID": "REGID-003"
+  },
+  {
+    "Roll No": "REG_MISMATCH_04",
+    "Student Name": "COMPLETELY WRONG NAME",
+    "Program": "B.Tech",
+    "Branch": "Computer Science",
+    "Semester": "3",
+    "Section": "A",
+    "Academic Year": "2026-27",
+    "Registration ID": "REGID-004"
+  },
+  {
+    "Roll No": "REG_UNMATCHED_05",
+    "Student Name": "Delta Unmatched",
+    "Program": "B.Tech",
+    "Branch": "Civil",
+    "Semester": "1",
+    "Section": "A",
+    "Academic Year": "2026-27",
+    "Registration ID": "REGID-005"
+  },
+  {
+    "Roll No": "9876543210",
+    "Student Name": "Phi Phone Number",
+    "Program": "B.Tech",
+    "Branch": "IT",
+    "Semester": "3",
+    "Section": "A",
+    "Academic Year": "2026-27",
+    "Registration ID": "REGID-006"
+  },
+  {
+    "Roll No": "",
+    "Student Name": "Eta NoRoll",
+    "Program": "B.Tech",
+    "Branch": "CSE",
+    "Semester": "3",
+    "Section": "A",
+    "Academic Year": "2026-27",
+    "Registration ID": "REGID-007"
+  },
+  {
+    "Roll No": "REG_MATCH_01",
+    "Student Name": "Theta Duplicate",
+    "Program": "B.Tech",
+    "Branch": "CSE",
+    "Semester": "3",
+    "Section": "A",
+    "Academic Year": "2026-27",
+    "Registration ID": "REGID-008"
+  }
+]

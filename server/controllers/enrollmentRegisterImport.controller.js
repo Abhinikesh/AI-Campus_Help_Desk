@@ -22,6 +22,8 @@
  */
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const mongoose = require('mongoose');
 const XLSX = require('xlsx');
 
@@ -37,6 +39,7 @@ const { EnrollmentVerification }
 const StudentStaging = require('../models/StudentStaging');
 
 const BATCH_ID = 'BATCH-20261112-STAGING-003';
+const LOCAL_DATA_DIR = path.resolve(__dirname, '../../data/student_import');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -51,26 +54,123 @@ function generateImportId() {
 /**
  * Derive file type from the original filename extension.
  * @param {string} filename
- * @returns {'csv'|'xlsx'}
+ * @returns {'csv'|'xlsx'|'json'}
  */
 function detectFileType(filename) {
   const lower = (filename || '').toLowerCase();
   if (lower.endsWith('.xlsx') || lower.endsWith('.xls')) return 'xlsx';
+  if (lower.endsWith('.json')) return 'json';
   return 'csv';
 }
 
+const SENSITIVE_KEY_PATTERNS = [
+  /password/i,
+  /credentials/i,
+  /parent.*phone/i,
+  /parent.*email/i,
+  /parent.*name/i,
+  /father.*name/i,
+  /mother.*name/i,
+  /marksheet.*url/i,
+];
+
+function isSensitiveKey(key) {
+  return SENSITIVE_KEY_PATTERNS.some((pattern) => pattern.test(key));
+}
+
+function extractJsonRecords(data) {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') {
+    const candidateKeys = [
+      'records',
+      'candidateIdentityGroups',
+      'students',
+      'enrollment',
+      'items',
+      'data',
+    ];
+    for (const key of candidateKeys) {
+      if (Array.isArray(data[key])) return data[key];
+    }
+    for (const key of Object.keys(data)) {
+      if (Array.isArray(data[key]) && data[key].length > 0 && typeof data[key][0] === 'object') {
+        return data[key];
+      }
+    }
+  }
+  return [];
+}
+
+function extractJsonRowsAndHeaders(parsedJson) {
+  const records = extractJsonRecords(parsedJson);
+  if (!records || records.length === 0) {
+    throw new ApiError(400, 'JSON file contains no student records array.');
+  }
+
+  const headerSet = new Set();
+  const rawRows = [];
+
+  for (const item of records) {
+    if (!item || typeof item !== 'object') continue;
+    const row = {};
+    for (const [k, v] of Object.entries(item)) {
+      if (isSensitiveKey(k)) continue;
+      if (v === null || v === undefined) {
+        row[k] = '';
+        headerSet.add(k);
+      } else if (typeof v !== 'object') {
+        row[k] = String(v).trim();
+        headerSet.add(k);
+      }
+    }
+    rawRows.push(row);
+  }
+
+  const headers = Array.from(headerSet);
+  if (headers.length === 0) {
+    throw new ApiError(400, 'Could not detect any valid column headers in JSON records.');
+  }
+
+  const rows = rawRows.map((r) => {
+    const fullRow = {};
+    let hasValue = false;
+    for (const h of headers) {
+      const val = r[h] !== undefined && r[h] !== null ? String(r[h]).trim() : '';
+      fullRow[h] = val;
+      if (val !== '') hasValue = true;
+    }
+    return hasValue ? fullRow : null;
+  }).filter(Boolean);
+
+  if (rows.length === 0) {
+    throw new ApiError(400, 'JSON file contains no populated data rows.');
+  }
+
+  return { headers, rows };
+}
+
 /**
- * Parse a file buffer (CSV or XLSX) using SheetJS.
+ * Parse a file buffer (CSV, XLSX, or JSON).
  * Returns { headers: string[], rows: Object[] }
  *
  * Each row object is keyed by header value.
  * Empty rows are discarded.
  *
  * @param {Buffer} buffer
- * @param {'csv'|'xlsx'} fileType
+ * @param {'csv'|'xlsx'|'json'} fileType
  * @returns {{ headers: string[], rows: Object[] }}
  */
 function parseFileBuffer(buffer, fileType) {
+  if (fileType === 'json') {
+    let parsedJson;
+    try {
+      parsedJson = JSON.parse(buffer.toString('utf8'));
+    } catch (err) {
+      throw new ApiError(400, `Malformed JSON: ${err.message}`);
+    }
+    return extractJsonRowsAndHeaders(parsedJson);
+  }
+
   const opts = fileType === 'csv'
     ? { type: 'buffer', raw: false, codepage: 65001 }
     : { type: 'buffer', raw: false };
@@ -691,10 +791,125 @@ const deleteImport = asyncHandler(async (req, res) => {
   res.json({ success: true, message: `Import session ${importId} deleted.` });
 });
 
+/**
+ * GET /staging/register/local-files
+ *
+ * Lists available data files in data/student_import/ for direct import.
+ */
+const listLocalRegisterFiles = asyncHandler(async (req, res) => {
+  let entries = [];
+  try {
+    entries = await fs.promises.readdir(LOCAL_DATA_DIR, { withFileTypes: true });
+  } catch {
+    return res.json({ success: true, files: [] });
+  }
+
+  const allowedExts = new Set(['.json', '.csv', '.xlsx', '.xls']);
+  const files = [];
+
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    const ext = path.extname(entry.name).toLowerCase();
+    if (!allowedExts.has(ext)) continue;
+    if (entry.name.startsWith('.')) continue;
+
+    try {
+      const stats = await fs.promises.stat(path.join(LOCAL_DATA_DIR, entry.name));
+      files.push({
+        filename: entry.name,
+        size: stats.size,
+        fileType: detectFileType(entry.name),
+        modifiedAt: stats.mtime,
+      });
+    } catch {
+      // skip
+    }
+  }
+
+  res.json({ success: true, files });
+});
+
+/**
+ * POST /staging/register/load-local
+ *
+ * Body: { filename: string }
+ *
+ * Loads an existing file directly from data/student_import/ without requiring user upload.
+ * Validates against directory traversal and creates an EnrollmentRegisterImport session.
+ */
+const loadLocalRegisterFile = asyncHandler(async (req, res) => {
+  const { filename } = req.body || {};
+  if (!filename || typeof filename !== 'string') {
+    throw new ApiError(400, 'filename is required.');
+  }
+
+  const cleanFilename = path.basename(filename.trim());
+  if (cleanFilename !== filename.trim()) {
+    throw new ApiError(400, 'Invalid filename: directory traversal is forbidden.');
+  }
+
+  const allowedExts = new Set(['.json', '.csv', '.xlsx', '.xls']);
+  const ext = path.extname(cleanFilename).toLowerCase();
+  if (!allowedExts.has(ext)) {
+    throw new ApiError(400, `Unsupported file extension: ${ext}`);
+  }
+
+  const fullPath = path.join(LOCAL_DATA_DIR, cleanFilename);
+  if (!fs.existsSync(fullPath)) {
+    throw new ApiError(404, `File "${cleanFilename}" not found in local student_import directory.`);
+  }
+
+  const buffer = await fs.promises.readFile(fullPath);
+  if (buffer.length > 15 * 1024 * 1024) {
+    throw new ApiError(400, 'File exceeds size limit of 15 MB.');
+  }
+
+  const fileType = detectFileType(cleanFilename);
+  let parsed;
+  try {
+    parsed = parseFileBuffer(buffer, fileType);
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    throw new ApiError(400, `Could not parse local file: ${err.message}`);
+  }
+
+  const { headers, rows } = parsed;
+  const importId = generateImportId();
+  const adminId   = actorId(req.user);
+  const adminName = req.user.name || req.user.email || '';
+
+  const importRecord = new EnrollmentRegisterImport({
+    batchId:             BATCH_ID,
+    importId,
+    sourceFilename:      cleanFilename,
+    sourceFileType:      fileType,
+    detectedHeaders:     headers,
+    fileBuffer:          buffer,
+    importedByAdminId:   adminId,
+    importedByAdminName: adminName,
+    status:              'PENDING_MAPPING',
+    summaryNotes:        `Loaded from local student_import: ${cleanFilename}`,
+  });
+
+  await importRecord.save();
+
+  res.status(201).json({
+    success: true,
+    importId,
+    headers,
+    rowCount: rows.length,
+    filename: cleanFilename,
+    fileType,
+    isLocal: true,
+  });
+});
+
 // ─── Exports ──────────────────────────────────────────────────────────────────
 
 module.exports = {
   uploadRegisterFile,
+  listLocalRegisterFiles,
+  loadLocalRegisterFile,
   previewColumnMapping,
   executeImport,
   getImportList,
