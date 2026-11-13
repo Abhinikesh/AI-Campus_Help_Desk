@@ -657,3 +657,146 @@ tr.sm-row-selected {
   padding: 1px 8px;
 }
 
+/* ─── Phase 3.7: Main Nav Tabs ──────────────────────────────────────────── */
+.sm-main-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #E2E8F0;
+  padding-bottom: 0;
+}
+
+.sm-main-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748B;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.sm-main-tab-btn:hover {
+  color: #1E293B;
+  background: #F8FAFC;
+}
+
+.sm-main-tab-btn.active {
+  color: #2563EB;
+  border-bottom-color: #2563EB;
+  background: #EFF6FF;
+  border-radius: 6px 6px 0 0;
+}
+
+/* ─── Phase 3.7: Verification Form & History ────────────────────────────── */
+.sm-form-group {
+  margin-bottom: 14px;
+}
+
+.sm-form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.sm-form-label-required {
+  color: #EF4444;
+  margin-left: 3px;
+}
+
+.sm-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #E2E8F0;
+}
+
+.sm-action-btn-verify {
+  background: #16A34A !important;
+  color: #FFFFFF !important;
+  border: 1px solid #15803D !important;
+}
+.sm-action-btn-verify:hover:not(:disabled) {
+  background: #15803D !important;
+}
+
+.sm-action-btn-reject {
+  background: #DC2626 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #B91C1C !important;
+}
+.sm-action-btn-reject:hover:not(:disabled) {
+  background: #B91C1C !important;
+}
+
+.sm-action-btn-review {
+  background: #D97706 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #B45309 !important;
+}
+.sm-action-btn-review:hover:not(:disabled) {
+  background: #B45309 !important;
+}
+
+.sm-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.sm-history-card {
+  padding: 10px 12px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.sm-history-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.sm-history-actor {
+  font-weight: 600;
+  color: #334155;
+}
+
+.sm-history-time {
+  font-size: 11px;
+  color: #94A3B8;
+}
+
+.sm-history-detail {
+  color: #475569;
+  margin-top: 4px;
+}
+
+.sm-warning-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #92400E;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+
