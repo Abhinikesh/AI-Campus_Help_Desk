@@ -45,6 +45,13 @@ const {
   requestReview,
 } = require('../controllers/enrollmentVerification.controller');
 
+const {
+  getPromotionStats,
+  getPromotionPreview,
+  promoteStudent,
+  getPromotionHistory,
+} = require('../controllers/studentPromotion.controller');
+
 const authMiddleware = require('../middleware/auth.middleware');
 const { allowRoles } = require('../middleware/role.middleware');
 
@@ -89,5 +96,11 @@ router.patch('/staging/enrollment/:rollNumber/evidence',   recordEvidence);
 router.patch('/staging/enrollment/:rollNumber/approve',    approveVerification);
 router.patch('/staging/enrollment/:rollNumber/reject',     rejectVerification);
 router.patch('/staging/enrollment/:rollNumber/review',     requestReview);
+
+// ── Phase 3.8: Controlled Verified Student Promotion ────────────────────────
+router.get('/staging/promotion/stats',                     getPromotionStats);
+router.get('/staging/promotion/preview/:rollNumber',       getPromotionPreview);
+router.post('/staging/promotion/:rollNumber',              promoteStudent);
+router.get('/staging/promotion/history',                   getPromotionHistory);
 
 module.exports = router;

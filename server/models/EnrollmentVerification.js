@@ -34,6 +34,7 @@ const AUDIT_ACTIONS = [
   'APPROVED',
   'REJECTED',
   'REVIEW_REQUESTED',
+  'PROMOTED',
 ];
 
 // ── Audit history entry sub-schema ───────────────────────────────────────────
@@ -113,6 +114,21 @@ const enrollmentVerificationSchema = new mongoose.Schema(
     reviewerRemarks:   { type: String, default: '' },
     verifiedAt: { type: Date, default: null },
 
+    // ── Promotion Tracking (Phase 3.8) ────────────────────────────────────────
+    isPromoted: { type: Boolean, default: false },
+    promotedStudentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Student',
+      default: null,
+    },
+    promotedAt: { type: Date, default: null },
+    promotedByAdminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    promotedByAdminName: { type: String, default: null },
+
     // ── Immutable audit trail ─────────────────────────────────────────────────
     auditHistory: { type: [auditEntrySchema], default: [] },
   },
@@ -132,6 +148,7 @@ enrollmentVerificationSchema.index(
 enrollmentVerificationSchema.index({ batchId: 1 }, { name: 'ev_batchId' });
 enrollmentVerificationSchema.index({ verificationStatus: 1 }, { name: 'ev_status' });
 enrollmentVerificationSchema.index({ reviewerAdminId: 1 }, { name: 'ev_reviewer' });
+enrollmentVerificationSchema.index({ isPromoted: 1 }, { name: 'ev_isPromoted' });
 
 // ── Static helper: append one audit entry ────────────────────────────────────
 

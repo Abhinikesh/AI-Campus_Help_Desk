@@ -97,4 +97,24 @@ export const adminService = {
     );
     return response.data;
   },
+
+  // Phase 3.8: Controlled Verified Student Promotion
+  getPromotionStats: async () => {
+    const response = await api.get('/api/admin/staging/promotion/stats');
+    return response.data;
+  },
+  getPromotionPreview: async (rollNumber) => {
+    const response = await api.get(`/api/admin/staging/promotion/preview/${encodeURIComponent(rollNumber)}`);
+    return response.data;
+  },
+  promoteStudent: async (rollNumber) => {
+    const response = await api.post(`/api/admin/staging/promotion/${encodeURIComponent(rollNumber)}`);
+    return response.data;
+  },
+  getPromotionHistory: async (rollNumber) => {
+    const response = await api.get('/api/admin/staging/promotion/history', {
+      params: { rollNumber },
+    });
+    return response.data;
+  },
 };

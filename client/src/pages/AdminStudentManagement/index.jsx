@@ -1,19 +1,23 @@
 /**
  * AdminStudentManagement/index.jsx
  *
- * Phase 3.6 & Phase 3.7 — Admin Staging Student Management & Enrollment Verification
+ * Phase 3.6, Phase 3.7 & Phase 3.8 — Admin Staging Student Management,
+ * Enrollment Verification & Controlled Promotion Workflow
  *
  * Connects to Batch 003 staging collections via secure admin-only APIs.
  * Displays:
  *  1. Staging Student Records: searchable, paginated list and rich detail panel.
  *  2. Enrollment Verification: independent registrar verification workflow,
  *     evidence recording, status actions (Verify, Reject, Request Review), and audit history.
+ *  3. Controlled Promotion Governance: promotion eligibility evaluation,
+ *     detailed preview, reasons ledger, and individual promotion confirmation modal.
  *
  * Security:
  *  - Page is only accessible via /admin/students (ProtectedRoute role="admin")
  *  - No PII (passwords, parental info) is ever displayed — the API excludes it
- *  - No production Student creation or identity merge actions
- *  - Verification requires independent evidence (Registrar rolls, fees, etc.)
+ *  - Strict promotion eligibility requires DOCUMENT_VERIFIED + independent evidence
+ *  - No automatic User creation; offline institutional Student (enrolled_offline)
+ *  - Concurrency protected & immutable audit trail recorded
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -98,16 +102,6 @@ function InfoRow({ label, value, missing = false }) {
       <span className={`sm-info-value ${missing ? 'sm-missing' : ''}`}>
         {value !== null && value !== undefined && value !== '' ? String(value) : '—'}
       </span>
-    </div>
-  );
-}
-
-function FieldComplete({ value, label }) {
-  const hasValue = value !== null && value !== undefined && value !== '';
-  return (
-    <div className={`sm-field-complete ${hasValue ? 'present' : 'absent'}`} title={label}>
-      {hasValue ? <CheckCircle size={12} /> : <XCircle size={12} />}
-      <span>{label}</span>
     </div>
   );
 }
@@ -293,7 +287,7 @@ function StudentDetailPanel({ rollNumber, onClose }) {
   );
 }
 
-// ─── Verification Action & Detail Panel (Phase 3.7) ───────────────────────────
+// ─── Verification Action & Promotion Panel (Phase 3.7 & 3.8) ──────────────────
 
 function VerificationDetailPanel({ rollNumber, onClose, onActionSuccess }) {
   const [loading, setLoading] = useState(true);
@@ -307,16 +301,24 @@ function VerificationDetailPanel({ rollNumber, onClose, onActionSuccess }) {
   const [evidenceLevel, setEvidenceLevel] = useState('REFERENCE_RECORDED');
   const [remarks, setRemarks] = useState('');
 
+  // ── Phase 3.8: Promotion State ──
+  const [promoPreview, setPromoPreview] = useState(null);
+  const [promoConfirmModal, setPromoConfirmModal] = useState(false);
+  const [promoSubmitting, setPromoSubmitting] = useState(false);
+
   const loadData = useCallback(() => {
     if (!rollNumber) return;
     setLoading(true);
     setError(null);
 
-    adminService.getEnrollmentDetail(rollNumber)
-      .then(res => {
-        if (res.success) {
-          setData(res.data);
-          const v = res.data.verification;
+    Promise.all([
+      adminService.getEnrollmentDetail(rollNumber),
+      adminService.getPromotionPreview(rollNumber),
+    ])
+      .then(([resDetail, resPromo]) => {
+        if (resDetail.success) {
+          setData(resDetail.data);
+          const v = resDetail.data.verification;
           if (v) {
             if (v.evidenceType) setEvidenceType(v.evidenceType);
             if (v.evidenceReference) setEvidenceReference(v.evidenceReference);
@@ -324,7 +326,11 @@ function VerificationDetailPanel({ rollNumber, onClose, onActionSuccess }) {
             if (v.reviewerRemarks) setRemarks(v.reviewerRemarks);
           }
         } else {
-          setError(res.message || 'Failed to load verification details');
+          setError(resDetail.message || 'Failed to load verification details');
+        }
+
+        if (resPromo.success) {
+          setPromoPreview(resPromo.data);
         }
       })
       .catch(err => {
@@ -439,10 +445,30 @@ function VerificationDetailPanel({ rollNumber, onClose, onActionSuccess }) {
     }
   };
 
+  // Phase 3.8: Execute controlled promotion
+  const handleExecutePromotion = async () => {
+    setPromoSubmitting(true);
+    setError(null);
+    try {
+      const res = await adminService.promoteStudent(rollNumber);
+      if (res.success) {
+        setActionMsg(`Student successfully promoted to production Student collection.`);
+        setPromoConfirmModal(false);
+        loadData();
+        if (onActionSuccess) onActionSuccess();
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || 'Promotion failed');
+    } finally {
+      setPromoSubmitting(false);
+    }
+  };
+
   if (!rollNumber) return null;
 
   const currentStatus = data?.verification?.verificationStatus || 'PENDING';
   const history = data?.verification?.auditHistory || [];
+  const isAlreadyPromoted = data?.verification?.isPromoted;
 
   return (
     <div className="sm-detail-panel" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
@@ -484,13 +510,23 @@ function VerificationDetailPanel({ rollNumber, onClose, onActionSuccess }) {
           {/* Status Bar */}
           <div className="sm-status-bar" style={{ marginBottom: 16 }}>
             <div className="sm-status-item">
-              <span className="sm-status-label">Current Status</span>
+              <span className="sm-status-label">Status</span>
               <VerificationBadge status={currentStatus} />
             </div>
-            {data.admission && (
+            {isAlreadyPromoted ? (
               <div className="sm-status-item">
-                <span className="sm-status-label">App #</span>
-                <span className="ds-code-badge" style={{ fontSize: 11 }}>{data.admission.applicationNumber}</span>
+                <span className="sm-status-label">Production</span>
+                <span className="ds-pill blue">PROMOTED</span>
+              </div>
+            ) : promoPreview?.eligible ? (
+              <div className="sm-status-item">
+                <span className="sm-status-label">Promotion</span>
+                <span className="ds-pill green">ELIGIBLE</span>
+              </div>
+            ) : (
+              <div className="sm-status-item">
+                <span className="sm-status-label">Promotion</span>
+                <span className="ds-pill gray">INELIGIBLE</span>
               </div>
             )}
             {data.verification?.evidenceVerificationLevel && (
@@ -501,11 +537,59 @@ function VerificationDetailPanel({ rollNumber, onClose, onActionSuccess }) {
             )}
           </div>
 
+          {/* ── Phase 3.8: Promotion Governance Section ── */}
+          {isAlreadyPromoted ? (
+            <div className="sm-promotion-box sm-promotion-promoted">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
+                <UserCheck size={16} /> Promoted to Production Student
+              </div>
+              <div style={{ marginTop: 6, fontSize: 12 }}>
+                Account State: <span className="ds-pill blue">enrolled_offline</span>
+                {data.verification?.promotedAt && (
+                  <div style={{ marginTop: 4, color: '#64748B' }}>
+                    Promoted on {new Date(data.verification.promotedAt).toLocaleString('en-IN')} by {data.verification.promotedByAdminName || 'Admin'}
+                  </div>
+                )}
+                <div style={{ marginTop: 4, color: '#64748B', fontSize: 11 }}>
+                  Production Student ID: <code>{data.verification.promotedStudentId}</code>
+                </div>
+              </div>
+            </div>
+          ) : promoPreview?.eligible ? (
+            <div className="sm-promotion-box sm-promotion-eligible">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
+                <CheckCircle size={16} /> All 7 Promotion Eligibility Criteria Met
+              </div>
+              <div style={{ marginTop: 4, fontSize: 12 }}>
+                Identity verified as <strong>DOCUMENT_VERIFIED</strong> against official institutional evidence.
+                Ready for individual promotion.
+              </div>
+              <button
+                className="ds-btn sm sm-action-btn-verify"
+                style={{ marginTop: 10 }}
+                onClick={() => setPromoConfirmModal(true)}
+              >
+                <UserCheck size={14} /> Preview & Promote to Production
+              </button>
+            </div>
+          ) : (
+            <div className="sm-promotion-box sm-promotion-ineligible">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
+                <AlertTriangle size={16} /> Not Eligible for Production Promotion
+              </div>
+              <ul className="sm-reasons-list">
+                {promoPreview?.reasons?.map((reason, idx) => (
+                  <li key={idx} className="sm-reasons-item">{reason}</li>
+                )) || <li className="sm-reasons-item">Requires DOCUMENT_VERIFIED enrollment proof.</li>}
+              </ul>
+            </div>
+          )}
+
           {/* Independent Evidence Notice */}
           <div className="sm-warning-box">
             <ShieldCheck size={16} style={{ flexShrink: 0, marginTop: 1 }} />
             <div>
-              <strong>Independent Registrar Evidence Required.</strong> An exact roll number match establishes identity, but NOT enrollment. Application forms, survey submissions, and internships are NOT accepted as proof of enrollment.
+              <strong>Institutional Evidence Governance:</strong> Promotion to the production Student collection requires <code>DOCUMENT_VERIFIED</code> status. <code>REFERENCE_RECORDED</code> alone never qualifies.
             </div>
           </div>
 
@@ -612,7 +696,7 @@ function VerificationDetailPanel({ rollNumber, onClose, onActionSuccess }) {
           {/* Audit Trail */}
           <div className="ds-card" style={{ padding: 14 }}>
             <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#1E293B', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Clock size={14} /> Verification History ({history.length})
+              <Clock size={14} /> Verification & Promotion History ({history.length})
             </div>
 
             {history.length === 0 ? (
@@ -651,6 +735,58 @@ function VerificationDetailPanel({ rollNumber, onClose, onActionSuccess }) {
           </div>
         </div>
       )}
+
+      {/* ── Phase 3.8: Individual Promotion Confirmation Modal ── */}
+      {promoConfirmModal && promoPreview?.candidateData && (
+        <div className="sm-modal-overlay">
+          <div className="sm-modal-container">
+            <div className="sm-modal-header">
+              <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <UserCheck size={18} style={{ color: '#16A34A' }} />
+                Confirm Production Student Promotion
+              </div>
+              <button className="sm-close-btn" onClick={() => setPromoConfirmModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="sm-modal-body">
+              <div className="sm-warning-box" style={{ background: '#EFF6FF', borderColor: '#BFDBFE', color: '#1E40AF', marginBottom: 14 }}>
+                <Info size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <strong>Controlled Promotion Policy:</strong> Promoting this identity will create an offline institutional Student record with <code>accountStatus: 'enrolled_offline'</code>. No portal User account, password, or synthetic credentials will be created. Academic survey submissions remain untouched.
+                </div>
+              </div>
+              <div className="sm-promotion-preview-card">
+                <InfoRow label="Roll Number" value={promoPreview.candidateData.rollNumber} />
+                <InfoRow label="Full Name" value={promoPreview.candidateData.fullName} />
+                <InfoRow label="Program / Branch" value={promoPreview.candidateData.branch || promoPreview.candidateData.program} />
+                <InfoRow label="School" value={promoPreview.candidateData.school} />
+                <InfoRow label="Application #" value={promoPreview.candidateData.admissionApplicationNumber} />
+                <InfoRow label="Source Batch" value={promoPreview.candidateData.sourceBatchId} />
+                <InfoRow label="Account Status" value="enrolled_offline" />
+                <InfoRow label="Evidence Level" value={promoPreview.verificationSummary?.level} />
+                <InfoRow label="Evidence Ref" value={promoPreview.verificationSummary?.reference} />
+              </div>
+            </div>
+            <div className="sm-modal-footer">
+              <button
+                className="ds-btn ghost sm"
+                onClick={() => setPromoConfirmModal(false)}
+                disabled={promoSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                className="ds-btn sm sm-action-btn-verify"
+                disabled={promoSubmitting}
+                onClick={handleExecutePromotion}
+              >
+                {promoSubmitting ? 'Promoting…' : 'Confirm Individual Promotion'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -673,8 +809,9 @@ export default function AdminStudentManagement() {
   const [classification, setClassification] = useState('all');
   const [selectedRoll, setSelectedRoll]     = useState(null);
 
-  // ── Enrollment Verification State (Phase 3.7) ──
+  // ── Enrollment Verification & Promotion State (Phase 3.7 & 3.8) ──
   const [verifStats, setVerifStats]           = useState(null);
+  const [promoStats, setPromoStats]           = useState(null);
   const [verifications, setVerifications]     = useState([]);
   const [verifLoading, setVerifLoading]       = useState(false);
   const [verifError, setVerifError]           = useState(null);
@@ -696,15 +833,21 @@ export default function AdminStudentManagement() {
       .catch(() => {});
   };
 
-  const loadVerificationStats = () => {
-    adminService.getEnrollmentStats()
-      .then(res => { if (res.success) setVerifStats(res.data); })
+  const loadVerificationAndPromotionStats = () => {
+    Promise.all([
+      adminService.getEnrollmentStats(),
+      adminService.getPromotionStats(),
+    ])
+      .then(([resVerif, resPromo]) => {
+        if (resVerif.success) setVerifStats(resVerif.data);
+        if (resPromo.success) setPromoStats(resPromo.data);
+      })
       .catch(() => {});
   };
 
   useEffect(() => {
     loadStagingStats();
-    loadVerificationStats();
+    loadVerificationAndPromotionStats();
   }, []);
 
   // ── Debounce Staging Search ──
@@ -786,7 +929,7 @@ export default function AdminStudentManagement() {
   useEffect(() => {
     if (activeMainTab === 'verification') {
       loadVerifications();
-      loadVerificationStats();
+      loadVerificationAndPromotionStats();
     }
   }, [loadVerifications, activeMainTab]);
 
@@ -819,7 +962,7 @@ export default function AdminStudentManagement() {
               onClick={() => { setActiveMainTab('verification'); setSelectedRoll(null); }}
             >
               <ShieldCheck size={16} />
-              Enrollment Verification
+              Enrollment Verification & Promotion
             </button>
           </div>
 
@@ -864,7 +1007,7 @@ export default function AdminStudentManagement() {
                     onClick={() => setActiveMainTab('verification')}
                     style={{ background: 'none', border: 'none', color: '#1D4ED8', textDecoration: 'underline', cursor: 'pointer', fontWeight: 600, padding: 0 }}
                   >
-                    Enrollment Verification
+                    Enrollment Verification & Promotion
                   </button>{' '}
                   tab.
                 </div>
@@ -1038,7 +1181,7 @@ export default function AdminStudentManagement() {
           )}
 
           {/* ═════════════════════════════════════════════════════════════════ */}
-          {/* TAB 2: ENROLLMENT VERIFICATION WORKFLOW (PHASE 3.7)                */}
+          {/* TAB 2: ENROLLMENT VERIFICATION & PROMOTION WORKFLOW (PHASE 3.7/8)   */}
           {/* ═════════════════════════════════════════════════════════════════ */}
           {activeMainTab === 'verification' && (
             <>
@@ -1059,18 +1202,18 @@ export default function AdminStudentManagement() {
                   <div className="ds-stat-trend up">Independent proof accepted</div>
                 </div>
                 <div className="ds-stat-card">
-                  <div className="ds-stat-label">Requires Review</div>
-                  <div className="ds-stat-value" style={{ color: '#EA580C' }}>
-                    {verifStats?.requiresReview ?? 0}
+                  <div className="ds-stat-label">Eligible for Promotion</div>
+                  <div className="ds-stat-value" style={{ color: '#2563EB' }}>
+                    {promoStats?.eligibleCount ?? 0}
                   </div>
-                  <div className="ds-stat-trend">Needs clarification</div>
+                  <div className="ds-stat-trend up">DOCUMENT_VERIFIED & verified</div>
                 </div>
                 <div className="ds-stat-card">
-                  <div className="ds-stat-label">Rejected</div>
-                  <div className="ds-stat-value" style={{ color: '#DC2626' }}>
-                    {verifStats?.rejected ?? 0}
+                  <div className="ds-stat-label">Promoted to Production</div>
+                  <div className="ds-stat-value" style={{ color: '#059669' }}>
+                    {promoStats?.alreadyPromotedCount ?? 0}
                   </div>
-                  <div className="ds-stat-trend down">Invalid or non-enrolled</div>
+                  <div className="ds-stat-trend">enrolled_offline students</div>
                 </div>
               </div>
 
@@ -1078,7 +1221,7 @@ export default function AdminStudentManagement() {
               <div className="sm-enrollment-notice" style={{ background: '#F0FDF4', borderColor: '#BBF7D0', color: '#166534' }}>
                 <ShieldCheck size={16} style={{ flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <strong>Enrollment Verification Policy:</strong> All 554 Batch 003 identities remain in <strong>PENDING</strong> status until an authorized administrator verifies them against an official University Registrar document (e.g. Enrollment Register, Fee Clearance, or Semester Registration). Internship participation and self-reported marks do NOT constitute proof of enrollment.
+                  <strong>Controlled Promotion Policy (Phase 3.8):</strong> Staging identities become eligible for promotion only after attaining <strong>DOCUMENT_VERIFIED</strong> status against an accepted institutional document. Promoting creates an offline institutional Student record with <code>accountStatus: 'enrolled_offline'</code>. Bulk promotion is permanently disabled.
                 </div>
               </div>
 
@@ -1087,7 +1230,7 @@ export default function AdminStudentManagement() {
                 <div className="sm-list-panel">
                   <div className="ds-card">
                     <div className="ds-card-header">
-                      <span className="ds-section-title">Enrollment Verification Ledger</span>
+                      <span className="ds-section-title">Enrollment Verification & Promotion Ledger</span>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                         <div style={{ position: 'relative' }}>
                           <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
@@ -1112,7 +1255,7 @@ export default function AdminStudentManagement() {
                           <option value="REJECTED">Rejected</option>
                         </select>
 
-                        <button className="ds-btn ghost sm" onClick={() => { loadVerifications(); loadVerificationStats(); }}>
+                        <button className="ds-btn ghost sm" onClick={() => { loadVerifications(); loadVerificationAndPromotionStats(); }}>
                           <RefreshCw size={14} /> Refresh
                         </button>
                       </div>
@@ -1244,7 +1387,7 @@ export default function AdminStudentManagement() {
                     onClose={() => setSelectedVerifRoll(null)}
                     onActionSuccess={() => {
                       loadVerifications();
-                      loadVerificationStats();
+                      loadVerificationAndPromotionStats();
                     }}
                   />
                 )}
