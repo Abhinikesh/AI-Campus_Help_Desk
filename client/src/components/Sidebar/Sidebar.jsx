@@ -43,6 +43,7 @@ const NAV_CONFIG = {
   ],
   admin: [
     { label: 'Dashboard',          icon: LayoutDashboard, to: '/admin/dashboard'     },
+    { label: 'Student Management', icon: GraduationCap,   to: '/admin/students'      },
     { label: 'Smart Attendance',   icon: UserCheck,       to: '/admin/attendance'    },
     { label: 'Scheduling & Cal',   icon: Clock,           to: '/admin/timetable'     },
     { label: 'Finance & Fees',     icon: CreditCard,      to: '/admin/finance'       },

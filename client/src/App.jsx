@@ -48,6 +48,7 @@ const FacultyInventory          = lazyWithRetry(() => import('./pages/FacultyInv
 
 // Admin Pages
 const AdminDashboard            = lazyWithRetry(() => import('./pages/AdminDashboard/index'));
+const AdminStudentManagement    = lazyWithRetry(() => import('./pages/AdminStudentManagement/index'));
 const AdminAttendanceHub        = lazyWithRetry(() => import('./pages/AdminAttendance/index'));
 const AdminTimetable            = lazyWithRetry(() => import('./pages/AdminTimetable/index'));
 const AdminFinance              = lazyWithRetry(() => import('./pages/AdminFinance/index'));
@@ -160,6 +161,8 @@ const App = () => (
           {/* ── Admin ── */}
           <Route path="/admin/dashboard"
             element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/students"
+            element={<ProtectedRoute role="admin"><AdminStudentManagement /></ProtectedRoute>} />
           <Route path="/admin/timetable"
             element={<ProtectedRoute role="admin"><AdminTimetable /></ProtectedRoute>} />
           <Route path="/admin/finance"

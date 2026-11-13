@@ -1,0 +1,659 @@
+/* AdminStudentManagement.css
+   Phase 3.6 — Staging Student Management Page
+   Light-only. No dark mode overrides.
+   Extends dashboard-shared.css — no duplicate definitions.
+*/
+
+/* ─── Batch & status badges ─────────────────────────────────────────────── */
+.sm-batch-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1A56DB;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 100px;
+  padding: 3px 10px;
+  letter-spacing: 0.3px;
+}
+
+.sm-read-only-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #92400E;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  border-radius: 100px;
+  padding: 3px 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* ─── Enrollment notice ─────────────────────────────────────────────────── */
+.sm-enrollment-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #1E40AF;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.sm-no-action-label {
+  font-weight: 600;
+  color: #DC2626;
+}
+
+/* ─── Workspace split layout ────────────────────────────────────────────── */
+.sm-workspace {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.sm-list-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.sm-workspace--split .sm-list-panel {
+  flex: 0 0 55%;
+  max-width: 55%;
+}
+
+@media (max-width: 1024px) {
+  .sm-workspace--split {
+    flex-direction: column;
+  }
+  .sm-workspace--split .sm-list-panel {
+    max-width: 100%;
+    flex: 1;
+  }
+}
+
+/* ─── Error / loading states ────────────────────────────────────────────── */
+.sm-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 6px;
+  color: #DC2626;
+  font-size: 13px;
+  padding: 10px 14px;
+  margin: 0 20px 16px;
+}
+
+.sm-loading-rows {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sm-skeleton-row {
+  height: 40px;
+  background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.sm-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 20px;
+  color: #6B7280;
+  font-size: 14px;
+}
+
+.sm-empty-state-icon { color: #D1D5DB; }
+
+.sm-empty-sub {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+/* ─── Table extras ──────────────────────────────────────────────────────── */
+tr.sm-row-selected {
+  background: #EFF6FF !important;
+}
+
+.sm-count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1A56DB;
+  background: #EFF6FF;
+  border-radius: 100px;
+  padding: 2px 8px;
+}
+
+.sm-conflict-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: #D97706;
+  background: #FEF3C7;
+  border-radius: 100px;
+  padding: 2px 8px;
+}
+
+/* ─── Pagination ────────────────────────────────────────────────────────── */
+.sm-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 1px solid #E2E8F0;
+}
+
+.sm-pagination-info {
+  font-size: 12px;
+  color: #6B7280;
+}
+
+.sm-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sm-page-num {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* ─── Detail Panel ──────────────────────────────────────────────────────── */
+.sm-detail-panel {
+  flex: 0 0 44%;
+  max-width: 44%;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  position: sticky;
+  top: 80px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+@media (max-width: 1024px) {
+  .sm-detail-panel {
+    flex: 1;
+    max-width: 100%;
+    position: static;
+    max-height: none;
+  }
+}
+
+.sm-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #E2E8F0;
+  background: #F8F9FA;
+}
+
+.sm-detail-roll {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6B7280;
+  letter-spacing: 0.5px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.sm-detail-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin-top: 2px;
+}
+
+.sm-close-btn {
+  border: none;
+  background: none;
+  color: #6B7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.sm-close-btn:hover { background: #F3F4F6; color: #111827; }
+
+.sm-detail-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 20px;
+  color: #6B7280;
+  font-size: 13px;
+}
+
+.sm-detail-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #DC2626;
+  font-size: 13px;
+  padding: 20px;
+  background: #FEF2F2;
+  border-bottom: 1px solid #FECACA;
+}
+
+/* ─── Status bar ────────────────────────────────────────────────────────── */
+.sm-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #E2E8F0;
+  background: #FAFAFA;
+  flex-wrap: wrap;
+}
+
+.sm-status-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sm-status-label {
+  font-size: 11px;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+/* ─── Tabs ──────────────────────────────────────────────────────────────── */
+.sm-tabs {
+  display: flex;
+  border-bottom: 1px solid #E2E8F0;
+  background: #FAFAFA;
+}
+
+.sm-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6B7280;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.sm-tab:hover { color: #111827; }
+
+.sm-tab.active {
+  color: #1A56DB;
+  border-bottom-color: #1A56DB;
+  font-weight: 600;
+}
+
+.sm-tab-count {
+  font-size: 10px;
+  font-weight: 700;
+  background: #E5E7EB;
+  border-radius: 100px;
+  padding: 1px 6px;
+  color: #374151;
+}
+
+.sm-tab.active .sm-tab-count {
+  background: #DBEAFE;
+  color: #1A56DB;
+}
+
+/* ─── Tab content ───────────────────────────────────────────────────────── */
+.sm-tab-content {
+  overflow-y: auto;
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ─── Record cards ──────────────────────────────────────────────────────── */
+.sm-record-card {
+  background: #FAFAFA;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sm-record-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6B7280;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.sm-canonical-badge {
+  font-size: 10px;
+  background: #D1FAE5;
+  color: #065F46;
+  border-radius: 100px;
+  padding: 1px 8px;
+  font-weight: 700;
+}
+
+/* ─── Info rows ─────────────────────────────────────────────────────────── */
+.sm-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+}
+
+.sm-info-label {
+  flex: 0 0 140px;
+  color: #6B7280;
+  font-weight: 500;
+  padding-top: 1px;
+}
+
+.sm-info-value {
+  color: #111827;
+  font-weight: 500;
+  flex: 1;
+  word-break: break-word;
+}
+
+.sm-missing {
+  color: #9CA3AF;
+  font-style: italic;
+}
+
+/* ─── Conflicts ─────────────────────────────────────────────────────────── */
+.sm-conflicts {
+  margin-top: 4px;
+  border: 1px solid #FDE68A;
+  border-radius: 6px;
+  background: #FFFBEB;
+  padding: 10px 12px;
+}
+
+.sm-conflicts-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #92400E;
+  margin-bottom: 8px;
+}
+
+.sm-conflict-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #374151;
+  padding: 3px 0;
+  border-bottom: 1px dashed #FDE68A;
+}
+
+.sm-conflict-item:last-child { border-bottom: none; }
+
+.sm-conflict-field {
+  flex: 0 0 90px;
+  font-weight: 600;
+  color: #92400E;
+}
+
+.sm-conflict-raw {
+  flex: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+
+.sm-conflict-candidates {
+  color: #1A56DB;
+  font-size: 11px;
+}
+
+/* ─── Raw payload ───────────────────────────────────────────────────────── */
+.sm-raw-payload {
+  margin-top: 8px;
+}
+
+.sm-raw-payload > summary {
+  font-size: 12px;
+  color: #6B7280;
+  cursor: pointer;
+  padding: 6px 0;
+  font-weight: 500;
+}
+
+.sm-raw-payload-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
+  margin-top: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.sm-raw-payload-row {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  padding: 2px 0;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.sm-raw-key { flex: 0 0 130px; color: #6B7280; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sm-raw-val { flex: 1; color: #111827; word-break: break-all; }
+
+/* ─── Academic summary ──────────────────────────────────────────────────── */
+.sm-academic-summary {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.sm-academic-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.sm-conflict-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #DC2626;
+  font-weight: 500;
+}
+
+.sm-academic-quick {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid #BBF7D0;
+}
+
+.sm-quick-stat {
+  text-align: center;
+  padding: 8px 4px;
+}
+
+.sm-quick-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.sm-quick-label {
+  font-size: 10.5px;
+  color: #6B7280;
+  margin-top: 2px;
+}
+
+.sm-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+  color: #6B7280;
+  line-height: 1.4;
+  padding-top: 4px;
+  border-top: 1px solid #BBF7D0;
+}
+
+/* ─── Internship summary ────────────────────────────────────────────────── */
+.sm-internship-summary {
+  background: #F0F9FF;
+  border: 1px solid #BAE6FD;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.sm-internship-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.sm-null-org-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #92400E;
+  font-weight: 500;
+}
+
+/* ─── Field completeness row ────────────────────────────────────────────── */
+.sm-field-completeness {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 0 4px;
+  border-bottom: 1px solid #E2E8F0;
+  margin-bottom: 6px;
+}
+
+.sm-field-complete {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 100px;
+  border: 1px solid;
+}
+
+.sm-field-complete.present {
+  color: #065F46;
+  background: #D1FAE5;
+  border-color: #A7F3D0;
+}
+
+.sm-field-complete.absent {
+  color: #991B1B;
+  background: #FEE2E2;
+  border-color: #FECACA;
+}
+
+/* ─── Empty tab state ───────────────────────────────────────────────────── */
+.sm-empty-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 36px 20px;
+  color: #6B7280;
+  font-size: 13px;
+  text-align: center;
+}
+
+.sm-empty-icon { color: #D1D5DB; }
+
+/* ─── Section headers (unused but kept for future extension) ────────────── */
+.sm-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 4px;
+  border-bottom: 1px solid #E2E8F0;
+  margin-bottom: 10px;
+}
+
+.sm-section-icon { color: #6B7280; }
+
+.sm-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  flex: 1;
+}
+
+.sm-section-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6B7280;
+  background: #F3F4F6;
+  border-radius: 100px;
+  padding: 1px 8px;
+}
+

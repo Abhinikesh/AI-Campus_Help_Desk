@@ -25,6 +25,14 @@ const {
   getAttendanceSettings,
   updateAttendanceSettings,
 } = require('../controllers/admin.controller');
+
+const {
+  listStagingStudents,
+  getStagingStats,
+  getStagingStudentDetail,
+  searchStagingStudents,
+} = require('../controllers/stagingStudents.controller');
+
 const authMiddleware = require('../middleware/auth.middleware');
 const { allowRoles } = require('../middleware/role.middleware');
 
@@ -50,5 +58,13 @@ router.delete('/attendance/face-enrollments/:studentId', deleteFaceEnrollment);
 router.get('/attendance/analytics',           getAttendanceAnalytics);
 router.get('/attendance/settings',            getAttendanceSettings);
 router.put('/attendance/settings',            updateAttendanceSettings);
+
+// ── Phase 3.6: Staging Student Management (Read-Only) ──────────────────────
+// All routes under /api/admin/staging/ are locked to admin role by the
+// router-level middleware above and serve only BATCH-20261112-STAGING-003.
+router.get('/staging/students/stats',         getStagingStats);
+router.get('/staging/students/search',        searchStagingStudents);
+router.get('/staging/students',               listStagingStudents);
+router.get('/staging/students/:rollNumber',   getStagingStudentDetail);
 
 module.exports = router;
