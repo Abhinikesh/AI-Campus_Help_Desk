@@ -1,16 +1,19 @@
 /**
  * AdminStudentManagement/index.jsx
  *
- * Phase 3.6 — Admin Staging Student Management
+ * Phase 3.6 & Phase 3.7 — Admin Staging Student Management & Enrollment Verification
  *
  * Connects to Batch 003 staging collections via secure admin-only APIs.
- * Displays a searchable, paginated list of staging records and a full
- * detail panel for any selected student.
+ * Displays:
+ *  1. Staging Student Records: searchable, paginated list and rich detail panel.
+ *  2. Enrollment Verification: independent registrar verification workflow,
+ *     evidence recording, status actions (Verify, Reject, Request Review), and audit history.
  *
  * Security:
  *  - Page is only accessible via /admin/students (ProtectedRoute role="admin")
  *  - No PII (passwords, parental info) is ever displayed — the API excludes it
  *  - No production Student creation or identity merge actions
+ *  - Verification requires independent evidence (Registrar rolls, fees, etc.)
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -20,6 +23,7 @@ import {
   Users, Search, ChevronLeft, ChevronRight, RefreshCw,
   AlertCircle, CheckCircle, HelpCircle, XCircle, ClipboardList,
   BookOpen, Briefcase, Info, X, GraduationCap,
+  ShieldCheck, FileCheck, FileText, Clock, AlertTriangle, UserCheck
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './AdminStudentManagement.css';
@@ -44,12 +48,25 @@ const REVIEW_STATUS_LABELS = {
   promoted:       { label: 'Promoted', color: 'blue'  },
 };
 
-const ACADEMIC_ELIGIBILITY_LABELS = {
-  CONSISTENT_PENDING_VERIFICATION:  { label: 'Consistent — Pending Verification', color: 'green'  },
-  CONFLICTING_REQUIRES_ADJUDICATION: { label: 'Conflicting — Needs Adjudication', color: 'red'    },
-  IDENTITY_REQUIRES_REVIEW:         { label: 'Identity Under Review',             color: 'amber'  },
-  ACADEMIC_DATA_INCOMPLETE:         { label: 'Incomplete Data',                   color: 'gray'   },
+const VERIFICATION_STATUS_CONFIG = {
+  PENDING:         { label: 'Pending',         color: 'amber', icon: Clock },
+  VERIFIED:        { label: 'Verified',        color: 'green', icon: CheckCircle },
+  REJECTED:        { label: 'Rejected',        color: 'red',   icon: XCircle },
+  REQUIRES_REVIEW: { label: 'Requires Review', color: 'orange', icon: AlertTriangle },
 };
+
+const EVIDENCE_TYPE_OPTIONS = [
+  { value: 'REGISTRAR_ENROLLMENT_REGISTER',      label: 'Registrar Enrollment Register' },
+  { value: 'OFFICIAL_SEMESTER_REGISTRATION',     label: 'Official Semester Registration' },
+  { value: 'OFFICIAL_FEE_CLEARANCE',             label: 'Official Fee Clearance' },
+  { value: 'INSTITUTION_ENROLLMENT_CONFIRMATION',label: 'Institution Enrollment Confirmation' },
+  { value: 'OTHER',                              label: 'Other Official Registrar Record' },
+];
+
+const EVIDENCE_LEVEL_OPTIONS = [
+  { value: 'REFERENCE_RECORDED', label: 'Reference Recorded' },
+  { value: 'DOCUMENT_VERIFIED',  label: 'Document Verified' },
+];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -63,6 +80,17 @@ function ReviewBadge({ status }) {
   return <span className={`ds-pill ${info.color}`}>{info.label}</span>;
 }
 
+function VerificationBadge({ status }) {
+  const config = VERIFICATION_STATUS_CONFIG[status] || { label: status, color: 'gray', icon: Clock };
+  const Icon = config.icon;
+  return (
+    <span className={`ds-pill ${config.color}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+      <Icon size={12} />
+      {config.label}
+    </span>
+  );
+}
+
 function InfoRow({ label, value, missing = false }) {
   return (
     <div className="sm-info-row">
@@ -70,18 +98,6 @@ function InfoRow({ label, value, missing = false }) {
       <span className={`sm-info-value ${missing ? 'sm-missing' : ''}`}>
         {value !== null && value !== undefined && value !== '' ? String(value) : '—'}
       </span>
-    </div>
-  );
-}
-
-function SectionHeader({ icon: Icon, title, count }) {
-  return (
-    <div className="sm-section-header">
-      <Icon size={16} className="sm-section-icon" />
-      <span className="sm-section-title">{title}</span>
-      {count !== undefined && (
-        <span className="sm-section-count">{count}</span>
-      )}
     </div>
   );
 }
@@ -96,7 +112,7 @@ function FieldComplete({ value, label }) {
   );
 }
 
-// ─── Detail Panel ─────────────────────────────────────────────────────────────
+// ─── Detail Panel for Staging Students (Phase 3.6) ─────────────────────────────
 
 function StudentDetailPanel({ rollNumber, onClose }) {
   const [loading, setLoading] = useState(true);
@@ -195,159 +211,41 @@ function StudentDetailPanel({ rollNumber, onClose }) {
           </div>
 
           <div className="sm-tab-content">
-            {/* ── Basic Info Tab ── */}
             {activeTab === 'basic' && (
               <div>
-                {detail.masterRecords.map((rec, i) => (
-                  <div key={rec._id} className="sm-record-card">
-                    {detail.masterRecords.length > 1 && (
-                      <div className="sm-record-badge">Master Record #{i + 1}</div>
-                    )}
-                    <InfoRow label="Roll Number"    value={rec.normalizedRollNumber} />
-                    <InfoRow label="Raw Identifier" value={rec.rawIdentifier} />
-                    <InfoRow label="Student Name"   value={rec.studentName} />
-                    <InfoRow label="Source Sheet"   value={rec.sourceSheet} />
-                    <InfoRow label="Source Row"     value={rec.sourceRow} />
-                    <InfoRow label="Review Status"  value={
-                      <ReviewBadge status={rec.reviewStatus} />
-                    } />
-                    {rec.reviewNotes && (
-                      <InfoRow label="Review Notes" value={rec.reviewNotes} />
-                    )}
-                    {rec.conflictCandidates && rec.conflictCandidates.length > 0 && (
-                      <div className="sm-conflicts">
-                        <div className="sm-conflicts-title">
-                          <AlertCircle size={13} style={{ color: '#D97706' }} />
-                          Conflict Candidates ({rec.conflictCandidates.length})
-                        </div>
-                        {rec.conflictCandidates.map((cc, j) => (
-                          <div key={j} className="sm-conflict-item">
-                            <span className="sm-conflict-field">{cc.field}</span>
-                            <span className="sm-conflict-raw">{cc.rawValue}</span>
-                            {cc.parsedCandidates?.length > 0 && (
-                              <span className="sm-conflict-candidates">
-                                → {cc.parsedCandidates.join(' | ')}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {/* Raw payload preview — sanitized by API */}
-                    {rec.rawPayload && Object.keys(rec.rawPayload).length > 0 && (
-                      <details className="sm-raw-payload">
-                        <summary>Source Row Payload ({Object.keys(rec.rawPayload).length} fields)</summary>
-                        <div className="sm-raw-payload-grid">
-                          {Object.entries(rec.rawPayload).map(([k, v]) => (
-                            <div key={k} className="sm-raw-payload-row">
-                              <span className="sm-raw-key">{k}</span>
-                              <span className="sm-raw-val">{String(v ?? '—')}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    )}
-                  </div>
-                ))}
+                <InfoRow label="Normalized Roll" value={detail.normalizedRollNumber} />
+                <InfoRow label="Student Name"    value={detail.studentName} missing={!detail.studentName} />
+                <InfoRow label="Source Row"      value={detail.sourceRow} />
+                <InfoRow label="Review Status"   value={<ReviewBadge status={detail.reviewStatus} />} />
+                <InfoRow label="Course"          value={detail.academicProfile?.course}  missing={!detail.academicProfile?.course} />
+                <InfoRow label="School"          value={detail.academicProfile?.school}  missing={!detail.academicProfile?.school} />
+                <InfoRow label="Batch / Year"    value={detail.academicProfile?.batch}   missing={!detail.academicProfile?.batch} />
+                <InfoRow label="Section"         value={detail.academicProfile?.section} missing={!detail.academicProfile?.section} />
               </div>
             )}
 
-            {/* ── Admission Tab ── */}
             {activeTab === 'admission' && (
               <div>
-                {detail.admissionRecords.length === 0 ? (
+                {!detail.admissionRecord ? (
                   <div className="sm-empty-tab">
-                    <HelpCircle size={28} className="sm-empty-icon" />
-                    <div>No admission application found for this student</div>
-                    <div className="sm-empty-sub">
-                      Identity may be UNMATCHED. Manual verification required.
-                    </div>
+                    <ClipboardList size={28} className="sm-empty-icon" />
+                    <div>No admission application found for this roll number</div>
                   </div>
                 ) : (
-                  detail.admissionRecords.map((rec, i) => (
-                    <div key={rec._id} className="sm-record-card">
-                      {detail.admissionRecords.length > 1 && (
-                        <div className="sm-record-badge">Application #{i + 1}</div>
-                      )}
-                      <InfoRow label="Application Number" value={rec.applicationNumber} />
-                      <InfoRow label="Student Name"       value={rec.studentName} />
-                      <InfoRow label="Course"             value={rec.course} missing={!rec.course} />
-                      <InfoRow label="School"             value={rec.school} missing={!rec.school} />
-                      <InfoRow label="Date of Reporting"  value={rec.dateOfReporting} missing={!rec.dateOfReporting} />
-                      <InfoRow label="Status"             value={
-                        <span className={`ds-pill ${rec.admissionStatus === 'enrolled' ? 'green' : rec.admissionStatus === 'duplicate_flagged' ? 'red' : 'amber'}`}>
-                          {rec.admissionStatus}
-                        </span>
-                      } />
-                      <InfoRow label="Source Row" value={rec.sourceRow} />
-                      {rec.reviewNotes && (
-                        <InfoRow label="Review Notes" value={rec.reviewNotes} />
-                      )}
-                    </div>
-                  ))
+                  <div className="sm-record-card">
+                    <div className="sm-record-badge">Admission Record</div>
+                    <InfoRow label="App Number"       value={detail.admissionRecord.applicationNumber} />
+                    <InfoRow label="Course"           value={detail.admissionRecord.course} missing={!detail.admissionRecord.course} />
+                    <InfoRow label="School"           value={detail.admissionRecord.school} missing={!detail.admissionRecord.school} />
+                    <InfoRow label="Admission Status" value={detail.admissionRecord.admissionStatus} />
+                    <InfoRow label="Source Row"       value={detail.admissionRecord.sourceRow} />
+                  </div>
                 )}
               </div>
             )}
 
-            {/* ── Academic Tab ── */}
             {activeTab === 'academic' && (
               <div>
-                {/* Summary banner */}
-                {detail.summary?.academic && (
-                  <div className="sm-academic-summary">
-                    <div className="sm-academic-summary-row">
-                      <span>Eligibility</span>
-                      {(() => {
-                        const e = ACADEMIC_ELIGIBILITY_LABELS[detail.summary.academic.eligibility];
-                        return e
-                          ? <span className={`ds-pill ${e.color}`}>{e.label}</span>
-                          : <span className="ds-pill gray">{detail.summary.academic.eligibility}</span>;
-                      })()}
-                    </div>
-                    <div className="sm-academic-summary-row">
-                      <span>Submissions</span>
-                      <span className="sm-info-value">{detail.summary.academic.submissionCount}</span>
-                    </div>
-                    {detail.summary.academic.hasConflict && (
-                      <div className="sm-conflict-banner">
-                        <AlertCircle size={13} />
-                        CGPA conflict detected across submissions — adjudication required.
-                      </div>
-                    )}
-                    <div className="sm-academic-quick">
-                      <div className="sm-quick-stat">
-                        <div className="sm-quick-val">
-                          {detail.summary.academic.latestCgpa !== null
-                            ? detail.summary.academic.latestCgpa.toFixed(2)
-                            : '—'}
-                        </div>
-                        <div className="sm-quick-label">Self-Reported CGPA</div>
-                      </div>
-                      <div className="sm-quick-stat">
-                        <div className="sm-quick-val">
-                          {detail.summary.academic.latestTenth !== null
-                            ? `${detail.summary.academic.latestTenth}%`
-                            : '—'}
-                        </div>
-                        <div className="sm-quick-label">10th %</div>
-                      </div>
-                      <div className="sm-quick-stat">
-                        <div className="sm-quick-val">
-                          {detail.summary.academic.latestTwelfth !== null
-                            ? `${detail.summary.academic.latestTwelfth}%`
-                            : '—'}
-                        </div>
-                        <div className="sm-quick-label">12th %</div>
-                      </div>
-                    </div>
-                    <div className="sm-notice">
-                      <Info size={12} />
-                      All submissions are self-reported. <strong>isCanonical: false</strong> for all.
-                      Not verified against official marksheets.
-                    </div>
-                  </div>
-                )}
-
                 {detail.academicRecords.length === 0 ? (
                   <div className="sm-empty-tab">
                     <GraduationCap size={28} className="sm-empty-icon" />
@@ -355,55 +253,21 @@ function StudentDetailPanel({ rollNumber, onClose }) {
                   </div>
                 ) : (
                   detail.academicRecords.map((rec, i) => (
-                    <div key={rec._id} className="sm-record-card">
-                      <div className="sm-record-badge">
-                        Submission #{i + 1}
-                        {rec.isCanonical && <span className="sm-canonical-badge">Canonical</span>}
-                      </div>
-                      <InfoRow label="Source Row"           value={rec.sourceRow} />
-                      <InfoRow label="Branch"               value={rec.branch}         missing={!rec.branch} />
-                      <InfoRow label="10th %"               value={rec.tenthPercentage !== null ? `${rec.tenthPercentage}%` : null} missing={rec.tenthPercentage === null} />
-                      <InfoRow label="10th Board"           value={rec.tenthBoard}      missing={!rec.tenthBoard} />
-                      <InfoRow label="12th %"               value={rec.twelfthPercentage !== null ? `${rec.twelfthPercentage}%` : null} missing={rec.twelfthPercentage === null} />
-                      <InfoRow label="12th Board"           value={rec.twelfthBoard}    missing={!rec.twelfthBoard} />
-                      <InfoRow label="Self-Reported CGPA"   value={rec.selfReportedCgpa !== null ? rec.selfReportedCgpa.toFixed(2) : null} missing={rec.selfReportedCgpa === null} />
-                      <InfoRow label="Active Reappears"     value={rec.selfReportedActiveReappears} missing={rec.selfReportedActiveReappears === null} />
-                      <InfoRow label="Dead Reappears"       value={rec.selfReportedDeadReappears}   missing={rec.selfReportedDeadReappears === null} />
-                      {rec.reappearSubjects?.length > 0 && (
-                        <InfoRow label="Reappear Subjects"  value={rec.reappearSubjects.join(', ')} />
-                      )}
-                      <InfoRow label="Submission Time"      value={rec.submissionTimestamp ? new Date(rec.submissionTimestamp).toLocaleString('en-IN') : null} missing={!rec.submissionTimestamp} />
-                      <InfoRow label="Review Status"        value={<ReviewBadge status={rec.reviewStatus} />} />
+                    <div key={rec._id || i} className="sm-record-card">
+                      <div className="sm-record-badge">Submission #{i + 1}</div>
+                      <InfoRow label="Branch"        value={rec.branch} missing={!rec.branch} />
+                      <InfoRow label="10th %"        value={rec.tenthPercentage !== null ? `${rec.tenthPercentage}%` : null} missing={rec.tenthPercentage === null} />
+                      <InfoRow label="12th %"        value={rec.twelfthPercentage !== null ? `${rec.twelfthPercentage}%` : null} missing={rec.twelfthPercentage === null} />
+                      <InfoRow label="CGPA"          value={rec.selfReportedCgpa !== null ? rec.selfReportedCgpa.toFixed(2) : null} missing={rec.selfReportedCgpa === null} />
+                      <InfoRow label="Active Reappears" value={rec.selfReportedActiveReappears} missing={rec.selfReportedActiveReappears === null} />
                     </div>
                   ))
                 )}
               </div>
             )}
 
-            {/* ── Internship Tab ── */}
             {activeTab === 'internship' && (
               <div>
-                {/* Summary */}
-                {detail.summary?.internship && (
-                  <div className="sm-internship-summary">
-                    <div className="sm-internship-summary-row">
-                      <span>Records</span>
-                      <span className="sm-info-value">{detail.summary.internship.count}</span>
-                    </div>
-                    <div className="sm-internship-summary-row">
-                      <span>Field Completeness</span>
-                      <span className="sm-info-value">{detail.summary.internship.completenessPercent}%</span>
-                    </div>
-                    {detail.summary.internship.hasNullOrg && (
-                      <div className="sm-null-org-banner">
-                        <AlertCircle size={13} />
-                        {detail.summary.internship.nullOrgCount} record(s) have no organization name
-                        (preserved as self-guided/independent internship).
-                      </div>
-                    )}
-                  </div>
-                )}
-
                 {detail.internshipRecords.length === 0 ? (
                   <div className="sm-empty-tab">
                     <Briefcase size={28} className="sm-empty-icon" />
@@ -411,36 +275,12 @@ function StudentDetailPanel({ rollNumber, onClose }) {
                   </div>
                 ) : (
                   detail.internshipRecords.map((rec, i) => (
-                    <div key={rec._id} className="sm-record-card">
+                    <div key={rec._id || i} className="sm-record-card">
                       <div className="sm-record-badge">Internship #{i + 1}</div>
-
-                      {/* Field completeness indicators */}
-                      <div className="sm-field-completeness">
-                        <FieldComplete value={rec.organizationName}  label="Org" />
-                        <FieldComplete value={rec.internshipTitle}    label="Title" />
-                        <FieldComplete value={rec.startDate}         label="Start Date" />
-                        <FieldComplete value={rec.mode}              label="Mode" />
-                        <FieldComplete value={rec.stipendProvided !== null ? rec.stipendProvided : null} label="Stipend" />
-                      </div>
-
-                      <InfoRow label="Organization"   value={rec.organizationName || null}     missing={!rec.organizationName} />
-                      <InfoRow label="Title"          value={rec.internshipTitle || null}      missing={!rec.internshipTitle} />
-                      <InfoRow label="Start Date"     value={rec.startDate || null}            missing={!rec.startDate} />
-                      <InfoRow label="Mode"           value={rec.mode || null}                 missing={!rec.mode} />
-                      <InfoRow label="Stipend"        value={
-                        rec.stipendProvided === true
-                          ? `Yes${rec.monthlyStipendAmount ? ` — ₹${rec.monthlyStipendAmount}/mo` : ''}`
-                          : rec.stipendProvided === false
-                          ? 'No'
-                          : null
-                      } missing={rec.stipendProvided === null} />
-                      <InfoRow label="Placement Done" value={
-                        rec.placementDone === true ? 'Yes' : rec.placementDone === false ? 'No' : null
-                      } missing={rec.placementDone === null} />
-                      <InfoRow label="Branch"         value={rec.branch}        missing={!rec.branch} />
-                      <InfoRow label="Section"        value={rec.section}       missing={!rec.section} />
-                      <InfoRow label="Linkage Status" value={rec.linkageStatus} />
-                      <InfoRow label="Source Row"     value={rec.sourceRow} />
+                      <InfoRow label="Organization" value={rec.organizationName || 'None (Self-guided)'} missing={!rec.organizationName} />
+                      <InfoRow label="Title"        value={rec.internshipTitle || null} missing={!rec.internshipTitle} />
+                      <InfoRow label="Start Date"   value={rec.startDate || null} missing={!rec.startDate} />
+                      <InfoRow label="Mode"         value={rec.mode || null} missing={!rec.mode} />
                     </div>
                   ))
                 )}
@@ -453,9 +293,374 @@ function StudentDetailPanel({ rollNumber, onClose }) {
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// ─── Verification Action & Detail Panel (Phase 3.7) ───────────────────────────
+
+function VerificationDetailPanel({ rollNumber, onClose, onActionSuccess }) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [actionMsg, setActionMsg] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [data, setData] = useState(null);
+  const [evidenceType, setEvidenceType] = useState('REGISTRAR_ENROLLMENT_REGISTER');
+  const [evidenceReference, setEvidenceReference] = useState('');
+  const [evidenceLevel, setEvidenceLevel] = useState('REFERENCE_RECORDED');
+  const [remarks, setRemarks] = useState('');
+
+  const loadData = useCallback(() => {
+    if (!rollNumber) return;
+    setLoading(true);
+    setError(null);
+
+    adminService.getEnrollmentDetail(rollNumber)
+      .then(res => {
+        if (res.success) {
+          setData(res.data);
+          const v = res.data.verification;
+          if (v) {
+            if (v.evidenceType) setEvidenceType(v.evidenceType);
+            if (v.evidenceReference) setEvidenceReference(v.evidenceReference);
+            if (v.evidenceVerificationLevel) setEvidenceLevel(v.evidenceVerificationLevel);
+            if (v.reviewerRemarks) setRemarks(v.reviewerRemarks);
+          }
+        } else {
+          setError(res.message || 'Failed to load verification details');
+        }
+      })
+      .catch(err => {
+        setError(err?.response?.data?.message || err.message || 'Network error');
+      })
+      .finally(() => setLoading(false));
+  }, [rollNumber]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleRecordEvidence = async () => {
+    if (!evidenceReference.trim()) {
+      setError('Please provide a document reference identifier.');
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    setActionMsg(null);
+    try {
+      const res = await adminService.recordEnrollmentEvidence(rollNumber, {
+        evidenceType,
+        evidenceReference: evidenceReference.trim(),
+        evidenceVerificationLevel: evidenceLevel,
+        remarks: remarks.trim(),
+      });
+      if (res.success) {
+        setActionMsg('Evidence successfully saved.');
+        loadData();
+        if (onActionSuccess) onActionSuccess();
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || 'Failed to record evidence');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!evidenceReference.trim()) {
+      setError('Cannot verify enrollment without an independent evidence reference document identifier.');
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    setActionMsg(null);
+    try {
+      const res = await adminService.approveEnrollment(rollNumber, {
+        evidenceType,
+        evidenceReference: evidenceReference.trim(),
+        evidenceVerificationLevel: evidenceLevel,
+        remarks: remarks.trim() || 'Enrollment verified against independent registrar documentation',
+      });
+      if (res.success) {
+        setActionMsg(`Enrollment successfully VERIFIED.`);
+        loadData();
+        if (onActionSuccess) onActionSuccess();
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || 'Failed to approve enrollment');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!remarks.trim()) {
+      setError('Rejection requires reviewer remarks explaining why the record is rejected.');
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    setActionMsg(null);
+    try {
+      const res = await adminService.rejectEnrollment(rollNumber, {
+        remarks: remarks.trim(),
+      });
+      if (res.success) {
+        setActionMsg('Enrollment REJECTED.');
+        loadData();
+        if (onActionSuccess) onActionSuccess();
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || 'Failed to reject enrollment');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRequestReview = async () => {
+    if (!remarks.trim()) {
+      setError('Review request requires remarks specifying what requires review.');
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    setActionMsg(null);
+    try {
+      const res = await adminService.requestEnrollmentReview(rollNumber, {
+        remarks: remarks.trim(),
+      });
+      if (res.success) {
+        setActionMsg('Status set to REQUIRES_REVIEW.');
+        loadData();
+        if (onActionSuccess) onActionSuccess();
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || 'Failed to request review');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!rollNumber) return null;
+
+  const currentStatus = data?.verification?.verificationStatus || 'PENDING';
+  const history = data?.verification?.auditHistory || [];
+
+  return (
+    <div className="sm-detail-panel" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="sm-detail-header">
+        <div>
+          <div className="sm-detail-roll">{rollNumber}</div>
+          <div className="sm-detail-name">
+            {data?.staging?.studentName || data?.verification?.studentName || 'Student Verification'}
+          </div>
+        </div>
+        <button className="sm-close-btn" onClick={onClose} aria-label="Close panel">
+          <X size={18} />
+        </button>
+      </div>
+
+      {loading && (
+        <div className="sm-detail-loading">
+          <div className="ds-spinner" style={{ width: 24, height: 24 }} />
+          <span>Loading verification details…</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="sm-detail-error" style={{ margin: '12px 16px' }}>
+          <AlertCircle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {actionMsg && (
+        <div className="sm-detail-success" style={{ margin: '12px 16px', background: '#DCFCE7', border: '1px solid #86EFAC', color: '#166534', padding: '8px 12px', borderRadius: 6, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <CheckCircle size={15} />
+          <span>{actionMsg}</span>
+        </div>
+      )}
+
+      {data && !loading && (
+        <div style={{ padding: '16px' }}>
+          {/* Status Bar */}
+          <div className="sm-status-bar" style={{ marginBottom: 16 }}>
+            <div className="sm-status-item">
+              <span className="sm-status-label">Current Status</span>
+              <VerificationBadge status={currentStatus} />
+            </div>
+            {data.admission && (
+              <div className="sm-status-item">
+                <span className="sm-status-label">App #</span>
+                <span className="ds-code-badge" style={{ fontSize: 11 }}>{data.admission.applicationNumber}</span>
+              </div>
+            )}
+            {data.verification?.evidenceVerificationLevel && (
+              <div className="sm-status-item">
+                <span className="sm-status-label">Level</span>
+                <span className="ds-pill blue">{data.verification.evidenceVerificationLevel}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Independent Evidence Notice */}
+          <div className="sm-warning-box">
+            <ShieldCheck size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <strong>Independent Registrar Evidence Required.</strong> An exact roll number match establishes identity, but NOT enrollment. Application forms, survey submissions, and internships are NOT accepted as proof of enrollment.
+            </div>
+          </div>
+
+          {/* Form */}
+          <div className="ds-card" style={{ padding: 14, marginBottom: 16 }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 12, color: '#1E293B' }}>
+              Record Verification Evidence
+            </div>
+
+            <div className="sm-form-group">
+              <label className="sm-form-label">
+                Evidence Type <span className="sm-form-label-required">*</span>
+              </label>
+              <select
+                className="ds-select"
+                style={{ width: '100%' }}
+                value={evidenceType}
+                onChange={e => setEvidenceType(e.target.value)}
+              >
+                {EVIDENCE_TYPE_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="sm-form-group">
+              <label className="sm-form-label">
+                Evidence Document / Reference Number <span className="sm-form-label-required">*</span>
+              </label>
+              <input
+                className="ds-input"
+                style={{ width: '100%' }}
+                placeholder="e.g., REG-2026-ROLL-0842 or FEE-REC-99120"
+                value={evidenceReference}
+                onChange={e => setEvidenceReference(e.target.value)}
+              />
+            </div>
+
+            <div className="sm-form-group">
+              <label className="sm-form-label">Evidence Verification Level</label>
+              <select
+                className="ds-select"
+                style={{ width: '100%' }}
+                value={evidenceLevel}
+                onChange={e => setEvidenceLevel(e.target.value)}
+              >
+                {EVIDENCE_LEVEL_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="sm-form-group">
+              <label className="sm-form-label">Reviewer Remarks</label>
+              <textarea
+                className="ds-input"
+                style={{ width: '100%', minHeight: 60, resize: 'vertical' }}
+                placeholder="Notes on document verification, registrar ledger page, or reasons..."
+                value={remarks}
+                onChange={e => setRemarks(e.target.value)}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="sm-action-buttons">
+              <button
+                className="ds-btn outline sm"
+                disabled={submitting || !evidenceReference.trim()}
+                onClick={handleRecordEvidence}
+                title="Save evidence without changing to VERIFIED status"
+              >
+                <FileCheck size={14} /> Record Evidence
+              </button>
+
+              <button
+                className="ds-btn sm sm-action-btn-verify"
+                disabled={submitting || !evidenceReference.trim()}
+                onClick={handleApprove}
+                title="Mark enrollment as VERIFIED (requires independent evidence)"
+              >
+                <CheckCircle size={14} /> Verify & Approve
+              </button>
+
+              <button
+                className="ds-btn sm sm-action-btn-review"
+                disabled={submitting || !remarks.trim()}
+                onClick={handleRequestReview}
+                title="Flag record for further review (requires remarks)"
+              >
+                <AlertTriangle size={14} /> Request Review
+              </button>
+
+              <button
+                className="ds-btn sm sm-action-btn-reject"
+                disabled={submitting || !remarks.trim()}
+                onClick={handleReject}
+                title="Reject enrollment (requires remarks)"
+              >
+                <XCircle size={14} /> Reject
+              </button>
+            </div>
+          </div>
+
+          {/* Audit Trail */}
+          <div className="ds-card" style={{ padding: 14 }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#1E293B', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Clock size={14} /> Verification History ({history.length})
+            </div>
+
+            {history.length === 0 ? (
+              <div style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic', padding: '6px 0' }}>
+                No actions recorded yet. Record starts in PENDING status.
+              </div>
+            ) : (
+              <div className="sm-history-list">
+                {[...history].reverse().map((entry, idx) => (
+                  <div key={entry._id || idx} className="sm-history-card">
+                    <div className="sm-history-head">
+                      <span className="sm-history-actor">{entry.action} by {entry.actorName || 'Admin'}</span>
+                      <span className="sm-history-time">
+                        {entry.timestamp ? new Date(entry.timestamp).toLocaleString('en-IN') : '—'}
+                      </span>
+                    </div>
+                    {entry.status && (
+                      <div>
+                        Status: <VerificationBadge status={entry.status} />
+                      </div>
+                    )}
+                    {entry.evidenceReference && (
+                      <div className="sm-history-detail">
+                        Ref: <span className="ds-code-badge" style={{ fontSize: 11 }}>{entry.evidenceReference}</span> ({entry.evidenceType})
+                      </div>
+                    )}
+                    {entry.remarks && (
+                      <div className="sm-history-detail" style={{ fontStyle: 'italic', color: '#64748B' }}>
+                        "{entry.remarks}"
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Page Component ──────────────────────────────────────────────────────
 
 export default function AdminStudentManagement() {
+  const [activeMainTab, setActiveMainTab] = useState('staging'); // 'staging' | 'verification'
+
+  // ── Staging State (Phase 3.6) ──
   const [stats, setStats]           = useState(null);
   const [students, setStudents]     = useState([]);
   const [loading, setLoading]       = useState(true);
@@ -468,16 +673,41 @@ export default function AdminStudentManagement() {
   const [classification, setClassification] = useState('all');
   const [selectedRoll, setSelectedRoll]     = useState(null);
 
-  const searchTimer = useRef(null);
+  // ── Enrollment Verification State (Phase 3.7) ──
+  const [verifStats, setVerifStats]           = useState(null);
+  const [verifications, setVerifications]     = useState([]);
+  const [verifLoading, setVerifLoading]       = useState(false);
+  const [verifError, setVerifError]           = useState(null);
+  const [verifSearch, setVerifSearch]         = useState('');
+  const [debouncedVerifSearch, setDebouncedVerifSearch] = useState('');
+  const [verifStatus, setVerifStatus]         = useState('ALL');
+  const [verifPage, setVerifPage]             = useState(1);
+  const [verifTotalPages, setVerifTotalPages] = useState(1);
+  const [verifTotal, setVerifTotal]           = useState(0);
+  const [selectedVerifRoll, setSelectedVerifRoll] = useState(null);
 
-  // ── Load stats ──────────────────────────────────────────────────────────────
-  useEffect(() => {
+  const searchTimer = useRef(null);
+  const verifSearchTimer = useRef(null);
+
+  // ── Load stats ──
+  const loadStagingStats = () => {
     adminService.getStagingStats()
       .then(res => { if (res.success) setStats(res.data); })
       .catch(() => {});
+  };
+
+  const loadVerificationStats = () => {
+    adminService.getEnrollmentStats()
+      .then(res => { if (res.success) setVerifStats(res.data); })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    loadStagingStats();
+    loadVerificationStats();
   }, []);
 
-  // ── Debounce search ─────────────────────────────────────────────────────────
+  // ── Debounce Staging Search ──
   useEffect(() => {
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => {
@@ -487,7 +717,17 @@ export default function AdminStudentManagement() {
     return () => clearTimeout(searchTimer.current);
   }, [search]);
 
-  // ── Load students ───────────────────────────────────────────────────────────
+  // ── Debounce Verification Search ──
+  useEffect(() => {
+    clearTimeout(verifSearchTimer.current);
+    verifSearchTimer.current = setTimeout(() => {
+      setDebouncedVerifSearch(verifSearch);
+      setVerifPage(1);
+    }, 350);
+    return () => clearTimeout(verifSearchTimer.current);
+  }, [verifSearch]);
+
+  // ── Load Staging Students ──
   const loadStudents = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -512,9 +752,44 @@ export default function AdminStudentManagement() {
     }
   }, [debouncedSearch, page, classification]);
 
-  useEffect(() => { loadStudents(); }, [loadStudents]);
+  useEffect(() => {
+    if (activeMainTab === 'staging') {
+      loadStudents();
+    }
+  }, [loadStudents, activeMainTab]);
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  // ── Load Enrollment Verifications ──
+  const loadVerifications = useCallback(async () => {
+    setVerifLoading(true);
+    setVerifError(null);
+    try {
+      const res = await adminService.listEnrollmentVerifications({
+        search: debouncedVerifSearch || undefined,
+        status: verifStatus !== 'ALL' ? verifStatus : undefined,
+        page: verifPage,
+        limit: PAGE_LIMIT,
+      });
+      if (res.success) {
+        setVerifications(res.data.items);
+        setVerifTotal(res.data.pagination.total);
+        setVerifTotalPages(res.data.pagination.totalPages || 1);
+      } else {
+        setVerifError(res.message || 'Failed to load verifications');
+      }
+    } catch (err) {
+      setVerifError(err?.response?.data?.message || err.message || 'Network error');
+    } finally {
+      setVerifLoading(false);
+    }
+  }, [debouncedVerifSearch, verifStatus, verifPage]);
+
+  useEffect(() => {
+    if (activeMainTab === 'verification') {
+      loadVerifications();
+      loadVerificationStats();
+    }
+  }, [loadVerifications, activeMainTab]);
+
   return (
     <div className="ds-shell">
       <Sidebar />
@@ -524,230 +799,461 @@ export default function AdminStudentManagement() {
           <span className="ds-header-title">Student Management</span>
           <div className="ds-header-right">
             <span className="sm-batch-badge">{BATCH_ID}</span>
-            <span className="sm-read-only-badge">READ-ONLY STAGING</span>
+            <span className="sm-read-only-badge">BATCH 003 GOVERNANCE</span>
           </div>
         </header>
 
         <div className="ds-content">
 
-          {/* ── Stat Cards ── */}
-          {stats && (
-            <div className="ds-stat-row">
-              <div className="ds-stat-card">
-                <div className="ds-stat-label">Master Records</div>
-                <div className="ds-stat-value">{stats.totalMasterRecords}</div>
-                <div className="ds-stat-trend up">Student Master (Batch 003)</div>
-              </div>
-              <div className="ds-stat-card">
-                <div className="ds-stat-label">Admissions</div>
-                <div className="ds-stat-value">{stats.totalAdmissions}</div>
-                <div className="ds-stat-trend up">Application records</div>
-              </div>
-              <div className="ds-stat-card">
-                <div className="ds-stat-label">Academic Submissions</div>
-                <div className="ds-stat-value">{stats.totalAcademicSubmissions}</div>
-                <div className="ds-stat-trend up">isCanonical: false for all</div>
-              </div>
-              <div className="ds-stat-card">
-                <div className="ds-stat-label">Internship Records</div>
-                <div className="ds-stat-value">{stats.totalInternships}</div>
-                <div className="ds-stat-trend up">{stats.nullOrgInternships} null-org preserved</div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Enrollment Notice ── */}
-          <div className="sm-enrollment-notice">
-            <Info size={15} style={{ flexShrink: 0 }} />
-            <div>
-              <strong>Enrollment Not Verified.</strong> All {stats?.totalMasterRecords ?? 0} staging
-              records originate from student surveys and an applicant tracking sheet — not from an
-              authoritative University Registrar enrollment roll. No production Student records will
-              be created until independent registrar verification is provided.{' '}
-              <span className="sm-no-action-label">No promotion actions are available in this view.</span>
-            </div>
+          {/* ── Main Tab Navigation ── */}
+          <div className="sm-main-tabs">
+            <button
+              className={`sm-main-tab-btn ${activeMainTab === 'staging' ? 'active' : ''}`}
+              onClick={() => { setActiveMainTab('staging'); setSelectedVerifRoll(null); }}
+            >
+              <Users size={16} />
+              Staging Student Records
+            </button>
+            <button
+              className={`sm-main-tab-btn ${activeMainTab === 'verification' ? 'active' : ''}`}
+              onClick={() => { setActiveMainTab('verification'); setSelectedRoll(null); }}
+            >
+              <ShieldCheck size={16} />
+              Enrollment Verification
+            </button>
           </div>
 
-          {/* ── Main table + detail panel ── */}
-          <div className={`sm-workspace ${selectedRoll ? 'sm-workspace--split' : ''}`}>
-
-            {/* ── List Panel ── */}
-            <div className="sm-list-panel">
-              <div className="ds-card">
-                <div className="ds-card-header">
-                  <span className="ds-section-title">Batch 003 Staging Records</span>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                    {/* Search */}
-                    <div style={{ position: 'relative' }}>
-                      <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
-                      <input
-                        className="ds-input"
-                        style={{ paddingLeft: 32, width: 220 }}
-                        placeholder="Search name or roll…"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                      />
-                    </div>
-
-                    {/* Classification filter */}
-                    <select
-                      className="ds-select"
-                      value={classification}
-                      onChange={e => { setClassification(e.target.value); setPage(1); }}
-                    >
-                      <option value="all">All Classifications</option>
-                      <option value="IDENTITY_CONFIRMED">Confirmed</option>
-                      <option value="IDENTITY_REQUIRES_REVIEW">Needs Review</option>
-                      <option value="IDENTITY_AMBIGUOUS">Ambiguous</option>
-                      <option value="IDENTITY_INVALID">Invalid</option>
-                      <option value="IDENTITY_UNMATCHED">Unmatched</option>
-                    </select>
-
-                    <button className="ds-btn ghost sm" onClick={loadStudents}>
-                      <RefreshCw size={14} /> Refresh
-                    </button>
+          {/* ═════════════════════════════════════════════════════════════════ */}
+          {/* TAB 1: STAGING STUDENT RECORDS (PHASE 3.6)                         */}
+          {/* ═════════════════════════════════════════════════════════════════ */}
+          {activeMainTab === 'staging' && (
+            <>
+              {/* Stat Cards */}
+              {stats && (
+                <div className="ds-stat-row">
+                  <div className="ds-stat-card">
+                    <div className="ds-stat-label">Master Records</div>
+                    <div className="ds-stat-value">{stats.totalMasterRecords}</div>
+                    <div className="ds-stat-trend up">Student Master (Batch 003)</div>
+                  </div>
+                  <div className="ds-stat-card">
+                    <div className="ds-stat-label">Admissions</div>
+                    <div className="ds-stat-value">{stats.totalAdmissions}</div>
+                    <div className="ds-stat-trend up">Application records</div>
+                  </div>
+                  <div className="ds-stat-card">
+                    <div className="ds-stat-label">Academic Submissions</div>
+                    <div className="ds-stat-value">{stats.totalAcademicSubmissions}</div>
+                    <div className="ds-stat-trend up">isCanonical: false for all</div>
+                  </div>
+                  <div className="ds-stat-card">
+                    <div className="ds-stat-label">Internship Records</div>
+                    <div className="ds-stat-value">{stats.totalInternships}</div>
+                    <div className="ds-stat-trend up">{stats.nullOrgInternships} null-org preserved</div>
                   </div>
                 </div>
+              )}
 
-                {/* Error state */}
-                {error && (
-                  <div className="sm-error-banner">
-                    <AlertCircle size={15} />
-                    <span>{error}</span>
-                  </div>
-                )}
+              {/* Enrollment Notice */}
+              <div className="sm-enrollment-notice">
+                <Info size={15} style={{ flexShrink: 0 }} />
+                <div>
+                  <strong>Enrollment Not Verified.</strong> Staging records originate from student surveys and applicant tracking sheets.
+                  To record official registrar proof of enrollment, switch to the{' '}
+                  <button
+                    onClick={() => setActiveMainTab('verification')}
+                    style={{ background: 'none', border: 'none', color: '#1D4ED8', textDecoration: 'underline', cursor: 'pointer', fontWeight: 600, padding: 0 }}
+                  >
+                    Enrollment Verification
+                  </button>{' '}
+                  tab.
+                </div>
+              </div>
 
-                {/* Loading skeleton */}
-                {loading && (
-                  <div className="sm-loading-rows">
-                    {[...Array(6)].map((_, i) => (
-                      <div key={i} className="sm-skeleton-row" />
-                    ))}
-                  </div>
-                )}
+              {/* Main Workspace */}
+              <div className={`sm-workspace ${selectedRoll ? 'sm-workspace--split' : ''}`}>
+                <div className="sm-list-panel">
+                  <div className="ds-card">
+                    <div className="ds-card-header">
+                      <span className="ds-section-title">Batch 003 Staging Records</span>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div style={{ position: 'relative' }}>
+                          <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+                          <input
+                            className="ds-input"
+                            style={{ paddingLeft: 32, width: 220 }}
+                            placeholder="Search name or roll…"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                          />
+                        </div>
 
-                {/* Table */}
-                {!loading && students.length === 0 && !error && (
-                  <div className="sm-empty-state">
-                    <Users size={36} className="sm-empty-state-icon" />
-                    <div>No staging records found</div>
-                    {debouncedSearch && (
-                      <div className="sm-empty-sub">Try a different search term or clear the filter.</div>
-                    )}
-                  </div>
-                )}
-
-                {!loading && students.length > 0 && (
-                  <>
-                    <div className="ds-table-wrap">
-                      <table className="ds-table">
-                        <thead>
-                          <tr>
-                            <th>Row</th>
-                            <th>Roll Number</th>
-                            <th>Name</th>
-                            <th>Identity</th>
-                            <th>Acad.</th>
-                            <th>Intern.</th>
-                            <th>Conflicts</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {students.map(s => (
-                            <tr
-                              key={s._id}
-                              className={selectedRoll === s.normalizedRollNumber ? 'sm-row-selected' : ''}
-                            >
-                              <td>
-                                <span className="ds-code-badge" style={{ fontSize: 11 }}>
-                                  {s.sourceRow}
-                                </span>
-                              </td>
-                              <td>
-                                <span className="ds-code-badge">
-                                  {s.normalizedRollNumber || <em style={{ color: '#9CA3AF', fontStyle: 'italic' }}>—</em>}
-                                </span>
-                              </td>
-                              <td className="bold" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {s.studentName || <span style={{ color: '#9CA3AF' }}>—</span>}
-                              </td>
-                              <td>
-                                <IdentityBadge classification={s.identityClassification} />
-                              </td>
-                              <td style={{ textAlign: 'center' }}>
-                                {s.academicSubmissionsCount > 0
-                                  ? <span className="sm-count-badge">{s.academicSubmissionsCount}</span>
-                                  : <span style={{ color: '#9CA3AF' }}>—</span>}
-                              </td>
-                              <td style={{ textAlign: 'center' }}>
-                                {s.internshipsCount > 0
-                                  ? <span className="sm-count-badge">{s.internshipsCount}</span>
-                                  : <span style={{ color: '#9CA3AF' }}>—</span>}
-                              </td>
-                              <td style={{ textAlign: 'center' }}>
-                                {s.conflictsCount > 0
-                                  ? <span className="sm-conflict-count">{s.conflictsCount}</span>
-                                  : <span style={{ color: '#9CA3AF' }}>—</span>}
-                              </td>
-                              <td>
-                                {s.normalizedRollNumber && (
-                                  <button
-                                    className="ds-btn outline sm"
-                                    onClick={() => setSelectedRoll(
-                                      selectedRoll === s.normalizedRollNumber ? null : s.normalizedRollNumber
-                                    )}
-                                  >
-                                    {selectedRoll === s.normalizedRollNumber ? 'Close' : 'View'}
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Pagination */}
-                    <div className="sm-pagination">
-                      <span className="sm-pagination-info">
-                        {total} record{total !== 1 ? 's' : ''} · Page {page} of {totalPages}
-                      </span>
-                      <div className="sm-pagination-controls">
-                        <button
-                          className="ds-btn ghost sm"
-                          disabled={page <= 1}
-                          onClick={() => setPage(p => Math.max(1, p - 1))}
+                        <select
+                          className="ds-select"
+                          value={classification}
+                          onChange={e => { setClassification(e.target.value); setPage(1); }}
                         >
-                          <ChevronLeft size={15} />
-                        </button>
-                        <span className="sm-page-num">{page}</span>
-                        <button
-                          className="ds-btn ghost sm"
-                          disabled={page >= totalPages}
-                          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        >
-                          <ChevronRight size={15} />
+                          <option value="all">All Classifications</option>
+                          <option value="IDENTITY_CONFIRMED">Confirmed</option>
+                          <option value="IDENTITY_REQUIRES_REVIEW">Needs Review</option>
+                          <option value="IDENTITY_AMBIGUOUS">Ambiguous</option>
+                          <option value="IDENTITY_INVALID">Invalid</option>
+                          <option value="IDENTITY_UNMATCHED">Unmatched</option>
+                        </select>
+
+                        <button className="ds-btn ghost sm" onClick={loadStudents}>
+                          <RefreshCw size={14} /> Refresh
                         </button>
                       </div>
                     </div>
-                  </>
+
+                    {error && (
+                      <div className="sm-error-banner">
+                        <AlertCircle size={15} />
+                        <span>{error}</span>
+                      </div>
+                    )}
+
+                    {loading && (
+                      <div className="sm-loading-rows">
+                        {[...Array(6)].map((_, i) => (
+                          <div key={i} className="sm-skeleton-row" />
+                        ))}
+                      </div>
+                    )}
+
+                    {!loading && students.length === 0 && !error && (
+                      <div className="sm-empty-state">
+                        <Users size={36} className="sm-empty-state-icon" />
+                        <div>No staging records found</div>
+                      </div>
+                    )}
+
+                    {!loading && students.length > 0 && (
+                      <>
+                        <div className="ds-table-wrap">
+                          <table className="ds-table">
+                            <thead>
+                              <tr>
+                                <th>Row</th>
+                                <th>Roll Number</th>
+                                <th>Name</th>
+                                <th>Identity</th>
+                                <th>Acad.</th>
+                                <th>Intern.</th>
+                                <th>Conflicts</th>
+                                <th></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {students.map(s => (
+                                <tr
+                                  key={s._id}
+                                  className={selectedRoll === s.normalizedRollNumber ? 'sm-row-selected' : ''}
+                                >
+                                  <td>
+                                    <span className="ds-code-badge" style={{ fontSize: 11 }}>
+                                      {s.sourceRow}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <span className="ds-code-badge">
+                                      {s.normalizedRollNumber || <em style={{ color: '#9CA3AF' }}>—</em>}
+                                    </span>
+                                  </td>
+                                  <td className="bold" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {s.studentName || <span style={{ color: '#9CA3AF' }}>—</span>}
+                                  </td>
+                                  <td>
+                                    <IdentityBadge classification={s.identityClassification} />
+                                  </td>
+                                  <td style={{ textAlign: 'center' }}>
+                                    {s.academicSubmissionsCount > 0
+                                      ? <span className="sm-count-badge">{s.academicSubmissionsCount}</span>
+                                      : <span style={{ color: '#9CA3AF' }}>—</span>}
+                                  </td>
+                                  <td style={{ textAlign: 'center' }}>
+                                    {s.internshipsCount > 0
+                                      ? <span className="sm-count-badge">{s.internshipsCount}</span>
+                                      : <span style={{ color: '#9CA3AF' }}>—</span>}
+                                  </td>
+                                  <td style={{ textAlign: 'center' }}>
+                                    {s.conflictsCount > 0
+                                      ? <span className="sm-conflict-count">{s.conflictsCount}</span>
+                                      : <span style={{ color: '#9CA3AF' }}>—</span>}
+                                  </td>
+                                  <td>
+                                    {s.normalizedRollNumber && (
+                                      <button
+                                        className="ds-btn outline sm"
+                                        onClick={() => setSelectedRoll(
+                                          selectedRoll === s.normalizedRollNumber ? null : s.normalizedRollNumber
+                                        )}
+                                      >
+                                        {selectedRoll === s.normalizedRollNumber ? 'Close' : 'View'}
+                                      </button>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div className="sm-pagination">
+                          <span className="sm-pagination-info">
+                            {total} record{total !== 1 ? 's' : ''} · Page {page} of {totalPages}
+                          </span>
+                          <div className="sm-pagination-controls">
+                            <button
+                              className="ds-btn ghost sm"
+                              disabled={page <= 1}
+                              onClick={() => setPage(p => Math.max(1, p - 1))}
+                            >
+                              <ChevronLeft size={15} />
+                            </button>
+                            <span className="sm-page-num">{page}</span>
+                            <button
+                              className="ds-btn ghost sm"
+                              disabled={page >= totalPages}
+                              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            >
+                              <ChevronRight size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {selectedRoll && (
+                  <StudentDetailPanel
+                    rollNumber={selectedRoll}
+                    onClose={() => setSelectedRoll(null)}
+                  />
                 )}
               </div>
-            </div>
+            </>
+          )}
 
-            {/* ── Detail Panel ── */}
-            {selectedRoll && (
-              <StudentDetailPanel
-                rollNumber={selectedRoll}
-                onClose={() => setSelectedRoll(null)}
-              />
-            )}
-          </div>
+          {/* ═════════════════════════════════════════════════════════════════ */}
+          {/* TAB 2: ENROLLMENT VERIFICATION WORKFLOW (PHASE 3.7)                */}
+          {/* ═════════════════════════════════════════════════════════════════ */}
+          {activeMainTab === 'verification' && (
+            <>
+              {/* Stat Cards */}
+              <div className="ds-stat-row">
+                <div className="ds-stat-card">
+                  <div className="ds-stat-label">Pending Verification</div>
+                  <div className="ds-stat-value" style={{ color: '#D97706' }}>
+                    {verifStats?.pending ?? '—'}
+                  </div>
+                  <div className="ds-stat-trend">Requires independent evidence</div>
+                </div>
+                <div className="ds-stat-card">
+                  <div className="ds-stat-label">Verified Enrollments</div>
+                  <div className="ds-stat-value" style={{ color: '#16A34A' }}>
+                    {verifStats?.verified ?? 0}
+                  </div>
+                  <div className="ds-stat-trend up">Independent proof accepted</div>
+                </div>
+                <div className="ds-stat-card">
+                  <div className="ds-stat-label">Requires Review</div>
+                  <div className="ds-stat-value" style={{ color: '#EA580C' }}>
+                    {verifStats?.requiresReview ?? 0}
+                  </div>
+                  <div className="ds-stat-trend">Needs clarification</div>
+                </div>
+                <div className="ds-stat-card">
+                  <div className="ds-stat-label">Rejected</div>
+                  <div className="ds-stat-value" style={{ color: '#DC2626' }}>
+                    {verifStats?.rejected ?? 0}
+                  </div>
+                  <div className="ds-stat-trend down">Invalid or non-enrolled</div>
+                </div>
+              </div>
+
+              {/* Informational Guidance Box */}
+              <div className="sm-enrollment-notice" style={{ background: '#F0FDF4', borderColor: '#BBF7D0', color: '#166534' }}>
+                <ShieldCheck size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <strong>Enrollment Verification Policy:</strong> All 554 Batch 003 identities remain in <strong>PENDING</strong> status until an authorized administrator verifies them against an official University Registrar document (e.g. Enrollment Register, Fee Clearance, or Semester Registration). Internship participation and self-reported marks do NOT constitute proof of enrollment.
+                </div>
+              </div>
+
+              {/* Verification Workspace (Split List & Action Panel) */}
+              <div className={`sm-workspace ${selectedVerifRoll ? 'sm-workspace--split' : ''}`}>
+                <div className="sm-list-panel">
+                  <div className="ds-card">
+                    <div className="ds-card-header">
+                      <span className="ds-section-title">Enrollment Verification Ledger</span>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div style={{ position: 'relative' }}>
+                          <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+                          <input
+                            className="ds-input"
+                            style={{ paddingLeft: 32, width: 220 }}
+                            placeholder="Search name or roll…"
+                            value={verifSearch}
+                            onChange={e => setVerifSearch(e.target.value)}
+                          />
+                        </div>
+
+                        <select
+                          className="ds-select"
+                          value={verifStatus}
+                          onChange={e => { setVerifStatus(e.target.value); setVerifPage(1); }}
+                        >
+                          <option value="ALL">All Statuses</option>
+                          <option value="PENDING">Pending</option>
+                          <option value="VERIFIED">Verified</option>
+                          <option value="REQUIRES_REVIEW">Requires Review</option>
+                          <option value="REJECTED">Rejected</option>
+                        </select>
+
+                        <button className="ds-btn ghost sm" onClick={() => { loadVerifications(); loadVerificationStats(); }}>
+                          <RefreshCw size={14} /> Refresh
+                        </button>
+                      </div>
+                    </div>
+
+                    {verifError && (
+                      <div className="sm-error-banner">
+                        <AlertCircle size={15} />
+                        <span>{verifError}</span>
+                      </div>
+                    )}
+
+                    {verifLoading && (
+                      <div className="sm-loading-rows">
+                        {[...Array(6)].map((_, i) => (
+                          <div key={i} className="sm-skeleton-row" />
+                        ))}
+                      </div>
+                    )}
+
+                    {!verifLoading && verifications.length === 0 && !verifError && (
+                      <div className="sm-empty-state">
+                        <ShieldCheck size={36} className="sm-empty-state-icon" />
+                        <div>No verification records match the query</div>
+                      </div>
+                    )}
+
+                    {!verifLoading && verifications.length > 0 && (
+                      <>
+                        <div className="ds-table-wrap">
+                          <table className="ds-table">
+                            <thead>
+                              <tr>
+                                <th>Roll Number</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Evidence Type / Reference</th>
+                                <th>Level</th>
+                                <th>Reviewer</th>
+                                <th></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {verifications.map(item => (
+                                <tr
+                                  key={item.normalizedRollNumber}
+                                  className={selectedVerifRoll === item.normalizedRollNumber ? 'sm-row-selected' : ''}
+                                >
+                                  <td>
+                                    <span className="ds-code-badge">
+                                      {item.normalizedRollNumber}
+                                    </span>
+                                  </td>
+                                  <td className="bold" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {item.studentName || '—'}
+                                  </td>
+                                  <td>
+                                    <VerificationBadge status={item.verificationStatus} />
+                                  </td>
+                                  <td style={{ fontSize: 12 }}>
+                                    {item.evidenceReference ? (
+                                      <div>
+                                        <span className="ds-code-badge" style={{ fontSize: 11 }}>{item.evidenceReference}</span>
+                                        <div style={{ fontSize: 10, color: '#64748B' }}>{item.evidenceType}</div>
+                                      </div>
+                                    ) : (
+                                      <span style={{ color: '#94A3B8', fontStyle: 'italic' }}>None</span>
+                                    )}
+                                  </td>
+                                  <td>
+                                    {item.evidenceVerificationLevel ? (
+                                      <span className="ds-pill blue" style={{ fontSize: 10 }}>
+                                        {item.evidenceVerificationLevel === 'REFERENCE_RECORDED' ? 'Ref. Recorded' : 'Doc. Verified'}
+                                      </span>
+                                    ) : (
+                                      <span style={{ color: '#94A3B8' }}>—</span>
+                                    )}
+                                  </td>
+                                  <td style={{ fontSize: 12, color: '#475569' }}>
+                                    {item.reviewerAdminName || <span style={{ color: '#94A3B8' }}>—</span>}
+                                  </td>
+                                  <td>
+                                    <button
+                                      className="ds-btn outline sm"
+                                      onClick={() => setSelectedVerifRoll(
+                                        selectedVerifRoll === item.normalizedRollNumber ? null : item.normalizedRollNumber
+                                      )}
+                                    >
+                                      {selectedVerifRoll === item.normalizedRollNumber ? 'Close' : 'Review'}
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div className="sm-pagination">
+                          <span className="sm-pagination-info">
+                            {verifTotal} record{verifTotal !== 1 ? 's' : ''} · Page {verifPage} of {verifTotalPages}
+                          </span>
+                          <div className="sm-pagination-controls">
+                            <button
+                              className="ds-btn ghost sm"
+                              disabled={verifPage <= 1}
+                              onClick={() => setVerifPage(p => Math.max(1, p - 1))}
+                            >
+                              <ChevronLeft size={15} />
+                            </button>
+                            <span className="sm-page-num">{verifPage}</span>
+                            <button
+                              className="ds-btn ghost sm"
+                              disabled={verifPage >= verifTotalPages}
+                              onClick={() => setVerifPage(p => Math.min(verifTotalPages, p + 1))}
+                            >
+                              <ChevronRight size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Action Panel */}
+                {selectedVerifRoll && (
+                  <VerificationDetailPanel
+                    rollNumber={selectedVerifRoll}
+                    onClose={() => setSelectedVerifRoll(null)}
+                    onActionSuccess={() => {
+                      loadVerifications();
+                      loadVerificationStats();
+                    }}
+                  />
+                )}
+              </div>
+            </>
+          )}
 
         </div>
       </div>
     </div>
   );
 }
-

@@ -218,12 +218,16 @@ const getVerificationDetail = asyncHandler(async (req, res) => {
   }
 
   // Also include admission summary for context (read-only, non-PII)
-  const admission = await AdmissionApplication.findOne({
-    batchId: BATCH_ID,
-    $or: [{ rollNumber: roll }, { normalizedRollNumber: roll }],
-  })
-    .select('applicationNumber course school admissionStatus')
-    .lean();
+  let admission = null;
+  if (staging.studentName) {
+    const firstName = staging.studentName.trim().split(' ')[0];
+    admission = await AdmissionApplication.findOne({
+      batchId: BATCH_ID,
+      studentName: { $regex: firstName, $options: 'i' },
+    })
+      .select('applicationNumber course school admissionStatus')
+      .lean();
+  }
 
   return res.status(200).json({
     success: true,
