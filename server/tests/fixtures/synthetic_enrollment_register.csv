@@ -1,0 +1,12 @@
+Roll No,Student Name,Program,Branch,Semester,Section,Academic Year,Registration ID
+REG_MATCH_01,Alpha Student,B.Tech,Computer Science,3,A,2026-27,REGID-001
+REG_MATCH_02,Beta Student,B.Tech,Electronics,3,B,2026-27,REGID-002
+REG_MATCH_03,Gamma Student,B.Tech,Mechanical,5,A,2026-27,REGID-003
+REG_MISMATCH_04,COMPLETELY WRONG NAME,B.Tech,Computer Science,3,A,2026-27,REGID-004
+REG_UNMATCHED_05,Delta Unmatched,B.Tech,Civil,1,A,2026-27,REGID-005
+9876543210,Phi Phone Number,B.Tech,IT,3,A,2026-27,REGID-006
+,Eta NoRoll,B.Tech,CSE,3,A,2026-27,REGID-007
+REG_MATCH_01,Theta Duplicate,B.Tech,CSE,3,A,2026-27,REGID-008
+REG_MATCH_03,Gamma Student,B.Tech,Mechanical,5,A,2026-27,REGID-009
+REG_UNMATCHED_99,Iota Extra,M.Tech,CS,1,A,2026-27,REGID-010
+

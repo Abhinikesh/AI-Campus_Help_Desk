@@ -117,4 +117,48 @@ export const adminService = {
     });
     return response.data;
   },
+
+  // ── Phase 3.9A: Enrollment Register Import ────────────────────────────────
+  uploadEnrollmentRegister: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/api/admin/staging/register/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  previewRegisterMapping: async (importId, columnMapping) => {
+    const response = await api.post(`/api/admin/staging/register/preview/${importId}`, { columnMapping });
+    return response.data;
+  },
+  executeRegisterImport: async (importId, columnMapping) => {
+    const response = await api.post(`/api/admin/staging/register/import/${importId}`, { columnMapping });
+    return response.data;
+  },
+  listRegisterImports: async ({ page, limit } = {}) => {
+    const response = await api.get('/api/admin/staging/register/imports', { params: { page, limit } });
+    return response.data;
+  },
+  getRegisterImportDetail: async (importId) => {
+    const response = await api.get(`/api/admin/staging/register/imports/${importId}`);
+    return response.data;
+  },
+  getRegisterImportRows: async (importId, { status, page, limit } = {}) => {
+    const response = await api.get(`/api/admin/staging/register/imports/${importId}/rows`, {
+      params: { status, page, limit },
+    });
+    return response.data;
+  },
+  getRegisterRowDetail: async (rowId) => {
+    const response = await api.get(`/api/admin/staging/register/rows/${rowId}`);
+    return response.data;
+  },
+  reviewRegisterRowEvidence: async (rowId, { decision, remarks }) => {
+    const response = await api.patch(`/api/admin/staging/register/rows/${rowId}/review`, { decision, remarks });
+    return response.data;
+  },
+  deleteRegisterImport: async (importId) => {
+    const response = await api.delete(`/api/admin/staging/register/imports/${importId}`);
+    return response.data;
+  },
 };

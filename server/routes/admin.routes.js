@@ -52,6 +52,20 @@ const {
   getPromotionHistory,
 } = require('../controllers/studentPromotion.controller');
 
+const {
+  uploadRegisterFile,
+  previewColumnMapping,
+  executeImport,
+  getImportList,
+  getImportDetail,
+  getImportRows,
+  getRowDetail,
+  reviewRowEvidence,
+  deleteImport,
+} = require('../controllers/enrollmentRegisterImport.controller');
+
+const upload = require('../middleware/upload.middleware');
+
 const authMiddleware = require('../middleware/auth.middleware');
 const { allowRoles } = require('../middleware/role.middleware');
 
@@ -102,5 +116,17 @@ router.get('/staging/promotion/stats',                     getPromotionStats);
 router.get('/staging/promotion/preview/:rollNumber',       getPromotionPreview);
 router.post('/staging/promotion/:rollNumber',              promoteStudent);
 router.get('/staging/promotion/history',                   getPromotionHistory);
+
+// ── Phase 3.9A: Official Enrollment Register Import & Reconciliation ──────────
+// multer upload middleware applied only to the file-upload endpoint.
+router.post('/staging/register/upload',                      upload.single('file'), uploadRegisterFile);
+router.post('/staging/register/preview/:importId',           previewColumnMapping);
+router.post('/staging/register/import/:importId',            executeImport);
+router.get('/staging/register/imports',                      getImportList);
+router.get('/staging/register/imports/:importId',            getImportDetail);
+router.get('/staging/register/imports/:importId/rows',       getImportRows);
+router.get('/staging/register/rows/:rowId',                  getRowDetail);
+router.patch('/staging/register/rows/:rowId/review',         reviewRowEvidence);
+router.delete('/staging/register/imports/:importId',         deleteImport);
 
 module.exports = router;

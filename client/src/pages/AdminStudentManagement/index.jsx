@@ -791,10 +791,532 @@ function VerificationDetailPanel({ rollNumber, onClose, onActionSuccess }) {
   );
 }
 
+
+// ─── Phase 3.9A: Enrollment Register Import Tab ───────────────────────────────
+
+const RECON_STATUS_CONFIG = {
+  PENDING:                      { label: 'Pending',          color: 'gray'   },
+  CONFIRMED_MATCH:              { label: 'Confirmed Match',  color: 'green'  },
+  NAME_MISMATCH_REQUIRES_REVIEW:{ label: 'Name Mismatch',   color: 'amber'  },
+  DUPLICATE_REGISTER_ENTRY:     { label: 'Duplicate',        color: 'orange' },
+  UNMATCHED_REGISTER_ENTRY:     { label: 'Unmatched',        color: 'red'    },
+  INVALID_IDENTIFIER:           { label: 'Invalid ID',       color: 'red'    },
+};
+
+const ROW_STATUS_CONFIG = {
+  VALID:                 { label: 'Valid',          color: 'green'  },
+  INVALID_IDENTIFIER:    { label: 'Invalid ID',     color: 'red'    },
+  MISSING_ROLL:          { label: 'Missing Roll',   color: 'red'    },
+  DUPLICATE_IN_REGISTER: { label: 'Duplicate',      color: 'orange' },
+};
+
+const EVIDENCE_REVIEW_CONFIG = {
+  UNREVIEWED: { label: 'Unreviewed', color: 'gray'  },
+  CONFIRMED:  { label: 'Confirmed',  color: 'green' },
+  REJECTED:   { label: 'Rejected',   color: 'red'   },
+};
+
+const CANONICAL_FIELDS = [
+  { key: 'rollNumber',     label: 'Roll Number *', required: true },
+  { key: 'studentName',    label: 'Student Name',  required: false },
+  { key: 'program',        label: 'Program',       required: false },
+  { key: 'branch',         label: 'Branch',        required: false },
+  { key: 'semester',       label: 'Semester',      required: false },
+  { key: 'section',        label: 'Section',       required: false },
+  { key: 'academicYear',   label: 'Academic Year', required: false },
+  { key: 'registrationId', label: 'Registration ID', required: false },
+];
+
+function ReconBadge({ status }) {
+  const cfg = RECON_STATUS_CONFIG[status] || { label: status, color: 'gray' };
+  return <span className={`ds-pill ${cfg.color}`}>{cfg.label}</span>;
+}
+
+function EvidenceReviewBadge({ status }) {
+  const cfg = EVIDENCE_REVIEW_CONFIG[status] || { label: status, color: 'gray' };
+  return <span className={`ds-pill ${cfg.color}`}>{cfg.label}</span>;
+}
+
+function RegisterImportTab() {
+  // ── Upload step ──
+  const [uploadPhase, setUploadPhase]       = useState('idle'); // idle | uploading | mapping | importing | done
+  const [uploadError, setUploadError]       = useState('');
+  const [importId, setImportId]             = useState(null);
+  const [headers, setHeaders]               = useState([]);
+  const [rowCount, setRowCount]             = useState(0);
+  const [filename, setFilename]             = useState('');
+  const [selectedFile, setSelectedFile]     = useState(null);
+  const fileInputRef = useRef(null);
+
+  // ── Mapping step ──
+  const [columnMapping, setColumnMapping]   = useState({});
+  const [previewRows, setPreviewRows]       = useState([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError]     = useState('');
+
+  // ── Import result ──
+  const [importSummary, setImportSummary]   = useState(null);
+
+  // ── Rows view ──
+  const [rows, setRows]                     = useState([]);
+  const [rowsTotal, setRowsTotal]           = useState(0);
+  const [rowsPage, setRowsPage]             = useState(1);
+  const [rowsStatus, setRowsStatus]         = useState('');
+  const [rowsLoading, setRowsLoading]       = useState(false);
+  const [selectedRow, setSelectedRow]       = useState(null);
+
+  // ── Evidence review form ──
+  const [reviewDecision, setReviewDecision] = useState('');
+  const [reviewRemarks, setReviewRemarks]   = useState('');
+  const [reviewLoading, setReviewLoading]   = useState(false);
+  const [reviewMsg, setReviewMsg]           = useState('');
+
+  // ── Import history ──
+  const [importList, setImportList]         = useState([]);
+  const [importListLoading, setImportListLoading] = useState(false);
+
+  // Load history on mount
+  useEffect(() => {
+    loadImportHistory();
+  }, []);
+
+  async function loadImportHistory() {
+    setImportListLoading(true);
+    try {
+      const data = await adminService.listRegisterImports({ limit: 10 });
+      setImportList(data.imports || []);
+    } catch { /* silent */ }
+    setImportListLoading(false);
+  }
+
+  async function loadRows(id, status, page) {
+    setRowsLoading(true);
+    try {
+      const data = await adminService.getRegisterImportRows(id, { status, page, limit: 20 });
+      setRows(data.rows || []);
+      setRowsTotal(data.pagination?.total || 0);
+    } catch { /* silent */ }
+    setRowsLoading(false);
+  }
+
+  function handleFileChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setSelectedFile(file);
+    setUploadError('');
+  }
+
+  async function handleUpload() {
+    if (!selectedFile) { setUploadError('Please choose a CSV or XLSX file.'); return; }
+    setUploadPhase('uploading');
+    setUploadError('');
+    try {
+      const data = await adminService.uploadEnrollmentRegister(selectedFile);
+      setImportId(data.importId);
+      setHeaders(data.headers || []);
+      setRowCount(data.rowCount || 0);
+      setFilename(data.filename || selectedFile.name);
+      setUploadPhase('mapping');
+    } catch (err) {
+      setUploadError(err?.response?.data?.message || 'Upload failed.');
+      setUploadPhase('idle');
+    }
+  }
+
+  async function handlePreview() {
+    if (!columnMapping.rollNumber) { setPreviewError('Roll Number mapping is required.'); return; }
+    setPreviewLoading(true); setPreviewError('');
+    try {
+      const data = await adminService.previewRegisterMapping(importId, columnMapping);
+      setPreviewRows(data.previewRows || []);
+    } catch (err) {
+      setPreviewError(err?.response?.data?.message || 'Preview failed.');
+    }
+    setPreviewLoading(false);
+  }
+
+  async function handleImport() {
+    if (!columnMapping.rollNumber) { setPreviewError('Roll Number mapping is required.'); return; }
+    setUploadPhase('importing');
+    try {
+      const data = await adminService.executeRegisterImport(importId, columnMapping);
+      setImportSummary(data.summary);
+      setUploadPhase('done');
+      await loadRows(importId, '', 1);
+      await loadImportHistory();
+    } catch (err) {
+      setUploadError(err?.response?.data?.message || 'Import failed.');
+      setUploadPhase('mapping');
+    }
+  }
+
+  async function handleReviewSubmit(rowId) {
+    if (!reviewDecision) { setReviewMsg('Select Confirm or Reject.'); return; }
+    setReviewLoading(true); setReviewMsg('');
+    try {
+      const data = await adminService.reviewRegisterRowEvidence(rowId, { decision: reviewDecision, remarks: reviewRemarks });
+      setReviewMsg(data.message || 'Review recorded.');
+      // Refresh the row
+      const updated = await adminService.getRegisterRowDetail(rowId);
+      setSelectedRow({ ...selectedRow, ...updated.row });
+      await loadRows(importId, rowsStatus, rowsPage);
+    } catch (err) {
+      setReviewMsg(err?.response?.data?.message || 'Review failed.');
+    }
+    setReviewLoading(false);
+  }
+
+  function resetToUpload() {
+    setUploadPhase('idle'); setImportId(null); setHeaders([]); setRowCount(0);
+    setFilename(''); setSelectedFile(null); setColumnMapping({}); setPreviewRows([]);
+    setImportSummary(null); setRows([]); setSelectedRow(null); setUploadError('');
+    setPreviewError(''); setReviewDecision(''); setReviewRemarks(''); setReviewMsg('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  return (
+    <div className="sm-register-root">
+
+      {/* ── Upload Zone ── */}
+      {uploadPhase === 'idle' && (
+        <div className="ds-card sm-register-section">
+          <div className="sm-register-section-title">
+            <FileText size={18} /> Upload Enrollment Register
+          </div>
+          <p className="sm-register-hint">
+            Upload an official enrollment register (CSV or XLSX, max 10 MB). Column names are mapped in the next step.
+          </p>
+          <div
+            className="sm-upload-zone"
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) { setSelectedFile(f); setUploadError(''); } }}
+          >
+            <FileText size={32} style={{ color: '#9CA3AF' }} />
+            <div className="sm-upload-zone-label">
+              {selectedFile ? selectedFile.name : 'Click or drag & drop CSV / XLSX file here'}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.xlsx,.xls"
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
+          </div>
+          {uploadError && <div className="sm-register-error">{uploadError}</div>}
+          <button className="ds-btn-primary sm-register-upload-btn" onClick={handleUpload} disabled={!selectedFile}>
+            Upload File
+          </button>
+        </div>
+      )}
+
+      {uploadPhase === 'uploading' && (
+        <div className="ds-card sm-register-section">
+          <div className="sm-register-hint">Uploading and parsing file…</div>
+        </div>
+      )}
+
+      {/* ── Column Mapping Step ── */}
+      {uploadPhase === 'mapping' && (
+        <div className="ds-card sm-register-section">
+          <div className="sm-register-section-title">
+            <FileCheck size={18} /> Map Columns — <span className="sm-register-filename">{filename}</span>
+            <span className="sm-register-rowcount">{rowCount} data rows detected</span>
+          </div>
+          <p className="sm-register-hint">
+            Map each canonical field to the corresponding column in your spreadsheet. Roll Number is required.
+          </p>
+          <div className="sm-mapping-grid">
+            {CANONICAL_FIELDS.map(({ key, label }) => (
+              <div key={key} className="sm-mapping-row">
+                <label className="sm-mapping-label">{label}</label>
+                <select
+                  className="sm-mapping-select"
+                  value={columnMapping[key] || ''}
+                  onChange={(e) => setColumnMapping((m) => ({ ...m, [key]: e.target.value || undefined }))}
+                >
+                  <option value="">— not mapped —</option>
+                  {headers.map((h) => <option key={h} value={h}>{h}</option>)}
+                </select>
+              </div>
+            ))}
+          </div>
+          {previewError && <div className="sm-register-error">{previewError}</div>}
+          <div className="sm-register-actions">
+            <button className="ds-btn-secondary" onClick={handlePreview} disabled={previewLoading}>
+              {previewLoading ? 'Loading…' : 'Preview First 5 Rows'}
+            </button>
+            <button className="ds-btn-primary" onClick={handleImport} disabled={!columnMapping.rollNumber}>
+              Confirm &amp; Import
+            </button>
+            <button className="ds-btn-ghost" onClick={resetToUpload}>Cancel</button>
+          </div>
+
+          {/* Preview Table */}
+          {previewRows.length > 0 && (
+            <div className="sm-register-preview">
+              <div className="sm-register-section-title" style={{ marginTop: 16 }}>Preview</div>
+              <div className="ds-table-wrapper">
+                <table className="ds-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      {CANONICAL_FIELDS.filter((f) => columnMapping[f.key]).map((f) => (
+                        <th key={f.key}>{f.label.replace(' *','')}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewRows.map((r) => (
+                      <tr key={r.row}>
+                        <td>{r.row}</td>
+                        {CANONICAL_FIELDS.filter((f) => columnMapping[f.key]).map((f) => (
+                          <td key={f.key}>{r[f.key] || '—'}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {uploadPhase === 'importing' && (
+        <div className="ds-card sm-register-section">
+          <div className="sm-register-hint">Importing and reconciling rows against Batch 003 staging…</div>
+        </div>
+      )}
+
+      {/* ── Import Summary ── */}
+      {uploadPhase === 'done' && importSummary && (
+        <>
+          <div className="ds-card sm-register-section">
+            <div className="sm-register-section-title"><CheckCircle size={18} /> Import Complete — {filename}</div>
+            <div className="sm-import-summary-row">
+              <div className="sm-summary-stat"><span className="sm-summary-num">{importSummary.totalRows}</span><span className="sm-summary-lbl">Total Rows</span></div>
+              <div className="sm-summary-stat green"><span className="sm-summary-num">{importSummary.confirmedMatchRows}</span><span className="sm-summary-lbl">Confirmed Match</span></div>
+              <div className="sm-summary-stat amber"><span className="sm-summary-num">{importSummary.reviewRows}</span><span className="sm-summary-lbl">Name Mismatch</span></div>
+              <div className="sm-summary-stat red"><span className="sm-summary-num">{importSummary.unmatchedRows}</span><span className="sm-summary-lbl">Unmatched</span></div>
+              <div className="sm-summary-stat orange"><span className="sm-summary-num">{importSummary.duplicateRows}</span><span className="sm-summary-lbl">Duplicates</span></div>
+              <div className="sm-summary-stat red"><span className="sm-summary-num">{importSummary.rejectedRows}</span><span className="sm-summary-lbl">Rejected</span></div>
+            </div>
+            <button className="ds-btn-ghost" style={{ marginTop: 12 }} onClick={resetToUpload}>Upload Another File</button>
+          </div>
+
+          {/* Rows filter + table */}
+          <div className="ds-card sm-register-section">
+            <div className="sm-register-section-title"><ClipboardList size={18} /> Reconciliation Results</div>
+            <div className="sm-register-row-filter">
+              <label>Filter by status:</label>
+              <select className="sm-mapping-select" value={rowsStatus} onChange={(e) => { setRowsStatus(e.target.value); loadRows(importId, e.target.value, 1); setRowsPage(1); }}>
+                <option value="">All</option>
+                {Object.entries(RECON_STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              </select>
+            </div>
+
+            <div className="ds-table-wrapper">
+              <table className="ds-table">
+                <thead>
+                  <tr>
+                    <th>Row #</th>
+                    <th>Roll Number</th>
+                    <th>Name (Register)</th>
+                    <th>Status</th>
+                    <th>Evidence Review</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rowsLoading ? (
+                    <tr><td colSpan={6} style={{ textAlign: 'center', color: '#6B7280' }}>Loading…</td></tr>
+                  ) : rows.length === 0 ? (
+                    <tr><td colSpan={6} style={{ textAlign: 'center', color: '#6B7280' }}>No rows</td></tr>
+                  ) : rows.map((row) => (
+                    <tr
+                      key={row._id}
+                      className={selectedRow?._id === row._id ? 'sm-row-selected' : ''}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => { setSelectedRow(row); setReviewDecision(''); setReviewRemarks(''); setReviewMsg(''); }}
+                    >
+                      <td>{row.sourceRow}</td>
+                      <td><code>{row.normalizedRollNumber || '—'}</code></td>
+                      <td>{row.rawStudentName || '—'}</td>
+                      <td><ReconBadge status={row.reconciliationStatus} /></td>
+                      <td><EvidenceReviewBadge status={row.evidenceReviewStatus} /></td>
+                      <td>
+                        {['CONFIRMED_MATCH','NAME_MISMATCH_REQUIRES_REVIEW'].includes(row.reconciliationStatus) && row.evidenceReviewStatus === 'UNREVIEWED' && (
+                          <span className="sm-row-action-hint">Review ›</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {rowsTotal > 20 && (
+              <div className="sm-pagination">
+                <button className="sm-page-btn" disabled={rowsPage <= 1} onClick={() => { const p = rowsPage - 1; setRowsPage(p); loadRows(importId, rowsStatus, p); }}>
+                  <ChevronLeft size={16} />
+                </button>
+                <span>Page {rowsPage} of {Math.ceil(rowsTotal / 20)}</span>
+                <button className="sm-page-btn" disabled={rowsPage >= Math.ceil(rowsTotal / 20)} onClick={() => { const p = rowsPage + 1; setRowsPage(p); loadRows(importId, rowsStatus, p); }}>
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+
+            {/* Row detail / evidence review panel */}
+            {selectedRow && (
+              <div className="sm-detail-panel sm-register-detail-panel">
+                <div className="sm-detail-panel-header">
+                  <span className="sm-detail-panel-title">Row {selectedRow.sourceRow} — {selectedRow.normalizedRollNumber}</span>
+                  <button className="sm-detail-close" onClick={() => setSelectedRow(null)}><X size={16} /></button>
+                </div>
+
+                <div className="sm-register-side-by-side">
+                  <div className="sm-register-side">
+                    <div className="sm-detail-section-label">Register Data</div>
+                    <div className="sm-kv-row"><span>Roll Number</span><code>{selectedRow.rawRollNumber || '—'}</code></div>
+                    <div className="sm-kv-row"><span>Name</span><span>{selectedRow.rawStudentName || '—'}</span></div>
+                    <div className="sm-kv-row"><span>Program</span><span>{selectedRow.rawProgram || '—'}</span></div>
+                    <div className="sm-kv-row"><span>Branch</span><span>{selectedRow.rawBranch || '—'}</span></div>
+                    <div className="sm-kv-row"><span>Semester</span><span>{selectedRow.rawSemester || '—'}</span></div>
+                    <div className="sm-kv-row"><span>Section</span><span>{selectedRow.rawSection || '—'}</span></div>
+                    <div className="sm-kv-row"><span>Acad. Year</span><span>{selectedRow.rawAcademicYear || '—'}</span></div>
+                    <div className="sm-kv-row"><span>Reg. ID</span><code>{selectedRow.rawRegistrationId || '—'}</code></div>
+                  </div>
+                  <div className="sm-register-side">
+                    <div className="sm-detail-section-label">Batch 003 Staging Match</div>
+                    {selectedRow.matchedStagingRollNumber ? (
+                      <>
+                        <div className="sm-kv-row"><span>Roll Number</span><code>{selectedRow.matchedStagingRollNumber}</code></div>
+                        <div className="sm-kv-row"><span>Staging Name</span><span>{selectedRow.matchedStagingName || '—'}</span></div>
+                      </>
+                    ) : (
+                      <div style={{ color: '#6B7280', fontSize: 13 }}>No staging match found</div>
+                    )}
+                    <div className="sm-kv-row" style={{ marginTop: 12 }}><span>Reconciliation</span><ReconBadge status={selectedRow.reconciliationStatus} /></div>
+                    <div className="sm-kv-row"><span>Evidence Review</span><EvidenceReviewBadge status={selectedRow.evidenceReviewStatus} /></div>
+                    {selectedRow.reviewRemarks && <div className="sm-kv-row"><span>Remarks</span><span>{selectedRow.reviewRemarks}</span></div>}
+                  </div>
+                </div>
+
+                {/* Evidence review form */}
+                {['CONFIRMED_MATCH','NAME_MISMATCH_REQUIRES_REVIEW'].includes(selectedRow.reconciliationStatus) && (
+                  <div className="sm-register-review-form">
+                    <div className="sm-detail-section-label" style={{ marginTop: 16 }}>Record Evidence Decision</div>
+                    <div className="sm-register-actions" style={{ gap: 8, flexWrap: 'wrap' }}>
+                      <button
+                        className={`sm-review-decision-btn ${reviewDecision === 'CONFIRMED' ? 'active-confirm' : ''}`}
+                        onClick={() => setReviewDecision('CONFIRMED')}
+                      >
+                        <CheckCircle size={14} /> Confirm Evidence
+                      </button>
+                      <button
+                        className={`sm-review-decision-btn ${reviewDecision === 'REJECTED' ? 'active-reject' : ''}`}
+                        onClick={() => setReviewDecision('REJECTED')}
+                      >
+                        <XCircle size={14} /> Reject
+                      </button>
+                    </div>
+                    <textarea
+                      className="sm-register-remarks"
+                      placeholder="Remarks (optional)"
+                      value={reviewRemarks}
+                      onChange={(e) => setReviewRemarks(e.target.value)}
+                      rows={2}
+                    />
+                    {reviewMsg && <div className={`sm-register-msg ${reviewDecision === 'REJECTED' ? 'error' : 'success'}`}>{reviewMsg}</div>}
+                    <button
+                      className="ds-btn-primary"
+                      style={{ marginTop: 8 }}
+                      onClick={() => handleReviewSubmit(selectedRow._id)}
+                      disabled={reviewLoading || !reviewDecision}
+                    >
+                      {reviewLoading ? 'Saving…' : 'Submit Review'}
+                    </button>
+                    {selectedRow.linkedVerificationId && (
+                      <div className="sm-register-ev-note">
+                        <Info size={13} /> EnrollmentVerification updated. Use the Enrollment Verification &amp; Promotion tab to set status to VERIFIED.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ── Import History ── */}
+      <div className="ds-card sm-register-section">
+        <div className="sm-register-section-title" style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span><ClipboardList size={18} /> Import History</span>
+          <button className="ds-btn-ghost sm-refresh-btn" onClick={loadImportHistory}><RefreshCw size={14} /></button>
+        </div>
+        {importListLoading ? (
+          <div className="sm-register-hint">Loading…</div>
+        ) : importList.length === 0 ? (
+          <div className="sm-register-hint">No imports yet.</div>
+        ) : (
+          <div className="ds-table-wrapper">
+            <table className="ds-table">
+              <thead>
+                <tr>
+                  <th>Filename</th>
+                  <th>Imported At</th>
+                  <th>Admin</th>
+                  <th>Status</th>
+                  <th>Total</th>
+                  <th>Matched</th>
+                  <th>Unmatched</th>
+                  <th>Rejected</th>
+                </tr>
+              </thead>
+              <tbody>
+                {importList.map((imp) => (
+                  <tr key={imp.importId}
+                    style={{ cursor: 'pointer' }}
+                    onClick={async () => {
+                      setImportId(imp.importId);
+                      setFilename(imp.sourceFilename);
+                      setImportSummary({
+                        totalRows: imp.totalRows, confirmedMatchRows: imp.confirmedMatchRows,
+                        reviewRows: imp.reviewRows, unmatchedRows: imp.unmatchedRows,
+                        duplicateRows: imp.duplicateRows, rejectedRows: imp.rejectedRows,
+                      });
+                      setUploadPhase('done');
+                      await loadRows(imp.importId, '', 1);
+                    }}
+                  >
+                    <td>{imp.sourceFilename}</td>
+                    <td>{new Date(imp.importedAt).toLocaleString()}</td>
+                    <td>{imp.importedByAdminName || '—'}</td>
+                    <td><span className={`ds-pill ${imp.status === 'IMPORTED' ? 'green' : 'gray'}`}>{imp.status}</span></td>
+                    <td>{imp.totalRows}</td>
+                    <td>{imp.confirmedMatchRows}</td>
+                    <td>{imp.unmatchedRows}</td>
+                    <td>{imp.rejectedRows}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page Component ──────────────────────────────────────────────────────
 
 export default function AdminStudentManagement() {
-  const [activeMainTab, setActiveMainTab] = useState('staging'); // 'staging' | 'verification'
+  const [activeMainTab, setActiveMainTab] = useState('staging'); // 'staging' | 'verification' | 'register'
 
   // ── Staging State (Phase 3.6) ──
   const [stats, setStats]           = useState(null);
@@ -963,6 +1485,13 @@ export default function AdminStudentManagement() {
             >
               <ShieldCheck size={16} />
               Enrollment Verification & Promotion
+            </button>
+            <button
+              className={`sm-main-tab-btn ${activeMainTab === 'register' ? 'active' : ''}`}
+              onClick={() => setActiveMainTab('register')}
+            >
+              <FileText size={16} />
+              Enrollment Register Import
             </button>
           </div>
 
@@ -1393,6 +1922,13 @@ export default function AdminStudentManagement() {
                 )}
               </div>
             </>
+          )}
+
+          {/* ═════════════════════════════════════════════════════════════════ */}
+          {/* TAB 3: ENROLLMENT REGISTER IMPORT (PHASE 3.9A)                    */}
+          {/* ═════════════════════════════════════════════════════════════════ */}
+          {activeMainTab === 'register' && (
+            <RegisterImportTab />
           )}
 
         </div>
