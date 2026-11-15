@@ -5,12 +5,12 @@ import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 import { studentService } from '../../services/student.service';
 import attendanceService from '../../services/attendance.service';
-import Sidebar from '../../components/Sidebar/Sidebar';
+import Sidebar, { NAV_CONFIG } from '../../components/Sidebar/Sidebar';
 import AppHeader from '../../components/AppHeader/AppHeader';
 import {
   LayoutDashboard, BookOpen, CalendarCheck, BarChart2,
   Folder, Flag, MessageCircle, LogOut, Bell, ChevronRight,
-  GraduationCap, Loader2
+  GraduationCap, Loader2, ArrowRight, Sparkles
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Student.css';
@@ -37,18 +37,43 @@ const gradePill = (grade = '') => {
   return 'red';
 };
 
+// ── Curated Module Descriptions for Launcher Tiles ─────────────
+const MODULE_DESCRIPTIONS = {
+  '/student/attendance': 'Lecture presence, biometric logs & smart check-in',
+  '/student/timetable': 'Weekly class schedule, periods & academic calendar',
+  '/student/assignments': 'Subject coursework, deadlines & online submissions',
+  '/student/fees': 'Tuition fee payments, receipts & online clearance',
+  '/student/hostel': 'Hostel room allocation, mess schedule & facilities',
+  '/student/transport': 'Bus routes, transit passes & pickup timing',
+  '/student/placement': 'Campus recruitment drives, internships & interviews',
+  '/student/activities': 'Student clubs, campus events & extra-curriculars',
+  '/student/library': 'Book catalog, digital reserves & issued titles',
+  '/notifications': 'Institutional notices, academic circulars & alerts',
+  '/student/results': 'Semester marks, GPA evaluation & grade sheets',
+  '/student/exams': 'Upcoming term exams, datesheet & hall tickets',
+  '/student/drive': 'Course syllabus, lecture slides & study materials',
+  '/student/complaints': 'Student grievance filing & status tracking',
+  '/student/ai-help': '24/7 intelligent campus assistance & resolution',
+};
+
 // ══════════════════════════════════════════════════════════════
 const StudentDashboard = () => {
   const { user, logout } = useAuth();
   const { isCollapsed } = useSidebar();
   const navigate = useNavigate();
 
+  const [activeView,    setActiveView]    = useState('modules');
   const [loading,       setLoading]       = useState(true);
   const [profile,       setProfile]       = useState(null);
   const [announcements, setAnnouncements] = useState([]);
   const [complaints,    setComplaints]    = useState([]);
   const [attendance,    setAttendance]    = useState([]);
   const [results,       setResults]       = useState([]);
+
+  // Dynamically derive authorized Student module destinations from navigation config
+  const studentModules = (NAV_CONFIG.student || []).filter(
+    (item) => item.to !== '/student/dashboard'
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -139,203 +164,309 @@ const StudentDashboard = () => {
 
         <div className="ds-content">
 
-          {/* ── STAT CARDS ── */}
-          <div className="ds-stat-row">
-            <div className="ds-stat-card">
-              <div className="ds-stat-label">Attendance</div>
-              <div className="ds-stat-value">{attendanceAvg}%</div>
-              <div className={`ds-stat-trend ${attendanceAvg < 75 ? 'down' : 'up'}`}>
-                {attendanceAvg < 75 ? '▼ Below 75% threshold' : '▲ Above required limit'}
+          {/* ── Top Welcome & Overview Banner ── */}
+          <div className="sd-welcome-banner">
+            <div className="sd-welcome-left">
+              <h2 className="sd-welcome-title">Welcome back, {studentName}</h2>
+              <p className="sd-welcome-subtitle">
+                Access your campus modules, lecture attendance, course schedules, and student services.
+              </p>
+            </div>
+            <div className="sd-welcome-badges">
+              <div className="sd-quick-stat-badge">
+                <span className="sd-stat-badge-label">Attendance</span>
+                <span className={`sd-stat-badge-val ${attendanceAvg < 75 ? 'warn' : 'good'}`}>
+                  {attendanceAvg}%
+                </span>
               </div>
-            </div>
-            <div className="ds-stat-card">
-              <div className="ds-stat-label">Courses Enrolled</div>
-              <div className="ds-stat-value">{displayAttendance.length}</div>
-              <div className="ds-stat-trend neu">Semester {semester}</div>
-            </div>
-            <div className="ds-stat-card">
-              <div className="ds-stat-label">Active Grievances</div>
-              <div className="ds-stat-value">{complaints.length}</div>
-              <div className="ds-stat-trend neu">Campus Issues</div>
-            </div>
-            <div className="ds-stat-card">
-              <div className="ds-stat-label">CGPA</div>
-              <div className="ds-stat-value">{cgpa}</div>
-              <div className="ds-stat-trend up">▲ Current Semester</div>
+              <div className="sd-quick-stat-badge">
+                <span className="sd-stat-badge-label">CGPA</span>
+                <span className="sd-stat-badge-val good">{cgpa}</span>
+              </div>
+              <div className="sd-quick-stat-badge">
+                <span className="sd-stat-badge-label">Courses</span>
+                <span className="sd-stat-badge-val">{displayAttendance.length}</span>
+              </div>
             </div>
           </div>
 
-          {/* ── ATTENDANCE OVERVIEW ── */}
-          <div className="ds-card">
-            <div className="ds-card-header">
-              <div>
-                <span className="ds-section-title">Attendance Overview (Semester {semester})</span>
-                <p style={{ margin: '3px 0 0', fontSize: 13, color: '#6B7280' }}>
-                  Real-time lecture presence and biometric logs
-                </p>
-              </div>
-              <Link to="/student/attendance" className="ds-view-all">View All →</Link>
-            </div>
-
-            {/* Table */}
-            <div className="ds-table-wrap">
-              <table className="ds-table">
-                <thead>
-                  <tr>
-                    <th>Subject</th>
-                    <th>Code</th>
-                    <th>Total Classes</th>
-                    <th>Attended</th>
-                    <th>Percentage</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayAttendance.slice(0, 7).map((s, i) => {
-                    const pct = s.total > 0 ? Math.round((s.attended / s.total) * 100) : 100;
-                    return (
-                      <tr key={i}>
-                        <td className="bold">{s.subject}</td>
-                        <td><span className="ds-code-badge">{s.code || `CS50${i+1}`}</span></td>
-                        <td>{s.total}</td>
-                        <td>{s.attended}</td>
-                        <td style={{ fontWeight: 600 }}>{pct}%</td>
-                        <td><span className={`ds-pill ${pillClass(pct)}`}>{pillLabel(pct)}</span></td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+          {/* ── View Switcher: Module Launcher vs Detailed Analytics ── */}
+          <div className="sd-view-tabs" role="tablist" aria-label="Student Dashboard Views">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'modules'}
+              className={`sd-view-tab ${activeView === 'modules' ? 'active' : ''}`}
+              onClick={() => setActiveView('modules')}
+            >
+              <LayoutDashboard size={15} />
+              <span>Campus Modules ({studentModules.length})</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'analytics'}
+              className={`sd-view-tab ${activeView === 'analytics' ? 'active' : ''}`}
+              onClick={() => setActiveView('analytics')}
+            >
+              <BarChart2 size={15} />
+              <span>Academic & Course Overview</span>
+            </button>
           </div>
 
-          {/* ── 5TH SEM COURSES ── */}
-          <div className="ds-card">
-            <div className="ds-card-header">
-              <div>
-                <span className="ds-section-title">Enrolled Courses (Semester {semester} CSE-A)</span>
-                <p style={{ margin: '3px 0 0', fontSize: 13, color: '#6B7280' }}>
-                  Official college timetable subjects and instructors
-                </p>
+          {/* ── VIEW 1: MODULE LAUNCHER GRID (DEFAULT) ── */}
+          {activeView === 'modules' && (
+            <div className="sd-launcher-section">
+              <div className="sd-modules-grid">
+                {studentModules.map((item) => {
+                  const Icon = item.icon;
+                  const desc = MODULE_DESCRIPTIONS[item.to] || 'Access student module';
+
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className="sd-module-card"
+                      title={`Open ${item.label}`}
+                      aria-label={`Open ${item.label}`}
+                    >
+                      <div className="sd-module-card-top">
+                        <div className="sd-module-icon-wrap">
+                          <Icon size={20} className="sd-module-icon" />
+                        </div>
+                        <ChevronRight size={16} className="sd-module-arrow" />
+                      </div>
+                      <div className="sd-module-info">
+                        <h3 className="sd-module-name">{item.label}</h3>
+                        <p className="sd-module-desc">{desc}</p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
-              <Link to="/student/results" className="ds-view-all">View Syllabus →</Link>
+
+              {/* Quick Academic Snapshot Link Bar */}
+              <div className="sd-glance-bar">
+                <div className="sd-glance-left">
+                  <span className="sd-glance-heading">Academic Snapshot</span>
+                  <span className="sd-glance-text">
+                    Semester {semester} {branch} • {displayAttendance.length} enrolled courses • Attendance: {attendanceAvg}% • CGPA: {cgpa}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="sd-glance-btn"
+                  onClick={() => setActiveView('analytics')}
+                >
+                  <span>Detailed Analytics & Marksheet</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
             </div>
-            <div className="courses-grid">
-              {coursesList.map((c, i) => (
-                <div key={i} className="course-card">
-                  <div className="course-code">{c.code}</div>
-                  <div className="course-name">{c.name}</div>
-                  <div className="course-faculty">{c.faculty}</div>
-                  <div className="course-next">{c.next}</div>
+          )}
+
+          {/* ── VIEW 2: DETAILED ACADEMIC & COURSE OVERVIEW ── */}
+          {activeView === 'analytics' && (
+            <div className="sd-analytics-section">
+              {/* ── STAT CARDS ── */}
+              <div className="ds-stat-row">
+                <div className="ds-stat-card">
+                  <div className="ds-stat-label">Attendance</div>
+                  <div className="ds-stat-value">{attendanceAvg}%</div>
+                  <div className={`ds-stat-trend ${attendanceAvg < 75 ? 'down' : 'up'}`}>
+                    {attendanceAvg < 75 ? '▼ Below 75% threshold' : '▲ Above required limit'}
+                  </div>
+                </div>
+                <div className="ds-stat-card">
+                  <div className="ds-stat-label">Courses Enrolled</div>
+                  <div className="ds-stat-value">{displayAttendance.length}</div>
+                  <div className="ds-stat-trend neu">Semester {semester}</div>
+                </div>
+                <div className="ds-stat-card">
+                  <div className="ds-stat-label">Active Grievances</div>
+                  <div className="ds-stat-value">{complaints.length}</div>
+                  <div className="ds-stat-trend neu">Campus Issues</div>
+                </div>
+                <div className="ds-stat-card">
+                  <div className="ds-stat-label">CGPA</div>
+                  <div className="ds-stat-value">{cgpa}</div>
+                  <div className="ds-stat-trend up">▲ Current Semester</div>
+                </div>
+              </div>
+
+              {/* ── ATTENDANCE OVERVIEW ── */}
+              <div className="ds-card">
+                <div className="ds-card-header">
                   <div>
-                    <div className="course-prog-label">
-                      <span>Course Progress</span><span>{c.progress}%</span>
-                    </div>
-                    <div className="ds-bar-track" style={{ height: 6 }}>
-                      <div className="ds-bar-fill" style={{ width: `${c.progress}%` }} />
-                    </div>
+                    <span className="ds-section-title">Attendance Overview (Semester {semester})</span>
+                    <p style={{ margin: '3px 0 0', fontSize: 13, color: '#6B7280' }}>
+                      Real-time lecture presence and biometric logs
+                    </p>
                   </div>
+                  <Link to="/student/attendance" className="ds-view-all">View All →</Link>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* ── RESULTS & GRADES ── */}
-          <div className="ds-card">
-            <div className="ds-card-header">
-              <span className="ds-section-title">Academic Results & Grades (Semester {semester})</span>
-              <Link to="/student/results" className="ds-view-all">Full Marksheet →</Link>
-            </div>
-            <div className="ds-table-wrap">
-              <table className="ds-table">
-                <thead>
-                  <tr>
-                    <th>Subject</th>
-                    <th>Code</th>
-                    <th>Credits</th>
-                    <th>Marks</th>
-                    <th>Grade</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(results.length > 0 ? results.slice(0, 5) : [
-                    { subject: 'Design Analysis of Algorithms', code: 'CS501', credits: 4, marks: 88, grade: 'A' },
-                    { subject: 'Formal Languages and Automata Theory', code: 'CS502', credits: 4, marks: 76, grade: 'B+' },
-                    { subject: 'Artificial Intelligence Concepts & Apps', code: 'CS503', credits: 4, marks: 92, grade: 'A+' },
-                    { subject: 'Computer Graphics', code: 'CS504', credits: 3, marks: 84, grade: 'A' },
-                    { subject: 'Software Development Processes', code: 'CS505', credits: 3, marks: 80, grade: 'A' },
-                  ]).map((r, i) => (
-                    <tr key={i}>
-                      <td className="bold">{r.subject}</td>
-                      <td><span className="ds-code-badge">{r.code}</span></td>
-                      <td>{r.credits || 3}</td>
-                      <td style={{ fontWeight: 600 }}>{r.marks} / 100</td>
-                      <td>
-                        <span className={`ds-pill ${gradePill(r.grade)}`}>
-                          {r.grade}
-                        </span>
-                      </td>
-                      <td>
-                        <span style={{ color: '#16A34A', fontWeight: 600, fontSize: 13 }}>
-                          Pass
-                        </span>
-                      </td>
-                    </tr>
+                {/* Table */}
+                <div className="ds-table-wrap">
+                  <table className="ds-table">
+                    <thead>
+                      <tr>
+                        <th>Subject</th>
+                        <th>Code</th>
+                        <th>Total Classes</th>
+                        <th>Attended</th>
+                        <th>Percentage</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {displayAttendance.slice(0, 7).map((s, i) => {
+                        const pct = s.total > 0 ? Math.round((s.attended / s.total) * 100) : 100;
+                        return (
+                          <tr key={i}>
+                            <td className="bold">{s.subject}</td>
+                            <td><span className="ds-code-badge">{s.code || `CS50${i+1}`}</span></td>
+                            <td>{s.total}</td>
+                            <td>{s.attended}</td>
+                            <td style={{ fontWeight: 600 }}>{pct}%</td>
+                            <td><span className={`ds-pill ${pillClass(pct)}`}>{pillLabel(pct)}</span></td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* ── 5TH SEM COURSES ── */}
+              <div className="ds-card">
+                <div className="ds-card-header">
+                  <div>
+                    <span className="ds-section-title">Enrolled Courses (Semester {semester} CSE-A)</span>
+                    <p style={{ margin: '3px 0 0', fontSize: 13, color: '#6B7280' }}>
+                      Official college timetable subjects and instructors
+                    </p>
+                  </div>
+                  <Link to="/student/results" className="ds-view-all">View Syllabus →</Link>
+                </div>
+                <div className="courses-grid">
+                  {coursesList.map((c, i) => (
+                    <div key={i} className="course-card">
+                      <div className="course-code">{c.code}</div>
+                      <div className="course-name">{c.name}</div>
+                      <div className="course-faculty">{c.faculty}</div>
+                      <div className="course-next">{c.next}</div>
+                      <div>
+                        <div className="course-prog-label">
+                          <span>Course Progress</span><span>{c.progress}%</span>
+                        </div>
+                        <div className="ds-bar-track" style={{ height: 6 }}>
+                          <div className="ds-bar-fill" style={{ width: `${c.progress}%` }} />
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-            <div style={{ textAlign: 'right', marginTop: 14, fontSize: 15, fontWeight: 700, color: '#111827' }}>
-              Cumulative CGPA: {cgpa} / 10
-            </div>
-          </div>
-
-          {/* ── BOTTOM: Announcements + Quick Links ── */}
-          <div className="ds-two-col">
-            {/* Announcements */}
-            <div className="ds-card">
-              <div className="ds-card-header">
-                <span className="ds-section-title">Campus Announcements</span>
-              </div>
-              {announcements.length > 0 ? announcements.map((ann, i) => (
-                <div key={ann._id || i} className="ann-item">
-                  <div className="ann-top">
-                    <span className="ann-title">{ann.title}</span>
-                    <span className="ann-date">{new Date(ann.date || ann.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
-                  </div>
-                  <div className="ann-body">{ann.body}</div>
                 </div>
-              )) : (
-                <div className="ds-empty">No new announcements at this time.</div>
-              )}
-            </div>
+              </div>
 
-            {/* Quick Links */}
-            <div className="ds-card">
-              <div className="ds-card-header">
-                <span className="ds-section-title">Quick Portals</span>
+              {/* ── RESULTS & GRADES ── */}
+              <div className="ds-card">
+                <div className="ds-card-header">
+                  <span className="ds-section-title">Academic Results & Grades (Semester {semester})</span>
+                  <Link to="/student/results" className="ds-view-all">Full Marksheet →</Link>
+                </div>
+                <div className="ds-table-wrap">
+                  <table className="ds-table">
+                    <thead>
+                      <tr>
+                        <th>Subject</th>
+                        <th>Code</th>
+                        <th>Credits</th>
+                        <th>Marks</th>
+                        <th>Grade</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(results.length > 0 ? results.slice(0, 5) : [
+                        { subject: 'Design Analysis of Algorithms', code: 'CS501', credits: 4, marks: 88, grade: 'A' },
+                        { subject: 'Formal Languages and Automata Theory', code: 'CS502', credits: 4, marks: 76, grade: 'B+' },
+                        { subject: 'Artificial Intelligence Concepts & Apps', code: 'CS503', credits: 4, marks: 92, grade: 'A+' },
+                        { subject: 'Computer Graphics', code: 'CS504', credits: 3, marks: 84, grade: 'A' },
+                        { subject: 'Software Development Processes', code: 'CS505', credits: 3, marks: 80, grade: 'A' },
+                      ]).map((r, i) => (
+                        <tr key={i}>
+                          <td className="bold">{r.subject}</td>
+                          <td><span className="ds-code-badge">{r.code}</span></td>
+                          <td>{r.credits || 3}</td>
+                          <td style={{ fontWeight: 600 }}>{r.marks} / 100</td>
+                          <td>
+                            <span className={`ds-pill ${gradePill(r.grade)}`}>
+                              {r.grade}
+                            </span>
+                          </td>
+                          <td>
+                            <span style={{ color: '#16A34A', fontWeight: 600, fontSize: 13 }}>
+                              Pass
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ textAlign: 'right', marginTop: 14, fontSize: 15, fontWeight: 700, color: '#111827' }}>
+                  Cumulative CGPA: {cgpa} / 10
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {[
-                  { label: 'Smart Attendance', to: '/student/attendance', icon: CalendarCheck },
-                  { label: 'Semester Exams',   to: '/student/exams',      icon: GraduationCap },
-                  { label: 'Marks & Results',  to: '/student/results',    icon: BarChart2     },
-                  { label: 'Academic Drive',   to: '/student/drive',      icon: Folder        },
-                  { label: 'Campus Grievance', to: '/student/complaints', icon: Flag          },
-                  { label: 'AI Help Desk',     to: '/student/ai-help',    icon: MessageCircle },
-                ].map(({ label, to, icon: Icon }) => (
-                  <Link key={label} to={to} className="ds-quicklink">
-                    <div className="ds-quicklink-left">
-                      <Icon size={16} color="#1A56DB" strokeWidth={1.75} />
-                      {label}
+
+              {/* ── BOTTOM: Announcements + Quick Links ── */}
+              <div className="ds-two-col">
+                {/* Announcements */}
+                <div className="ds-card">
+                  <div className="ds-card-header">
+                    <span className="ds-section-title">Campus Announcements</span>
+                  </div>
+                  {announcements.length > 0 ? announcements.map((ann, i) => (
+                    <div key={ann._id || i} className="ann-item">
+                      <div className="ann-top">
+                        <span className="ann-title">{ann.title}</span>
+                        <span className="ann-date">{new Date(ann.date || ann.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                      </div>
+                      <div className="ann-body">{ann.body}</div>
                     </div>
-                    <ChevronRight size={16} color="#9CA3AF" />
-                  </Link>
-                ))}
+                  )) : (
+                    <div className="ds-empty">No new announcements at this time.</div>
+                  )}
+                </div>
+
+                {/* Quick Links */}
+                <div className="ds-card">
+                  <div className="ds-card-header">
+                    <span className="ds-section-title">Quick Portals</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {[
+                      { label: 'Smart Attendance', to: '/student/attendance', icon: CalendarCheck },
+                      { label: 'Semester Exams',   to: '/student/exams',      icon: GraduationCap },
+                      { label: 'Marks & Results',  to: '/student/results',    icon: BarChart2     },
+                      { label: 'Academic Drive',   to: '/student/drive',      icon: Folder        },
+                      { label: 'Campus Grievance', to: '/student/complaints', icon: Flag          },
+                      { label: 'AI Help Desk',     to: '/student/ai-help',    icon: MessageCircle },
+                    ].map(({ label, to, icon: Icon }) => (
+                      <Link key={label} to={to} className="ds-quicklink">
+                        <div className="ds-quicklink-left">
+                          <Icon size={16} color="#1A56DB" strokeWidth={1.75} />
+                          {label}
+                        </div>
+                        <ChevronRight size={16} color="#9CA3AF" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
         </div>
       </div>
