@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar/Sidebar';
+import AppHeader from '../../components/AppHeader/AppHeader';
 import { adminService } from '../../services/admin.service';
 import {
   LayoutDashboard, Users, UserCheck, AlertTriangle, CreditCard,
@@ -112,18 +113,13 @@ const AdminDashboard = () => {
       <Sidebar />
 
       {/* MAIN */}
-      <div
-        className="ds-main"
-        
-      >
-        <header className="ds-header">
-          <span className="ds-header-title">{activeNav}</span>
-          <div className="ds-header-right">
-            <span style={{ fontSize: 13, color: '#6B7280', fontWeight: 500 }}>{time}</span>
-            <button className="ds-bell-btn"><Bell size={18} /><span className="ds-bell-dot" /></button>
-            <div className="ds-avatar">{initials(adminName)}</div>
-          </div>
-        </header>
+      <div className="ds-main">
+        <AppHeader
+          title={activeNav || "Admin Dashboard"}
+          extraRight={
+            <span style={{ fontSize: 13, color: '#64748B', fontWeight: 500 }}>{time}</span>
+          }
+        />
 
         <div className="ds-content">
 

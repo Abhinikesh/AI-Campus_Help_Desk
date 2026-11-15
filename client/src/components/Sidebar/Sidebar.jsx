@@ -244,37 +244,30 @@ const Sidebar = () => {
 
       {/* ── Shared Unified Sidebar ── */}
       <aside className={`cs-sidebar ${isCollapsed ? 'collapsed' : 'expanded'}`}>
-        {/* ── Top Header with Logo, Brand, Role Badge & Toggle ── */}
+        {/* ── Top Header with Logo, Brand & Role Badge (Collapse button moved outside) ── */}
         <div className="cs-sidebar-header">
           <Link
             to={homePath}
             className="cs-sidebar-logo-link"
-            title={`CampusSphere — ${badgeInfo.label}`}
+            title={`CampusSphere AI — ${badgeInfo.label}`}
             onClick={handleNavClick}
           >
             <img
               src="/campussphere-logo.png"
-              alt="CampusSphere"
+              alt="CampusSphere AI"
               className="cs-sidebar-logo-img"
             />
             {!isCollapsed && (
               <div className="cs-sidebar-brand-group">
-                <span className="cs-sidebar-brand">CampusSphere</span>
+                <span className="cs-sidebar-brand">
+                  CampusSphere <span className="cs-sidebar-brand-ai">AI</span>
+                </span>
                 <span className={`cs-sidebar-role-badge ${badgeInfo.className}`}>
                   {badgeInfo.label}
                 </span>
               </div>
             )}
           </Link>
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            className="cs-sidebar-toggle-btn"
-            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          </button>
         </div>
 
         {/* ── User Information Block ── */}
@@ -311,7 +304,8 @@ const Sidebar = () => {
                 key={item.to}
                 to={item.to}
                 className={`cs-sidebar-item${isActive ? ' active' : ''}`}
-                title={isCollapsed ? item.label : undefined}
+                title={item.label}
+                aria-label={item.label}
                 onClick={handleNavClick}
               >
                 <div className="cs-sidebar-icon">
@@ -330,6 +324,7 @@ const Sidebar = () => {
             onClick={handleLogout}
             className="cs-sidebar-logout"
             title={isCollapsed ? 'Sign Out' : undefined}
+            aria-label="Sign Out"
           >
             <div className="cs-sidebar-icon">
               <LogOut size={18} />
@@ -338,6 +333,17 @@ const Sidebar = () => {
           </button>
         </div>
       </aside>
+
+      {/* ── Collapse/Expand Button — Positioned OUTSIDE the sidebar at its boundary ── */}
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        className={`cs-sidebar-boundary-toggle ${isCollapsed ? 'collapsed' : 'expanded'}`}
+        title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+      </button>
     </>
   );
 };

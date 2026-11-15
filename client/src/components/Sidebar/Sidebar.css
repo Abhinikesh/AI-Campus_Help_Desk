@@ -128,8 +128,8 @@
   height: 64px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 14px;
+  justify-content: flex-start;
+  padding: 0 16px;
   border-bottom: 1px solid var(--cs-sidebar-border, #E2E8F0);
   flex-shrink: 0;
   background: var(--cs-sidebar-bg, #FFFFFF);
@@ -138,8 +138,8 @@
 
 .cs-sidebar.collapsed .cs-sidebar-header {
   padding: 0 10px;
-  justify-content: space-between;
-  gap: 4px;
+  justify-content: center;
+  gap: 0;
 }
 
 .cs-sidebar-logo-link {
@@ -181,6 +181,13 @@
   line-height: 1.2;
 }
 
+.cs-sidebar-brand-ai {
+  color: var(--cs-primary, #1A56DB);
+  font-weight: 800;
+  font-size: 12.5px;
+  margin-left: 2px;
+}
+
 .cs-sidebar-role-badge {
   display: inline-flex;
   align-items: center;
@@ -208,6 +215,53 @@
 .badge-staff      { background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0; }
 .badge-parent     { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; }
 .badge-admission  { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+
+/* ── Collapse/Expand Button — Positioned OUTSIDE the sidebar at its boundary ── */
+.cs-sidebar-boundary-toggle {
+  position: fixed;
+  top: 16px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  cursor: pointer;
+  z-index: 95;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+  transition: left 0.22s cubic-bezier(0.4, 0, 0.2, 1), background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  padding: 0;
+}
+
+.cs-sidebar-boundary-toggle.expanded {
+  left: calc(var(--cs-sidebar-width-expanded, 250px) - 12px);
+}
+
+.cs-sidebar-boundary-toggle.collapsed {
+  left: calc(var(--cs-sidebar-width-collapsed, 72px) - 12px);
+}
+
+.cs-sidebar-boundary-toggle:hover {
+  background: #EFF6FF;
+  color: #1A56DB;
+  border-color: #93C5FD;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(26, 86, 219, 0.18);
+}
+
+.cs-sidebar-boundary-toggle:focus-visible {
+  outline: 2px solid #1A56DB;
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .cs-sidebar-boundary-toggle {
+    display: none !important;
+  }
+}
 
 .cs-sidebar-toggle-btn {
   background: var(--cs-bg-subtle, #F8F9FA);

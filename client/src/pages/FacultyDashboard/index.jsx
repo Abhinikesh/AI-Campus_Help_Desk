@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar/Sidebar';
+import AppHeader from '../../components/AppHeader/AppHeader';
 import { facultyService } from '../../services/faculty.service';
 import {
   LayoutDashboard, BookOpen, CalendarCheck, Users, Megaphone,
@@ -138,20 +139,11 @@ const FacultyDashboard = () => {
       <Sidebar />
 
       {/* ── MAIN ── */}
-      <div
-        className="ds-main"
-        
-      >
-        <header className="ds-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span className="ds-header-title">Faculty Portal</span>
-            <span className="ds-pill blue">Semester 5 (2026–2027)</span>
-          </div>
-          <div className="ds-header-right">
-            <button className="ds-bell-btn"><Bell size={18} /><span className="ds-bell-dot" /></button>
-            <div className="ds-avatar">{initials(facultyName)}</div>
-          </div>
-        </header>
+      <div className="ds-main">
+        <AppHeader
+          title="Faculty Portal"
+          subtitle="Semester 5 (2026–2027)"
+        />
 
         <div className="ds-content">
 

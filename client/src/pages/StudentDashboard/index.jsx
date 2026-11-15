@@ -6,6 +6,7 @@ import { useSidebar } from '../../context/SidebarContext';
 import { studentService } from '../../services/student.service';
 import attendanceService from '../../services/attendance.service';
 import Sidebar from '../../components/Sidebar/Sidebar';
+import AppHeader from '../../components/AppHeader/AppHeader';
 import {
   LayoutDashboard, BookOpen, CalendarCheck, BarChart2,
   Folder, Flag, MessageCircle, LogOut, Bell, ChevronRight,
@@ -129,24 +130,12 @@ const StudentDashboard = () => {
       <Sidebar />
 
       {/* ── MAIN CONTENT ── */}
-      <div
-        className="ds-main"
-        
-      >
+      <div className="ds-main">
         {/* Top header */}
-        <header className="ds-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span className="ds-header-title">Student Dashboard</span>
-            <span className="ds-pill blue">Semester {semester} • {branch}</span>
-          </div>
-          <div className="ds-header-right">
-            <button className="ds-bell-btn" aria-label="Notifications" title="Notifications">
-              <Bell size={18} />
-              <span className="ds-bell-dot" />
-            </button>
-            <div className="ds-avatar">{initials(studentName)}</div>
-          </div>
-        </header>
+        <AppHeader
+          title="Student Dashboard"
+          subtitle={`Semester ${semester} • ${branch}`}
+        />
 
         <div className="ds-content">
 

@@ -22,6 +22,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from '../../components/Sidebar/Sidebar';
+import AppHeader from '../../components/AppHeader/AppHeader';
 import { adminService } from '../../services/admin.service';
 import {
   Users, Search, ChevronLeft, ChevronRight, RefreshCw,
@@ -1528,13 +1529,15 @@ export default function AdminStudentManagement() {
       <Sidebar />
 
       <div className="ds-main">
-        <header className="ds-header">
-          <span className="ds-header-title">Student Management</span>
-          <div className="ds-header-right">
-            <span className="sm-batch-badge">{BATCH_ID}</span>
-            <span className="sm-read-only-badge">BATCH 003 GOVERNANCE</span>
-          </div>
-        </header>
+        <AppHeader
+          title="Student Management"
+          extraRight={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span className="sm-batch-badge">{BATCH_ID}</span>
+              <span className="sm-read-only-badge">BATCH 003 GOVERNANCE</span>
+            </div>
+          }
+        />
 
         <div className="ds-content">
 

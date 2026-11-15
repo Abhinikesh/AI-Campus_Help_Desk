@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 import Sidebar from '../../components/Sidebar/Sidebar';
+import AppHeader from '../../components/AppHeader/AppHeader';
 import attendanceService from '../../services/attendance.service';
 import AttendanceStatusBadge from '../../components/AttendanceShared/AttendanceStatusBadge';
 import AttendanceSummaryCard from '../../components/AttendanceShared/AttendanceSummaryCard';
@@ -187,17 +188,11 @@ const AdminAttendanceHub = () => {
       <Sidebar />
 
       {/* ── Main Content ── */}
-      <div
-        className="ds-main"
-        
-      >
-        <header className="ds-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <h1 className="ds-header-title">Campus Smart Attendance Administration</h1>
-            <span className="ds-pill blue">Enterprise Hub</span>
-          </div>
-
-          <div className="ds-header-right">
+      <div className="ds-main">
+        <AppHeader
+          title="Campus Smart Attendance Administration"
+          subtitle="Enterprise Hub"
+          extraRight={
             <button
               type="button"
               className="ds-btn ds-btn-secondary"
@@ -207,9 +202,8 @@ const AdminAttendanceHub = () => {
             >
               <RefreshCw size={14} /> Refresh
             </button>
-            <div className="ds-avatar">{initials(adminName)}</div>
-          </div>
-        </header>
+          }
+        />
 
         <main className="ds-content">
           {/* Sub-navigation Tabs */}

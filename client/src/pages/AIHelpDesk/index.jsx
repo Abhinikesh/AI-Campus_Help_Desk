@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar/Sidebar';
+import AppHeader from '../../components/AppHeader/AppHeader';
 import { aiService } from '../../services/ai.service';
 import {
   Send, Trash2, Plus, BookOpen, Building2, Map, Flag, Cpu, ArrowLeft
@@ -176,26 +177,26 @@ const AIHelpDesk = () => {
           overflow: 'hidden',
         }}
       >
-        <header className="ds-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <h1 className="ds-header-title">AI Help Desk</h1>
-            <span className="ds-pill blue">Campus Assistant</span>
-          </div>
-          <div className="ai-chat-controls" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <select
-              className="ai-agent-select"
-              value={agentKey}
-              onChange={e => { setAgentKey(e.target.value); setAutoDetect(e.target.value === 'auto'); }}
-            >
-              {Object.entries(AGENTS).map(([k, a]) => (
-                <option key={k} value={k}>{a.label}</option>
-              ))}
-            </select>
-            <button className="ds-btn ghost sm" onClick={clearChat} title="Clear chat">
-              <Trash2 size={15} />
-            </button>
-          </div>
-        </header>
+        <AppHeader
+          title="AI Help Desk"
+          subtitle="Campus Assistant"
+          extraRight={
+            <div className="ai-chat-controls" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <select
+                className="ai-agent-select"
+                value={agentKey}
+                onChange={e => { setAgentKey(e.target.value); setAutoDetect(e.target.value === 'auto'); }}
+              >
+                {Object.entries(AGENTS).map(([k, a]) => (
+                  <option key={k} value={k}>{a.label}</option>
+                ))}
+              </select>
+              <button className="ds-btn ghost sm" onClick={clearChat} title="Clear chat">
+                <Trash2 size={15} />
+              </button>
+            </div>
+          }
+        />
 
         <div className="ai-page">
 
