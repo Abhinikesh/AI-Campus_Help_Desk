@@ -1,1 +1,334 @@
-/* Admin.css — thin overrides, layout from dashboard-shared.css */
+/* ═══════════════════════════════════════════════════════════════
+   Admin.css — Admin Landing Dashboard & Module Launcher System
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Top Welcome Banner ─────────────────────────────────────── */
+.ad-welcome-banner {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.ad-welcome-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.ad-welcome-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0F172A;
+  letter-spacing: -0.2px;
+  margin: 0 0 4px 0;
+}
+
+.ad-welcome-subtitle {
+  font-size: 13px;
+  color: #64748B;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.ad-welcome-badges {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.ad-quick-stat-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 14px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  min-width: 80px;
+}
+
+.ad-stat-badge-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748B;
+}
+
+.ad-stat-badge-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.ad-stat-badge-val.good {
+  color: #16A34A;
+}
+
+.ad-stat-badge-val.warn {
+  color: #D97706;
+}
+
+/* ── View Switcher Tabs ─────────────────────────────────────── */
+.ad-view-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #E2E8F0;
+  padding-bottom: 2px;
+}
+
+.ad-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px 8px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748B;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.ad-view-tab:hover {
+  color: #0F172A;
+  background: #F1F5F9;
+}
+
+.ad-view-tab.active {
+  color: #1A56DB;
+  font-weight: 600;
+  border-bottom-color: #1A56DB;
+  background: transparent;
+}
+
+/* ── Module Launcher Grid ───────────────────────────────────── */
+.ad-launcher-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ad-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* Module Card */
+.ad-module-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 135px;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.ad-module-card:hover {
+  transform: translateY(-2px);
+  border-color: #BFDBFE;
+  box-shadow: 0 8px 20px -4px rgba(26, 86, 219, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+}
+
+.ad-module-card:focus-visible {
+  outline: 2px solid #1A56DB;
+  outline-offset: 2px;
+}
+
+.ad-module-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.ad-module-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #EFF6FF;
+  border: 1px solid #DBEAFE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1A56DB;
+  flex-shrink: 0;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.ad-module-card:hover .ad-module-icon-wrap {
+  background: #DBEAFE;
+  transform: scale(1.05);
+}
+
+.ad-module-arrow {
+  color: #CBD5E1;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.ad-module-card:hover .ad-module-arrow {
+  color: #1A56DB;
+  transform: translateX(3px);
+}
+
+.ad-module-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ad-module-name {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #0F172A;
+  margin: 0;
+  letter-spacing: -0.1px;
+}
+
+.ad-module-desc {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Glance Strip Bar ───────────────────────────────────────── */
+.ad-glance-bar {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.ad-glance-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ad-glance-heading {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border-radius: 6px;
+}
+
+.ad-glance-text {
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.ad-glance-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: #1A56DB;
+  border: 1px solid #BFDBFE;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.ad-glance-btn:hover {
+  background: #EFF6FF;
+  border-color: #1A56DB;
+  color: #1E40AF;
+}
+
+/* ── Overview Section ───────────────────────────────────────── */
+.ad-overview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Responsive Rules ───────────────────────────────────────── */
+@media (max-width: 1280px) {
+  .ad-modules-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .ad-modules-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .ad-welcome-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+  }
+
+  .ad-welcome-badges {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .ad-modules-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .ad-module-card {
+    padding: 14px;
+    min-height: 120px;
+  }
+
+  .ad-module-icon-wrap {
+    width: 36px;
+    height: 36px;
+  }
+
+  .ad-glance-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .ad-modules-grid {
+    grid-template-columns: 1fr;
+  }
+}
