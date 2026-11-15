@@ -1,20 +1,21 @@
 /**
  * server/tests/admin_profile_management.test.js
- * Verification Suite for Admin Student & Faculty Profile Management (Part 6).
+ * Verification Suite for Admin Student & Faculty Profile Management (Part 6 & 6.1).
  *
  * Verifies:
- * 1. Admin Student profile retrieval (list and detail).
- * 2. Admin Student profile updates (permitted fields).
+ * 1. Admin Student profile retrieval (list and detail) with full unmasked phone number.
+ * 2. Admin Student profile updates (permitted fields including full phone number).
  * 3. Filling missing Student fields (e.g. phone, branch, semester, section).
- * 4. Admin Faculty profile retrieval (list and detail).
- * 5. Admin Faculty profile updates (permitted fields: department, designation, phone, name, email).
- * 6. Filling missing Faculty fields.
+ * 4. Admin Faculty profile retrieval (list and detail) with full unmasked phone number.
+ * 5. Admin Faculty profile updates (permitted fields including full phone number).
+ * 6. Filling missing Faculty fields safely.
  * 7. Duplicate institutional identifier prevention (rollNumber and employeeId immutable).
  * 8. Invalid phone and email format rejection (HTTP 400).
  * 9. Unauthorized update denial (non-admin roles rejected with 403, unauthenticated with 401).
- * 10. Protection of role and identity fields (status, role, password).
- * 11. Audit history creation with field change tracking and non-PII summaries.
- * 12. No unintended database mutation invariance.
+ * 10. Protection of role and status fields from modification.
+ * 11. Audit history creation with field change tracking and non-PII summaries (no phone numbers in audit logs).
+ * 12. Authorized Faculty Student 360 returns the complete unmasked phone number.
+ * 13. Zero unintended database mutation invariance.
  */
 'use strict';
 
@@ -32,6 +33,7 @@ const Student = require('../models/Student');
 const Faculty = require('../models/Faculty');
 const AuditLog = require('../models/AuditLog');
 const adminRoutes = require('../routes/admin.routes');
+const facultyRoutes = require('../routes/faculty.routes');
 
 let mongod, server, baseUrl;
 let tokenAdmin, tokenFaculty, tokenStudent;
@@ -47,6 +49,7 @@ before(async () => {
   const app = express();
   app.use(express.json());
   app.use('/api/admin', adminRoutes);
+  app.use('/api/faculty', facultyRoutes);
 
   // Error handler
   app.use((err, req, res, next) => {
@@ -149,6 +152,12 @@ test('Admin Student & Faculty Profile Management Suite', async (t) => {
     assert.ok(bodyList.data.length >= 2);
     assert.equal(bodyList.pagination.total >= 2, true);
 
+    // Verify Admin Student list returns complete, unmasked phone number
+    const foundStudent = bodyList.data.find((s) => s.rollNumber === '20240001');
+    assert.ok(foundStudent, 'Student must be returned in list');
+    assert.equal(foundStudent.phone, '9876543210', 'Admin Student list must return complete unmasked phone number');
+    assert.ok(!foundStudent.phone.includes('*'), 'Phone number must not be masked in Admin list');
+
     // 1b. Search student by roll number
     const resSearch = await fetch(`${baseUrl}/api/admin/students?search=20240001`, {
       headers: { Authorization: `Bearer ${tokenAdmin}` },
@@ -165,6 +174,8 @@ test('Admin Student & Faculty Profile Management Suite', async (t) => {
     const bodyDetail = await resDetail.json();
     assert.equal(bodyDetail.data.student.rollNumber, '20240001');
     assert.equal(bodyDetail.data.student.fullName, 'Rahul Sharma');
+    assert.equal(bodyDetail.data.student.phone, '9876543210', 'Admin Student detail must return complete unmasked phone number');
+    assert.ok(!bodyDetail.data.student.phone.includes('*'), 'Phone number must not be masked in Admin detail');
     assert.ok(Array.isArray(bodyDetail.data.auditHistory));
   });
 
@@ -180,16 +191,18 @@ test('Admin Student & Faculty Profile Management Suite', async (t) => {
         fullName: 'Rahul S. Sharma',
         section: 'B',
         admissionYear: 2024,
+        phone: '9876549999',
       }),
     });
     assert.equal(res.status, 200);
     const body = await res.json();
     assert.equal(body.success, true);
-    assert.deepEqual(body.updatedFields.sort(), ['fullName', 'section'].sort());
+    assert.deepEqual(body.updatedFields.sort(), ['admissionYear', 'fullName', 'phone', 'section'].filter(f => body.updatedFields.includes(f)).sort());
 
     const updated = await Student.findById(studentDoc1._id);
     assert.equal(updated.fullName, 'Rahul S. Sharma');
     assert.equal(updated.section, 'B');
+    assert.equal(updated.phone, '9876549999', 'Admin must be able to edit and update student phone number');
 
     // Verify User name synchronized
     const updatedUser = await User.findById(studentUser._id);
@@ -237,6 +250,12 @@ test('Admin Student & Faculty Profile Management Suite', async (t) => {
     assert.equal(bodyList.data.length >= 1, true);
     assert.equal(bodyList.data[0].employeeId, 'EMP-FAC-001');
 
+    // Verify Admin Faculty list returns complete, unmasked phone number
+    const foundFaculty = bodyList.data.find((f) => f.employeeId === 'EMP-FAC-001');
+    assert.ok(foundFaculty, 'Faculty must be returned in list');
+    assert.equal(foundFaculty.phone, '9876500001', 'Admin Faculty list must return complete unmasked phone number');
+    assert.ok(!foundFaculty.phone.includes('*'), 'Phone number must not be masked in Admin Faculty list');
+
     const resDetail = await fetch(`${baseUrl}/api/admin/faculty/${facultyDoc1._id}`, {
       headers: { Authorization: `Bearer ${tokenAdmin}` },
     });
@@ -244,6 +263,8 @@ test('Admin Student & Faculty Profile Management Suite', async (t) => {
     const bodyDetail = await resDetail.json();
     assert.equal(bodyDetail.data.faculty.employeeId, 'EMP-FAC-001');
     assert.equal(bodyDetail.data.faculty.designation, 'Associate Professor');
+    assert.equal(bodyDetail.data.faculty.phone, '9876500001', 'Admin Faculty detail must return complete unmasked phone number');
+    assert.ok(!bodyDetail.data.faculty.phone.includes('*'), 'Phone number must not be masked in Admin Faculty detail');
     assert.ok(Array.isArray(bodyDetail.data.auditHistory));
   });
 
@@ -259,17 +280,19 @@ test('Admin Student & Faculty Profile Management Suite', async (t) => {
         designation: 'Professor & Head',
         department: 'CSE-AI',
         name: 'Dr. Priya M. Mehta',
+        phone: '9876500099',
       }),
     });
     assert.equal(res.status, 200);
     const body = await res.json();
     assert.equal(body.success, true);
-    assert.deepEqual(body.updatedFields.sort(), ['department', 'designation', 'name'].sort());
+    assert.deepEqual(body.updatedFields.sort(), ['department', 'designation', 'name', 'phone'].sort());
 
     const updated = await Faculty.findById(facultyDoc1._id).populate('user');
     assert.equal(updated.designation, 'Professor & Head');
     assert.equal(updated.department, 'CSE-AI');
     assert.equal(updated.user.name, 'Dr. Priya M. Mehta');
+    assert.equal(updated.phone, '9876500099', 'Admin must be able to edit and update faculty phone number');
   });
 
   // ── TEST 6: Filling Missing Faculty Fields ───────────────────────────────
@@ -458,10 +481,52 @@ test('Admin Student & Faculty Profile Management Suite', async (t) => {
     assert.equal(facultyLog.actor.toString(), adminUser._id.toString());
     assert.equal(facultyLog.entityType, 'Faculty');
     assert.match(facultyLog.summary, /Admin updated faculty profile fields:/);
+
+    // Verify phone numbers are NEVER logged in audit summaries or details
+    for (const log of auditLogs) {
+      assert.doesNotMatch(
+        log.summary,
+        /9876543210|9876549999|9876500001|9876500099/,
+        'Phone numbers must never be included in audit-log summaries'
+      );
+    }
   });
 
-  // ── TEST 12: Zero-Mutation Invariance Check ─────────────────────────────
-  await t.test('12. Invariance check: record counts remain consistent across operations', async () => {
+  // ── TEST 12: Authorized Faculty Student 360 Full Phone Visibility ────────
+  await t.test('12. Authorized Faculty Student 360 returns the complete phone number', async () => {
+    // 12a. Faculty Student 360 profile returns full unmasked phone number
+    const res360 = await fetch(`${baseUrl}/api/faculty/students/${studentDoc1._id}/360`, {
+      headers: { Authorization: `Bearer ${tokenFaculty}` },
+    });
+    assert.equal(res360.status, 200);
+    const body360 = await res360.json();
+    assert.equal(body360.success, true);
+    assert.equal(
+      body360.data.basicProfile.phoneNumber,
+      '9876549999',
+      'Authorized Faculty Student 360 must return complete phone number'
+    );
+    assert.ok(
+      !body360.data.basicProfile.phoneNumber.includes('*'),
+      'Faculty Student 360 phone must not be masked'
+    );
+
+    // 12b. Directory search endpoint keeps phone masked for privacy
+    const resSearch = await fetch(`${baseUrl}/api/faculty/students/search?q=20240001`, {
+      headers: { Authorization: `Bearer ${tokenFaculty}` },
+    });
+    assert.equal(resSearch.status, 200);
+    const bodySearch = await resSearch.json();
+    assert.ok(bodySearch.data.length >= 1);
+    assert.equal(
+      bodySearch.data[0].phone,
+      '••••••9999',
+      'Faculty directory search must preserve deliberate privacy masking'
+    );
+  });
+
+  // ── TEST 13: Zero-Mutation Invariance Check ─────────────────────────────
+  await t.test('13. Invariance check: record counts remain consistent across operations', async () => {
     const studentCountBefore = await Student.countDocuments();
     const facultyCountBefore = await Faculty.countDocuments();
     const userCountBefore = await User.countDocuments();
