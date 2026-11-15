@@ -35,6 +35,7 @@ const Timetable = require('../models/Timetable');
 const Mark = require('../models/Mark');
 const Exam = require('../models/Exam');
 const AuditLog = require('../models/AuditLog');
+const StudentAcademicSubmission = require('../models/StudentAcademicSubmission');
 const { verifyTestDatabaseIsolation } = require('./helpers/testDatabase');
 const { JWT_SECRET } = require('../config/env');
 const facultyRoutes = require('../routes/faculty.routes');
@@ -72,6 +73,7 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     await Mark.deleteMany({});
     await Exam.deleteMany({});
     await AuditLog.deleteMany({});
+    await StudentAcademicSubmission.deleteMany({});
 
     // 1. Create Faculty A (Teaches CSE Sem 5)
     facultyUserA = await User.create({
@@ -666,6 +668,208 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
 
     // Must be bounded to at most 11 (10 normal + 1 throttled notice) and definitely less than 15
     assert.ok(newlyCreated <= 11, `Audit writes must be throttled (created ${newlyCreated} logs for 15 requests)`);
+  });
+
+  // ── TEST 21: Clearly distinguish unavailable marks from zero marks ──────
+  await t.test('21. Marks & Results clearly distinguishes unavailable marks from zero marks', async () => {
+    // Create student with two mark records: one unavailable (null), one explicit zero (0)
+    const userZero = await User.create({
+      name: 'Marks Test Student',
+      email: 'markstest@test.edu',
+      passwordHash: 'HashedPassword123!',
+      role: 'student',
+      loginId: '20240999',
+    });
+    const studentZero = await Student.create({
+      user: userZero._id,
+      rollNumber: '20240999',
+      fullName: 'Marks Test Student',
+      phone: '9876549999',
+      email: 'markstest@test.edu',
+      branch: 'CSE',
+      program: 'B.Tech',
+      semester: 5,
+      section: 'A',
+      status: 'active',
+    });
+
+    // Create Exam 2 for the second mark (since { student: 1, exam: 1 } has a unique index)
+    const exam2 = await Exam.create({
+      title: 'End-Semester Examination 2026',
+      examinationType: 'end_semester',
+      academicYear: '2026-2027',
+      department: 'CSE',
+      semester: 5,
+      section: 'A',
+      subject: subjectCse2._id,
+      faculty: facultyUserA._id,
+      date: new Date('2026-11-20'),
+      startTime: '09:00 AM',
+      endTime: '12:00 PM',
+      durationMinutes: 180,
+      maximumMarks: 100,
+      passingMarks: 40,
+      status: 'completed',
+      evaluationStatus: 'published',
+    });
+
+    // Mark 1: Unavailable marks (null marksObtained, null internal, null external)
+    await Mark.create({
+      student: studentZero._id,
+      subject: subjectCse1._id,
+      exam: exam1._id,
+      status: 'published',
+      marksObtained: null,
+      internal: null,
+      external: null,
+      passingMarks: 40,
+    });
+
+    // Mark 2: True zero marks scored (marksObtained: 0)
+    await Mark.create({
+      student: studentZero._id,
+      subject: subjectCse2._id,
+      exam: exam2._id,
+      status: 'published',
+      marksObtained: 0,
+      internal: 0,
+      external: 0,
+      passingMarks: 40,
+    });
+
+    const res = await fetch(`${baseUrl}/api/faculty/students/${studentZero._id}/360`, {
+      headers: { Authorization: `Bearer ${tokenFacultyA}` },
+    });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    const marksList = body.data.marksAndResults.subjectMarks;
+    assert.equal(marksList.length, 2);
+
+    const unavailMark = marksList.find(m => m.subjectCode === 'CS501');
+    assert.equal(unavailMark.marksObtained, null, 'Unavailable marks must remain null, NOT converted to 0');
+    assert.equal(unavailMark.grade, '—', 'Unavailable marks must show dash grade, NOT F');
+    assert.equal(unavailMark.isPassed, null, 'Unavailable marks isPassed must be null, NOT false');
+
+    const zeroMark = marksList.find(m => m.subjectCode === 'CS502');
+    assert.equal(zeroMark.marksObtained, 0, 'True zero marks must be preserved as 0');
+    assert.equal(zeroMark.grade, 'F', 'True zero marks must be evaluated as F');
+    assert.equal(zeroMark.isPassed, false, 'True zero marks must be evaluated as failed');
+  });
+
+  // ── TEST 22: Conflicting self-reported surveys in StudentAcademicSubmission ──
+  await t.test('22. Conflicting survey submissions are preserved for review without overriding canonical data', async () => {
+    // Insert two survey submissions with conflicting self-reported CGPAs for student1
+    await StudentAcademicSubmission.create([
+      {
+        batchId: 'BATCH-20261112-STAGING-003',
+        sourceRow: 501,
+        rawRollNumber: '20240001',
+        normalizedRollNumber: '20240001',
+        studentId: student1._id,
+        studentName: 'Rahul Sharma',
+        selfReportedCgpa: 7.50,
+        isCanonical: false,
+        reviewStatus: 'flagged_conflict',
+      },
+      {
+        batchId: 'BATCH-20261112-STAGING-003',
+        sourceRow: 502,
+        rawRollNumber: '20240001',
+        normalizedRollNumber: '20240001',
+        studentId: student1._id,
+        studentName: 'Rahul Sharma',
+        selfReportedCgpa: 8.35,
+        isCanonical: false,
+        reviewStatus: 'flagged_conflict',
+      },
+    ]);
+
+    const res = await fetch(`${baseUrl}/api/faculty/students/${student1._id}/360`, {
+      headers: { Authorization: `Bearer ${tokenFacultyA}` },
+    });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+
+    // Verify conflict flag is raised
+    assert.equal(body.data.marksAndResults.hasConflictingSubmissions, true, 'Conflict between multiple survey CGPAs must be flagged');
+    // Verify canonical published SGPA remains untouched (calculated from verified Mark, which was 9)
+    assert.equal(body.data.marksAndResults.sgpa, 9, 'Canonical SGPA must NOT be overridden by survey self-reports');
+  });
+
+  // ── TEST 23: Timetable association with missing/unassigned class ─────────
+  await t.test('23. Missing or unassigned timetable schedule returns clear empty state', async () => {
+    // studentIncomplete has no section and no published timetable
+    const res = await fetch(`${baseUrl}/api/faculty/students/${studentIncomplete._id}/360`, {
+      headers: { Authorization: `Bearer ${tokenFacultyA}` },
+    });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.data.timetable.status, 'no_schedule');
+    assert.deepEqual(body.data.timetable.slots, []);
+    assert.match(body.data.timetable.message, /no published timetable/i);
+  });
+
+  // ── TEST 24: Basic Profile strict 3-field rule & full phone number visibility ──
+  await t.test('24. Basic Profile strict 3-field integrity and full phone visibility for authorized faculty', async () => {
+    const res = await fetch(`${baseUrl}/api/faculty/students/${student1._id}/360`, {
+      headers: { Authorization: `Bearer ${tokenFacultyA}` },
+    });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    const basic = body.data.basicProfile;
+
+    // Must contain exactly rollNumber, phoneNumber, class
+    const keys = Object.keys(basic);
+    assert.deepEqual(keys.sort(), ['class', 'phoneNumber', 'rollNumber'].sort());
+
+    // Full phone number returned to authorized faculty
+    assert.equal(basic.phoneNumber, '9876543210', 'Authorized faculty must see full unmasked phone number');
+
+    // In search endpoint, phone number is masked
+    const resSearch = await fetch(`${baseUrl}/api/faculty/students/search?q=20240001`, {
+      headers: { Authorization: `Bearer ${tokenFacultyA}` },
+    });
+    const searchBody = await resSearch.json();
+    assert.equal(searchBody.data[0].phone, '••••••3210', 'Directory search must mask phone number');
+
+    // Forbidden privacy fields must NOT exist in basicProfile
+    assert.equal(basic.email, undefined);
+    assert.equal(basic.address, undefined);
+    assert.equal(basic.guardianName, undefined);
+    assert.equal(basic.feeStatus, undefined);
+    assert.equal(basic.attendance, undefined);
+  });
+
+  // ── TEST 25: Zero-mutation invariance check ──────────────────────────────
+  await t.test('25. Zero mutation invariance check: querying Student 360 leaves all collections untouched', async () => {
+    const studentCountBefore = await Student.countDocuments();
+    const userCountBefore = await User.countDocuments();
+    const academicSubCountBefore = await StudentAcademicSubmission.countDocuments();
+    const markCountBefore = await Mark.countDocuments();
+    const timetableCountBefore = await Timetable.countDocuments();
+
+    // Perform multiple read operations across search and Student 360
+    await fetch(`${baseUrl}/api/faculty/students/${student1._id}/360`, {
+      headers: { Authorization: `Bearer ${tokenFacultyA}` },
+    });
+    await fetch(`${baseUrl}/api/faculty/students/search?q=Rahul`, {
+      headers: { Authorization: `Bearer ${tokenFacultyA}` },
+    });
+    await fetch(`${baseUrl}/api/faculty/students/${studentSimilar._id}/360`, {
+      headers: { Authorization: `Bearer ${tokenFacultyA}` },
+    });
+
+    const studentCountAfter = await Student.countDocuments();
+    const userCountAfter = await User.countDocuments();
+    const academicSubCountAfter = await StudentAcademicSubmission.countDocuments();
+    const markCountAfter = await Mark.countDocuments();
+    const timetableCountAfter = await Timetable.countDocuments();
+
+    assert.equal(studentCountAfter, studentCountBefore, 'Student collection must remain untouched');
+    assert.equal(userCountAfter, userCountBefore, 'User collection must remain untouched');
+    assert.equal(academicSubCountAfter, academicSubCountBefore, 'StudentAcademicSubmission collection must remain untouched');
+    assert.equal(markCountAfter, markCountBefore, 'Mark collection must remain untouched');
+    assert.equal(timetableCountAfter, timetableCountBefore, 'Timetable collection must remain untouched');
   });
 
   await t.test('Teardown: Close server and disconnect test database', async () => {

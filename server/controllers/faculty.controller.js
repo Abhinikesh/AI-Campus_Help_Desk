@@ -12,6 +12,7 @@ const Timetable = require('../models/Timetable');
 const Mark = require('../models/Mark');
 const Exam = require('../models/Exam');
 const AuditLog = require('../models/AuditLog');
+const StudentAcademicSubmission = require('../models/StudentAcademicSubmission');
 const Attendance = require('../models/Attendance');
 const AttendanceSession = require('../models/AttendanceSession');
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
@@ -797,14 +798,18 @@ const getStudent360 = asyncHandler(async (req, res) => {
   }
 
   // 4. Fetch 4 sections in parallel using actual database relationships
-  const [subjects, publishedMarks, timetableSlots] = await Promise.all([
+  const isClassAssigned = Boolean(student.branch && student.semester != null);
+
+  const [subjects, publishedMarks, timetableSlots, surveySubmissions] = await Promise.all([
     // Section 2: Academic Details -> Enrolled subjects matching student branch & semester
-    Subject.find({
-      branch: student.branch,
-      semester: student.semester,
-    })
-      .populate('faculty', 'name email')
-      .lean(),
+    isClassAssigned
+      ? Subject.find({
+          branch: student.branch,
+          semester: student.semester,
+        })
+          .populate('faculty', 'name email')
+          .lean()
+      : Promise.resolve([]),
 
     // Section 3: Marks & Results -> Published marks only
     Mark.find({
@@ -816,20 +821,35 @@ const getStudent360 = asyncHandler(async (req, res) => {
       .lean(),
 
     // Section 4: Timetable -> Published weekly timetable slots
-    Timetable.find({
-      branch: student.branch,
-      semester: student.semester,
-      $or: [{ section: student.section }, { section: 'All' }, { section: null }, { section: '' }],
-      status: { $in: ['published', 'updated'] },
-    })
-      .populate({
-        path: 'subject',
-        select: 'name code credits',
-        populate: { path: 'faculty', select: 'name email' },
-      })
-      .populate('faculty', 'name email')
-      .sort({ dayOfWeek: 1, startTime: 1 })
-      .lean(),
+    isClassAssigned
+      ? Timetable.find({
+          branch: student.branch,
+          semester: student.semester,
+          $or: [{ section: student.section }, { section: 'All' }, { section: null }, { section: '' }],
+          status: { $in: ['published', 'updated'] },
+        })
+          .populate({
+            path: 'subject',
+            select: 'name code credits',
+            populate: { path: 'faculty', select: 'name email' },
+          })
+          .populate('faculty', 'name email')
+          .sort({ dayOfWeek: 1, startTime: 1 })
+          .lean()
+      : Promise.resolve([]),
+
+    // Optional survey submissions to detect any conflicting self-reported records
+    StudentAcademicSubmission
+      ? StudentAcademicSubmission.find({
+          $or: [
+            { studentId: student._id },
+            { normalizedRollNumber: String(student.rollNumber || '').toUpperCase() },
+          ],
+        })
+          .select('selfReportedCgpa isCanonical reviewStatus batchId')
+          .lean()
+          .catch(() => [])
+      : Promise.resolve([]),
   ]);
 
   // Section 1: Basic Profile — STRICT LIMITATION: ONLY rollNumber, phoneNumber, class
@@ -841,9 +861,12 @@ const getStudent360 = asyncHandler(async (req, res) => {
     .filter(Boolean)
     .join(' ') || (student.semester && student.branch ? `${student.semester} ${student.branch}-${student.section || 'A'}` : null);
 
+  const rawPhone = student.phone ? String(student.phone).trim() : null;
+  const phoneNumber = (rawPhone && rawPhone.length > 0) ? rawPhone : null;
+
   const basicProfile = {
     rollNumber: student.rollNumber || null,
-    phoneNumber: student.phone || null,
+    phoneNumber,
     class: classLabel,
   };
 
@@ -869,6 +892,11 @@ const getStudent360 = asyncHandler(async (req, res) => {
 
   // Section 3: Marks & Results — real persisted published marks only
   let marksAndResults;
+  const distinctSurveyCgpas = new Set(
+    (surveySubmissions || []).map((s) => s.selfReportedCgpa).filter((v) => v != null)
+  );
+  const hasConflictingSubmissions = distinctSurveyCgpas.size > 1;
+
   if (!publishedMarks || publishedMarks.length === 0) {
     marksAndResults = {
       status: 'unreleased',
@@ -876,6 +904,7 @@ const getStudent360 = asyncHandler(async (req, res) => {
       sgpa: null,
       cgpa: null,
       subjectMarks: [],
+      hasConflictingSubmissions,
     };
   } else {
     let totalCredits = 0;
@@ -883,14 +912,28 @@ const getStudent360 = asyncHandler(async (req, res) => {
 
     const subjectMarks = publishedMarks.map((m) => {
       const cred = m.subject?.credits || 0;
-      const rawMarks = m.marksObtained != null ? m.marksObtained : (m.internal || 0) + (m.external || 0);
-      const max = m.maxMarks != null ? m.maxMarks : (m.exam?.maximumMarks || 100);
-      const pct = max > 0 && rawMarks != null ? (rawMarks / max) * 100 : 0;
-      const gradeInfo = getGrade(pct);
+      let rawMarks = null;
+      if (m.marksObtained != null) {
+        rawMarks = m.marksObtained;
+      } else if (m.internal != null || m.external != null) {
+        rawMarks = (m.internal || 0) + (m.external || 0);
+      }
 
-      if (cred > 0 && !m.isAbsent) {
+      const max = m.maxMarks != null ? m.maxMarks : (m.exam?.maximumMarks || 100);
+      const pct = (max > 0 && rawMarks != null) ? (rawMarks / max) * 100 : null;
+      const gradeInfo = pct != null ? getGrade(pct) : null;
+      const grade = m.isAbsent ? 'F' : (gradeInfo ? gradeInfo.grade : null);
+
+      if (cred > 0 && !m.isAbsent && gradeInfo) {
         totalCredits += cred;
         earnedPoints += gradeInfo.points * cred;
+      }
+
+      let isPassed = null;
+      if (m.isAbsent) {
+        isPassed = false;
+      } else if (rawMarks != null) {
+        isPassed = rawMarks >= (m.passingMarks || 40);
       }
 
       return {
@@ -901,8 +944,8 @@ const getStudent360 = asyncHandler(async (req, res) => {
         externalMarks: m.external != null ? m.external : null,
         marksObtained: rawMarks,
         maxMarks: max,
-        grade: m.isAbsent ? 'F' : gradeInfo.grade,
-        isPassed: m.isAbsent ? false : (rawMarks >= (m.passingMarks || 40)),
+        grade: grade || '—',
+        isPassed,
       };
     });
 
@@ -917,6 +960,7 @@ const getStudent360 = asyncHandler(async (req, res) => {
       sgpa,
       cgpa: sgpa,
       subjectMarks,
+      hasConflictingSubmissions,
     };
   }
 

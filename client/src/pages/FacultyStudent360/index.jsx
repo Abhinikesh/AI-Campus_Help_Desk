@@ -307,8 +307,8 @@ const FacultyStudent360 = () => {
                                 </td>
                                 <td><span className="ds-pill blue bold">{m.grade || '—'}</span></td>
                                 <td>
-                                  <span className={`ds-pill ${m.isPassed ? 'green' : 'red'}`}>
-                                    {m.isPassed ? 'Pass' : 'Pending / Fail'}
+                                  <span className={`ds-pill ${m.isPassed === true ? 'green' : (m.isPassed === false ? 'red' : 'gray')}`}>
+                                    {m.isPassed === true ? 'Pass' : (m.isPassed === false ? 'Fail' : 'Pending / Not Evaluated')}
                                   </span>
                                 </td>
                               </tr>
