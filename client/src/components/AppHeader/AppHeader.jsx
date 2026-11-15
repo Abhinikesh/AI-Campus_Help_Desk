@@ -211,3 +211,4 @@ const AppHeader = ({ title, subtitle, badge, extraRight, children }) => {
 };
 
 export default AppHeader;
+

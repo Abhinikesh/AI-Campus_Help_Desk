@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import './Sidebar.css';
 
-const NAV_CONFIG = {
+export const NAV_CONFIG = {
   student: [
     { label: 'Dashboard',          icon: LayoutDashboard, to: '/student/dashboard'   },
     { label: 'Attendance',         icon: CalendarCheck,   to: '/student/attendance'  },
