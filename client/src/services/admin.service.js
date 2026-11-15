@@ -13,8 +13,10 @@ export const adminService = {
     const response = await api.get('/api/admin/complaints');
     return response.data;
   },
-  updateComplaintStatus: async (id, status) => {
-    const response = await api.patch(`/api/admin/complaints/${id}/status`, { status });
+  updateComplaintStatus: async (id, status, adminResponse) => {
+    const payload = { status };
+    if (adminResponse !== undefined) payload.adminResponse = adminResponse;
+    const response = await api.patch(`/api/admin/complaints/${id}/status`, payload);
     return response.data;
   },
   createAnnouncement: async (data) => {

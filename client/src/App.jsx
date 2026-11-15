@@ -59,6 +59,7 @@ const AdminPlacement            = lazyWithRetry(() => import('./pages/AdminPlace
 const AdminActivities           = lazyWithRetry(() => import('./pages/AdminActivities/index'));
 const AdminInventory            = lazyWithRetry(() => import('./pages/AdminInventory/index'));
 const AdminHR                   = lazyWithRetry(() => import('./pages/AdminHR/index'));
+const AdminComplaints           = lazyWithRetry(() => import('./pages/AdminComplaints/index'));
 const FacultyHR                 = lazyWithRetry(() => import('./pages/FacultyHR/index'));
 
 // Shared Authenticated Pages
@@ -95,13 +96,13 @@ const App = () => (
           <Route path="/student/hostel"
             element={<ProtectedRoute role="student"><StudentHostel /></ProtectedRoute>} />
           <Route path="/student/transport"
-            element={<ProtectedRoute role="student"><StudentTransport /></ProtectedRoute>} />
+            element={<ProtectedRoute role={[]}><StudentTransport /></ProtectedRoute>} />
           <Route path="/student/placement"
             element={<ProtectedRoute role="student"><StudentPlacement /></ProtectedRoute>} />
           <Route path="/student/activities"
-            element={<ProtectedRoute role="student"><StudentActivities /></ProtectedRoute>} />
+            element={<ProtectedRoute role={[]}><StudentActivities /></ProtectedRoute>} />
           <Route path="/student/library"
-            element={<ProtectedRoute role="student"><StudentLibrary /></ProtectedRoute>} />
+            element={<ProtectedRoute role={[]}><StudentLibrary /></ProtectedRoute>} />
           <Route path="/student/attendance"
             element={<ProtectedRoute role="student"><AttendanceOverview /></ProtectedRoute>} />
           <Route path="/student/attendance/mark"
@@ -117,7 +118,7 @@ const App = () => (
           <Route path="/student/results"
             element={<ProtectedRoute role="student"><Results /></ProtectedRoute>} />
           <Route path="/student/drive"
-            element={<ProtectedRoute role="student"><StudentDrive /></ProtectedRoute>} />
+            element={<ProtectedRoute role={[]}><StudentDrive /></ProtectedRoute>} />
           <Route path="/student/complaints"
             element={<ProtectedRoute role="student"><Complaints /></ProtectedRoute>} />
           <Route path="/student/ai-help"
@@ -150,7 +151,7 @@ const App = () => (
           <Route path="/faculty/drive"
             element={<ProtectedRoute role={[]}><StudentDrive /></ProtectedRoute>} />
           <Route path="/faculty/inventory"
-            element={<ProtectedRoute role="faculty"><FacultyInventory /></ProtectedRoute>} />
+            element={<ProtectedRoute role={[]}><FacultyInventory /></ProtectedRoute>} />
           <Route path="/faculty/hr"
             element={<ProtectedRoute role={['faculty', 'employee', 'department_head']}><FacultyHR /></ProtectedRoute>} />
           <Route path="/employee/self-service"
@@ -164,29 +165,29 @@ const App = () => (
           <Route path="/admin/students"
             element={<ProtectedRoute role="admin"><AdminStudentManagement /></ProtectedRoute>} />
           <Route path="/admin/timetable"
-            element={<ProtectedRoute role="admin"><AdminTimetable /></ProtectedRoute>} />
+            element={<ProtectedRoute role={[]}><AdminTimetable /></ProtectedRoute>} />
           <Route path="/admin/finance"
             element={<ProtectedRoute role="admin"><AdminFinance /></ProtectedRoute>} />
           <Route path="/admin/inventory"
-            element={<ProtectedRoute role={['admin', 'inventory_manager', 'procurement_officer', 'storekeeper']}><AdminInventory /></ProtectedRoute>} />
+            element={<ProtectedRoute role={['inventory_manager', 'procurement_officer', 'storekeeper']}><AdminInventory /></ProtectedRoute>} />
           <Route path="/admin/hr"
             element={<ProtectedRoute role={['admin', 'hr_admin', 'hr_officer']}><AdminHR /></ProtectedRoute>} />
           <Route path="/admin/hostel"
             element={<ProtectedRoute role={['admin', 'warden']}><AdminHostel /></ProtectedRoute>} />
           <Route path="/admin/transport"
-            element={<ProtectedRoute role={['admin', 'transport_manager', 'driver', 'attendant']}><AdminTransport /></ProtectedRoute>} />
+            element={<ProtectedRoute role={['transport_manager', 'driver', 'attendant']}><AdminTransport /></ProtectedRoute>} />
           <Route path="/admin/placement"
             element={<ProtectedRoute role={['admin', 'placement_officer', 'placement_coordinator']}><AdminPlacement /></ProtectedRoute>} />
           <Route path="/admin/activities"
-            element={<ProtectedRoute role={['admin', 'faculty', 'event_organizer', 'club_coordinator']}><AdminActivities /></ProtectedRoute>} />
+            element={<ProtectedRoute role={['event_organizer', 'club_coordinator']}><AdminActivities /></ProtectedRoute>} />
           <Route path="/admin/library"
-            element={<ProtectedRoute role={['admin', 'librarian']}><AdminLibrary /></ProtectedRoute>} />
+            element={<ProtectedRoute role={['librarian']}><AdminLibrary /></ProtectedRoute>} />
           <Route path="/admin/attendance"
             element={<ProtectedRoute role="admin"><AdminAttendanceHub /></ProtectedRoute>} />
           <Route path="/admin/complaints"
-            element={<ProtectedRoute role="admin"><Complaints /></ProtectedRoute>} />
+            element={<ProtectedRoute role={['admin', 'warden', 'librarian', 'transport_manager', 'inventory_manager', 'procurement_officer', 'storekeeper', 'hr_admin', 'hr_officer']}><AdminComplaints /></ProtectedRoute>} />
           <Route path="/admin/ai-help"
-            element={<ProtectedRoute role="admin"><AIHelpDesk /></ProtectedRoute>} />
+            element={<ProtectedRoute role={['transport_manager', 'placement_officer', 'placement_coordinator', 'driver', 'attendant', 'event_organizer', 'club_coordinator', 'warden', 'librarian', 'inventory_manager', 'procurement_officer', 'storekeeper', 'hr_admin', 'hr_officer', 'employee']}><AIHelpDesk /></ProtectedRoute>} />
 
           {/* ── 404 Catch-All ── */}
           <Route path="*" element={<NotFound />} />

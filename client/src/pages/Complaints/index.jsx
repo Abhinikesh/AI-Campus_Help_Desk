@@ -132,7 +132,10 @@ const Complaints = () => {
       } else {
         showToast(res.message || 'Submission failed.', 'error');
       }
-    } catch { showToast('Server error. Please try again.', 'error'); }
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.message || 'Server error. Please try again.';
+      showToast(errMsg, 'error');
+    }
     finally { setIsSubmitting(false); }
   };
 

@@ -865,8 +865,9 @@ const downloadSubmissionFile = asyncHandler(async (req, res) => {
   if (!fileDoc) throw new ApiError(404, 'Submission file not found');
 
   // Authorization check: Admin, Creator faculty, or the Submitting student
-  const isOwnerStudent = String(submission.studentUser) === String(req.user.userId);
-  const isAssignedFaculty = String(submission.assignment?.faculty) === String(req.user.userId);
+  const currentUserId = String(req.user.userId || req.user._id || req.user.id);
+  const isOwnerStudent = String(submission.studentUser) === currentUserId;
+  const isAssignedFaculty = String(submission.assignment?.faculty) === currentUserId;
   const isAdmin = req.user.role === 'admin';
 
   if (!isOwnerStudent && !isAssignedFaculty && !isAdmin) {

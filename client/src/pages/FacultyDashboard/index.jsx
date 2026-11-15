@@ -7,7 +7,7 @@ import AppHeader from '../../components/AppHeader/AppHeader';
 import { facultyService } from '../../services/faculty.service';
 import {
   LayoutDashboard, CalendarCheck, Users, BookOpen, Clock,
-  Bell, Sparkles, Boxes, BarChart2,
+  Bell, BarChart2,
   ChevronRight, X, Loader2, Search, ArrowRight
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
@@ -21,8 +21,6 @@ const MODULE_DESCRIPTIONS = {
   '/notifications': 'Official institutional circulars & academic notices',
   '/faculty/timetable': 'Weekly lecture schedule, periods & classroom allocations',
   '/faculty/hr': 'Faculty leave applications, attendance & HR self-service',
-  '/admin/activities': 'Campus events, student clubs & activity coordination',
-  '/faculty/inventory': 'Lab supplies, departmental assets & consumables requisition',
   '/faculty/results': 'Internal assessment scores & semester grade entry',
 };
 

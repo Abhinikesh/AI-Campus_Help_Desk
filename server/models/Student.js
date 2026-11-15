@@ -76,6 +76,21 @@ const studentSchema = new mongoose.Schema(
       default: null,
       trim: true,
     },
+    course: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    batch: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    year: {
+      type: String,
+      default: null,
+      trim: true,
+    },
     admissionApplicationNumber: {
       type: String,
       default: null,

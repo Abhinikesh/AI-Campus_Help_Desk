@@ -9,8 +9,8 @@ import Sidebar, { NAV_CONFIG } from '../../components/Sidebar/Sidebar';
 import AppHeader from '../../components/AppHeader/AppHeader';
 import {
   LayoutDashboard, BookOpen, CalendarCheck, BarChart2,
-  Folder, Flag, MessageCircle, LogOut, Bell, ChevronRight,
-  GraduationCap, Loader2, ArrowRight, Sparkles
+  Flag, MessageCircle, LogOut, Bell, ChevronRight,
+  GraduationCap, Loader2, ArrowRight
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Student.css';
@@ -44,14 +44,10 @@ const MODULE_DESCRIPTIONS = {
   '/student/assignments': 'Subject coursework, deadlines & online submissions',
   '/student/fees': 'Tuition fee payments, receipts & online clearance',
   '/student/hostel': 'Hostel room allocation, mess schedule & facilities',
-  '/student/transport': 'Bus routes, transit passes & pickup timing',
   '/student/placement': 'Campus recruitment drives, internships & interviews',
-  '/student/activities': 'Student clubs, campus events & extra-curriculars',
-  '/student/library': 'Book catalog, digital reserves & issued titles',
   '/notifications': 'Institutional notices, academic circulars & alerts',
   '/student/results': 'Semester marks, GPA evaluation & grade sheets',
   '/student/exams': 'Upcoming term exams, datesheet & hall tickets',
-  '/student/drive': 'Course syllabus, lecture slides & study materials',
   '/student/complaints': 'Student grievance filing & status tracking',
   '/student/ai-help': '24/7 intelligent campus assistance & resolution',
 };
@@ -76,12 +72,26 @@ const StudentDashboard = () => {
   );
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setProfile(null);
+      setAnnouncements([]);
+      setComplaints([]);
+      setAttendance([]);
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+
     (async () => {
       try {
         setLoading(true);
         const [profRes, annRes, compRes, attRes, resRes] = await Promise.all([
-          studentService.getProfile().catch(() => ({ success: false })),
+          studentService.getProfile().catch((err) => {
+            if (err?.response?.status === 401) {
+              logout(navigate);
+            }
+            return { success: false };
+          }),
           studentService.getAnnouncements().catch(() => ({ success: false })),
           studentService.getComplaints().catch(() => ({ success: false })),
           attendanceService.getStudentAttendance().catch(() => ({ success: false })),
@@ -89,18 +99,20 @@ const StudentDashboard = () => {
         ]);
 
         if (profRes.success)  setProfile(profRes.data);
-        if (annRes.success && annRes.data.length > 0)
+        if (annRes.success && annRes.data?.length > 0)
           setAnnouncements(annRes.data.slice(0, 4));
-        if (compRes.success)  setComplaints(compRes.data);
+        if (compRes.success)  setComplaints(compRes.data || []);
         if (attRes.success && attRes.data?.length > 0)
           setAttendance(attRes.data);
+        else setAttendance([]);
         if (resRes.success && resRes.data?.length > 0)
           setResults(resRes.data);
+        else setResults([]);
       } finally {
         setLoading(false);
       }
     })();
-  }, [user]);
+  }, [user, logout, navigate]);
 
   if (loading) {
     return (
@@ -111,43 +123,23 @@ const StudentDashboard = () => {
     );
   }
 
-  const studentName = profile?.fullName || profile?.userId?.name || user?.name || 'Student';
-  const semester = profile?.semester || 5;
-  const branch = profile?.branch || 'CSE';
+  const studentName = profile?.fullName || profile?.user?.name || user?.name || 'Student';
+  const semester = profile?.semester != null ? profile.semester : '--';
+  const branch = profile?.branch || '--';
 
-  // 5th Sem real subjects attendance average
+  // Authoritative subjects attendance average from real records
   const attendanceAvg = attendance.length
     ? Math.round(
         attendance.reduce((acc, s) =>
           acc + (s.total > 0 ? (s.attended / s.total) * 100 : 0), 0
         ) / attendance.length
       )
-    : 88;
+    : null;
 
+  // Real CGPA computed from published results
   const cgpa = results.length
     ? (results.reduce((s, r) => s + (r.marks || 0), 0) / results.length / 10).toFixed(1)
-    : '8.6';
-
-  // 5th Sem Courses
-  const coursesList = [
-    { code: 'CS501', name: 'Design Analysis of Algorithms (DAA)', faculty: 'Prof. Neha Singh', next: 'Mon 08:10 AM', progress: 85 },
-    { code: 'CS502', name: 'Formal Languages and Automata Theory (FLAT)', faculty: 'Prof. Poonam Nandal', next: 'Mon 09:00 AM', progress: 80 },
-    { code: 'CS503', name: 'AI Concepts & Applications (AICA)', faculty: 'Prof. Meeta Singh', next: 'Tue 08:10 AM', progress: 90 },
-    { code: 'CS504', name: 'Computer Graphics (CG)', faculty: 'Prof. Ginni Sehgal', next: 'Tue 09:50 AM', progress: 75 },
-    { code: 'CS505', name: 'Software Development Processes (SDP)', faculty: 'Prof. Swati Hans', next: 'Wed 08:10 AM', progress: 88 },
-  ];
-
-  const fallbackAttendance = [
-    { subject: 'Design Analysis of Algorithms', code: 'CS501', total: 15, attended: 15 },
-    { subject: 'Formal Languages and Automata Theory', code: 'CS502', total: 15, attended: 14 },
-    { subject: 'Artificial Intelligence Concepts & Apps', code: 'CS503', total: 15, attended: 15 },
-    { subject: 'Computer Graphics', code: 'CS504', total: 15, attended: 13 },
-    { subject: 'Software Development Processes', code: 'CS505', total: 15, attended: 14 },
-    { subject: 'Design Thinking & Innovation - III', code: 'CS506', total: 15, attended: 15 },
-    { subject: 'Entrepreneurship & Startups', code: 'CS507', total: 15, attended: 14 },
-  ];
-
-  const displayAttendance = attendance.length > 0 ? attendance : fallbackAttendance;
+    : '--';
 
   return (
     <div className="ds-shell">
@@ -272,14 +264,14 @@ const StudentDashboard = () => {
               <div className="ds-stat-row">
                 <div className="ds-stat-card">
                   <div className="ds-stat-label">Attendance</div>
-                  <div className="ds-stat-value">{attendanceAvg}%</div>
-                  <div className={`ds-stat-trend ${attendanceAvg < 75 ? 'down' : 'up'}`}>
-                    {attendanceAvg < 75 ? '▼ Below 75% threshold' : '▲ Above required limit'}
+                  <div className="ds-stat-value">{attendanceAvg != null ? `${attendanceAvg}%` : '--'}</div>
+                  <div className={`ds-stat-trend ${attendanceAvg != null && attendanceAvg < 75 ? 'down' : 'up'}`}>
+                    {attendanceAvg != null ? (attendanceAvg < 75 ? '▼ Below 75% threshold' : '▲ Above required limit') : 'No attendance logs'}
                   </div>
                 </div>
                 <div className="ds-stat-card">
-                  <div className="ds-stat-label">Courses Enrolled</div>
-                  <div className="ds-stat-value">{displayAttendance.length}</div>
+                  <div className="ds-stat-label">Courses Logged</div>
+                  <div className="ds-stat-value">{attendance.length}</div>
                   <div className="ds-stat-trend neu">Semester {semester}</div>
                 </div>
                 <div className="ds-stat-card">
@@ -290,7 +282,7 @@ const StudentDashboard = () => {
                 <div className="ds-stat-card">
                   <div className="ds-stat-label">CGPA</div>
                   <div className="ds-stat-value">{cgpa}</div>
-                  <div className="ds-stat-trend up">▲ Current Semester</div>
+                  <div className="ds-stat-trend up">{cgpa !== '--' ? '▲ Current Semester' : 'Awaiting publication'}</div>
                 </div>
               </div>
 
@@ -320,52 +312,29 @@ const StudentDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {displayAttendance.slice(0, 7).map((s, i) => {
-                        const pct = s.total > 0 ? Math.round((s.attended / s.total) * 100) : 100;
-                        return (
-                          <tr key={i}>
-                            <td className="bold">{s.subject}</td>
-                            <td><span className="ds-code-badge">{s.code || `CS50${i+1}`}</span></td>
-                            <td>{s.total}</td>
-                            <td>{s.attended}</td>
-                            <td style={{ fontWeight: 600 }}>{pct}%</td>
-                            <td><span className={`ds-pill ${pillClass(pct)}`}>{pillLabel(pct)}</span></td>
-                          </tr>
-                        );
-                      })}
+                      {attendance.length > 0 ? (
+                        attendance.slice(0, 7).map((s, i) => {
+                          const pct = s.total > 0 ? Math.round((s.attended / s.total) * 100) : 100;
+                          return (
+                            <tr key={i}>
+                              <td className="bold">{s.subject}</td>
+                              <td><span className="ds-code-badge">{s.code || '--'}</span></td>
+                              <td>{s.total}</td>
+                              <td>{s.attended}</td>
+                              <td style={{ fontWeight: 600 }}>{pct}%</td>
+                              <td><span className={`ds-pill ${pillClass(pct)}`}>{pillLabel(pct)}</span></td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={6} style={{ textAlign: 'center', color: '#6B7280', padding: '24px' }}>
+                            No lecture attendance records logged for current semester yet.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
-                </div>
-              </div>
-
-              {/* ── 5TH SEM COURSES ── */}
-              <div className="ds-card">
-                <div className="ds-card-header">
-                  <div>
-                    <span className="ds-section-title">Enrolled Courses (Semester {semester} CSE-A)</span>
-                    <p style={{ margin: '3px 0 0', fontSize: 13, color: '#6B7280' }}>
-                      Official college timetable subjects and instructors
-                    </p>
-                  </div>
-                  <Link to="/student/results" className="ds-view-all">View Syllabus →</Link>
-                </div>
-                <div className="courses-grid">
-                  {coursesList.map((c, i) => (
-                    <div key={i} className="course-card">
-                      <div className="course-code">{c.code}</div>
-                      <div className="course-name">{c.name}</div>
-                      <div className="course-faculty">{c.faculty}</div>
-                      <div className="course-next">{c.next}</div>
-                      <div>
-                        <div className="course-prog-label">
-                          <span>Course Progress</span><span>{c.progress}%</span>
-                        </div>
-                        <div className="ds-bar-track" style={{ height: 6 }}>
-                          <div className="ds-bar-fill" style={{ width: `${c.progress}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
 
@@ -388,35 +357,37 @@ const StudentDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {(results.length > 0 ? results.slice(0, 5) : [
-                        { subject: 'Design Analysis of Algorithms', code: 'CS501', credits: 4, marks: 88, grade: 'A' },
-                        { subject: 'Formal Languages and Automata Theory', code: 'CS502', credits: 4, marks: 76, grade: 'B+' },
-                        { subject: 'Artificial Intelligence Concepts & Apps', code: 'CS503', credits: 4, marks: 92, grade: 'A+' },
-                        { subject: 'Computer Graphics', code: 'CS504', credits: 3, marks: 84, grade: 'A' },
-                        { subject: 'Software Development Processes', code: 'CS505', credits: 3, marks: 80, grade: 'A' },
-                      ]).map((r, i) => (
-                        <tr key={i}>
-                          <td className="bold">{r.subject}</td>
-                          <td><span className="ds-code-badge">{r.code}</span></td>
-                          <td>{r.credits || 3}</td>
-                          <td style={{ fontWeight: 600 }}>{r.marks} / 100</td>
-                          <td>
-                            <span className={`ds-pill ${gradePill(r.grade)}`}>
-                              {r.grade}
-                            </span>
-                          </td>
-                          <td>
-                            <span style={{ color: '#16A34A', fontWeight: 600, fontSize: 13 }}>
-                              Pass
-                            </span>
+                      {results.length > 0 ? (
+                        results.slice(0, 5).map((r, i) => (
+                          <tr key={i}>
+                            <td className="bold">{r.subject}</td>
+                            <td><span className="ds-code-badge">{r.code}</span></td>
+                            <td>{r.credits || 3}</td>
+                            <td style={{ fontWeight: 600 }}>{r.marks} / 100</td>
+                            <td>
+                              <span className={`ds-pill ${gradePill(r.grade)}`}>
+                                {r.grade}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{ color: '#16A34A', fontWeight: 600, fontSize: 13 }}>
+                                Pass
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={6} style={{ textAlign: 'center', color: '#6B7280', padding: '24px' }}>
+                            No published examination results recorded yet.
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
                 <div style={{ textAlign: 'right', marginTop: 14, fontSize: 15, fontWeight: 700, color: '#111827' }}>
-                  Cumulative CGPA: {cgpa} / 10
+                  Cumulative CGPA: {cgpa !== '--' ? `${cgpa} / 10` : 'Not Available'}
                 </div>
               </div>
 
@@ -450,7 +421,6 @@ const StudentDashboard = () => {
                       { label: 'Smart Attendance', to: '/student/attendance', icon: CalendarCheck },
                       { label: 'Semester Exams',   to: '/student/exams',      icon: GraduationCap },
                       { label: 'Marks & Results',  to: '/student/results',    icon: BarChart2     },
-                      { label: 'Academic Drive',   to: '/student/drive',      icon: Folder        },
                       { label: 'Campus Grievance', to: '/student/complaints', icon: Flag          },
                       { label: 'AI Help Desk',     to: '/student/ai-help',    icon: MessageCircle },
                     ].map(({ label, to, icon: Icon }) => (

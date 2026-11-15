@@ -67,31 +67,49 @@ const FacultyHR = () => {
   const fetchSelfServiceData = async () => {
     try {
       setLoading(true);
-      const [pRes, bRes, aRes, polRes, annRes] = await Promise.all([
+      const results = await Promise.allSettled([
         hrService.getMyProfile(),
         hrService.getMyLeaveBalances(),
         hrService.getMyLeaveApplications(),
         hrService.getLeavePolicies(),
-        hrService.getAnnouncements()
+        hrService.getAnnouncements(),
+        hrService.getMyAttendance()
       ]);
 
-      if (pRes.success) {
-        setProfile(pRes.data);
-        // Load documents for this profile
-        const dRes = await hrService.getEmployeeDocuments(pRes.data._id);
-        if (dRes.success) setDocuments(dRes.data);
-      }
-      if (bRes.success) setLeaveBalances(bRes.data);
-      if (aRes.success) setLeaveApplications(aRes.data);
-      if (polRes.success) setPolicies(polRes.data);
-      if (annRes.success) setAnnouncements(annRes.data);
+      const [pRes, bRes, aRes, polRes, annRes, attRes] = results;
 
-      const attRes = await hrService.getMyAttendance();
-      if (attRes.success) setAttendanceRecords(attRes.data);
+      if (pRes.status === 'fulfilled' && pRes.value?.success) {
+        setProfile(pRes.value.data);
+        if (pRes.value.data?._id) {
+          try {
+            const dRes = await hrService.getEmployeeDocuments(pRes.value.data._id);
+            if (dRes.success) setDocuments(dRes.data);
+          } catch (_) {}
+        }
+      }
+      if (bRes.status === 'fulfilled' && bRes.value?.success) setLeaveBalances(bRes.value.data || []);
+      if (aRes.status === 'fulfilled' && aRes.value?.success) setLeaveApplications(aRes.value.data || []);
+      if (polRes.status === 'fulfilled' && polRes.value?.success) setPolicies(polRes.value.data || []);
+      if (annRes.status === 'fulfilled' && annRes.value?.success) setAnnouncements(annRes.value.data || []);
+      if (attRes.status === 'fulfilled' && attRes.value?.success) setAttendanceRecords(attRes.value.data || []);
     } catch (err) {
       showToast(err.response?.data?.message || err.message, 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openApplyModal = async () => {
+    setShowApplyModal(true);
+    if (!policies || policies.length === 0) {
+      try {
+        const polRes = await hrService.getLeavePolicies();
+        if (polRes?.success && Array.isArray(polRes.data)) {
+          setPolicies(polRes.data);
+        }
+      } catch (err) {
+        console.warn('Failed to load leave policies:', err);
+      }
     }
   };
 
@@ -144,6 +162,12 @@ const FacultyHR = () => {
       const res = await hrService.checkIn();
       if (res.success) {
         showToast('Daily check-in recorded successfully!', 'success');
+        if (res.data) {
+          setAttendanceRecords((prev) => [
+            res.data,
+            ...prev.filter((a) => a._id !== res.data._id && a.date !== res.data.date)
+          ]);
+        }
         const attRes = await hrService.getMyAttendance();
         if (attRes.success) setAttendanceRecords(attRes.data);
       }
@@ -157,6 +181,12 @@ const FacultyHR = () => {
       const res = await hrService.checkOut();
       if (res.success) {
         showToast('Daily check-out recorded successfully!', 'success');
+        if (res.data) {
+          setAttendanceRecords((prev) => [
+            res.data,
+            ...prev.filter((a) => a._id !== res.data._id && a.date !== res.data.date)
+          ]);
+        }
         const attRes = await hrService.getMyAttendance();
         if (attRes.success) setAttendanceRecords(attRes.data);
       }
@@ -204,10 +234,21 @@ const FacultyHR = () => {
   };
 
   // Determine today's attendance state
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayRecord = attendanceRecords.find(
-    (a) => new Date(a.date).toISOString().split('T')[0] === todayStr
-  );
+  const now = new Date();
+  const todayUTC = now.toISOString().split('T')[0];
+  const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+  const todayRecord = attendanceRecords.find((a) => {
+    if (!a?.date) return false;
+    const recStr = typeof a.date === 'string'
+      ? (a.date.includes('T') ? a.date.split('T')[0] : a.date)
+      : new Date(a.date).toISOString().split('T')[0];
+    return recStr === todayUTC || recStr === todayLocal;
+  });
+
+  const hasCheckedIn = Boolean(todayRecord?.checkIn || todayRecord?.checkInTime);
+  const hasCheckedOut = Boolean(todayRecord?.checkOut || todayRecord?.checkOutTime);
+  const checkInTimeVal = todayRecord?.checkIn || todayRecord?.checkInTime;
 
   return (
     <div className="cs-portal-shell overflow-hidden font-sans">
@@ -243,26 +284,26 @@ const FacultyHR = () => {
               <Clock className="w-5 h-5 text-indigo-500" />
               <div className="text-xs">
                 <div className="font-semibold text-slate-900">
-                  Today: {todayRecord ? todayRecord.status?.toUpperCase() : 'Not Checked In'}
+                  Today: {todayRecord?.status ? todayRecord.status.toUpperCase() : (hasCheckedIn ? 'PRESENT' : 'NOT CHECKED IN')}
                 </div>
                 <div className="text-slate-400">
-                  {todayRecord?.checkIn
-                    ? `In: ${new Date(todayRecord.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                  {hasCheckedIn && checkInTimeVal
+                    ? `In: ${new Date(checkInTimeVal).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                     : 'Check-in before grace period'}
                 </div>
               </div>
 
-              {!todayRecord?.checkIn ? (
+              {!hasCheckedIn ? (
                 <button
                   onClick={handleCheckIn}
-                  className="px-3 py-1.5 bg-indigo-600 hover text-white text-xs font-semibold rounded-lg shadow-sm"
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer transition-colors"
                 >
                   Check In
                 </button>
-              ) : !todayRecord?.checkOut ? (
+              ) : !hasCheckedOut ? (
                 <button
                   onClick={handleCheckOut}
-                  className="px-3 py-1.5 bg-amber-600 hover text-white text-xs font-semibold rounded-lg shadow-sm"
+                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer transition-colors"
                 >
                   Check Out
                 </button>
@@ -336,8 +377,8 @@ const FacultyHR = () => {
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold text-slate-900">My Leave Applications</h3>
                 <button
-                  onClick={() => setShowApplyModal(true)}
-                  className="px-4 py-2 bg-indigo-600 hover text-white text-sm font-medium rounded-lg flex items-center gap-2 shadow-sm"
+                  onClick={openApplyModal}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg flex items-center gap-2 shadow-sm cursor-pointer transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   Apply for Leave
@@ -591,7 +632,7 @@ const FacultyHR = () => {
                       required
                       value={leaveForm.policy}
                       onChange={(e) => setLeaveForm({ ...leaveForm, policy: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg text-sm"
+                      className="w-full px-3 py-2 border rounded-lg text-sm bg-white border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                       <option value="">Select Leave Policy</option>
                       {policies.map((p) => (
@@ -600,6 +641,9 @@ const FacultyHR = () => {
                         </option>
                       ))}
                     </select>
+                    {policies.length === 0 && (
+                      <p className="text-xs text-amber-600 mt-1">Loading institutional leave policies...</p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">

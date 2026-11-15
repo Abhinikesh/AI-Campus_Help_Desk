@@ -365,7 +365,11 @@ exports.downloadResume = async (req, res, next) => {
 
     // Anti-IDOR Authorization Check
     if (req.user.role === 'student') {
-      const student = await Student.findOne({ user: req.user._id });
+      const currentUserId = req.user.userId || req.user._id || req.user.id;
+      const student = await Student.findOne({ user: currentUserId });
+      if (!student) {
+        throw new ApiError(403, 'Access denied: Student profile not found');
+      }
       const profile = await PlacementProfile.findOne({ student: student._id, resumeUrl: filename });
       if (!profile) {
         // Also check if they submitted this resume on an active application
@@ -391,7 +395,8 @@ exports.getStudentProfileById = async (req, res, next) => {
 
     // Role check: Admin, Placement Officer, or Coordinator
     const studentUserId = student.user?._id ? student.user._id.toString() : student.user?.toString();
-    if (req.user.role === 'student' && (!studentUserId || studentUserId !== req.user._id.toString())) {
+    const currentUserId = String(req.user.userId || req.user._id || req.user.id);
+    if (req.user.role === 'student' && (!studentUserId || studentUserId !== currentUserId)) {
       throw new ApiError(403, 'Access denied: Cross-profile access is strictly prohibited');
     }
 
@@ -1437,7 +1442,11 @@ exports.downloadOfferLetter = async (req, res, next) => {
 
     // Anti-IDOR Authorization Check
     if (req.user.role === 'student') {
-      const student = await Student.findOne({ user: req.user._id });
+      const currentUserId = req.user.userId || req.user._id || req.user.id;
+      const student = await Student.findOne({ user: currentUserId });
+      if (!student) {
+        throw new ApiError(403, 'Access denied: Student profile not found');
+      }
       const offer = await PlacementOffer.findOne({ student: student._id, offerLetterUrl: filename });
       if (!offer) {
         throw new ApiError(403, 'Access denied: You can only download your own offer letters');

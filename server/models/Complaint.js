@@ -15,7 +15,19 @@ const complaintSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['academic', 'admin', 'hostel', 'transport', 'placement', 'event', 'asset', 'infrastructure', 'other'],
+      enum: [
+        'academic',
+        'admin',
+        'administration',
+        'faculty',
+        'hostel',
+        'transport',
+        'placement',
+        'event',
+        'asset',
+        'infrastructure',
+        'other',
+      ],
       required: [true, 'Category is required'],
     },
     title: {

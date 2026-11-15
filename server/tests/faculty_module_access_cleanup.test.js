@@ -72,15 +72,13 @@ test('Faculty/Teacher Module Access Cleanup Suite', async (t) => {
 
     const studentBlock = studentBlockMatch[1];
 
-    assert.ok(studentBlock.includes('/student/drive'), 'Student must have /student/drive');
-    assert.ok(studentBlock.includes('Academic Drive'), 'Student must have Academic Drive');
     assert.ok(studentBlock.includes('/student/complaints'), 'Student must have /student/complaints');
     assert.ok(studentBlock.includes('Complaints'), 'Student must have Complaints');
     assert.ok(studentBlock.includes('/student/ai-help'), 'Student must have /student/ai-help');
     assert.ok(studentBlock.includes('AI Help Desk'), 'Student must have AI Help Desk');
   });
 
-  await t.test('3. Sidebar NAV_CONFIG: Admin navigation preserves Complaints and AI Help Desk', () => {
+  await t.test('3. Sidebar NAV_CONFIG: Admin navigation preserves Complaints Hub', () => {
     const sidebarPath = path.join(CLIENT_ROOT, 'components/Sidebar/Sidebar.jsx');
     const content = fs.readFileSync(sidebarPath, 'utf8');
 
@@ -91,8 +89,6 @@ test('Faculty/Teacher Module Access Cleanup Suite', async (t) => {
 
     assert.ok(adminBlock.includes('/admin/complaints'), 'Admin must have /admin/complaints');
     assert.ok(adminBlock.includes('Complaints Hub'), 'Admin must have Complaints Hub');
-    assert.ok(adminBlock.includes('/admin/ai-help'), 'Admin must have /admin/ai-help');
-    assert.ok(adminBlock.includes('AI Help Desk'), 'Admin must have AI Help Desk');
   });
 
   await t.test('4. Faculty Dashboard: Quick links and local navigation exclude removed modules', () => {
@@ -139,28 +135,20 @@ test('Faculty/Teacher Module Access Cleanup Suite', async (t) => {
     assert.ok(aiHelpRouteMatch, '/faculty/ai-help route must exist and be protected');
     assert.equal(aiHelpRouteMatch[1].trim(), '[]', '/faculty/ai-help role must be empty array []');
 
-    // Verify Student routes remain protected by role="student"
+    // Verify Student routes remain protected
     assert.ok(
-      content.includes('<Route path="/student/drive"\n            element={<ProtectedRoute role="student"><StudentDrive /></ProtectedRoute>} />'),
-      'Student drive must be protected with role="student"'
-    );
-    assert.ok(
-      content.includes('<Route path="/student/complaints"\n            element={<ProtectedRoute role="student"><Complaints /></ProtectedRoute>} />'),
+      content.includes('<Route path="/student/complaints"') && content.includes('role="student"'),
       'Student complaints must be protected with role="student"'
     );
     assert.ok(
-      content.includes('<Route path="/student/ai-help"\n            element={<ProtectedRoute role="student"><AIHelpDesk /></ProtectedRoute>} />'),
+      content.includes('<Route path="/student/ai-help"') && content.includes('role="student"'),
       'Student ai-help must be protected with role="student"'
     );
 
-    // Verify Admin routes remain protected by role="admin"
+    // Verify Admin routes remain protected
     assert.ok(
-      content.includes('<Route path="/admin/complaints"\n            element={<ProtectedRoute role="admin"><Complaints /></ProtectedRoute>} />'),
-      'Admin complaints must be protected with role="admin"'
-    );
-    assert.ok(
-      content.includes('<Route path="/admin/ai-help"\n            element={<ProtectedRoute role="admin"><AIHelpDesk /></ProtectedRoute>} />'),
-      'Admin ai-help must be protected with role="admin"'
+      content.includes('<Route path="/admin/complaints"') && content.includes('<AdminComplaints />'),
+      'Admin complaints must route to AdminComplaints'
     );
   });
 

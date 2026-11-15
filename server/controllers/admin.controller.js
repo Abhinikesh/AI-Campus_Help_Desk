@@ -97,7 +97,7 @@ const getAllComplaints = asyncHandler(async (req, res) => {
   if (status) filter.status = status;
 
   const complaints = await Complaint.find(filter)
-    .populate('raisedBy', 'name email role')
+    .populate('raisedBy', 'name email role loginId')
     .sort({ createdAt: -1 });
 
   return res.status(200).json({ success: true, data: complaints, message: 'Complaints fetched' });

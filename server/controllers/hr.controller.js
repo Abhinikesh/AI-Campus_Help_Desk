@@ -24,12 +24,86 @@ const HRAnnouncement = require('../models/HRAnnouncement');
 const EmployeeTrainingRecord = require('../models/EmployeeTrainingRecord');
 const HRAuditLog = require('../models/HRAuditLog');
 const User = require('../models/User');
+const Faculty = require('../models/Faculty');
 
 const { hrService, HR_UPLOADS } = require('../services/hr.service');
 const notificationService = require('../services/notification.service');
 
 // Helper to get authenticated user ID
 const getUserId = (req) => req.user?.userId || req.user?.id || req.user?._id;
+
+// Helper to resolve or auto-link EmployeeProfile for faculty / staff users
+const resolveEmployeeProfile = async (userId) => {
+  if (!userId) return null;
+  let employee = await EmployeeProfile.findOne({ user: userId });
+  if (employee) return employee;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return null;
+
+    const faculty = await Faculty.findOne({ user: userId });
+    if (!faculty && user.role !== 'faculty') return null;
+
+    // Resolve Department
+    const deptName = faculty?.department || 'Computer Science & Engineering';
+    const deptCode = deptName.toLowerCase().includes('cdc') ? 'CDC' : 'CSE';
+    let dept = await Department.findOne({ code: deptCode });
+    if (!dept) {
+      dept = await Department.create({
+        name: deptName,
+        code: deptCode,
+        type: 'academic',
+        isActive: true,
+      });
+    }
+
+    // Resolve Designation
+    const desigTitle = faculty?.designation || 'Assistant Professor';
+    const desigCode = desigTitle.toLowerCase().includes('assoc') ? 'ASSOC_PROF' : 'ASST_PROF';
+    let desig = await Designation.findOne({ code: desigCode });
+    if (!desig) {
+      desig = await Designation.create({
+        name: desigTitle,
+        title: desigTitle,
+        code: desigCode,
+        category: 'teaching_faculty',
+        department: dept._id,
+      });
+    }
+
+    const nameParts = (user.name || 'Faculty Member').trim().split(/\s+/);
+    const firstName = nameParts[0] || 'Faculty';
+    const lastName = nameParts.slice(1).join(' ') || 'Member';
+    const empId = faculty?.employeeId || `FAC-${String(userId).slice(-4).toUpperCase()}`;
+
+    employee = await EmployeeProfile.create({
+      employeeId: empId,
+      user: userId,
+      firstName,
+      lastName,
+      displayName: user.name,
+      officialEmail: user.email,
+      phone: faculty?.phone || user.phone || '',
+      employeeCategory: 'teaching_faculty',
+      department: dept._id,
+      designation: desig._id,
+      employmentType: 'permanent',
+      employmentStatus: 'active',
+      joiningDate: faculty?.createdAt || user.createdAt || new Date(),
+      onboardingStatus: 'completed',
+    });
+
+    try {
+      await hrService.initializeLeaveBalancesForEmployee(employee._id, new Date().getFullYear(), userId);
+    } catch (_) {}
+
+    return employee;
+  } catch (err) {
+    console.warn('[resolveEmployeeProfile] Auto-provision notice:', err.message);
+    return null;
+  }
+};
 
 // ============================================================================
 // 1. DEPARTMENTS & DESIGNATIONS
@@ -291,11 +365,22 @@ exports.getEmployeeById = async (req, res) => {
 exports.getMyProfile = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const employee = await EmployeeProfile.findOne({ user: userId })
+    let employee = await EmployeeProfile.findOne({ user: userId })
       .populate('department', 'name code')
       .populate('designation', 'title code')
       .populate('reportingManager', 'name email role')
       .populate('user', 'name email role');
+
+    if (!employee) {
+      const resolved = await resolveEmployeeProfile(userId);
+      if (resolved) {
+        employee = await EmployeeProfile.findById(resolved._id)
+          .populate('department', 'name code')
+          .populate('designation', 'title code')
+          .populate('reportingManager', 'name email role')
+          .populate('user', 'name email role');
+      }
+    }
 
     if (!employee) {
       return res.status(404).json({ success: false, message: 'No employee profile linked to your user account' });
@@ -648,7 +733,46 @@ exports.getLeavePolicies = async (req, res) => {
     if (category) filter.applicableCategory = { $in: ['all', category] };
     if (isActive !== undefined) filter.isActive = isActive === 'true';
 
-    const policies = await LeavePolicy.find(filter).sort({ name: 1 });
+    let policies = await LeavePolicy.find(filter).sort({ name: 1 });
+
+    // Auto-seed standard institutional policies if empty
+    if (policies.length === 0) {
+      const defaultPolicies = [
+        {
+          code: 'CL',
+          name: 'Casual Leave',
+          description: 'Standard paid short-term casual leave for personal commitments',
+          applicableCategory: 'all',
+          annualEntitlement: 12,
+          maxConsecutiveDays: 3,
+          requiresProof: false,
+          isActive: true
+        },
+        {
+          code: 'SL',
+          name: 'Sick / Medical Leave',
+          description: 'Medical leave with doctor certificate requirement for extended recovery',
+          applicableCategory: 'all',
+          annualEntitlement: 10,
+          maxConsecutiveDays: 7,
+          requiresProof: true,
+          isActive: true
+        },
+        {
+          code: 'EL',
+          name: 'Earned / Privileged Leave',
+          description: 'Annual accumulated privilege leave eligible for academic inter-semester breaks',
+          applicableCategory: 'all',
+          annualEntitlement: 15,
+          maxConsecutiveDays: 10,
+          requiresProof: false,
+          isActive: true
+        }
+      ];
+      await LeavePolicy.insertMany(defaultPolicies);
+      policies = await LeavePolicy.find(filter).sort({ name: 1 });
+    }
+
     res.status(200).json({ success: true, count: policies.length, data: policies });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -776,7 +900,10 @@ exports.getEmployeeLeaveBalances = async (req, res) => {
 exports.getMyLeaveBalances = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const employee = await EmployeeProfile.findOne({ user: userId });
+    let employee = await EmployeeProfile.findOne({ user: userId });
+    if (!employee) {
+      employee = await resolveEmployeeProfile(userId);
+    }
     if (!employee) {
       return res.status(404).json({ success: false, message: 'No employee profile linked to user account' });
     }
@@ -919,7 +1046,10 @@ exports.getLeaveApplications = async (req, res) => {
 exports.getMyLeaveApplications = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const employee = await EmployeeProfile.findOne({ user: userId });
+    let employee = await EmployeeProfile.findOne({ user: userId });
+    if (!employee) {
+      employee = await resolveEmployeeProfile(userId);
+    }
     if (!employee) {
       return res.status(404).json({ success: false, message: 'No employee profile linked to user account' });
     }
@@ -947,7 +1077,10 @@ exports.applyForLeave = async (req, res) => {
       });
     }
 
-    const employee = await EmployeeProfile.findOne({ user: userId });
+    let employee = await EmployeeProfile.findOne({ user: userId });
+    if (!employee) {
+      employee = await resolveEmployeeProfile(userId);
+    }
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee profile not found for this user' });
     }
@@ -1261,19 +1394,24 @@ exports.cancelLeaveApplication = async (req, res) => {
 exports.checkIn = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const employee = await EmployeeProfile.findOne({ user: userId });
+    let employee = await EmployeeProfile.findOne({ user: userId });
+    if (!employee) {
+      employee = await resolveEmployeeProfile(userId);
+    }
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee profile not found' });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     let attendance = await EmployeeAttendance.findOne({
       employee: employee._id,
-      date: today
+      $or: [{ date: today }, { date: localDate }]
     });
 
-    if (attendance && attendance.checkIn) {
+    if (attendance && (attendance.checkIn || attendance.checkInTime)) {
       return res.status(400).json({
         success: false,
         message: 'You have already checked in for today',
@@ -1281,7 +1419,6 @@ exports.checkIn = async (req, res) => {
       });
     }
 
-    const now = new Date();
     // Default shift start 09:30 AM with 15 min grace period
     const shiftStart = new Date();
     shiftStart.setHours(9, 30, 0, 0);
@@ -1295,11 +1432,13 @@ exports.checkIn = async (req, res) => {
     if (!attendance) {
       attendance = new EmployeeAttendance({
         employee: employee._id,
+        user: userId,
         date: today
       });
     }
 
     attendance.checkIn = now;
+    attendance.checkInTime = now;
     attendance.status = status;
     attendance.verificationMethod = req.body?.verificationMethod || 'web_portal';
     attendance.ipAddress = req.ip || req.headers?.['x-forwarded-for'] || '';
@@ -1314,30 +1453,37 @@ exports.checkIn = async (req, res) => {
 exports.checkOut = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const employee = await EmployeeProfile.findOne({ user: userId });
+    let employee = await EmployeeProfile.findOne({ user: userId });
+    if (!employee) {
+      employee = await resolveEmployeeProfile(userId);
+    }
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee profile not found' });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     const attendance = await EmployeeAttendance.findOne({
       employee: employee._id,
-      date: today
+      $or: [{ date: today }, { date: localDate }]
     });
 
-    if (!attendance || !attendance.checkIn) {
+    if (!attendance || (!attendance.checkIn && !attendance.checkInTime)) {
       return res.status(400).json({
         success: false,
         message: 'No check-in record found for today. Please check in first.'
       });
     }
 
-    const now = new Date();
     attendance.checkOut = now;
+    attendance.checkOutTime = now;
 
-    const diffHours = (now.getTime() - new Date(attendance.checkIn).getTime()) / (1000 * 60 * 60);
+    const inTime = new Date(attendance.checkIn || attendance.checkInTime);
+    const diffHours = (now.getTime() - inTime.getTime()) / (1000 * 60 * 60);
     attendance.workingHours = Math.round(diffHours * 100) / 100;
+    attendance.hoursWorked = attendance.workingHours;
 
     await attendance.save();
 
@@ -1350,7 +1496,10 @@ exports.checkOut = async (req, res) => {
 exports.getMyAttendance = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const employee = await EmployeeProfile.findOne({ user: userId });
+    let employee = await EmployeeProfile.findOne({ user: userId });
+    if (!employee) {
+      employee = await resolveEmployeeProfile(userId);
+    }
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee profile not found' });
     }
@@ -1362,10 +1511,18 @@ exports.getMyAttendance = async (req, res) => {
     const startDate = new Date(targetYear, targetMonth - 1, 1);
     const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
 
+    const monthStr = String(targetMonth).padStart(2, '0');
+    const startStr = `${targetYear}-${monthStr}-01`;
+    const lastDay = new Date(targetYear, targetMonth, 0).getDate();
+    const endStr = `${targetYear}-${monthStr}-${String(lastDay).padStart(2, '0')}`;
+
     const attendances = await EmployeeAttendance.find({
       employee: employee._id,
-      date: { $gte: startDate, $lte: endDate }
-    }).sort({ date: 1 });
+      $or: [
+        { date: { $gte: startStr, $lte: endStr } },
+        { date: { $gte: startDate, $lte: endDate } }
+      ]
+    }).sort({ date: -1 });
 
     res.status(200).json({ success: true, count: attendances.length, data: attendances });
   } catch (err) {

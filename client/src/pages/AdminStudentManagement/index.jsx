@@ -1689,17 +1689,17 @@ function CanonicalStudentsTab() {
                 Page {page} of {totalPages || 1}
               </span>
             </div>
-            <div className="ds-table-wrap">
-              <table className="ds-table">
+            <div className="sm-canonical-table-wrap">
+              <table className="sm-canonical-table">
                 <thead>
                   <tr>
-                    <th>Roll Number</th>
-                    <th>Student Name</th>
-                    <th>Course / Branch</th>
-                    <th>Sem & Sec</th>
-                    <th>Contact</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: 'right' }}>Action</th>
+                    <th style={{ width: 130 }}>Roll Number</th>
+                    <th style={{ minWidth: 170 }}>Student Name</th>
+                    <th style={{ minWidth: 140 }}>Course / Branch</th>
+                    <th style={{ width: 110 }}>Sem & Sec</th>
+                    <th style={{ minWidth: 160 }}>Contact</th>
+                    <th style={{ width: 90 }}>Status</th>
+                    <th style={{ width: 110, textAlign: 'right' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>

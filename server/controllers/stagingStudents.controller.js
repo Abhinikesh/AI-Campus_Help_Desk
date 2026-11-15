@@ -418,14 +418,66 @@ const getStagingStudentDetail = asyncHandler(async (req, res) => {
     createdAt: doc.createdAt,
   }));
 
+  // Extract contact and academic info
+  const getRawVal = (field) => {
+    if (!primaryDoc.rawPayload) return null;
+    if (primaryDoc.rawPayload instanceof Map) return primaryDoc.rawPayload.get(field);
+    return primaryDoc.rawPayload[field];
+  };
+
+  const phone =
+    getRawVal('Phone Number') ||
+    getRawVal('Phone') ||
+    getRawVal('phone') ||
+    getRawVal('contactNumber') ||
+    internshipDocs[0]?.contactNumber ||
+    academicDocs[0]?.contactNumber ||
+    null;
+
+  const personalEmail =
+    getRawVal('Personal Email') ||
+    getRawVal('Email') ||
+    getRawVal('email') ||
+    admissionDocs[0]?.email ||
+    academicDocs[0]?.personalEmail ||
+    null;
+
+  const officialEmail =
+    getRawVal('College / Official Email') ||
+    getRawVal('officialEmail') ||
+    admissionDocs[0]?.teamsId ||
+    internshipDocs[0]?.officialId ||
+    academicDocs[0]?.collegeEmail ||
+    null;
+
+  const email = officialEmail || personalEmail || null;
+
+  const academicProfile = {
+    school: getRawVal('School') || admissionDocs[0]?.school || 'School of Engineering',
+    course: getRawVal('Course') || admissionDocs[0]?.course || 'CSE',
+    batch: getRawVal('Batch') || getRawVal('Batch / Year') || getRawVal('Batch and year') || '2024/3rd',
+    branch: getRawVal('Branch') || internshipDocs[0]?.branch || 'CSE',
+    section: getRawVal('Section') || internshipDocs[0]?.section || null,
+  };
+
   return res.status(200).json({
     success: true,
     data: {
       normalizedRollNumber: normalizedRoll,
       studentName,
+      sourceRow: primaryDoc.sourceRow,
+      reviewStatus: primaryDoc.reviewStatus,
+      reviewNotes: primaryDoc.reviewNotes,
+      phone,
+      phoneNumber: phone,
+      contactNumber: phone,
+      email,
+      personalEmail,
+      officialEmail,
       identityClassification: identityClass,
       enrollmentStatus: enrollmentStatus(),
       batchId: BATCH_ID,
+      academicProfile,
       masterRecords,
       admissionRecords,
       academicRecords,

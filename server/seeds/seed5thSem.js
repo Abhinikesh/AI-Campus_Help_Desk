@@ -232,7 +232,7 @@ async function seed() {
   // ── 6. Update existing students semester to 5 if in CSE ───────────────────
   const updated = await Student.updateMany(
     { branch: 'CSE', semester: { $lt: 5 } },
-    { $set: { semester: 5 } }
+    { $set: { semester: 5, school: 'School of Engineering', course: 'CSE', batch: '2024/3rd', year: '3rd' } }
   );
   console.log(`✅ Updated ${updated.modifiedCount} CSE students to semester 5`);
 

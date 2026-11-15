@@ -16,18 +16,12 @@ import './Admin.css';
 const MODULE_DESCRIPTIONS = {
   '/admin/students': 'Student admissions, enrollment verification & directory',
   '/admin/attendance': 'Smart attendance analytics, biometric logs & sessions',
-  '/admin/timetable': 'Master academic timetable, classroom & period schedules',
   '/admin/finance': 'Fee collection, challans, payroll & financial ledger',
   '/admin/hostel': 'Hostel blocks, room allocations & warden management',
-  '/admin/transport': 'Bus routes, transport fleet & driver allocations',
   '/admin/placement': 'Campus placement drives, corporate partners & offers',
-  '/admin/activities': 'Clubs, campus events, approvals & extracurriculars',
-  '/admin/inventory': 'Campus assets, lab supplies & procurement management',
   '/admin/hr': 'Faculty & staff profiles, leave requests & workforce directory',
-  '/admin/library': 'Library catalog, book circulation & digital reserves',
   '/notifications': 'Broadcast institutional notices, alerts & announcements',
   '/admin/complaints': 'Grievance resolution hub, ticket tracking & escalations',
-  '/admin/ai-help': 'Campus AI help desk supervision, query logs & assistance',
 };
 
 const statusPill = (status) => {

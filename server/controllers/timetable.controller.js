@@ -187,6 +187,21 @@ async function getStudentTimetable(req, res) {
       });
     }
 
+    // Anti-IDOR check on URL parameters and query parameters
+    const targetId = req.params?.id || req.query?.studentId || req.query?.id;
+    if (targetId && String(targetId) !== String(student._id)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You cannot access another student timetable',
+      });
+    }
+    if (req.query?.rollNumber && String(req.query.rollNumber).toUpperCase() !== String(student.rollNumber).toUpperCase()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You cannot access another student timetable',
+      });
+    }
+
     const department = (student.branch || 'CSE').toUpperCase();
     const semester = student.semester || 5;
     const section = student.section || 'A';

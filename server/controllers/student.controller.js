@@ -4,6 +4,7 @@
 'use strict';
 
 const Student = require('../models/Student');
+const Mark = require('../models/Mark');
 const Complaint = require('../models/Complaint');
 const Announcement = require('../models/Announcement');
 const Fee = require('../models/Fee');
@@ -23,13 +24,71 @@ const examController = require('./exam.controller');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
+// ── Identity Binding & IDOR Prevention Helpers ─────────────────
+
+const resolveAuthenticatedStudent = async (req) => {
+  const userId = req.user?.userId || req.user?._id || req.user?.id;
+  if (!userId) {
+    throw new ApiError(401, 'Authentication required');
+  }
+  const student = await Student.findOne({ user: userId });
+  if (!student) {
+    throw new ApiError(403, 'Forbidden: No linked student record for this user account');
+  }
+  if (student.status !== 'active') {
+    throw new ApiError(403, 'Forbidden: Student account is not active');
+  }
+  return student;
+};
+
+const assertOwnership = (student, targetId, entityName = 'record') => {
+  if (targetId && String(targetId).trim()) {
+    const cleanTarget = String(targetId).trim();
+    const matchesId = cleanTarget === String(student._id);
+    const matchesRoll = cleanTarget.toUpperCase() === String(student.rollNumber).toUpperCase();
+    if (!matchesId && !matchesRoll) {
+      throw new ApiError(403, `Forbidden: You do not have permission to access another student's ${entityName}`);
+    }
+  }
+};
+
 // GET /api/student/profile
 const getProfile = asyncHandler(async (req, res) => {
-  const student = await Student.findOne({ user: req.user.userId })
+  const currentStudent = await resolveAuthenticatedStudent(req);
+
+  // Anti-IDOR: Check manipulated query parameters
+  const { studentId, rollNumber, id } = req.query || {};
+  assertOwnership(currentStudent, studentId, 'profile');
+  assertOwnership(currentStudent, id, 'profile');
+  assertOwnership(currentStudent, rollNumber, 'profile');
+
+  const student = await Student.findById(currentStudent._id)
     .populate('user', 'name email loginId');
   if (!student) throw new ApiError(404, 'Student profile not found');
 
   return res.status(200).json({ success: true, data: student, message: 'OK' });
+});
+
+// GET /api/student/profile/:id (Anti-IDOR protected)
+const getProfileById = asyncHandler(async (req, res) => {
+  const currentStudent = await resolveAuthenticatedStudent(req);
+  const { id } = req.params;
+  assertOwnership(currentStudent, id, 'profile');
+
+  const student = await Student.findById(currentStudent._id)
+    .populate('user', 'name email loginId');
+  if (!student) throw new ApiError(404, 'Student profile not found');
+
+  return res.status(200).json({ success: true, data: student, message: 'OK' });
+});
+
+// PATCH / PUT /api/student/profile (Institutional field protection & update denial)
+const rejectStudentProfileEdit = asyncHandler(async (req, res) => {
+  const currentStudent = await resolveAuthenticatedStudent(req);
+  const targetId = req.params.id || req.body?.studentId || req.body?._id;
+  assertOwnership(currentStudent, targetId, 'profile');
+
+  throw new ApiError(403, 'Forbidden: Modifying institutional student profiles is restricted to Administrators');
 });
 
 // GET /api/student/announcements
@@ -41,16 +100,29 @@ const getAnnouncements = asyncHandler(async (req, res) => {
 
 // POST /api/student/complaints
 const raiseComplaint = asyncHandler(async (req, res) => {
-  const { title, description, category } = req.body;
+  const { title, description, category, raisedBy, studentId } = req.body || {};
   if (!title || !description || !category) {
     throw new ApiError(400, 'title, description, and category are required');
   }
 
+  // Anti-IDOR: Prevent impersonating another student in request body
+  const currentUserId = String(req.user.userId || req.user._id || req.user.id);
+  if (raisedBy && String(raisedBy) !== currentUserId) {
+    throw new ApiError(403, 'Forbidden: You cannot submit a complaint on behalf of another user');
+  }
+
+  if (studentId) {
+    const student = await resolveAuthenticatedStudent(req);
+    assertOwnership(student, studentId, 'complaint');
+  }
+
+  const normalizedCategory = String(category).trim().toLowerCase();
+
   const complaint = await Complaint.create({
-    raisedBy: req.user.userId,
-    title,
-    description,
-    category,
+    raisedBy: currentUserId,
+    title: String(title).trim(),
+    description: String(description).trim(),
+    category: normalizedCategory,
   });
 
   return res.status(201).json({ success: true, data: complaint, message: 'Complaint submitted' });
@@ -58,14 +130,20 @@ const raiseComplaint = asyncHandler(async (req, res) => {
 
 // GET /api/student/complaints
 const getMyComplaints = asyncHandler(async (req, res) => {
-  const complaints = await Complaint.find({ raisedBy: req.user.userId }).sort({ createdAt: -1 });
+  const currentUserId = req.user.userId || req.user._id || req.user.id;
+  const complaints = await Complaint.find({ raisedBy: currentUserId }).sort({ createdAt: -1 });
   return res.status(200).json({ success: true, data: complaints, message: 'OK' });
 });
 
 // GET /api/student/fees
 const getFees = asyncHandler(async (req, res) => {
-  const student = await Student.findOne({ user: req.user.userId });
-  if (!student) throw new ApiError(404, 'Student not found');
+  const student = await resolveAuthenticatedStudent(req);
+
+  // Anti-IDOR parameter check
+  const { studentId, rollNumber, id } = req.query || {};
+  assertOwnership(student, studentId, 'fee records');
+  assertOwnership(student, id, 'fee records');
+  assertOwnership(student, rollNumber, 'fee records');
 
   const fees = await Fee.find({ student: student._id }).sort({ dueDate: 1 });
   const invoices = await FeeInvoice.find({ student: student._id })
@@ -80,10 +158,26 @@ const getFees = asyncHandler(async (req, res) => {
   });
 });
 
+// GET /api/student/fees/:id
+const getFeeById = asyncHandler(async (req, res) => {
+  const student = await resolveAuthenticatedStudent(req);
+  const fee = await Fee.findById(req.params.id);
+  if (!fee) throw new ApiError(404, 'Fee record not found');
+  if (String(fee.student) !== String(student._id)) {
+    throw new ApiError(403, 'Forbidden: You cannot access fee records belonging to another student');
+  }
+  return res.status(200).json({ success: true, data: fee, message: 'OK' });
+});
+
 // GET /api/student/attendance
 const getAttendance = asyncHandler(async (req, res) => {
-  const student = await Student.findOne({ user: req.user.userId });
-  if (!student) throw new ApiError(404, 'Student profile not found');
+  const student = await resolveAuthenticatedStudent(req);
+
+  // Anti-IDOR parameter check
+  const { studentId, rollNumber, id } = req.query || {};
+  assertOwnership(student, studentId, 'attendance records');
+  assertOwnership(student, id, 'attendance records');
+  assertOwnership(student, rollNumber, 'attendance records');
 
   // Authoritative academic attendance calculation
   const calculation = await attendanceCalculationService.calculateStudentOverview({
@@ -150,10 +244,14 @@ const getAttendance = asyncHandler(async (req, res) => {
 
 // GET /api/student/attendance/history
 const getAttendanceHistory = asyncHandler(async (req, res) => {
-  const student = await Student.findOne({ user: req.user.userId });
-  if (!student) throw new ApiError(404, 'Student profile not found');
+  const student = await resolveAuthenticatedStudent(req);
 
-  const { subjectId, status, startDate, endDate, page = 1, limit = 15 } = req.query;
+  // Anti-IDOR parameter check
+  const { studentId, rollNumber, id, subjectId, status, startDate, endDate, page = 1, limit = 15 } = req.query || {};
+  assertOwnership(student, studentId, 'attendance history');
+  assertOwnership(student, id, 'attendance history');
+  assertOwnership(student, rollNumber, 'attendance history');
+
   const filter = { student: student._id };
 
   if (subjectId) filter.subject = subjectId;
@@ -197,6 +295,25 @@ const getAttendanceHistory = asyncHandler(async (req, res) => {
       },
     },
     message: 'Attendance history loaded',
+  });
+});
+
+// GET /api/student/attendance/:id (Anti-IDOR protected)
+const getAttendanceRecordById = asyncHandler(async (req, res) => {
+  const student = await resolveAuthenticatedStudent(req);
+  const record = await Attendance.findById(req.params.id)
+    .populate('subject', 'name code')
+    .populate('session', 'date period startTime endTime');
+
+  if (!record) throw new ApiError(404, 'Attendance record not found');
+  if (String(record.student) !== String(student._id)) {
+    throw new ApiError(403, 'Forbidden: You cannot access attendance records belonging to another student');
+  }
+
+  return res.status(200).json({
+    success: true,
+    data: record,
+    message: 'Attendance record loaded',
   });
 });
 
@@ -795,22 +912,61 @@ const revokeFace = asyncHandler(async (req, res) => {
 
 // GET /api/student/exams
 const getExams = asyncHandler(async (req, res) => {
+  const student = await resolveAuthenticatedStudent(req);
+
+  // Anti-IDOR parameter check
+  const { studentId, rollNumber, id } = req.query || {};
+  assertOwnership(student, studentId, 'exam schedule');
+  assertOwnership(student, id, 'exam schedule');
+  assertOwnership(student, rollNumber, 'exam schedule');
+
   return examController.getStudentExamSchedule(req, res);
 });
 
 // GET /api/student/results
 const getResults = asyncHandler(async (req, res) => {
+  const student = await resolveAuthenticatedStudent(req);
+
+  // Anti-IDOR parameter check
+  const { studentId, rollNumber, id } = req.query || {};
+  assertOwnership(student, studentId, 'examination results');
+  assertOwnership(student, id, 'examination results');
+  assertOwnership(student, rollNumber, 'examination results');
+
   return examController.getStudentResults(req, res);
+});
+
+// GET /api/student/results/:id (Anti-IDOR protected)
+const getResultById = asyncHandler(async (req, res) => {
+  const student = await resolveAuthenticatedStudent(req);
+  const mark = await Mark.findById(req.params.id)
+    .populate('subject', 'name code credits semester branch')
+    .populate('exam', 'title examinationType date maximumMarks passingMarks');
+
+  if (!mark) throw new ApiError(404, 'Result record not found');
+  if (String(mark.student) !== String(student._id)) {
+    throw new ApiError(403, 'Forbidden: You cannot access examination results belonging to another student');
+  }
+
+  return res.status(200).json({
+    success: true,
+    data: mark,
+    message: 'Examination result loaded',
+  });
 });
 
 module.exports = {
   getProfile,
+  getProfileById,
+  rejectStudentProfileEdit,
   getAnnouncements,
   raiseComplaint,
   getMyComplaints,
   getFees,
+  getFeeById,
   getAttendance,
   getAttendanceHistory,
+  getAttendanceRecordById,
   getActiveSessions,
   joinAttendanceSession,
   getFaceStatus,
@@ -820,4 +976,7 @@ module.exports = {
   revokeFace,
   getExams,
   getResults,
+  getResultById,
+  resolveAuthenticatedStudent,
+  assertOwnership,
 };

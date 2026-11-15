@@ -28,6 +28,11 @@ async function run() {
       $set: {
         semester: 5,
         branch: 'CSE',
+        course: 'CSE',
+        school: 'School of Engineering',
+        batch: '2024/3rd',
+        year: '3rd',
+        admissionYear: 2024,
         section: 'A',
       }
     }

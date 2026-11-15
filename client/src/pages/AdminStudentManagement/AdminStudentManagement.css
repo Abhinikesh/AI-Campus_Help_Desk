@@ -1479,3 +1479,56 @@ tr.sm-row-selected td {
   border-radius: 4px;
 }
 
+/* ─── Polished Canonical Student Table ─────────────────────────────────── */
+.sm-canonical-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.sm-canonical-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  color: #334155;
+}
+
+.sm-canonical-table thead tr {
+  background: #F8FAFC;
+}
+
+.sm-canonical-table th {
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: left;
+  border-bottom: 2px solid #E2E8F0;
+  white-space: nowrap;
+}
+
+.sm-canonical-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+  transition: background 0.15s ease;
+}
+
+.sm-canonical-table tbody tr:hover td {
+  background: #F8FAFC;
+}
+
+.sm-canonical-table tbody tr.selected td {
+  background: #EFF6FF !important;
+}
+
+.sm-canonical-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
