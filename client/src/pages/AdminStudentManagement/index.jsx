@@ -28,7 +28,8 @@ import {
   Users, Search, ChevronLeft, ChevronRight, RefreshCw,
   AlertCircle, CheckCircle, HelpCircle, XCircle, ClipboardList,
   BookOpen, Briefcase, Info, X, GraduationCap,
-  ShieldCheck, FileCheck, FileText, Clock, AlertTriangle, UserCheck
+  ShieldCheck, FileCheck, FileText, Clock, AlertTriangle, UserCheck,
+  Lock, Edit3, Save, RotateCcw, History, Mail, Phone, Calendar
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './AdminStudentManagement.css';
@@ -1382,10 +1383,774 @@ function RegisterImportTab() {
   );
 }
 
+// ─── Canonical Students Profile Management Tab (Part 6) ──────────────────────
+
+function CanonicalStudentsTab() {
+  const [students, setStudents] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [branchFilter, setBranchFilter] = useState('');
+  const [semesterFilter, setSemesterFilter] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Detail / Editing state
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [studentDetail, setStudentDetail] = useState(null);
+  const [auditHistory, setAuditHistory] = useState([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    branch: '',
+    program: '',
+    semester: '',
+    section: '',
+    admissionYear: '',
+    school: '',
+    gender: '',
+    dateOfBirth: '',
+  });
+  const [formErrors, setFormErrors] = useState({});
+  const [saveSuccess, setSaveSuccess] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Load canonical student list
+  const loadStudents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await adminService.getCanonicalStudents({
+        search: debouncedSearch || undefined,
+        branch: branchFilter || undefined,
+        semester: semesterFilter || undefined,
+        page,
+        limit: 15,
+      });
+      if (res.success) {
+        setStudents(res.data);
+        setTotal(res.pagination.total);
+        setTotalPages(res.pagination.pages || 1);
+      } else {
+        setError(res.message || 'Failed to load canonical students');
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || 'Failed to load canonical students');
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedSearch, branchFilter, semesterFilter, page]);
+
+  useEffect(() => {
+    loadStudents();
+  }, [loadStudents]);
+
+  // Load single student detail & audit logs
+  const loadDetail = useCallback(async (id) => {
+    if (!id) return;
+    setDetailLoading(true);
+    setDetailError(null);
+    setSaveSuccess(null);
+    setIsEditing(false);
+    try {
+      const res = await adminService.getCanonicalStudentDetail(id);
+      if (res.success) {
+        setStudentDetail(res.data);
+        setAuditHistory(res.data.auditHistory || []);
+      } else {
+        setDetailError(res.message || 'Failed to fetch student details');
+      }
+    } catch (err) {
+      setDetailError(err?.response?.data?.message || err.message || 'Failed to fetch student details');
+    } finally {
+      setDetailLoading(false);
+    }
+  }, []);
+
+  const handleSelectStudent = (id) => {
+    if (selectedStudentId === id) return;
+    setSelectedStudentId(id);
+    loadDetail(id);
+  };
+
+  const startEditing = () => {
+    if (!studentDetail?.student) return;
+    const s = studentDetail.student;
+    setEditFormData({
+      fullName: s.fullName || '',
+      email: s.email || '',
+      phone: s.phone || '',
+      branch: s.branch || '',
+      program: s.program || '',
+      semester: s.semester ? String(s.semester) : '',
+      section: s.section || '',
+      admissionYear: s.admissionYear ? String(s.admissionYear) : '',
+      school: s.school || '',
+      gender: s.gender || '',
+      dateOfBirth: s.dateOfBirth ? s.dateOfBirth.substring(0, 10) : '',
+    });
+    setFormErrors({});
+    setSaveSuccess(null);
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setFormErrors({});
+    setDetailError(null);
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setFormErrors({});
+    setDetailError(null);
+    setSaveSuccess(null);
+
+    // Client-side validations
+    const errors = {};
+    if (!editFormData.fullName.trim()) {
+      errors.fullName = 'Full Name is required';
+    }
+
+    if (editFormData.email && editFormData.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(editFormData.email.trim())) {
+        errors.email = 'Please provide a valid email address';
+      }
+    }
+
+    if (editFormData.phone && editFormData.phone.trim()) {
+      const digits = editFormData.phone.replace(/[\s\-\(\)\+]/g, '');
+      if (digits.length < 10 || digits.length > 15) {
+        errors.phone = 'Phone number must contain between 10 and 15 digits';
+      }
+    }
+
+    if (editFormData.semester && editFormData.semester.trim()) {
+      const semNum = Number(editFormData.semester);
+      if (isNaN(semNum) || semNum < 1 || semNum > 10) {
+        errors.semester = 'Semester must be a number between 1 and 10';
+      }
+    }
+
+    if (editFormData.admissionYear && editFormData.admissionYear.trim()) {
+      const yearNum = Number(editFormData.admissionYear);
+      if (isNaN(yearNum) || yearNum < 1990 || yearNum > 2100) {
+        errors.admissionYear = 'Admission year must be a valid 4-digit year';
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload = {
+        fullName: editFormData.fullName.trim(),
+        email: editFormData.email.trim() || null,
+        phone: editFormData.phone.trim() || null,
+        branch: editFormData.branch.trim() || null,
+        program: editFormData.program.trim() || null,
+        semester: editFormData.semester ? Number(editFormData.semester) : null,
+        section: editFormData.section.trim() || null,
+        admissionYear: editFormData.admissionYear ? Number(editFormData.admissionYear) : null,
+        school: editFormData.school.trim() || null,
+        gender: editFormData.gender || '',
+        dateOfBirth: editFormData.dateOfBirth || null,
+      };
+
+      const res = await adminService.updateCanonicalStudentProfile(selectedStudentId, payload);
+      if (res.success) {
+        setSaveSuccess('Student profile updated successfully. Audit log recorded.');
+        setIsEditing(false);
+        // Refresh detail & student in list
+        await loadDetail(selectedStudentId);
+        loadStudents();
+      } else {
+        setDetailError(res.message || 'Failed to update student profile');
+      }
+    } catch (err) {
+      setDetailError(err?.response?.data?.message || err.message || 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const student = studentDetail?.student;
+  const user = studentDetail?.user;
+
+  return (
+    <div className="sm-canonical-wrapper">
+      {/* Search and Filters Bar */}
+      <div className="sm-canonical-controls">
+        <div className="sm-canonical-search-input">
+          <Search size={15} />
+          <input
+            type="text"
+            placeholder="Search by student name, roll number, email, or phone..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <select
+          className="sm-canonical-select"
+          value={branchFilter}
+          onChange={(e) => { setBranchFilter(e.target.value); setPage(1); }}
+        >
+          <option value="">All Branches</option>
+          <option value="CSE">CSE</option>
+          <option value="ECE">ECE</option>
+          <option value="MECH">MECH</option>
+          <option value="CIVIL">CIVIL</option>
+          <option value="IT">IT</option>
+          <option value="EE">EE</option>
+        </select>
+
+        <select
+          className="sm-canonical-select"
+          value={semesterFilter}
+          onChange={(e) => { setSemesterFilter(e.target.value); setPage(1); }}
+        >
+          <option value="">All Semesters</option>
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+            <option key={s} value={s}>Semester {s}</option>
+          ))}
+        </select>
+
+        <button
+          className="sm-page-btn"
+          title="Refresh List"
+          onClick={loadStudents}
+          disabled={loading}
+          style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6 }}
+        >
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+          Refresh
+        </button>
+      </div>
+
+      {error && (
+        <div className="sm-error-banner">
+          <AlertCircle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Main Split Layout: Table on Left, Profile View/Edit on Right */}
+      <div className={`sm-workspace ${selectedStudentId ? 'sm-workspace--split' : ''}`}>
+        {/* Table Panel */}
+        <div className="sm-list-panel">
+          <div className="sm-table-container">
+            <table className="sm-table">
+              <thead>
+                <tr>
+                  <th>Roll Number</th>
+                  <th>Student Name</th>
+                  <th>Program / Branch</th>
+                  <th>Sem & Sec</th>
+                  <th>Contact</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && students.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '32px', color: '#64748B' }}>
+                      <RefreshCw size={18} className="animate-spin" style={{ display: 'inline', marginRight: 8 }} />
+                      Loading canonical student records...
+                    </td>
+                  </tr>
+                ) : students.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '32px', color: '#94A3B8' }}>
+                      No canonical student records found matching the search criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  students.map((s) => {
+                    const isSelected = selectedStudentId === s._id;
+                    return (
+                      <tr
+                        key={s._id}
+                        className={isSelected ? 'selected' : ''}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => handleSelectStudent(s._id)}
+                      >
+                        <td>
+                          <code style={{ fontWeight: 600, color: '#1E293B', background: '#F1F5F9', padding: '2px 6px', borderRadius: 4 }}>
+                            {s.rollNumber}
+                          </code>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: '#0F172A' }}>{s.fullName}</div>
+                          <div style={{ fontSize: 11, color: '#64748B' }}>{s.school || 'Institutional Student'}</div>
+                        </td>
+                        <td>
+                          <div style={{ fontSize: 13, color: '#334155' }}>{s.program || '—'}</div>
+                          <div style={{ fontSize: 11, color: '#64748B' }}>{s.branch || '—'}</div>
+                        </td>
+                        <td>
+                          <span style={{ fontSize: 13, color: '#334155' }}>
+                            {s.semester ? `Sem ${s.semester}` : '—'}
+                            {s.section ? ` (${s.section})` : ''}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ fontSize: 12, color: s.email ? '#334155' : '#94A3B8' }}>
+                            {s.email || 'No email'}
+                          </div>
+                          <div style={{ fontSize: 11, color: s.phone ? '#64748B' : '#94A3B8' }}>
+                            {s.phone || 'No phone'}
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`ds-pill ${s.status === 'active' ? 'green' : s.status === 'alumni' ? 'blue' : 'gray'}`}>
+                            {s.status}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            className="sm-row-action-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectStudent(s._id);
+                            }}
+                            style={{
+                              background: isSelected ? '#EFF6FF' : '#F8FAFC',
+                              color: isSelected ? '#1D4ED8' : '#334155',
+                              border: '1px solid #CBD5E1',
+                              borderRadius: 4,
+                              padding: '4px 8px',
+                              fontSize: 12,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {isSelected ? 'Viewing' : 'View / Edit'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="sm-pagination" style={{ marginTop: 12 }}>
+              <button
+                className="sm-page-btn"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span>Page {page} of {totalPages} ({total} students)</span>
+              <button
+                className="sm-page-btn"
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Detail Panel */}
+        {selectedStudentId && (
+          <div className="sm-detail-panel" style={{ flex: '1', minWidth: 320 }}>
+            {detailLoading ? (
+              <div style={{ padding: 32, textAlign: 'center', color: '#64748B' }}>
+                <RefreshCw size={20} className="animate-spin" style={{ display: 'inline', marginRight: 8 }} />
+                Loading profile details...
+              </div>
+            ) : !student ? (
+              <div style={{ padding: 24, textAlign: 'center', color: '#94A3B8' }}>
+                Student record not found.
+              </div>
+            ) : (
+              <>
+                <div className="sm-detail-panel-header" style={{ alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {student.fullName}
+                      <span className={`ds-pill ${student.status === 'active' ? 'green' : 'gray'}`}>
+                        {student.status}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                      <code style={{ fontSize: 12, fontWeight: 600, color: '#2563EB', background: '#EFF6FF', padding: '2px 6px', borderRadius: 4 }}>
+                        {student.rollNumber}
+                      </code>
+                      <span className="sm-badge-locked">
+                        <Lock size={10} /> Roll Number Immutable
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    className="sm-detail-close"
+                    onClick={() => { setSelectedStudentId(null); setStudentDetail(null); }}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                {/* Identity & Lifecycle Protection Banner */}
+                <div className="sm-profile-guard-banner">
+                  <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div>
+                    <strong>Institutional Identity & Integrity Safeguard</strong>
+                    <div style={{ marginTop: 2 }}>
+                      Roll Number and Enrollment Status cannot be modified from profile editing. Academic progression and enrollment verification are strictly governed through institutional Registrar workflows.
+                    </div>
+                  </div>
+                </div>
+
+                {saveSuccess && (
+                  <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#065F46', padding: '10px 12px', borderRadius: 6, fontSize: 12, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <CheckCircle size={15} />
+                    <span>{saveSuccess}</span>
+                  </div>
+                )}
+
+                {detailError && (
+                  <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#991B1B', padding: '10px 12px', borderRadius: 6, fontSize: 12, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <AlertCircle size={15} />
+                    <span>{detailError}</span>
+                  </div>
+                )}
+
+                {/* VIEW MODE */}
+                {!isEditing ? (
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                      <button
+                        className="sm-btn-save"
+                        onClick={startEditing}
+                        style={{ padding: '6px 12px', fontSize: 12 }}
+                      >
+                        <Edit3 size={14} />
+                        Edit Permitted Profile Fields
+                      </button>
+                    </div>
+
+                    <div className="sm-detail-section-label">Academic Placement</div>
+                    <div className="sm-kv-row"><span>Program</span><span>{student.program || <span style={{ color: '#94A3B8' }}>Not Set</span>}</span></div>
+                    <div className="sm-kv-row"><span>Branch</span><span>{student.branch || <span style={{ color: '#94A3B8' }}>Not Set</span>}</span></div>
+                    <div className="sm-kv-row"><span>Semester</span><span>{student.semester ? `Semester ${student.semester}` : <span style={{ color: '#94A3B8' }}>Not Set</span>}</span></div>
+                    <div className="sm-kv-row"><span>Section</span><span>{student.section || <span style={{ color: '#94A3B8' }}>Not Set</span>}</span></div>
+                    <div className="sm-kv-row"><span>Admission Year</span><span>{student.admissionYear || <span style={{ color: '#94A3B8' }}>Not Set</span>}</span></div>
+                    <div className="sm-kv-row"><span>School / College</span><span>{student.school || <span style={{ color: '#94A3B8' }}>Not Set</span>}</span></div>
+
+                    <div className="sm-detail-section-label" style={{ marginTop: 16 }}>Contact Information</div>
+                    <div className="sm-kv-row">
+                      <span>Official Email</span>
+                      <span>{student.email || <span style={{ color: '#94A3B8' }}>Not Set (Click Edit to Fill)</span>}</span>
+                    </div>
+                    <div className="sm-kv-row">
+                      <span>Contact Phone</span>
+                      <span>{student.phone || <span style={{ color: '#94A3B8' }}>Not Set (Click Edit to Fill)</span>}</span>
+                    </div>
+
+                    <div className="sm-detail-section-label" style={{ marginTop: 16 }}>Personal Demographics</div>
+                    <div className="sm-kv-row"><span>Gender</span><span style={{ textTransform: 'capitalize' }}>{student.gender || <span style={{ color: '#94A3B8' }}>Not Set</span>}</span></div>
+                    <div className="sm-kv-row"><span>Date of Birth</span><span>{student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString() : <span style={{ color: '#94A3B8' }}>Not Set</span>}</span></div>
+
+                    <div className="sm-detail-section-label" style={{ marginTop: 16 }}>Portal Account Linkage</div>
+                    <div className="sm-kv-row">
+                      <span>Linked Portal Account</span>
+                      <span>
+                        {user ? (
+                          <span style={{ color: '#16A34A', fontWeight: 600 }}>
+                            Yes ({user.role}) — {user.email}
+                          </span>
+                        ) : (
+                          <span style={{ color: '#64748B' }}>
+                            Unlinked (Offline Institutional Record)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="sm-kv-row">
+                      <span>Account Lifecycle</span>
+                      <span><code>{student.accountStatus}</code></span>
+                    </div>
+
+                    {/* Audit History */}
+                    <div className="sm-audit-section">
+                      <div className="sm-audit-title">
+                        <History size={15} />
+                        Profile Change Audit Trail
+                      </div>
+                      {auditHistory.length === 0 ? (
+                        <div style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic', padding: '6px 0' }}>
+                          No administrative profile edits recorded yet.
+                        </div>
+                      ) : (
+                        auditHistory.map((item, idx) => (
+                          <div key={idx} className="sm-audit-item">
+                            <div className="sm-audit-header">
+                              <span className="sm-audit-actor">{item.performedBy?.name || item.performedBy?.email || 'Administrator'}</span>
+                              <span>{new Date(item.timestamp).toLocaleString()}</span>
+                            </div>
+                            <div style={{ fontSize: 11, color: '#475569' }}>
+                              Modified fields:
+                            </div>
+                            <div className="sm-audit-tag-list">
+                              {(item.details?.modifiedFields || item.details?.updatedFields || []).map((f, fIdx) => (
+                                <span key={fIdx} className="sm-audit-tag">{f}</span>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  /* EDIT MODE */
+                  <form onSubmit={handleSave} className="sm-profile-form">
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#1E293B', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Edit3 size={14} className="text-blue-600" />
+                      Edit Permitted Profile Information
+                    </div>
+
+                    <div className="sm-profile-form-grid">
+                      {/* Immutable Roll Number */}
+                      <div className="sm-form-group">
+                        <label className="sm-form-label">
+                          Roll Number
+                          <span className="sm-badge-locked"><Lock size={10} /> Locked</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="sm-form-input"
+                          value={student.rollNumber}
+                          disabled
+                        />
+                      </div>
+
+                      {/* Immutable Status */}
+                      <div className="sm-form-group">
+                        <label className="sm-form-label">
+                          Enrollment Status
+                          <span className="sm-badge-locked"><Lock size={10} /> Locked</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="sm-form-input"
+                          value={student.status}
+                          disabled
+                        />
+                      </div>
+
+                      {/* Full Name */}
+                      <div className="sm-form-group full-width">
+                        <label className="sm-form-label">
+                          Full Name *
+                        </label>
+                        <input
+                          type="text"
+                          className={`sm-form-input ${formErrors.fullName ? 'has-error' : ''}`}
+                          value={editFormData.fullName}
+                          onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value })}
+                          placeholder="e.g. Rahul Sharma"
+                        />
+                        {formErrors.fullName && <div className="sm-input-error-msg">{formErrors.fullName}</div>}
+                      </div>
+
+                      {/* Official Email */}
+                      <div className="sm-form-group">
+                        <label className="sm-form-label">Official Email</label>
+                        <input
+                          type="email"
+                          className={`sm-form-input ${formErrors.email ? 'has-error' : ''}`}
+                          value={editFormData.email}
+                          onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                          placeholder="student@campussphere.edu"
+                        />
+                        {formErrors.email && <div className="sm-input-error-msg">{formErrors.email}</div>}
+                      </div>
+
+                      {/* Phone Number */}
+                      <div className="sm-form-group">
+                        <label className="sm-form-label">Phone Number (10–15 digits)</label>
+                        <input
+                          type="tel"
+                          className={`sm-form-input ${formErrors.phone ? 'has-error' : ''}`}
+                          value={editFormData.phone}
+                          onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                          placeholder="e.g. 9876543210"
+                        />
+                        {formErrors.phone && <div className="sm-input-error-msg">{formErrors.phone}</div>}
+                      </div>
+
+                      {/* Program */}
+                      <div className="sm-form-group">
+                        <label className="sm-form-label">Program</label>
+                        <input
+                          type="text"
+                          className="sm-form-input"
+                          value={editFormData.program}
+                          onChange={(e) => setEditFormData({ ...editFormData, program: e.target.value })}
+                          placeholder="e.g. B.Tech"
+                        />
+                      </div>
+
+                      {/* Branch */}
+                      <div className="sm-form-group">
+                        <label className="sm-form-label">Branch / Department</label>
+                        <input
+                          type="text"
+                          className="sm-form-input"
+                          value={editFormData.branch}
+                          onChange={(e) => setEditFormData({ ...editFormData, branch: e.target.value })}
+                          placeholder="e.g. CSE"
+                        />
+                      </div>
+
+                      {/* Semester */}
+                      <div className="sm-form-group">
+                        <label className="sm-form-label">Semester (1–10)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          className={`sm-form-input ${formErrors.semester ? 'has-error' : ''}`}
+                          value={editFormData.semester}
+                          onChange={(e) => setEditFormData({ ...editFormData, semester: e.target.value })}
+                          placeholder="e.g. 5"
+                        />
+                        {formErrors.semester && <div className="sm-input-error-msg">{formErrors.semester}</div>}
+                      </div>
+
+                      {/* Section */}
+                      <div className="sm-form-group">
+                        <label className="sm-form-label">Section</label>
+                        <input
+                          type="text"
+                          className="sm-form-input"
+                          value={editFormData.section}
+                          onChange={(e) => setEditFormData({ ...editFormData, section: e.target.value })}
+                          placeholder="e.g. A"
+                        />
+                      </div>
+
+                      {/* Admission Year */}
+                      <div className="sm-form-group">
+                        <label className="sm-form-label">Admission Year</label>
+                        <input
+                          type="number"
+                          className={`sm-form-input ${formErrors.admissionYear ? 'has-error' : ''}`}
+                          value={editFormData.admissionYear}
+                          onChange={(e) => setEditFormData({ ...editFormData, admissionYear: e.target.value })}
+                          placeholder="e.g. 2024"
+                        />
+                        {formErrors.admissionYear && <div className="sm-input-error-msg">{formErrors.admissionYear}</div>}
+                      </div>
+
+                      {/* School */}
+                      <div className="sm-form-group">
+                        <label className="sm-form-label">School / College</label>
+                        <input
+                          type="text"
+                          className="sm-form-input"
+                          value={editFormData.school}
+                          onChange={(e) => setEditFormData({ ...editFormData, school: e.target.value })}
+                          placeholder="e.g. School of Engineering"
+                        />
+                      </div>
+
+                      {/* Gender */}
+                      <div className="sm-form-group">
+                        <label className="sm-form-label">Gender</label>
+                        <select
+                          className="sm-form-input"
+                          value={editFormData.gender}
+                          onChange={(e) => setEditFormData({ ...editFormData, gender: e.target.value })}
+                        >
+                          <option value="">Unspecified</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+
+                      {/* Date of Birth */}
+                      <div className="sm-form-group">
+                        <label className="sm-form-label">Date of Birth</label>
+                        <input
+                          type="date"
+                          className="sm-form-input"
+                          value={editFormData.dateOfBirth}
+                          onChange={(e) => setEditFormData({ ...editFormData, dateOfBirth: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="sm-form-actions">
+                      <button
+                        type="button"
+                        className="sm-btn-cancel"
+                        onClick={cancelEditing}
+                        disabled={saving}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="sm-btn-save"
+                        disabled={saving}
+                      >
+                        {saving ? (
+                          <>
+                            <RefreshCw size={14} className="animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save size={14} />
+                            Save Profile Changes
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page Component ──────────────────────────────────────────────────────
 
 export default function AdminStudentManagement() {
-  const [activeMainTab, setActiveMainTab] = useState('staging'); // 'staging' | 'verification' | 'register'
+  const [activeMainTab, setActiveMainTab] = useState('canonical'); // 'canonical' | 'staging' | 'verification' | 'register'
 
   // ── Staging State (Phase 3.6) ──
   const [stats, setStats]           = useState(null);
@@ -1544,6 +2309,13 @@ export default function AdminStudentManagement() {
           {/* ── Main Tab Navigation ── */}
           <div className="sm-main-tabs">
             <button
+              className={`sm-main-tab-btn ${activeMainTab === 'canonical' ? 'active' : ''}`}
+              onClick={() => { setActiveMainTab('canonical'); setSelectedRoll(null); setSelectedVerifRoll(null); }}
+            >
+              <GraduationCap size={16} />
+              Enrolled Students (Profile Management)
+            </button>
+            <button
               className={`sm-main-tab-btn ${activeMainTab === 'staging' ? 'active' : ''}`}
               onClick={() => { setActiveMainTab('staging'); setSelectedVerifRoll(null); }}
             >
@@ -1565,6 +2337,13 @@ export default function AdminStudentManagement() {
               Enrollment Register Import
             </button>
           </div>
+
+          {/* ═════════════════════════════════════════════════════════════════ */}
+          {/* TAB 0: ENROLLED STUDENTS PROFILE MANAGEMENT (PART 6)               */}
+          {/* ═════════════════════════════════════════════════════════════════ */}
+          {activeMainTab === 'canonical' && (
+            <CanonicalStudentsTab />
+          )}
 
           {/* ═════════════════════════════════════════════════════════════════ */}
           {/* TAB 1: STAGING STUDENT RECORDS (PHASE 3.6)                         */}

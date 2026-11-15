@@ -169,4 +169,34 @@ export const adminService = {
     const response = await api.delete(`/api/admin/staging/register/imports/${importId}`);
     return response.data;
   },
+
+  // ── Part 6: Canonical Student & Faculty Profile Management ──────────────────
+  getCanonicalStudents: async ({ search, branch, semester, page, limit } = {}) => {
+    const response = await api.get('/api/admin/students', {
+      params: { search, branch, semester, page, limit },
+    });
+    return response.data;
+  },
+  getCanonicalStudentDetail: async (id) => {
+    const response = await api.get(`/api/admin/students/${id}`);
+    return response.data;
+  },
+  updateCanonicalStudentProfile: async (id, data) => {
+    const response = await api.patch(`/api/admin/students/${id}`, data);
+    return response.data;
+  },
+  getFacultyList: async ({ search, department, page, limit } = {}) => {
+    const response = await api.get('/api/admin/faculty', {
+      params: { search, department, page, limit },
+    });
+    return response.data;
+  },
+  getFacultyDetail: async (id) => {
+    const response = await api.get(`/api/admin/faculty/${id}`);
+    return response.data;
+  },
+  updateFacultyProfile: async (id, data) => {
+    const response = await api.patch(`/api/admin/faculty/${id}`, data);
+    return response.data;
+  },
 };

@@ -1214,3 +1214,268 @@ tr.sm-row-selected td {
   align-items: center;
   flex-wrap: wrap;
 }
+
+/* ─── Part 6: Canonical Student Profile Management Styles ──────────────── */
+.sm-canonical-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sm-canonical-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: #FFFFFF;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.sm-canonical-search-input {
+  flex: 1;
+  min-width: 240px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sm-canonical-search-input input {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  font-size: 13px;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  background: #F8FAFC;
+  outline: none;
+  transition: all 0.15s;
+}
+
+.sm-canonical-search-input input:focus {
+  border-color: #2563EB;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.sm-canonical-search-input svg {
+  position: absolute;
+  left: 10px;
+  color: #94A3B8;
+  pointer-events: none;
+}
+
+.sm-canonical-select {
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  background: #FFFFFF;
+  color: #334155;
+  outline: none;
+}
+
+.sm-canonical-select:focus {
+  border-color: #2563EB;
+}
+
+.sm-badge-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.sm-profile-guard-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #F0F9FF;
+  border: 1px solid #BAE6FD;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #0369A1;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.sm-profile-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+@media (max-width: 640px) {
+  .sm-profile-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sm-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sm-form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.sm-form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sm-form-input {
+  padding: 7px 10px;
+  font-size: 13px;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  background: #FFFFFF;
+  color: #1E293B;
+  outline: none;
+  transition: all 0.15s;
+}
+
+.sm-form-input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.sm-form-input:disabled {
+  background: #F8FAFC;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+.sm-form-input.has-error {
+  border-color: #EF4444;
+  background: #FEF2F2;
+}
+
+.sm-input-error-msg {
+  font-size: 11px;
+  color: #DC2626;
+  margin-top: 2px;
+}
+
+.sm-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #E2E8F0;
+}
+
+.sm-btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFFFFF;
+  background: #2563EB;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sm-btn-save:hover:not(:disabled) {
+  background: #1D4ED8;
+}
+
+.sm-btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sm-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748B;
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sm-btn-cancel:hover {
+  background: #E2E8F0;
+  color: #334155;
+}
+
+.sm-audit-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #E2E8F0;
+}
+
+.sm-audit-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.sm-audit-item {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.sm-audit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #64748B;
+  margin-bottom: 4px;
+}
+
+.sm-audit-actor {
+  font-weight: 600;
+  color: #334155;
+}
+
+.sm-audit-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.sm-audit-tag {
+  background: #EFF6FF;
+  border: 1px solid #DBEAFE;
+  color: #1E40AF;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+

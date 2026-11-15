@@ -66,6 +66,15 @@ const {
   deleteImport,
 } = require('../controllers/enrollmentRegisterImport.controller');
 
+const {
+  listCanonicalStudents,
+  getCanonicalStudentDetail,
+  updateCanonicalStudentProfile,
+  listFacultyProfiles,
+  getFacultyDetail,
+  updateFacultyProfile,
+} = require('../controllers/adminProfileManagement.controller');
+
 const upload = require('../middleware/upload.middleware');
 
 const authMiddleware = require('../middleware/auth.middleware');
@@ -82,6 +91,15 @@ router.get('/complaints',                     getAllComplaints);
 router.patch('/complaints/:id/status',        updateComplaintStatus);
 router.post('/announcements',                 createAnnouncement);
 router.get('/announcements',                  getAllAnnouncements);
+
+// ── Part 6: Admin Canonical Student & Faculty Profile Management ──────────────
+router.get('/students',                       listCanonicalStudents);
+router.get('/students/:id',                   getCanonicalStudentDetail);
+router.patch('/students/:id',                 updateCanonicalStudentProfile);
+
+router.get('/faculty',                        listFacultyProfiles);
+router.get('/faculty/:id',                    getFacultyDetail);
+router.patch('/faculty/:id',                  updateFacultyProfile);
 
 // Smart Attendance
 router.get('/attendance/overview',            getAttendanceOverview);

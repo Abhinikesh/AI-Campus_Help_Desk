@@ -2,7 +2,7 @@
  * client/src/pages/AdminHR/index.jsx
  * Centralized Institutional HR, Employee Directory, Leave Administration & Workforce Desk.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Users,
   UserCheck,
@@ -21,9 +21,16 @@ import {
   Sliders,
   X,
   Edit,
-  Award
+  Award,
+  GraduationCap,
+  Lock,
+  ShieldCheck,
+  History,
+  Save,
+  RefreshCw
 } from 'lucide-react';
 import hrService from '../../services/hr.service';
+import { adminService } from '../../services/admin.service';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import Sidebar from '../../components/Sidebar/Sidebar';
@@ -105,6 +112,136 @@ const AdminHR = () => {
     targetAudience: 'all',
     priority: 'medium'
   });
+
+  // Faculty Profile Management State (Part 6)
+  const [facultyList, setFacultyList] = useState([]);
+  const [facultyLoading, setFacultyLoading] = useState(false);
+  const [facultySearch, setFacultySearch] = useState('');
+  const [facultyDeptFilter, setFacultyDeptFilter] = useState('');
+  const [facultyTotal, setFacultyTotal] = useState(0);
+  const [facultyPage, setFacultyPage] = useState(1);
+  const [selectedFacultyId, setSelectedFacultyId] = useState(null);
+  const [facultyDetail, setFacultyDetail] = useState(null);
+  const [facultyDetailLoading, setFacultyDetailLoading] = useState(false);
+  const [showFacultyModal, setShowFacultyModal] = useState(false);
+  const [facultyForm, setFacultyForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    department: '',
+    designation: '',
+  });
+  const [facultyFormErrors, setFacultyFormErrors] = useState({});
+  const [facultySaving, setFacultySaving] = useState(false);
+  const [facultySaveSuccess, setFacultySaveSuccess] = useState(null);
+
+  const fetchFaculty = useCallback(async () => {
+    setFacultyLoading(true);
+    try {
+      const res = await adminService.getFacultyList({
+        search: facultySearch || undefined,
+        department: facultyDeptFilter || undefined,
+        page: facultyPage,
+        limit: 15,
+      });
+      if (res.success) {
+        setFacultyList(res.data);
+        setFacultyTotal(res.pagination.total);
+      }
+    } catch (err) {
+      showToast(err.message || 'Error loading faculty profiles', 'error');
+    } finally {
+      setFacultyLoading(false);
+    }
+  }, [facultySearch, facultyDeptFilter, facultyPage, showToast]);
+
+  useEffect(() => {
+    if (activeTab === 'faculty') {
+      fetchFaculty();
+    }
+  }, [activeTab, fetchFaculty]);
+
+  const handleOpenFaculty = async (id) => {
+    setSelectedFacultyId(id);
+    setFacultyDetailLoading(true);
+    setFacultySaveSuccess(null);
+    setFacultyFormErrors({});
+    setShowFacultyModal(true);
+    try {
+      const res = await adminService.getFacultyDetail(id);
+      if (res.success) {
+        setFacultyDetail(res.data);
+        const fac = res.data.faculty;
+        setFacultyForm({
+          name: fac.user?.name || '',
+          email: fac.user?.email || '',
+          phone: fac.phone || '',
+          department: fac.department || '',
+          designation: fac.designation || '',
+        });
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to fetch faculty details', 'error');
+    } finally {
+      setFacultyDetailLoading(false);
+    }
+  };
+
+  const handleSaveFacultyProfile = async (e) => {
+    e.preventDefault();
+    setFacultyFormErrors({});
+    setFacultySaveSuccess(null);
+
+    const errors = {};
+    if (facultyForm.name && !facultyForm.name.trim()) {
+      errors.name = 'Name cannot be empty';
+    }
+    if (facultyForm.email && facultyForm.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(facultyForm.email.trim())) {
+        errors.email = 'Please provide a valid email address';
+      }
+    }
+    if (facultyForm.phone && facultyForm.phone.trim()) {
+      const digits = facultyForm.phone.replace(/[\s\-\(\)\+]/g, '');
+      if (digits.length < 10 || digits.length > 15) {
+        errors.phone = 'Phone must be between 10 and 15 digits';
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFacultyFormErrors(errors);
+      return;
+    }
+
+    setFacultySaving(true);
+    try {
+      const payload = {
+        name: facultyForm.name ? facultyForm.name.trim() : undefined,
+        email: facultyForm.email ? facultyForm.email.trim() : undefined,
+        phone: facultyForm.phone ? facultyForm.phone.trim() : undefined,
+        department: facultyForm.department ? facultyForm.department.trim() : undefined,
+        designation: facultyForm.designation ? facultyForm.designation.trim() : undefined,
+      };
+
+      const res = await adminService.updateFacultyProfile(selectedFacultyId, payload);
+      if (res.success) {
+        setFacultySaveSuccess('Faculty profile updated successfully. Audit log recorded.');
+        showToast('Faculty profile updated successfully', 'success');
+        const refreshed = await adminService.getFacultyDetail(selectedFacultyId);
+        if (refreshed.success) {
+          setFacultyDetail(refreshed.data);
+        }
+        fetchFaculty();
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.message || err.message || 'Failed to update faculty profile';
+      setFacultyFormErrors({ form: msg });
+      showToast(msg, 'error');
+    } finally {
+      setFacultySaving(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -395,6 +532,7 @@ const AdminHR = () => {
             {[
               { id: 'overview', label: 'Overview', icon: Briefcase },
               { id: 'employees', label: 'Employee Directory', icon: Users },
+              { id: 'faculty', label: 'Faculty Profiles', icon: GraduationCap },
               { id: 'leaves', label: 'Leave Management', icon: Calendar },
               { id: 'attendance', label: 'Attendance Roster', icon: Clock },
               { id: 'announcements', label: 'HR Announcements', icon: Bell }
@@ -855,6 +993,125 @@ const AdminHR = () => {
             </div>
           )}
 
+          {/* TAB: FACULTY PROFILES (PART 6) */}
+          {activeTab === 'faculty' && (
+            <div className="space-y-4">
+              <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+                <div className="flex-1 flex gap-3 w-full">
+                  <div className="flex-1 relative">
+                    <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search faculty by name, employee ID, official email, or department..."
+                      value={facultySearch}
+                      onChange={(e) => setFacultySearch(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <select
+                    value={facultyDeptFilter}
+                    onChange={(e) => setFacultyDeptFilter(e.target.value)}
+                    className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900"
+                  >
+                    <option value="">All Departments</option>
+                    <option value="CSE">CSE</option>
+                    <option value="ECE">ECE</option>
+                    <option value="MECH">MECH</option>
+                    <option value="CIVIL">CIVIL</option>
+                    <option value="IT">IT</option>
+                    <option value="EE">EE</option>
+                  </select>
+                </div>
+
+                <button
+                  onClick={fetchFaculty}
+                  disabled={facultyLoading}
+                  className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-700 hover flex items-center gap-2"
+                >
+                  <RefreshCw className={`w-4 h-4 ${facultyLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </button>
+              </div>
+
+              {/* Faculty Table */}
+              <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                      <th className="p-3 font-medium">Employee ID</th>
+                      <th className="p-3 font-medium">Faculty Member</th>
+                      <th className="p-3 font-medium">Department</th>
+                      <th className="p-3 font-medium">Designation</th>
+                      <th className="p-3 font-medium">Contact Phone</th>
+                      <th className="p-3 font-medium">Role</th>
+                      <th className="p-3 font-medium text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700">
+                    {facultyLoading && facultyList.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="p-6 text-center text-slate-400">
+                          <RefreshCw className="w-5 h-5 animate-spin inline mr-2 text-indigo-600" />
+                          Loading faculty profiles...
+                        </td>
+                      </tr>
+                    ) : facultyList.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="p-6 text-center text-slate-400">
+                          No faculty records found matching criteria
+                        </td>
+                      </tr>
+                    ) : (
+                      facultyList.map((fac) => (
+                        <tr key={fac._id} className="hover">
+                          <td className="p-3">
+                            <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">
+                              {fac.employeeId}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <div className="font-medium text-slate-900">
+                              {fac.user?.name || '—'}
+                            </div>
+                            <div className="text-xs text-slate-400">
+                              {fac.user?.email || '—'}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span className="font-medium text-slate-800">{fac.department || '—'}</span>
+                          </td>
+                          <td className="p-3 text-slate-600">{fac.designation || '—'}</td>
+                          <td className="p-3 text-slate-600">
+                            {fac.phone ? (
+                              <span>{fac.phone}</span>
+                            ) : (
+                              <span className="text-slate-400 italic">Not Set</span>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <span className="px-2 py-0.5 text-xs rounded font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                              {fac.user?.role || 'faculty'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right">
+                            <button
+                              onClick={() => handleOpenFaculty(fac._id)}
+                              className="px-2.5 py-1 text-xs font-medium bg-slate-50 hover text-slate-700 border border-slate-300 rounded transition-colors inline-flex items-center gap-1.5"
+                            >
+                              <Edit className="w-3.5 h-3.5 text-indigo-600" />
+                              View & Edit
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* MODAL: ADD EMPLOYEE */}
           {showAddEmpModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -1216,6 +1473,236 @@ const AdminHR = () => {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL: VIEW & EDIT FACULTY PROFILE */}
+          {showFacultyModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h3 className="font-bold text-lg text-slate-900 flex items-center gap-2">
+                      <GraduationCap className="w-5 h-5 text-indigo-600" />
+                      Faculty Profile Management
+                    </h3>
+                    {facultyDetail?.faculty && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">
+                          {facultyDetail.faculty.employeeId}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          {facultyDetail.faculty.user?.name}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => { setShowFacultyModal(false); setFacultyDetail(null); }}
+                    className="text-slate-400 hover"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Safeguard Alert */}
+                <div className="flex items-start gap-2.5 bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 mb-4 leading-relaxed">
+                  <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <strong>Institutional Identity & Role Protection:</strong> Employee ID and Authorization Role are immutable. Administrative profile management permits updating contact and academic assignment details only. All updates are logged in the institutional audit ledger.
+                  </div>
+                </div>
+
+                {facultySaveSuccess && (
+                  <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800 mb-4">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>{facultySaveSuccess}</span>
+                  </div>
+                )}
+
+                {facultyFormErrors.form && (
+                  <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-lg p-3 text-xs text-rose-800 mb-4">
+                    <AlertCircle className="w-4 h-4 text-rose-600" />
+                    <span>{facultyFormErrors.form}</span>
+                  </div>
+                )}
+
+                {facultyDetailLoading ? (
+                  <div className="py-8 text-center text-slate-500">
+                    <RefreshCw className="w-5 h-5 animate-spin inline mr-2 text-indigo-600" />
+                    Loading faculty profile...
+                  </div>
+                ) : (
+                  <form onSubmit={handleSaveFacultyProfile} className="space-y-4">
+                    {/* Read-Only Protected Fields */}
+                    <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <div>
+                        <label className="flex items-center justify-between text-xs font-medium text-slate-600 mb-1">
+                          Employee ID
+                          <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                            <Lock className="w-3 h-3" /> Locked
+                          </span>
+                        </label>
+                        <input
+                          type="text"
+                          value={facultyDetail?.faculty?.employeeId || ''}
+                          disabled
+                          className="w-full px-3 py-1.5 text-xs bg-slate-100 border border-slate-200 rounded text-slate-500 font-mono cursor-not-allowed"
+                        />
+                      </div>
+                      <div>
+                        <label className="flex items-center justify-between text-xs font-medium text-slate-600 mb-1">
+                          System Role
+                          <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                            <Lock className="w-3 h-3" /> Locked
+                          </span>
+                        </label>
+                        <input
+                          type="text"
+                          value={facultyDetail?.faculty?.user?.role || 'faculty'}
+                          disabled
+                          className="w-full px-3 py-1.5 text-xs bg-slate-100 border border-slate-200 rounded text-slate-500 font-mono cursor-not-allowed capitalize"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Permitted Editable Fields */}
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Faculty Full Name</label>
+                        <input
+                          type="text"
+                          value={facultyForm.name}
+                          onChange={(e) => setFacultyForm({ ...facultyForm, name: e.target.value })}
+                          className={`w-full px-3 py-2 border rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                            facultyFormErrors.name ? 'border-rose-400 bg-rose-50' : 'border-slate-300'
+                          }`}
+                          placeholder="Dr. Priya Mehta"
+                        />
+                        {facultyFormErrors.name && (
+                          <p className="text-xs text-rose-600 mt-1">{facultyFormErrors.name}</p>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Official Email</label>
+                          <input
+                            type="email"
+                            value={facultyForm.email}
+                            onChange={(e) => setFacultyForm({ ...facultyForm, email: e.target.value })}
+                            className={`w-full px-3 py-2 border rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                              facultyFormErrors.email ? 'border-rose-400 bg-rose-50' : 'border-slate-300'
+                            }`}
+                            placeholder="faculty@campussphere.edu"
+                          />
+                          {facultyFormErrors.email && (
+                            <p className="text-xs text-rose-600 mt-1">{facultyFormErrors.email}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Contact Phone</label>
+                          <input
+                            type="tel"
+                            value={facultyForm.phone}
+                            onChange={(e) => setFacultyForm({ ...facultyForm, phone: e.target.value })}
+                            className={`w-full px-3 py-2 border rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                              facultyFormErrors.phone ? 'border-rose-400 bg-rose-50' : 'border-slate-300'
+                            }`}
+                            placeholder="e.g. 9876543210"
+                          />
+                          {facultyFormErrors.phone && (
+                            <p className="text-xs text-rose-600 mt-1">{facultyFormErrors.phone}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Department</label>
+                          <input
+                            type="text"
+                            value={facultyForm.department}
+                            onChange={(e) => setFacultyForm({ ...facultyForm, department: e.target.value })}
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="e.g. CSE"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Designation</label>
+                          <input
+                            type="text"
+                            value={facultyForm.designation}
+                            onChange={(e) => setFacultyForm({ ...facultyForm, designation: e.target.value })}
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="e.g. Associate Professor"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Audit History */}
+                    <div className="pt-4 border-t border-slate-200">
+                      <h4 className="text-xs font-semibold text-slate-700 flex items-center gap-1.5 mb-2">
+                        <History className="w-3.5 h-3.5 text-slate-500" />
+                        Profile Change Audit Trail
+                      </h4>
+                      {(!facultyDetail?.auditHistory || facultyDetail.auditHistory.length === 0) ? (
+                        <p className="text-xs text-slate-400 italic">No administrative profile edits recorded yet.</p>
+                      ) : (
+                        <div className="space-y-2 max-h-36 overflow-y-auto">
+                          {facultyDetail.auditHistory.map((item, idx) => (
+                            <div key={idx} className="p-2 bg-slate-50 border border-slate-200 rounded text-xs text-slate-600">
+                              <div className="flex justify-between font-medium text-slate-700">
+                                <span>{item.performedBy?.name || item.performedBy?.email || 'Administrator'}</span>
+                                <span className="text-[11px] text-slate-400">{new Date(item.timestamp).toLocaleString()}</span>
+                              </div>
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {(item.details?.modifiedFields || item.details?.updatedFields || []).map((f, fIdx) => (
+                                  <span key={fIdx} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[10px]">
+                                    {f}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => { setShowFacultyModal(false); setFacultyDetail(null); }}
+                        className="px-4 py-2 border border-slate-300 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        disabled={facultySaving}
+                      >
+                        Close
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={facultySaving}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                      >
+                        {facultySaving ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-3.5 h-3.5" />
+                            Save Profile Changes
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             </div>
           )}
