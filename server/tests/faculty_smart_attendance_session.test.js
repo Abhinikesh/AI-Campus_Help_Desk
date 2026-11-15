@@ -464,3 +464,4 @@ describe('Faculty Smart Attendance: Subject Loading and Session Creation Suite',
     assert.equal(resStudent.status, 403);
   });
 });
+

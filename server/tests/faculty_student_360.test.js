@@ -341,11 +341,12 @@ test('Faculty Student Search & Student 360 Verification Suite', async (t) => {
     assert.ok(body.data.marksAndResults);
     assert.ok(body.data.timetable);
 
-    // Verify Section 1: Basic Profile has STRICTLY 3 fields
+    // Verify Section 1: Basic Profile has STRICTLY 2 fields (rollNumber and class) under Part 6.2 privacy policy
     const bp = body.data.basicProfile;
-    assert.deepEqual(Object.keys(bp).sort(), ['class', 'phoneNumber', 'rollNumber']);
+    assert.deepEqual(Object.keys(bp).sort(), ['class', 'rollNumber']);
     assert.equal(bp.rollNumber, '20240001');
-    assert.equal(bp.phoneNumber, '9876543210');
+    assert.equal(bp.phoneNumber, undefined);
+    assert.equal(bp.phone, undefined);
     assert.match(bp.class, /5/);
 
     // Verify Section 2: Academic Details

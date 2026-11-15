@@ -339,8 +339,8 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     assert.equal(body2.data[0].rollNumber, '20240002');
   });
 
-  // ── TEST 4: Phone-number search & Masked Result ─────────────────────────
-  await t.test('4. Phone-number search locates student and returns masked phone', async () => {
+  // ── TEST 4: Phone-number search & Privacy Policy ─────────────────────────
+  await t.test('4. Phone-number search locates student and returns unexposed phone fields', async () => {
     // 4a. Exact phone query
     const res = await fetch(`${baseUrl}/api/faculty/students/search?q=9876543210`, {
       headers: { Authorization: `Bearer ${tokenFacultyA}` },
@@ -349,8 +349,8 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     assert.equal(res.status, 200);
     assert.equal(body.data.length, 1);
     assert.equal(body.data[0].rollNumber, '20240001');
-    assert.equal(body.data[0].phone, '••••••3210', 'Phone in search results must be masked');
-    assert.equal(body.data[0].phoneNumber, '••••••3210', 'phoneNumber in search results must be masked');
+    assert.equal(body.data[0].phone, undefined, 'Phone in search results must not be exposed');
+    assert.equal(body.data[0].phoneNumber, undefined, 'phoneNumber in search results must not be exposed');
 
     // 4b. Normalized phone query with dashes/spaces
     const resNorm = await fetch(`${baseUrl}/api/faculty/students/search?q=9876-543-210`, {
@@ -360,7 +360,8 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     assert.equal(resNorm.status, 200);
     assert.equal(bodyNorm.data.length, 1);
     assert.equal(bodyNorm.data[0].rollNumber, '20240001');
-    assert.equal(bodyNorm.data[0].phone, '••••••3210');
+    assert.equal(bodyNorm.data[0].phone, undefined);
+    assert.equal(bodyNorm.data[0].phoneNumber, undefined);
   });
 
   // ── TEST 5: Student ID and Email search ─────────────────────────────────
@@ -399,7 +400,9 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     assert.ok(mechStudent, 'Must find MECH Rahul Sharma');
     assert.equal(cseStudent.rollNumber, '20240001');
     assert.equal(mechStudent.rollNumber, '20220088');
-    assert.notEqual(cseStudent.phone, mechStudent.phone, 'Phones must distinguish records');
+    assert.notEqual(cseStudent.rollNumber, mechStudent.rollNumber, 'Roll numbers must distinguish records');
+    assert.equal(cseStudent.phone, undefined);
+    assert.equal(mechStudent.phone, undefined);
   });
 
   // ── TEST 7: Missing / incomplete records handling ───────────────────────
@@ -409,7 +412,7 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     });
     const body = await res.json();
     assert.equal(res.status, 200);
-    assert.equal(body.data.basicProfile.phoneNumber, null, 'Unspecified phone must remain null');
+    assert.equal(body.data.basicProfile.phoneNumber, undefined, 'Phone must not be returned');
     assert.equal(body.data.marksAndResults.status, 'unreleased');
     assert.equal(body.data.marksAndResults.sgpa, null, 'SGPA must remain null when marks are unreleased');
   });
@@ -423,9 +426,10 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     assert.equal(res.status, 200);
     const data = body.data;
 
-    // Section 1: Basic Profile — ONLY rollNumber, phoneNumber, class
+    // Section 1: Basic Profile — ONLY rollNumber, class (Phone hidden under Part 6.2)
     assert.equal(data.basicProfile.rollNumber, '20240001');
-    assert.equal(data.basicProfile.phoneNumber, '9876543210');
+    assert.equal(data.basicProfile.phoneNumber, undefined);
+    assert.equal(data.basicProfile.phone, undefined);
     assert.equal(data.basicProfile.class, 'Semester 5 CSE Section A');
     assert.equal(data.basicProfile.email, undefined, 'Email must NOT be present in Basic Profile');
     assert.equal(data.basicProfile.address, undefined, 'Address must NOT be present in Basic Profile');
@@ -567,8 +571,8 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     }
   });
 
-  // ── TEST 15: Phone masking safe handling for edge cases ─────────────────
-  await t.test('15. Phone masking edge cases (null, empty, short, non-numeric)', async () => {
+  // ── TEST 15: Phone privacy safe handling for edge cases ─────────────────
+  await t.test('15. Phone privacy safe handling (omitted across all records)', async () => {
     // Search incomplete student who has no phone
     const res = await fetch(`${baseUrl}/api/faculty/students/search?q=20240099`, {
       headers: { Authorization: `Bearer ${tokenFacultyA}` },
@@ -576,7 +580,8 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     const body = await res.json();
     assert.equal(res.status, 200);
     assert.equal(body.data.length, 1);
-    assert.equal(body.data[0].phone, null, 'Missing phone must remain null');
+    assert.equal(body.data[0].phone, undefined, 'Phone must not be returned');
+    assert.equal(body.data[0].phoneNumber, undefined, 'phoneNumber must not be returned');
   });
 
   // ── TEST 16: HTTP 401 unauthenticated request audit logging ────────────
@@ -809,8 +814,8 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     assert.match(body.data.timetable.message, /no published timetable/i);
   });
 
-  // ── TEST 24: Basic Profile strict 3-field rule & full phone number visibility ──
-  await t.test('24. Basic Profile strict 3-field integrity and full phone visibility for authorized faculty', async () => {
+  // ── TEST 24: Basic Profile strict 2-field rule & student phone privacy (Part 6.2) ──
+  await t.test('24. Basic Profile strict field integrity and student phone privacy for faculty', async () => {
     const res = await fetch(`${baseUrl}/api/faculty/students/${student1._id}/360`, {
       headers: { Authorization: `Bearer ${tokenFacultyA}` },
     });
@@ -818,19 +823,21 @@ test('Faculty Student Search & Student 360 Comprehensive Suite', async (t) => {
     const body = await res.json();
     const basic = body.data.basicProfile;
 
-    // Must contain exactly rollNumber, phoneNumber, class
+    // Must contain exactly rollNumber and class
     const keys = Object.keys(basic);
-    assert.deepEqual(keys.sort(), ['class', 'phoneNumber', 'rollNumber'].sort());
+    assert.deepEqual(keys.sort(), ['class', 'rollNumber'].sort());
 
-    // Full phone number returned to authorized faculty
-    assert.equal(basic.phoneNumber, '9876543210', 'Authorized faculty must see full unmasked phone number');
+    // Phone numbers must NOT be returned to faculty
+    assert.equal(basic.phoneNumber, undefined, 'Faculty must not see student phone number in Basic Profile');
+    assert.equal(basic.phone, undefined, 'Faculty must not see student phone number in Basic Profile');
 
-    // In search endpoint, phone number is masked
+    // In search endpoint, phone number is stripped completely
     const resSearch = await fetch(`${baseUrl}/api/faculty/students/search?q=20240001`, {
       headers: { Authorization: `Bearer ${tokenFacultyA}` },
     });
     const searchBody = await resSearch.json();
-    assert.equal(searchBody.data[0].phone, '••••••3210', 'Directory search must mask phone number');
+    assert.equal(searchBody.data[0].phone, undefined, 'Directory search must not return phone');
+    assert.equal(searchBody.data[0].phoneNumber, undefined, 'Directory search must not return phoneNumber');
 
     // Forbidden privacy fields must NOT exist in basicProfile
     assert.equal(basic.email, undefined);

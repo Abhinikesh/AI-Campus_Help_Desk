@@ -10,7 +10,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import { facultyService } from '../../services/faculty.service';
 import {
-  Search, Users, ChevronRight, X, AlertCircle, RefreshCw, Filter, Phone, Mail, Building
+  Search, Users, ChevronRight, X, AlertCircle, RefreshCw, Filter, Mail, Building
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import '../../styles/theme.css';
@@ -141,7 +141,7 @@ const FacultyStudentSearch = () => {
               <input
                 type="text"
                 className="fss-search-input"
-                placeholder="Search by student full/partial name, university roll number, phone number, email, or student ID..."
+                placeholder="Search by student full/partial name, university roll number, email, or student ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
@@ -274,7 +274,6 @@ const FacultyStudentSearch = () => {
                       <tr>
                         <th>Roll Number</th>
                         <th>Student Name & Disambiguation</th>
-                        <th>Contact</th>
                         <th>Programme & Branch</th>
                         <th>Class / Section</th>
                         <th>Status</th>
@@ -302,15 +301,6 @@ const FacultyStudentSearch = () => {
                                 </span>
                               )}
                             </div>
-                          </td>
-                          <td>
-                            {student.phone ? (
-                              <span style={{ fontSize: 13, color: 'var(--cs-text-secondary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                                <Phone size={12} color="#64748B" /> {student.phone}
-                              </span>
-                            ) : (
-                              <span style={{ fontSize: 12, color: 'var(--cs-text-muted)' }}>—</span>
-                            )}
                           </td>
                           <td>
                             <span style={{ fontSize: 13, color: 'var(--cs-text-secondary)' }}>

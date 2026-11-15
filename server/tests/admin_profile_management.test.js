@@ -492,9 +492,9 @@ test('Admin Student & Faculty Profile Management Suite', async (t) => {
     }
   });
 
-  // ── TEST 12: Authorized Faculty Student 360 Full Phone Visibility ────────
-  await t.test('12. Authorized Faculty Student 360 returns the complete phone number', async () => {
-    // 12a. Faculty Student 360 profile returns full unmasked phone number
+  // ── TEST 12: Faculty Student 360 & Search Phone Privacy Policy (Part 6.2) ────────
+  await t.test('12. Faculty Student 360 and search endpoints strictly enforce student phone privacy', async () => {
+    // 12a. Faculty Student 360 profile does NOT return phone number
     const res360 = await fetch(`${baseUrl}/api/faculty/students/${studentDoc1._id}/360`, {
       headers: { Authorization: `Bearer ${tokenFaculty}` },
     });
@@ -503,15 +503,20 @@ test('Admin Student & Faculty Profile Management Suite', async (t) => {
     assert.equal(body360.success, true);
     assert.equal(
       body360.data.basicProfile.phoneNumber,
-      '9876549999',
-      'Authorized Faculty Student 360 must return complete phone number'
+      undefined,
+      'Faculty Student 360 must not return phoneNumber'
+    );
+    assert.equal(
+      body360.data.basicProfile.phone,
+      undefined,
+      'Faculty Student 360 must not return phone'
     );
     assert.ok(
-      !body360.data.basicProfile.phoneNumber.includes('*'),
-      'Faculty Student 360 phone must not be masked'
+      !('phoneNumber' in body360.data.basicProfile),
+      'phoneNumber field must be completely omitted from Basic Profile'
     );
 
-    // 12b. Directory search endpoint keeps phone masked for privacy
+    // 12b. Directory search endpoint does NOT return phone number
     const resSearch = await fetch(`${baseUrl}/api/faculty/students/search?q=20240001`, {
       headers: { Authorization: `Bearer ${tokenFaculty}` },
     });
@@ -520,8 +525,13 @@ test('Admin Student & Faculty Profile Management Suite', async (t) => {
     assert.ok(bodySearch.data.length >= 1);
     assert.equal(
       bodySearch.data[0].phone,
-      '••••••9999',
-      'Faculty directory search must preserve deliberate privacy masking'
+      undefined,
+      'Faculty directory search must not return phone'
+    );
+    assert.equal(
+      bodySearch.data[0].phoneNumber,
+      undefined,
+      'Faculty directory search must not return phoneNumber'
     );
   });
 

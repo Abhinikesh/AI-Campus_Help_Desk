@@ -665,10 +665,21 @@ const getStudents = asyncHandler(async (req, res) => {
   if (semester) filter.semester = Number(semester);
 
   const students = await Student.find(filter)
+    .select('-phone')
     .populate('user', 'name email loginId')
-    .sort({ rollNumber: 1 });
+    .sort({ rollNumber: 1 })
+    .lean();
 
-  return res.status(200).json({ success: true, data: students, message: 'OK' });
+  const sanitized = students.map((s) => {
+    const { phone, phoneNumber, ...rest } = s;
+    if (rest.user && typeof rest.user === 'object') {
+      delete rest.user.phone;
+      delete rest.user.phoneNumber;
+    }
+    return rest;
+  });
+
+  return res.status(200).json({ success: true, data: sanitized, message: 'OK' });
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -781,10 +792,10 @@ const searchStudents = asyncHandler(async (req, res) => {
   const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
   const skip = (pageNum - 1) * limitNum;
 
-  // 3. Query students with selective projection (distinguish similar names, no sensitive auth data)
+  // 3. Query students with selective projection (distinguish similar names, no sensitive auth data, no phone)
   const [students, total] = await Promise.all([
     Student.find(filter)
-      .select('_id rollNumber fullName phone email branch semester section program status')
+      .select('_id rollNumber fullName email branch semester section program status')
       .sort({ rollNumber: 1 })
       .skip(skip)
       .limit(limitNum)
@@ -810,12 +821,11 @@ const searchStudents = asyncHandler(async (req, res) => {
     });
   }
 
-  // Mask phone numbers in search results (Fix F-03)
-  const sanitizedStudents = students.map((s) => ({
-    ...s,
-    phone: maskPhoneNumber(s.phone),
-    phoneNumber: maskPhoneNumber(s.phone),
-  }));
+  // Strip phone numbers from search results (Part 6.2 Faculty Privacy Policy)
+  const sanitizedStudents = students.map((s) => {
+    const { phone, phoneNumber, ...rest } = s;
+    return rest;
+  });
 
   return res.status(200).json({
     success: true,
@@ -935,7 +945,7 @@ const getStudent360 = asyncHandler(async (req, res) => {
       : Promise.resolve([]),
   ]);
 
-  // Section 1: Basic Profile — STRICT LIMITATION: ONLY rollNumber, phoneNumber, class
+  // Section 1: Basic Profile — STRICT LIMITATION: ONLY rollNumber, class (Phone removed under Part 6.2 privacy policy)
   const classLabel = [
     student.semester ? `Semester ${student.semester}` : '',
     student.branch || '',
@@ -944,12 +954,8 @@ const getStudent360 = asyncHandler(async (req, res) => {
     .filter(Boolean)
     .join(' ') || (student.semester && student.branch ? `${student.semester} ${student.branch}-${student.section || 'A'}` : null);
 
-  const rawPhone = student.phone ? String(student.phone).trim() : null;
-  const phoneNumber = (rawPhone && rawPhone.length > 0) ? rawPhone : null;
-
   const basicProfile = {
     rollNumber: student.rollNumber || null,
-    phoneNumber,
     class: classLabel,
   };
 

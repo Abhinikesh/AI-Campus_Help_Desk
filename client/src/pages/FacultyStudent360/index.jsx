@@ -174,13 +174,6 @@ const FacultyStudent360 = () => {
                     </div>
 
                     <div className="f360-field-item">
-                      <span className="f360-field-label">Phone Number</span>
-                      <span className="f360-field-value">
-                        {data.basicProfile?.phoneNumber || <span className="f360-null">Not provided</span>}
-                      </span>
-                    </div>
-
-                    <div className="f360-field-item">
                       <span className="f360-field-label">Class</span>
                       <span className="f360-field-value">
                         {data.basicProfile?.class || <span className="f360-null">Not specified</span>}
