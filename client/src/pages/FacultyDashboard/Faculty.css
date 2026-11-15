@@ -1,2 +1,397 @@
-/* Faculty.css — thin overrides only, layout from dashboard-shared.css */
-/* Faculty-specific styles handled inline or via shared classes */
+/* ═══════════════════════════════════════════════════════════════
+   Faculty.css — Faculty Landing Dashboard & Module Launcher System
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Top Welcome Banner ─────────────────────────────────────── */
+.fd-welcome-banner {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.fd-welcome-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.fd-welcome-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0F172A;
+  letter-spacing: -0.2px;
+  margin: 0 0 4px 0;
+}
+
+.fd-welcome-subtitle {
+  font-size: 13px;
+  color: #64748B;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.fd-welcome-badges {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.fd-quick-stat-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 14px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  min-width: 80px;
+}
+
+.fd-stat-badge-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748B;
+}
+
+.fd-stat-badge-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.fd-stat-badge-val.good {
+  color: #16A34A;
+}
+
+.fd-stat-badge-val.warn {
+  color: #D97706;
+}
+
+/* ── Quick Search Card ──────────────────────────────────────── */
+.fd-search-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px 18px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.fd-search-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fd-search-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1E293B;
+  font-weight: 600;
+  font-size: 13.5px;
+  min-width: 125px;
+}
+
+.fd-search-input-wrap {
+  flex: 1;
+  min-width: 220px;
+}
+
+.fd-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  outline: none;
+  background: #F8FAFC;
+  color: #0F172A;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.fd-search-input:focus {
+  background: #FFFFFF;
+  border-color: #1A56DB;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+}
+
+.fd-search-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── View Switcher Tabs ─────────────────────────────────────── */
+.fd-view-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #E2E8F0;
+  padding-bottom: 2px;
+}
+
+.fd-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px 8px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748B;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.fd-view-tab:hover {
+  color: #0F172A;
+  background: #F1F5F9;
+}
+
+.fd-view-tab.active {
+  color: #1A56DB;
+  font-weight: 600;
+  border-bottom-color: #1A56DB;
+  background: transparent;
+}
+
+/* ── Module Launcher Grid ───────────────────────────────────── */
+.fd-launcher-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fd-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* Module Card */
+.fd-module-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 135px;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.fd-module-card:hover {
+  transform: translateY(-2px);
+  border-color: #BFDBFE;
+  box-shadow: 0 8px 20px -4px rgba(26, 86, 219, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+}
+
+.fd-module-card:focus-visible {
+  outline: 2px solid #1A56DB;
+  outline-offset: 2px;
+}
+
+.fd-module-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.fd-module-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #EFF6FF;
+  border: 1px solid #DBEAFE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1A56DB;
+  flex-shrink: 0;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.fd-module-card:hover .fd-module-icon-wrap {
+  background: #DBEAFE;
+  transform: scale(1.05);
+}
+
+.fd-module-arrow {
+  color: #CBD5E1;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.fd-module-card:hover .fd-module-arrow {
+  color: #1A56DB;
+  transform: translateX(3px);
+}
+
+.fd-module-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fd-module-name {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #0F172A;
+  margin: 0;
+  letter-spacing: -0.1px;
+}
+
+.fd-module-desc {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Glance Strip Bar ───────────────────────────────────────── */
+.fd-glance-bar {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.fd-glance-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fd-glance-heading {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border-radius: 6px;
+}
+
+.fd-glance-text {
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.fd-glance-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: #1A56DB;
+  border: 1px solid #BFDBFE;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.fd-glance-btn:hover {
+  background: #EFF6FF;
+  border-color: #1A56DB;
+  color: #1E40AF;
+}
+
+/* ── Overview Section ───────────────────────────────────────── */
+.fd-overview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Responsive Rules ───────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .fd-modules-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .fd-welcome-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+  }
+
+  .fd-welcome-badges {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .fd-modules-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .fd-module-card {
+    padding: 14px;
+    min-height: 120px;
+  }
+
+  .fd-module-icon-wrap {
+    width: 36px;
+    height: 36px;
+  }
+
+  .fd-glance-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fd-search-card {
+    padding: 12px;
+  }
+
+  .fd-search-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fd-search-actions {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 520px) {
+  .fd-modules-grid {
+    grid-template-columns: 1fr;
+  }
+}
