@@ -48,6 +48,26 @@ export const AuthProvider = ({ children }) => {
     throw new Error(data.message || 'Login failed');
   };
 
+  // studentLogin: { rollNumber, gmail }
+  const studentLogin = async (rollNumber, gmail) => {
+    const data = await authService.studentLogin({ rollNumber, gmail });
+    if (data.success) {
+      if (data.data?.token) {
+        localStorage.setItem('campus_token', data.data.token);
+      }
+      if (data.data) {
+        setUser({
+          id: data.data.id || data.data.userId || data.data.studentId,
+          name: data.data.name,
+          role: data.data.role,
+        });
+      }
+      await fetchUser();
+      return data;
+    }
+    throw new Error(data.message || 'Login failed');
+  };
+
   const logout = async (navigate) => {
     try { await authService.logout(); } catch { /* ignore */ }
     localStorage.removeItem('campus_token');
@@ -58,7 +78,7 @@ export const AuthProvider = ({ children }) => {
   const getDashboard = (role) => ROLE_DASHBOARDS[role] || '/';
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, fetchUser, getDashboard }}>
+    <AuthContext.Provider value={{ user, loading, login, studentLogin, logout, fetchUser, getDashboard }}>
       {children}
     </AuthContext.Provider>
   );

@@ -13,8 +13,8 @@ const ROLE_META = {
     label:    'Student',
     icon:     GraduationCap,
     title:    'Student Login',
-    subtitle: 'Sign in to access your student dashboard',
-    btnText:  'Sign in as Student',
+    subtitle: 'Sign in with your Roll Number and registered personal Gmail',
+    btnText:  'Login',
   },
   faculty: {
     label:    'Faculty',
@@ -73,7 +73,7 @@ const PasswordField = ({ label, value, onChange, error, placeholder, hint }) => 
 // Main LoginModal component
 // ═══════════════════════════════════════════════════════════════
 const LoginModal = ({ role, onClose }) => {
-  const { login } = useAuth();
+  const { login, studentLogin } = useAuth();
   const navigate = useNavigate();
 
   const [closing,      setClosing]      = useState(false);
@@ -83,35 +83,60 @@ const LoginModal = ({ role, onClose }) => {
   const [resetSent,    setResetSent]    = useState(false);
 
   const activeRole = role || 'student';
-  const [idFocused,    setIdFocused]    = useState(false);
-
-  // ── Shared fields ──────────────────────────────────────────
-  const [loginId,   setLoginId]   = useState(''); // roll number (student) or employee/admin ID
-  const [password,  setPassword]  = useState('');
-
-  // ── Forgot password field ──────────────────────────────────
-  const [resetEmail, setResetEmail] = useState('');
-
-  // ── Inline validation errors ───────────────────────────────
-  const [idError,  setIdError]  = useState('');
-  const [pwError,  setPwError]  = useState('');
-
-  const meta       = ROLE_META[activeRole] || ROLE_META.student;
   const isStudent  = activeRole === 'student';
 
+  // ── Student fields (Roll Number + Registered Gmail) ────────
+  const [rollNumber, setRollNumber] = useState('');
+  const [gmail,      setGmail]      = useState('');
+  const [rollError,  setRollError]  = useState('');
+  const [gmailError, setGmailError] = useState('');
+
+  // ── Faculty / Admin fields (ID + Password) ──────────────────
+  const [loginId,   setLoginId]   = useState('');
+  const [password,  setPassword]  = useState('');
+  const [idError,   setIdError]   = useState('');
+  const [pwError,   setPwError]   = useState('');
+
+  // ── Forgot password field (Faculty/Admin only) ──────────────
+  const [resetEmail, setResetEmail] = useState('');
+
+  const meta = ROLE_META[activeRole] || ROLE_META.student;
+
   // ── Helpers ────────────────────────────────────────────────
-  const clearErrors = () => { setIdError(''); setPwError(''); setApiError(''); };
+  const clearErrors = () => {
+    setRollError('');
+    setGmailError('');
+    setIdError('');
+    setPwError('');
+    setApiError('');
+  };
 
   // ── Validation ─────────────────────────────────────────────
   const validate = () => {
     let ok = true;
     clearErrors();
 
-    if (!loginId.trim()) {
-      setIdError('Required'); ok = false;
-    }
-    if (!password) {
-      setPwError('Required'); ok = false;
+    if (isStudent) {
+      if (!rollNumber.trim()) {
+        setRollError('Roll number is required');
+        ok = false;
+      }
+      if (!gmail.trim()) {
+        setGmailError('Personal Gmail is required');
+        ok = false;
+      } else if (!gmail.trim().toLowerCase().endsWith('@gmail.com')) {
+        setGmailError('Must be a personal Gmail address ending in @gmail.com');
+        ok = false;
+      }
+    } else {
+      if (!loginId.trim()) {
+        setIdError('Required');
+        ok = false;
+      }
+      if (!password) {
+        setPwError('Required');
+        ok = false;
+      }
     }
     return ok;
   };
@@ -133,10 +158,15 @@ const LoginModal = ({ role, onClose }) => {
 
     setLoading(true);
     try {
-      const data = await login(loginId, password, activeRole);
-      handleClose();
-      // data.data.redirectTo from new consistent JSON shape
-      navigate(data?.data?.redirectTo || '/');
+      if (isStudent) {
+        const data = await studentLogin(rollNumber.trim().toUpperCase(), gmail.trim().toLowerCase());
+        handleClose();
+        navigate(data?.data?.redirectTo || '/student/dashboard');
+      } else {
+        const data = await login(loginId, password, activeRole);
+        handleClose();
+        navigate(data?.data?.redirectTo || '/');
+      }
     } catch (err) {
       setApiError(
         err?.response?.data?.message ||
@@ -239,30 +269,72 @@ const LoginModal = ({ role, onClose }) => {
 
           <form className="modal-form" onSubmit={handleSubmit} noValidate>
 
-            {/* Login ID field */}
-            <div className="modal-field">
-              <label className="modal-label">{idLabel}</label>
-              <input
-                className={`modal-input${idError ? ' error-input' : ''}`}
-                type={idType}
-                placeholder={idPlaceholder}
-                value={loginId}
-                onChange={(e) => { setLoginId(e.target.value); setIdError(''); }}
-                autoComplete="username"
-                autoFocus
-              />
-              {idError && (
-                <span className="field-error">{idError}</span>
-              )}
-            </div>
+            {isStudent ? (
+              <>
+                {/* Student Roll Number */}
+                <div className="modal-field">
+                  <label className="modal-label">College Roll Number</label>
+                  <input
+                    className={`modal-input${rollError ? ' error-input' : ''}`}
+                    type="text"
+                    placeholder="e.g. 20240001"
+                    value={rollNumber}
+                    onChange={(e) => { setRollNumber(e.target.value); setRollError(''); }}
+                    autoComplete="username"
+                    autoFocus
+                  />
+                  {rollError && (
+                    <span className="field-error">{rollError}</span>
+                  )}
+                </div>
 
-            {/* Password field */}
-            <PasswordField
-              label="Password"
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); setPwError(''); }}
-              error={pwError}
-            />
+                {/* Student Registered Personal Gmail */}
+                <div className="modal-field">
+                  <label className="modal-label">Registered Personal Gmail</label>
+                  <input
+                    className={`modal-input${gmailError ? ' error-input' : ''}`}
+                    type="email"
+                    placeholder="e.g. yourname@gmail.com"
+                    value={gmail}
+                    onChange={(e) => { setGmail(e.target.value); setGmailError(''); }}
+                    autoComplete="email"
+                  />
+                  <span className="field-hint" style={{ fontSize: 11, color: '#64748B', marginTop: 4 }}>
+                    Enter your personal @gmail.com address registered with the college.
+                  </span>
+                  {gmailError && (
+                    <span className="field-error">{gmailError}</span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Faculty / Admin Login ID field */}
+                <div className="modal-field">
+                  <label className="modal-label">{idLabel}</label>
+                  <input
+                    className={`modal-input${idError ? ' error-input' : ''}`}
+                    type={idType}
+                    placeholder={idPlaceholder}
+                    value={loginId}
+                    onChange={(e) => { setLoginId(e.target.value); setIdError(''); }}
+                    autoComplete="username"
+                    autoFocus
+                  />
+                  {idError && (
+                    <span className="field-error">{idError}</span>
+                  )}
+                </div>
+
+                {/* Password field */}
+                <PasswordField
+                  label="Password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setPwError(''); }}
+                  error={pwError}
+                />
+              </>
+            )}
 
             {/* Submit */}
             <button className="modal-submit" type="submit" disabled={loading}>
@@ -279,12 +351,14 @@ const LoginModal = ({ role, onClose }) => {
               </div>
             )}
 
-            {/* Forgot password */}
-            <div className="modal-forgot">
-              <button type="button" onClick={() => { clearErrors(); setForgotView(true); }}>
-                Forgot password?
-              </button>
-            </div>
+            {/* Forgot password — for Faculty / Admin only */}
+            {!isStudent && (
+              <div className="modal-forgot">
+                <button type="button" onClick={() => { clearErrors(); setForgotView(true); }}>
+                  Forgot password?
+                </button>
+              </div>
+            )}
 
           </form>
 

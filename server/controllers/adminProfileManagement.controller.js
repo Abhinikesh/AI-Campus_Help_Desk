@@ -49,7 +49,15 @@ const listCanonicalStudents = asyncHandler(async (req, res) => {
 
   const andConditions = [];
 
-  if (branch) andConditions.push({ branch: String(branch).trim() });
+  if (branch) {
+    const bRegex = new RegExp(String(branch).trim(), 'i');
+    andConditions.push({
+      $or: [
+        { branch: bRegex },
+        { course: bRegex },
+      ],
+    });
+  }
   if (semester) andConditions.push({ semester: Number(semester) });
 
   const queryStr = typeof search === 'string' ? search.trim() : '';
@@ -62,6 +70,11 @@ const listCanonicalStudents = asyncHandler(async (req, res) => {
         { fullName: regex },
         { phone: regex },
         { email: regex },
+        { school: regex },
+        { course: regex },
+        { branch: regex },
+        { batch: regex },
+        { section: regex },
       ],
     });
   }
@@ -69,12 +82,12 @@ const listCanonicalStudents = asyncHandler(async (req, res) => {
   const filter = andConditions.length === 0 ? {} : (andConditions.length === 1 ? andConditions[0] : { $and: andConditions });
 
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
   const skip = (pageNum - 1) * limitNum;
 
   const [students, total] = await Promise.all([
     Student.find(filter)
-      .select('rollNumber fullName email phone branch program semester section admissionYear status createdAt')
+      .select('rollNumber fullName email phone branch program course school batch year semester section admissionYear status createdAt')
       .populate('user', 'name email loginId isActive')
       .sort({ rollNumber: 1 })
       .skip(skip)
@@ -187,6 +200,17 @@ const updateCanonicalStudentProfile = asyncHandler(async (req, res) => {
         if (conflict) {
           throw new ApiError(409, 'Email address is already in use by another student.');
         }
+
+        // Prevent accidental email synchronization conflict to an unrelated User
+        if (student.user) {
+          const userConflict = await User.findOne({
+            email: validatedEmail,
+            _id: { $ne: student.user },
+          }).lean();
+          if (userConflict) {
+            throw new ApiError(409, 'Email address is already in use by another user account.');
+          }
+        }
       }
       student.email = validatedEmail;
       updatedFields.push('email');
@@ -252,6 +276,30 @@ const updateCanonicalStudentProfile = asyncHandler(async (req, res) => {
     if (val !== (student.school || null)) {
       student.school = val;
       updatedFields.push('school');
+    }
+  }
+
+  if (body.course !== undefined) {
+    const val = body.course ? String(body.course).trim() : null;
+    if (val !== (student.course || null)) {
+      student.course = val;
+      updatedFields.push('course');
+    }
+  }
+
+  if (body.batch !== undefined) {
+    const val = body.batch ? String(body.batch).trim() : null;
+    if (val !== (student.batch || null)) {
+      student.batch = val;
+      updatedFields.push('batch');
+    }
+  }
+
+  if (body.year !== undefined) {
+    const val = body.year ? String(body.year).trim() : null;
+    if (val !== (student.year || null)) {
+      student.year = val;
+      updatedFields.push('year');
     }
   }
 
