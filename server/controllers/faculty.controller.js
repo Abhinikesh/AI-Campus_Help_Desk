@@ -34,22 +34,39 @@ const getProfile = asyncHandler(async (req, res) => {
 
 // GET /api/faculty/timetable
 const getTimetable = asyncHandler(async (req, res) => {
-  const facultyId = req.user._id || req.user.userId;
+  const userId = req.user.userId || req.user._id;
+  const facultyUserIds = [userId, req.user._id].filter(Boolean);
+  const facultyProfile = await Faculty.findOne({ user: { $in: facultyUserIds } });
+  if (facultyProfile?._id) facultyUserIds.push(facultyProfile._id);
 
-  // Find subjects taught by this faculty
+  // Find subjects strictly taught by this faculty (no branch fallback leaks)
   const subjects = await Subject.find({
-    $or: [{ faculty: facultyId }, { branch: 'CSE' }],
+    $or: [
+      { faculty: { $in: facultyUserIds } },
+      ...(facultyProfile?.assignedSubjects?.length ? [{ _id: { $in: facultyProfile.assignedSubjects } }] : []),
+    ],
   });
 
   const subjectIds = subjects.map(s => s._id);
 
   // Query database-backed timetable entries assigned to faculty or their subjects
+  // Match published/updated/draft or legacy entries where status field is unpopulated
   const timetable = await Timetable.find({
-    $or: [
-      { faculty: facultyId },
-      { subject: { $in: subjectIds } },
+    $and: [
+      {
+        $or: [
+          { faculty: { $in: facultyUserIds } },
+          { subject: { $in: subjectIds } },
+        ],
+      },
+      {
+        $or: [
+          { status: { $in: ['published', 'updated', 'draft'] } },
+          { status: { $exists: false } },
+          { status: null },
+        ],
+      },
     ],
-    status: { $in: ['published', 'updated', 'draft'] },
   })
     .populate('subject', 'name code credits semester branch')
     .sort({ dayOfWeek: 1, startTime: 1 });
@@ -76,6 +93,31 @@ const getTimetable = asyncHandler(async (req, res) => {
   return res.status(200).json({ success: true, data: formatted, message: 'Timetable loaded' });
 });
 
+// GET /api/faculty/subjects
+const getFacultySubjects = asyncHandler(async (req, res) => {
+  const userId = req.user.userId || req.user._id;
+  const facultyUserIds = [userId, req.user._id].filter(Boolean);
+  const facultyProfile = await Faculty.findOne({ user: { $in: facultyUserIds } });
+  if (facultyProfile?._id) facultyUserIds.push(facultyProfile._id);
+
+  const query = {
+    $or: [
+      { faculty: { $in: facultyUserIds } },
+      ...(facultyProfile?.assignedSubjects?.length ? [{ _id: { $in: facultyProfile.assignedSubjects } }] : []),
+    ],
+  };
+
+  if (req.query.branch) {
+    query.branch = { $regex: new RegExp(`^${req.query.branch.trim()}$`, 'i') };
+  }
+  if (req.query.semester) {
+    query.semester = Number(req.query.semester);
+  }
+
+  const subjects = await Subject.find(query).sort({ code: 1, name: 1 });
+  return res.status(200).json({ success: true, data: subjects, message: 'Faculty subjects loaded' });
+});
+
 // POST /api/faculty/attendance/sessions — Create & Start Session
 const createAttendanceSession = asyncHandler(async (req, res) => {
   const {
@@ -95,28 +137,69 @@ const createAttendanceSession = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Subject is required to start an attendance session');
   }
 
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new ApiError(400, 'Valid date in YYYY-MM-DD format is required');
+  }
+
+  const periodNum = Number(period);
+  if (isNaN(periodNum) || periodNum < 1 || periodNum > 10) {
+    throw new ApiError(400, 'Period must be an integer between 1 and 10');
+  }
+
   const subject = await Subject.findById(subjectId);
   if (!subject) throw new ApiError(404, 'Subject not found');
 
+  // Verify faculty authorization
+  const userId = req.user.userId || req.user._id;
+  const facultyUserIds = [userId, req.user._id].filter(Boolean);
+  const facultyProfile = await Faculty.findOne({ user: { $in: facultyUserIds } });
+  if (facultyProfile?._id) facultyUserIds.push(facultyProfile._id);
+
+  const isAssigned =
+    (subject.faculty && facultyUserIds.some(id => id.toString() === subject.faculty.toString())) ||
+    facultyProfile?.assignedSubjects?.some(s => s.toString() === subjectId.toString());
+
+  if (subject.faculty && !isAssigned && req.user.role !== 'admin') {
+    throw new ApiError(403, 'You are not authorized to create an attendance session for this subject');
+  }
+
+  // Prevent duplicate active/scheduled session for the same subject, date, and period
+  const existingActive = await AttendanceSession.findOne({
+    subject: subject._id,
+    date,
+    period: periodNum,
+    status: { $in: ['open', 'active', 'scheduled'] },
+  });
+  if (existingActive) {
+    throw new ApiError(409, `An active attendance session already exists for this subject on ${date} (Period ${periodNum})`);
+  }
+
+  const effectiveBranch = branch || subject.branch || 'CSE';
+  const effectiveSemester = Number(semester) || subject.semester || 4;
+  const effectiveSection = section || 'A';
+
   // Count total students enrolled in this branch & semester
   const totalStudents = await Student.countDocuments({
-    branch: { $regex: new RegExp(branch, 'i') },
-    semester: Number(semester),
+    branch: { $regex: new RegExp(effectiveBranch, 'i') },
+    semester: effectiveSemester,
   });
 
   // Create session
   const session = await AttendanceSession.create({
     subject: subject._id,
-    faculty: req.user.userId,
+    faculty: userId,
     date,
-    period: Number(period),
-    startTime,
-    endTime,
+    sessionDate: date,
+    period: periodNum,
+    periods: [periodNum],
+    periodCount: 1,
+    startTime: startTime || '09:00 AM',
+    endTime: endTime || '10:00 AM',
     sessionType,
     attendanceMethod,
-    branch,
-    semester: Number(semester),
-    section,
+    branch: effectiveBranch,
+    semester: effectiveSemester,
+    section: effectiveSection,
     status: 'open',
     totalStudents: totalStudents || 10,
     presentCount: 0,
@@ -128,8 +211,8 @@ const createAttendanceSession = asyncHandler(async (req, res) => {
 
   // Pre-populate students in Attendance as pending/absent
   const students = await Student.find({
-    branch: { $regex: new RegExp(branch, 'i') },
-    semester: Number(semester),
+    branch: { $regex: new RegExp(effectiveBranch, 'i') },
+    semester: effectiveSemester,
   });
 
   for (const st of students) {
@@ -138,7 +221,7 @@ const createAttendanceSession = asyncHandler(async (req, res) => {
       subject: subject._id,
       student: st._id,
       date,
-      period: Number(period),
+      period: periodNum,
     });
 
     if (!existing) {
@@ -147,7 +230,7 @@ const createAttendanceSession = asyncHandler(async (req, res) => {
         student: st._id,
         session: session._id,
         date,
-        period: Number(period),
+        period: periodNum,
         status: 'pending',
         verificationMethod: attendanceMethod,
       });
@@ -1056,6 +1139,7 @@ module.exports = {
   getProfile,
   getOverview,
   getTimetable,
+  getFacultySubjects,
   createAttendanceSession,
   getAttendanceSessions,
   getSessionDetails,

@@ -1020,12 +1020,27 @@ const getFacultyClasses = asyncHandler(async (req, res) => {
  * GET /api/attendance/faculty/subjects
  */
 const getFacultySubjects = asyncHandler(async (req, res) => {
-  const faculty = await getFacultyForUser(req.user.userId);
-  const subjects = await Subject.find({
-    $or: [{ faculty: req.user.userId }, { faculty: faculty._id }, { _id: { $in: faculty.assignedSubjects || [] } }]
-  });
+  const userId = req.user.userId || req.user._id;
+  const facultyUserIds = [userId, req.user._id].filter(Boolean);
+  const faculty = await Faculty.findOne({ user: { $in: facultyUserIds } });
+  if (faculty?._id) facultyUserIds.push(faculty._id);
 
-  return res.status(200).json({ success: true, data: subjects });
+  const query = {
+    $or: [
+      { faculty: { $in: facultyUserIds } },
+      ...(faculty?.assignedSubjects?.length ? [{ _id: { $in: faculty.assignedSubjects } }] : []),
+    ],
+  };
+
+  if (req.query.branch) {
+    query.branch = { $regex: new RegExp(`^${req.query.branch.trim()}$`, 'i') };
+  }
+  if (req.query.semester) {
+    query.semester = Number(req.query.semester);
+  }
+
+  const subjects = await Subject.find(query).sort({ code: 1, name: 1 });
+  return res.status(200).json({ success: true, data: subjects, message: 'Faculty subjects loaded' });
 });
 
 /**

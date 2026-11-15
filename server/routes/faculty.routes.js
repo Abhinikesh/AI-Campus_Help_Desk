@@ -9,6 +9,7 @@ const {
   getProfile,
   getOverview,
   getTimetable,
+  getFacultySubjects,
   createAttendanceSession,
   getAttendanceSessions,
   getSessionDetails,
@@ -139,6 +140,7 @@ router.use(auditUnauthenticatedFacultyAccess, authMiddleware, allowRoles('facult
 router.get('/profile',              getProfile);
 router.get('/overview',             getOverview);
 router.get('/timetable',            getTimetable);
+router.get('/subjects',             getFacultySubjects);
 router.post('/announcements',       createAnnouncement);
 router.get('/announcements',        getAnnouncements);
 router.get('/students/search',       searchStudents);

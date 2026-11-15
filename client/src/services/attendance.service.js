@@ -62,6 +62,16 @@ export const attendanceService = {
   },
 
   // ── Faculty Attendance APIs ──────────────────────────────────
+  getFacultySubjects: async (params = {}) => {
+    try {
+      const res = await api.get('/api/faculty/subjects', { params });
+      return res.data;
+    } catch (e) {
+      const res = await api.get('/api/attendance/faculty/subjects', { params });
+      return res.data;
+    }
+  },
+
   getFacultyTimetable: async () => {
     const res = await api.get('/api/faculty/timetable');
     return res.data;

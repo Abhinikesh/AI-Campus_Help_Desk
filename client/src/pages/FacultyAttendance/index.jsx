@@ -11,7 +11,7 @@ import EmptyState from '../../components/AttendanceShared/EmptyState';
 import {
   GraduationCap, LayoutDashboard, BookOpen, CalendarCheck, Users,
   Megaphone, LogOut, Plus, Clock,
-  Camera, ArrowRight, BarChart2, CheckCircle2, ChevronRight, X
+  Camera, ArrowRight, BarChart2, CheckCircle2, ChevronRight, X, Loader2
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 
@@ -35,6 +35,8 @@ const FacultyAttendanceOverview = () => {
   const [timetable, setTimetable] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
+  const [subjectsError, setSubjectsError] = useState('');
 
   // Create session modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -56,33 +58,64 @@ const FacultyAttendanceOverview = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [profRes, ttRes, sessRes] = await Promise.all([
+      setSubjectsLoading(true);
+      setSubjectsError('');
+
+      const [profRes, subsRes, ttRes, sessRes] = await Promise.all([
         facultyService.getProfile().catch(() => ({ success: false })),
+        attendanceService.getFacultySubjects().catch((err) => ({ success: false, error: err })),
         attendanceService.getFacultyTimetable().catch(() => ({ success: false })),
         attendanceService.getFacultySessions().catch(() => ({ success: false })),
       ]);
 
       if (profRes?.success) setProfile(profRes.data);
+      if (sessRes?.success && sessRes.data) {
+        setSessions(sessRes.data);
+      }
       if (ttRes?.success && ttRes.data) {
         setTimetable(ttRes.data);
-        // Extract unique subjects
+      }
+
+      // Consolidate subjects: primary from assigned subjects endpoint, supplemented by timetable
+      let resolvedSubs = [];
+      if (subsRes?.success && Array.isArray(subsRes.data) && subsRes.data.length > 0) {
+        resolvedSubs = subsRes.data;
+      } else if (subsRes?.error) {
+        const msg = subsRes.error?.response?.data?.message || 'Failed to load assigned subjects.';
+        setSubjectsError(msg);
+      }
+
+      // If dedicated subjects endpoint returned empty or failed, fallback to timetable subjects
+      if (resolvedSubs.length === 0 && ttRes?.success && Array.isArray(ttRes.data)) {
         const map = {};
         ttRes.data.forEach(t => {
           if (t.subject?._id) map[t.subject._id] = t.subject;
         });
-        const subs = Object.values(map);
-        setSubjects(subs);
-        if (subs.length > 0 && !formData.subjectId) {
-          setFormData(prev => ({ ...prev, subjectId: subs[0]._id }));
+        const ttSubs = Object.values(map);
+        if (ttSubs.length > 0) {
+          resolvedSubs = ttSubs;
+          setSubjectsError('');
         }
       }
-      if (sessRes?.success && sessRes.data) {
-        setSessions(sessRes.data);
+
+      setSubjects(resolvedSubs);
+      if (resolvedSubs.length > 0) {
+        setFormData(prev => {
+          const matched = resolvedSubs.find(s => s._id === prev.subjectId) || resolvedSubs[0];
+          return {
+            ...prev,
+            subjectId: matched._id,
+            branch: matched.branch || prev.branch,
+            semester: matched.semester != null ? matched.semester : prev.semester,
+          };
+        });
       }
     } catch (err) {
       console.error('Failed to load faculty attendance data:', err);
+      setSubjectsError('Failed to load attendance data. Please refresh.');
     } finally {
       setLoading(false);
+      setSubjectsLoading(false);
     }
   };
 
@@ -93,7 +126,11 @@ const FacultyAttendanceOverview = () => {
   const handleCreateSession = async (e) => {
     e.preventDefault();
     if (!formData.subjectId) {
-      setErrorMsg('Please select a subject');
+      setErrorMsg('Please select a subject from the list');
+      return;
+    }
+    if (!formData.date) {
+      setErrorMsg('Session date is required');
       return;
     }
 
@@ -105,7 +142,7 @@ const FacultyAttendanceOverview = () => {
         setShowCreateModal(false);
         navigate(`/faculty/attendance/live/${res.data._id}`);
       } else {
-        setErrorMsg('Failed to create attendance session.');
+        setErrorMsg(res?.message || 'Failed to create attendance session.');
       }
     } catch (err) {
       setErrorMsg(err.response?.data?.message || 'Error creating attendance session.');
@@ -409,16 +446,52 @@ const FacultyAttendanceOverview = () => {
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
                     Select Subject *
                   </label>
+
+                  {subjectsLoading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#4B5563', padding: '6px 0', marginBottom: 6 }}>
+                      <Loader2 size={14} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                      <span>Loading assigned subjects from database…</span>
+                    </div>
+                  ) : subjectsError ? (
+                    <div style={{ padding: '8px 12px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626', borderRadius: 6, fontSize: 12, marginBottom: 8 }}>
+                      {subjectsError}
+                    </div>
+                  ) : subjects.length === 0 ? (
+                    <div style={{ padding: '8px 12px', background: '#FEF3C7', border: '1px solid #FDE68A', color: '#92400E', borderRadius: 6, fontSize: 12, marginBottom: 8 }}>
+                      No subjects are currently assigned to your faculty profile. Please contact an administrator to assign your curriculum subjects.
+                    </div>
+                  ) : null}
+
                   <select
                     className="ds-select"
                     value={formData.subjectId}
-                    onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const selectedSub = subjects.find(s => s._id === selectedId);
+                      setFormData(prev => ({
+                        ...prev,
+                        subjectId: selectedId,
+                        branch: selectedSub?.branch || prev.branch,
+                        semester: selectedSub?.semester != null ? selectedSub.semester : prev.semester,
+                      }));
+                    }}
                     required
+                    disabled={subjectsLoading || subjects.length === 0}
                     style={{ width: '100%' }}
                   >
-                    <option value="">-- Choose Subject --</option>
+                    <option value="">
+                      {subjectsLoading
+                        ? '-- Loading Assigned Subjects... --'
+                        : subjectsError
+                        ? '-- Error Loading Subjects --'
+                        : subjects.length === 0
+                        ? '-- No Subjects Assigned to Account --'
+                        : '-- Choose Subject --'}
+                    </option>
                     {subjects.map(s => (
-                      <option key={s._id} value={s._id}>{s.name} ({s.code})</option>
+                      <option key={s._id} value={s._id}>
+                        {s.name} ({s.code})
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -557,7 +630,7 @@ const FacultyAttendanceOverview = () => {
                 <button
                   type="submit"
                   className="ds-btn ds-btn-primary"
-                  disabled={submitting}
+                  disabled={submitting || subjectsLoading || subjects.length === 0}
                   style={{ display: 'flex', alignItems: 'center', gap: 6 }}
                 >
                   <Camera size={14} />
