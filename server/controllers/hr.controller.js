@@ -245,6 +245,7 @@ exports.getEmployees = async (req, res) => {
       filter.$or = [
         { firstName: searchRegex },
         { lastName: searchRegex },
+        { displayName: searchRegex },
         { employeeId: searchRegex },
         { officialEmail: searchRegex }
       ];
@@ -266,7 +267,7 @@ exports.getEmployees = async (req, res) => {
       count: employees.length,
       total,
       page: safePage,
-      totalPages: Math.ceil(total / safeLimit),
+      totalPages: Math.max(1, Math.ceil(total / safeLimit)),
       data: employees
     });
   } catch (err) {
@@ -289,6 +290,16 @@ exports.getEmployeeById = async (req, res) => {
 
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee profile not found' });
+    }
+
+    const userId = getUserId(req);
+    const userRole = req.user?.role;
+    const isHrManager = ['admin', 'hr_admin', 'hr_officer'].includes(userRole);
+    const isDeptHead = userRole === 'department_head';
+    const isSelf = employee.user?._id?.toString() === userId?.toString() || employee.user?.toString() === userId?.toString();
+
+    if (!isHrManager && !isDeptHead && !isSelf) {
+      return res.status(403).json({ success: false, message: 'Unauthorized to view this employee profile' });
     }
 
     res.status(200).json({ success: true, data: employee });
@@ -344,6 +355,31 @@ exports.createEmployee = async (req, res) => {
         success: false,
         message: 'First name, last name, official email, category, department, designation, and joining date are required'
       });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(officialEmail.trim())) {
+      return res.status(400).json({ success: false, message: 'Valid official email is required' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(department)) {
+      return res.status(400).json({ success: false, message: 'Valid department ID is required' });
+    }
+    const deptExists = await Department.findById(department);
+    if (!deptExists) {
+      return res.status(400).json({ success: false, message: 'Department not found' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(designation)) {
+      return res.status(400).json({ success: false, message: 'Valid designation ID is required' });
+    }
+    const desigExists = await Designation.findById(designation);
+    if (!desigExists) {
+      return res.status(400).json({ success: false, message: 'Designation not found' });
+    }
+
+    if (reportingManager && !mongoose.Types.ObjectId.isValid(reportingManager)) {
+      return res.status(400).json({ success: false, message: 'Valid reporting manager ID is required' });
     }
 
     // Determine or generate employeeId
@@ -491,9 +527,32 @@ exports.updateEmployee = async (req, res) => {
       if (firstName) employee.firstName = firstName.trim();
       if (lastName) employee.lastName = lastName.trim();
       if (workLocation !== undefined) employee.workLocation = workLocation;
-      if (department !== undefined) employee.department = department;
-      if (designation !== undefined) employee.designation = designation;
-      if (reportingManager !== undefined) employee.reportingManager = reportingManager || null;
+      if (department !== undefined) {
+        if (!mongoose.Types.ObjectId.isValid(department)) {
+          return res.status(400).json({ success: false, message: 'Valid department ID is required' });
+        }
+        const deptExists = await Department.findById(department);
+        if (!deptExists) {
+          return res.status(400).json({ success: false, message: 'Department not found' });
+        }
+        employee.department = department;
+      }
+      if (designation !== undefined) {
+        if (!mongoose.Types.ObjectId.isValid(designation)) {
+          return res.status(400).json({ success: false, message: 'Valid designation ID is required' });
+        }
+        const desigExists = await Designation.findById(designation);
+        if (!desigExists) {
+          return res.status(400).json({ success: false, message: 'Designation not found' });
+        }
+        employee.designation = designation;
+      }
+      if (reportingManager !== undefined) {
+        if (reportingManager && !mongoose.Types.ObjectId.isValid(reportingManager)) {
+          return res.status(400).json({ success: false, message: 'Valid reporting manager ID is required' });
+        }
+        employee.reportingManager = reportingManager || null;
+      }
       if (employmentType !== undefined) employee.employmentType = employmentType;
       if (employmentStatus !== undefined) employee.employmentStatus = employmentStatus;
     }
@@ -510,7 +569,13 @@ exports.updateEmployee = async (req, res) => {
       req
     });
 
-    res.status(200).json({ success: true, data: employee });
+    const updatedEmployee = await EmployeeProfile.findById(employee._id)
+      .populate('department', 'name code')
+      .populate('designation', 'title code')
+      .populate('reportingManager', 'name email role')
+      .populate('user', 'name email role');
+
+    res.status(200).json({ success: true, data: updatedEmployee });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
