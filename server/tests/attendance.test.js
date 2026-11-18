@@ -1,7 +1,13 @@
 /**
  * server/tests/attendance.test.js
  * Comprehensive automated test suite for Smart Attendance backend.
- * Tests 16 core requirements across Student, Faculty, Admin, and Python calculation engine.
+ * Tests 16 core requirements across Student, Faculty, Admin, and calculation engine.
+ *
+ * SAFETY HARDENING:
+ * - Executes strictly in an isolated MongoMemoryServer instance.
+ * - Enforces zero connection to canonical database 'campus-erp' or live port 27018.
+ * - Binds to a dynamic ephemeral HTTP port (port 0) for isolated API integration.
+ * - Cleans up only its own isolated memory state and shuts down cleanly.
  */
 'use strict';
 
@@ -10,6 +16,11 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const express = require('express');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+
+const { verifyTestDatabaseIsolation, assertConnectionIsolated } = require('./helpers/testDatabase');
+const attendanceRoutes = require('../routes/attendance.routes');
 
 const User = require('../models/User');
 const Student = require('../models/Student');
@@ -22,8 +33,8 @@ const AttendanceSettings = require('../models/AttendanceSettings');
 const FaceEmbedding = require('../models/FaceEmbedding');
 const ConsentRecord = require('../models/ConsentRecord');
 
-const API_BASE = 'http://localhost:5001/api/attendance';
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'test_jwt_secret_min_32_characters_long_for_safety!';
+if (!process.env.JWT_SECRET) process.env.JWT_SECRET = JWT_SECRET;
 
 function makeToken(user) {
   return jwt.sign(
@@ -34,72 +45,152 @@ function makeToken(user) {
 }
 
 test('Smart Attendance Backend & API Test Suite', async (t) => {
+  let mongod, server, API_BASE;
   let adminUser, facultyUser, student1User, student2User;
   let adminToken, facultyToken, student1Token, student2Token;
-  let testSubject, student1Doc, student2Doc;
+  let facultyDoc, testSubject, student1Doc, student2Doc;
   let createdSessionId, createdAttendanceId;
 
   t.after(async () => {
+    if (server) {
+      await new Promise((resolve) => server.close(resolve));
+    }
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
     }
+    if (mongod) {
+      await mongod.stop();
+    }
   });
 
-  // Setup: Connect & load fixture identities
-  await t.test('Setup: Connect & load fixture identities', async () => {
-    if (mongoose.connection.readyState === 0) {
-      const dbUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27018/campus-erp';
-      await mongoose.connect(dbUri);
-    }
+  // Setup: Connect & load fixture identities in isolated memory database
+  await t.test('Setup: Connect & load fixture identities in isolated memory database', async () => {
+    mongod = await MongoMemoryServer.create();
+    const rawUri = mongod.getUri();
+    const uri = `${rawUri.replace(/\/+$/, '')}/test_smart_attendance_isolated`;
 
-    adminUser = await User.findOne({ role: 'admin' });
-    facultyUser = await User.findOne({ role: 'faculty' });
-    const students = await User.find({ role: 'student' }).limit(2);
-    student1User = students[0];
-    student2User = students[1];
+    // ── CRITICAL DATABASE ISOLATION GUARDS ──────────────────────────────────
+    assert.ok(!uri.includes('27018'), 'TEST SAFETY VIOLATION: Must not connect to canonical port 27018');
+    assert.ok(!uri.includes('campus-erp'), 'TEST SAFETY VIOLATION: Must not connect to canonical database campus-erp');
+    verifyTestDatabaseIsolation(uri, { disallowPort27018: true });
 
-    assert.ok(adminUser, 'Admin user should exist');
-    assert.ok(facultyUser, 'Faculty user should exist');
-    assert.ok(student1User, 'Student 1 user should exist');
-    assert.ok(student2User, 'Student 2 user should exist');
+    await mongoose.connect(uri);
+    assertConnectionIsolated(mongoose.connection);
+    assert.notEqual(mongoose.connection.db.databaseName, 'campus-erp');
 
-    student1Doc = await Student.findOne({ user: student1User._id });
-    student2Doc = await Student.findOne({ user: student2User._id });
-    testSubject = await Subject.findOne({
-      $or: [{ faculty: facultyUser._id }]
-    }) || await Subject.findOne();
+    // Ephemeral Express HTTP server on dynamic port
+    const app = express();
+    app.use(express.json());
+    app.use('/api/attendance', attendanceRoutes);
+
+    app.use((err, req, res, next) => {
+      const statusCode = err.statusCode || 500;
+      res.status(statusCode).json({
+        success: false,
+        message: err.message || 'Internal Server Error',
+        errors: err.errors || []
+      });
+    });
+
+    server = app.listen(0);
+    const port = server.address().port;
+    API_BASE = `http://127.0.0.1:${port}/api/attendance`;
+
+    // Seed synthetic user accounts
+    adminUser = await User.create({
+      name: 'Admin User',
+      email: 'admin_test@test.local',
+      loginId: 'ADMIN_ATT_TEST',
+      role: 'admin',
+      passwordHash: 'hash'
+    });
+
+    facultyUser = await User.create({
+      name: 'Dr. Priya Mehta',
+      email: 'priya.mehta@test.local',
+      loginId: 'FAC_ATT_TEST',
+      role: 'faculty',
+      passwordHash: 'hash'
+    });
+
+    student1User = await User.create({
+      name: 'Student One',
+      email: 'stu1@test.local',
+      loginId: 'STU1_ATT_TEST',
+      role: 'student',
+      passwordHash: 'hash'
+    });
+
+    student2User = await User.create({
+      name: 'Student Two',
+      email: 'stu2@test.local',
+      loginId: 'STU2_ATT_TEST',
+      role: 'student',
+      passwordHash: 'hash'
+    });
+
+    facultyDoc = await Faculty.create({
+      user: facultyUser._id,
+      employeeId: 'FAC001',
+      name: 'Dr. Priya Mehta',
+      department: 'CSE',
+      designation: 'Associate Professor',
+      email: facultyUser.email
+    });
+
+    student1Doc = await Student.create({
+      user: student1User._id,
+      rollNumber: 'ROLL001',
+      fullName: 'Student One',
+      branch: 'CSE',
+      semester: 4,
+      section: 'A'
+    });
+
+    student2Doc = await Student.create({
+      user: student2User._id,
+      rollNumber: 'ROLL002',
+      fullName: 'Student Two',
+      branch: 'CSE',
+      semester: 4,
+      section: 'A'
+    });
+
+    testSubject = await Subject.create({
+      name: 'Data Structures & Algorithms',
+      code: 'CS201',
+      credits: 4,
+      branch: 'CSE',
+      semester: 4,
+      faculty: facultyUser._id
+    });
+
+    facultyDoc.assignedSubjects = [testSubject._id];
+    await facultyDoc.save();
 
     // Ensure student1 has active face profile with consent for attendance verification
-    await FaceEmbedding.findOneAndUpdate(
-      { student: student1Doc._id },
-      {
-        student: student1Doc._id,
-        user: student1User._id,
-        embedding: new Array(128).fill(0.1),
-        encryptedData: 'dummy_encrypted_data',
-        templateReference: 'tpl_student1',
-        status: 'enrolled',
-        enrollmentStatus: 'enrolled',
-        isActive: true,
-        consentGiven: true,
-        consentStatus: 'active',
-        consentDate: new Date(),
-        encryptionKeyVersion: '1'
-      },
-      { upsert: true }
-    );
+    await FaceEmbedding.create({
+      student: student1Doc._id,
+      user: student1User._id,
+      embedding: new Array(128).fill(0.1),
+      encryptedData: 'dummy_encrypted_data',
+      templateReference: 'tpl_student1',
+      status: 'enrolled',
+      enrollmentStatus: 'enrolled',
+      isActive: true,
+      consentGiven: true,
+      consentStatus: 'active',
+      consentDate: new Date(),
+      encryptionKeyVersion: '1'
+    });
 
-    await ConsentRecord.findOneAndUpdate(
-      { student: student1Doc._id },
-      {
-        student: student1Doc._id,
-        user: student1User._id,
-        consentStatus: 'active',
-        policyVersion: 'v1.0',
-        grantedAt: new Date()
-      },
-      { upsert: true }
-    );
+    await ConsentRecord.create({
+      student: student1Doc._id,
+      user: student1User._id,
+      consentStatus: 'active',
+      policyVersion: 'v1.0',
+      grantedAt: new Date()
+    });
 
     adminToken = makeToken(adminUser);
     facultyToken = makeToken(facultyUser);
@@ -121,12 +212,7 @@ test('Smart Attendance Backend & API Test Suite', async (t) => {
 
   // Test 2: Student cannot retrieve another student's records
   await t.test('2. Student cannot retrieve another student\'s records', async () => {
-    const uniqueYear = 2030 + Math.floor(Math.random() * 20);
-    const uniqueMonth = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
-    const uniqueDay = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
-    const testDate = `${uniqueYear}-${uniqueMonth}-${uniqueDay}`;
-
-    await Attendance.deleteMany({ subject: testSubject._id, student: student2Doc._id, date: testDate, period: 1 });
+    const testDate = '2029-01-15';
 
     const otherRec = await Attendance.create({
       subject: testSubject._id,
@@ -147,7 +233,8 @@ test('Smart Attendance Backend & API Test Suite', async (t) => {
 
   // Test 3: Teacher can create a session for an assigned class
   await t.test('3. Teacher can create a session for an assigned class', async () => {
-    const testDate = `2029-02-${String(Math.floor(Math.random() * 20) + 10).padStart(2, '0')}`;
+    const testDate = '2029-02-15';
+
     const res = await fetch(`${API_BASE}/sessions`, {
       method: 'POST',
       headers: {
@@ -178,10 +265,9 @@ test('Smart Attendance Backend & API Test Suite', async (t) => {
   // Test 4: Teacher cannot create a session for an unauthorized class
   await t.test('4. Teacher cannot create a session for an unauthorized class', async () => {
     const fakeFacultyUser = new mongoose.Types.ObjectId();
-    const uniqueCode = 'QP' + Math.floor(Math.random() * 90000 + 1000);
     const otherSubject = await Subject.create({
       name: 'Quantum Physics',
-      code: uniqueCode,
+      code: 'QP999',
       credits: 4,
       semester: 4,
       faculty: fakeFacultyUser
@@ -317,15 +403,22 @@ test('Smart Attendance Backend & API Test Suite', async (t) => {
 
   // Test 10: Zero-class calculations work correctly
   await t.test('10. Zero-class calculations work correctly (No Data state)', async () => {
+    const fakeUser = await User.create({
+      name: 'Temp Student',
+      email: 'temp.student@test.local',
+      loginId: 'TEMP_STU_USER',
+      role: 'student',
+      passwordHash: 'hash'
+    });
+
     const fakeStudent = await Student.create({
-      user: new mongoose.Types.ObjectId(),
-      rollNumber: 'TEMP' + Math.floor(Math.random() * 90000 + 1000),
+      user: fakeUser._id,
+      rollNumber: 'TEMP999',
       fullName: 'Temp Student',
       branch: 'MECH',
       semester: 8
     });
-    const tempUser = { _id: fakeStudent.user, role: 'student', name: 'Temp Student' };
-    const tempToken = makeToken(tempUser);
+    const tempToken = makeToken(fakeUser);
 
     const res = await fetch(`${API_BASE}/student/overview`, {
       headers: { Authorization: `Bearer ${tempToken}` }
@@ -337,6 +430,7 @@ test('Smart Attendance Backend & API Test Suite', async (t) => {
     assert.equal(body.summary.status, 'No Data');
 
     await Student.deleteOne({ _id: fakeStudent._id });
+    await User.deleteOne({ _id: fakeUser._id });
   });
 
   // Test 11: Faculty can correct attendance with a reason
@@ -372,6 +466,18 @@ test('Smart Attendance Backend & API Test Suite', async (t) => {
 
   // Test 13: Admin can view authorized reports & audit logs
   await t.test('13. Admin can view authorized reports and audit logs', async () => {
+    // Seed a finalized session so admin overview totals reflect completed institutional sessions
+    await AttendanceSession.create({
+      subject: testSubject._id,
+      faculty: facultyUser._id,
+      date: '2029-01-10',
+      period: 1,
+      branch: student1Doc.branch,
+      semester: student1Doc.semester,
+      status: 'finalized',
+      sessionStatus: 'finalized'
+    });
+
     const resAudit = await fetch(`${API_BASE}/admin/audit-logs`, {
       headers: { Authorization: `Bearer ${adminToken}` }
     });
@@ -435,13 +541,9 @@ test('Smart Attendance Backend & API Test Suite', async (t) => {
     const sessionInDb = await AttendanceSession.findById(createdSessionId);
     assert.ok(sessionInDb, 'Session must persist in MongoDB');
 
-    // Clean up created test session, records, and logs
+    // Clean up created test session, records, and logs in isolated DB
     await Attendance.deleteOne({ _id: createdAttendanceId });
     await AttendanceSession.deleteOne({ _id: createdSessionId });
     await AttendanceAuditLog.deleteMany({ sessionId: createdSessionId });
-
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
   });
 });
