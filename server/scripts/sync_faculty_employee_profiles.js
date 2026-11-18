@@ -40,8 +40,16 @@ async function syncFacultyProfiles(options = {}) {
   for (const d of deptDefs) {
     let dept = await Department.findOne({ code: d.code });
     if (!dept) {
-      dept = await Department.create({ ...d, isActive: true });
-      console.log(`Created department: ${d.name} (${d.code})`);
+      try {
+        dept = await Department.create({ ...d, isActive: true });
+        console.log(`Created department: ${d.name} (${d.code})`);
+      } catch (err) {
+        if (err.code === 11000) {
+          dept = await Department.findOne({ code: d.code });
+        } else {
+          throw err;
+        }
+      }
     }
     deptMap[d.code] = dept;
   }
@@ -58,8 +66,16 @@ async function syncFacultyProfiles(options = {}) {
   for (const d of desigDefs) {
     let desig = await Designation.findOne({ code: d.code });
     if (!desig) {
-      desig = await Designation.create(d);
-      console.log(`Created designation: ${d.name} (${d.code})`);
+      try {
+        desig = await Designation.create(d);
+        console.log(`Created designation: ${d.name} (${d.code})`);
+      } catch (err) {
+        if (err.code === 11000) {
+          desig = await Designation.findOne({ code: d.code });
+        } else {
+          throw err;
+        }
+      }
     }
     desigMap[d.code] = desig;
   }
@@ -114,24 +130,33 @@ async function syncFacultyProfiles(options = {}) {
     const empId = fac?.employeeId || `FAC-${String(u._id).slice(-4).toUpperCase()}`;
 
     if (!employee) {
-      employee = await EmployeeProfile.create({
-        employeeId: empId,
-        user: u._id,
-        firstName,
-        lastName,
-        displayName: u.name,
-        officialEmail: u.email,
-        phone: fac?.phone || u.phone || '',
-        employeeCategory: 'teaching_faculty',
-        department: assignedDept._id,
-        designation: assignedDesig._id,
-        employmentType: 'permanent',
-        employmentStatus: 'active',
-        joiningDate: fac?.createdAt || u.createdAt || new Date(),
-        onboardingStatus: 'completed'
-      });
-      createdCount++;
-      console.log(`Created EmployeeProfile for: ${u.email} (${empId}) - ${u.name}`);
+      try {
+        employee = await EmployeeProfile.create({
+          employeeId: empId,
+          user: u._id,
+          firstName,
+          lastName,
+          displayName: u.name,
+          officialEmail: u.email,
+          phone: fac?.phone || u.phone || '',
+          employeeCategory: 'teaching_faculty',
+          department: assignedDept._id,
+          designation: assignedDesig._id,
+          employmentType: 'permanent',
+          employmentStatus: 'active',
+          joiningDate: fac?.createdAt || u.createdAt || new Date(),
+          onboardingStatus: 'completed'
+        });
+        createdCount++;
+        console.log(`Created EmployeeProfile for: ${u.email} (${empId}) - ${u.name}`);
+      } catch (err) {
+        if (err.code === 11000) {
+          employee = await EmployeeProfile.findOne({ user: u._id });
+          existingCount++;
+        } else {
+          throw err;
+        }
+      }
     } else {
       existingCount++;
     }

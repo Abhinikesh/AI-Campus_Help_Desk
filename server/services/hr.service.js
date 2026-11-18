@@ -149,34 +149,49 @@ class HRService {
       });
 
       if (!balance) {
-        balance = await EmployeeLeaveBalance.create({
-          employee: profile._id,
-          policy: policy._id,
-          year,
-          openingBalance: policy.annualEntitlement,
-          accrued: 0,
-          used: 0,
-          adjusted: 0,
-          currentBalance: policy.annualEntitlement
-        });
+        try {
+          balance = await EmployeeLeaveBalance.create({
+            employee: profile._id,
+            policy: policy._id,
+            year,
+            openingBalance: policy.annualEntitlement,
+            accrued: 0,
+            used: 0,
+            adjusted: 0,
+            currentBalance: policy.annualEntitlement
+          });
 
-        const entryNumber = await this.generateNumber('LED');
-        await LeaveLedgerEntry.create({
-          entryNumber,
-          employee: profile._id,
-          policy: policy._id,
-          year,
-          type: 'CREDIT',
-          reason: 'annual_grant',
-          days: policy.annualEntitlement,
-          previousBalance: 0,
-          newBalance: policy.annualEntitlement,
-          performedBy: authorizedBy || profile.user,
-          notes: `Initial ${year} entitlement for ${policy.name}`
-        });
+          const entryNumber = await this.generateNumber('LED');
+          await LeaveLedgerEntry.create({
+            entryNumber,
+            employee: profile._id,
+            policy: policy._id,
+            year,
+            type: 'CREDIT',
+            reason: 'annual_grant',
+            days: policy.annualEntitlement,
+            previousBalance: 0,
+            newBalance: policy.annualEntitlement,
+            performedBy: authorizedBy || profile.user,
+            notes: `Initial ${year} entitlement for ${policy.name}`
+          });
+        } catch (balErr) {
+          if (balErr.code === 11000) {
+            // Concurrent execution race: balance was created by parallel process
+            balance = await EmployeeLeaveBalance.findOne({
+              employee: profile._id,
+              policy: policy._id,
+              year
+            });
+          } else {
+            throw balErr;
+          }
+        }
       }
 
-      initializedBalances.push(balance);
+      if (balance) {
+        initializedBalances.push(balance);
+      }
     }
 
     return initializedBalances;

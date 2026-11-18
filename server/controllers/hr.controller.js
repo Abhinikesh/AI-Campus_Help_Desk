@@ -33,77 +33,11 @@ const { createSafeRegex, sanitizePagination } = require('../utils/safeSearch.uti
 // Helper to get authenticated user ID
 const getUserId = (req) => req.user?.userId || req.user?.id || req.user?._id;
 
-// Helper to resolve or auto-link EmployeeProfile for faculty / staff users
+// Helper to resolve existing EmployeeProfile for faculty / staff users (strictly read-only)
+// Part 10.8: Implicit provisioning has been removed. Unprovisioned users return null.
 const resolveEmployeeProfile = async (userId) => {
   if (!userId) return null;
-  let employee = await EmployeeProfile.findOne({ user: userId });
-  if (employee) return employee;
-
-  try {
-    const user = await User.findById(userId);
-    if (!user) return null;
-
-    const faculty = await Faculty.findOne({ user: userId });
-    if (!faculty && user.role !== 'faculty') return null;
-
-    // Resolve Department
-    const deptName = faculty?.department || 'Computer Science & Engineering';
-    const deptCode = deptName.toLowerCase().includes('cdc') ? 'CDC' : 'CSE';
-    let dept = await Department.findOne({ code: deptCode });
-    if (!dept) {
-      dept = await Department.create({
-        name: deptName,
-        code: deptCode,
-        type: 'academic',
-        isActive: true,
-      });
-    }
-
-    // Resolve Designation
-    const desigTitle = faculty?.designation || 'Assistant Professor';
-    const desigCode = desigTitle.toLowerCase().includes('assoc') ? 'ASSOC_PROF' : 'ASST_PROF';
-    let desig = await Designation.findOne({ code: desigCode });
-    if (!desig) {
-      desig = await Designation.create({
-        name: desigTitle,
-        title: desigTitle,
-        code: desigCode,
-        category: 'teaching_faculty',
-        department: dept._id,
-      });
-    }
-
-    const nameParts = (user.name || 'Faculty Member').trim().split(/\s+/);
-    const firstName = nameParts[0] || 'Faculty';
-    const lastName = nameParts.slice(1).join(' ') || 'Member';
-    const empId = faculty?.employeeId || `FAC-${String(userId).slice(-4).toUpperCase()}`;
-
-    employee = await EmployeeProfile.create({
-      employeeId: empId,
-      user: userId,
-      firstName,
-      lastName,
-      displayName: user.name,
-      officialEmail: user.email,
-      phone: faculty?.phone || user.phone || '',
-      employeeCategory: 'teaching_faculty',
-      department: dept._id,
-      designation: desig._id,
-      employmentType: 'permanent',
-      employmentStatus: 'active',
-      joiningDate: faculty?.createdAt || user.createdAt || new Date(),
-      onboardingStatus: 'completed',
-    });
-
-    try {
-      await hrService.initializeLeaveBalancesForEmployee(employee._id, new Date().getFullYear(), userId);
-    } catch (_) {}
-
-    return employee;
-  } catch (err) {
-    console.warn('[resolveEmployeeProfile] Auto-provision notice:', err.message);
-    return null;
-  }
+  return EmployeeProfile.findOne({ user: userId });
 };
 
 // ============================================================================
@@ -366,22 +300,11 @@ exports.getEmployeeById = async (req, res) => {
 exports.getMyProfile = async (req, res) => {
   try {
     const userId = getUserId(req);
-    let employee = await EmployeeProfile.findOne({ user: userId })
+    const employee = await EmployeeProfile.findOne({ user: userId })
       .populate('department', 'name code')
       .populate('designation', 'title code')
       .populate('reportingManager', 'name email role')
       .populate('user', 'name email role');
-
-    if (!employee) {
-      const resolved = await resolveEmployeeProfile(userId);
-      if (resolved) {
-        employee = await EmployeeProfile.findById(resolved._id)
-          .populate('department', 'name code')
-          .populate('designation', 'title code')
-          .populate('reportingManager', 'name email role')
-          .populate('user', 'name email role');
-      }
-    }
 
     if (!employee) {
       return res.status(404).json({ success: false, message: 'No employee profile linked to your user account' });
@@ -461,27 +384,38 @@ exports.createEmployee = async (req, res) => {
       });
     }
 
-    const employee = await EmployeeProfile.create({
-      employeeId: finalEmployeeId,
-      user: linkedUserId,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      displayName: displayName || `${firstName} ${lastName}`,
-      officialEmail: officialEmail.toLowerCase().trim(),
-      personalEmail: personalEmail || '',
-      phone: phone || '',
-      emergencyContact: emergencyContact || {},
-      employeeCategory,
-      department,
-      designation,
-      employmentType: employmentType || 'permanent',
-      employmentStatus: employmentStatus || 'active',
-      joiningDate: new Date(joiningDate),
-      reportingManager: reportingManager || null,
-      workLocation: workLocation || 'Main Campus',
-      qualifications: qualifications || [],
-      onboardingStatus: 'pending'
-    });
+    let employee;
+    try {
+      employee = await EmployeeProfile.create({
+        employeeId: finalEmployeeId,
+        user: linkedUserId,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        displayName: displayName || `${firstName} ${lastName}`,
+        officialEmail: officialEmail.toLowerCase().trim(),
+        personalEmail: personalEmail || '',
+        phone: phone || '',
+        emergencyContact: emergencyContact || {},
+        employeeCategory,
+        department,
+        designation,
+        employmentType: employmentType || 'permanent',
+        employmentStatus: employmentStatus || 'active',
+        joiningDate: new Date(joiningDate),
+        reportingManager: reportingManager || null,
+        workLocation: workLocation || 'Main Campus',
+        qualifications: qualifications || [],
+        onboardingStatus: 'pending'
+      });
+    } catch (createErr) {
+      if (createErr.code === 11000) {
+        return res.status(409).json({
+          success: false,
+          message: 'An employee profile with this employee ID or user account already exists'
+        });
+      }
+      throw createErr;
+    }
 
     // Automatically initialize leave balances for current year
     try {
@@ -863,27 +797,16 @@ exports.getEmployeeLeaveBalances = async (req, res) => {
 exports.getMyLeaveBalances = async (req, res) => {
   try {
     const userId = getUserId(req);
-    let employee = await EmployeeProfile.findOne({ user: userId });
-    if (!employee) {
-      employee = await resolveEmployeeProfile(userId);
-    }
+    const employee = await EmployeeProfile.findOne({ user: userId });
     if (!employee) {
       return res.status(404).json({ success: false, message: 'No employee profile linked to user account' });
     }
 
     const year = parseInt(req.query.year || new Date().getFullYear(), 10);
-    let balances = await EmployeeLeaveBalance.find({
+    const balances = await EmployeeLeaveBalance.find({
       employee: employee._id,
       year
     }).populate('policy');
-
-    if (balances.length === 0) {
-      balances = await hrService.initializeLeaveBalancesForEmployee(employee._id, year, userId);
-      balances = await EmployeeLeaveBalance.find({
-        employee: employee._id,
-        year
-      }).populate('policy');
-    }
 
     res.status(200).json({ success: true, year, count: balances.length, data: balances });
   } catch (err) {
@@ -1009,10 +932,7 @@ exports.getLeaveApplications = async (req, res) => {
 exports.getMyLeaveApplications = async (req, res) => {
   try {
     const userId = getUserId(req);
-    let employee = await EmployeeProfile.findOne({ user: userId });
-    if (!employee) {
-      employee = await resolveEmployeeProfile(userId);
-    }
+    const employee = await EmployeeProfile.findOne({ user: userId });
     if (!employee) {
       return res.status(404).json({ success: false, message: 'No employee profile linked to user account' });
     }
@@ -1040,10 +960,7 @@ exports.applyForLeave = async (req, res) => {
       });
     }
 
-    let employee = await EmployeeProfile.findOne({ user: userId });
-    if (!employee) {
-      employee = await resolveEmployeeProfile(userId);
-    }
+    const employee = await EmployeeProfile.findOne({ user: userId });
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee profile not found for this user' });
     }
@@ -1357,10 +1274,7 @@ exports.cancelLeaveApplication = async (req, res) => {
 exports.checkIn = async (req, res) => {
   try {
     const userId = getUserId(req);
-    let employee = await EmployeeProfile.findOne({ user: userId });
-    if (!employee) {
-      employee = await resolveEmployeeProfile(userId);
-    }
+    const employee = await EmployeeProfile.findOne({ user: userId });
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee profile not found' });
     }
@@ -1416,10 +1330,7 @@ exports.checkIn = async (req, res) => {
 exports.checkOut = async (req, res) => {
   try {
     const userId = getUserId(req);
-    let employee = await EmployeeProfile.findOne({ user: userId });
-    if (!employee) {
-      employee = await resolveEmployeeProfile(userId);
-    }
+    const employee = await EmployeeProfile.findOne({ user: userId });
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee profile not found' });
     }
@@ -1459,10 +1370,7 @@ exports.checkOut = async (req, res) => {
 exports.getMyAttendance = async (req, res) => {
   try {
     const userId = getUserId(req);
-    let employee = await EmployeeProfile.findOne({ user: userId });
-    if (!employee) {
-      employee = await resolveEmployeeProfile(userId);
-    }
+    const employee = await EmployeeProfile.findOne({ user: userId });
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee profile not found' });
     }
