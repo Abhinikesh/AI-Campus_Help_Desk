@@ -28,6 +28,7 @@ const Faculty = require('../models/Faculty');
 
 const { hrService, HR_UPLOADS } = require('../services/hr.service');
 const notificationService = require('../services/notification.service');
+const { createSafeRegex, sanitizePagination } = require('../utils/safeSearch.util');
 
 // Helper to get authenticated user ID
 const getUserId = (req) => req.user?.userId || req.user?.id || req.user?._id;
@@ -296,6 +297,8 @@ exports.getEmployees = async (req, res) => {
       limit = 50
     } = req.query;
 
+    const { page: safePage, limit: safeLimit, skip } = sanitizePagination(page, limit, 50, 100);
+
     const filter = {};
     if (department) filter.department = department;
     if (designation) filter.designation = designation;
@@ -303,17 +306,15 @@ exports.getEmployees = async (req, res) => {
     if (employmentStatus) filter.employmentStatus = employmentStatus;
     if (onboardingStatus) filter.onboardingStatus = onboardingStatus;
 
-    if (search) {
-      const regex = new RegExp(search.trim(), 'i');
+    const searchRegex = createSafeRegex(search, { paramName: 'Search query' });
+    if (searchRegex) {
       filter.$or = [
-        { firstName: regex },
-        { lastName: regex },
-        { employeeId: regex },
-        { officialEmail: regex }
+        { firstName: searchRegex },
+        { lastName: searchRegex },
+        { employeeId: searchRegex },
+        { officialEmail: searchRegex }
       ];
     }
-
-    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
     const employees = await EmployeeProfile.find(filter)
       .populate('department', 'name code')
@@ -322,7 +323,7 @@ exports.getEmployees = async (req, res) => {
       .populate('user', 'name email role')
       .sort({ employeeId: 1 })
       .skip(skip)
-      .limit(parseInt(limit, 10));
+      .limit(safeLimit);
 
     const total = await EmployeeProfile.countDocuments(filter);
 
@@ -330,12 +331,12 @@ exports.getEmployees = async (req, res) => {
       success: true,
       count: employees.length,
       total,
-      page: parseInt(page, 10),
-      totalPages: Math.ceil(total / parseInt(limit, 10)),
+      page: safePage,
+      totalPages: Math.ceil(total / safeLimit),
       data: employees
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
   }
 };
 

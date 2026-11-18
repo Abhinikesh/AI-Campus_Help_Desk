@@ -21,6 +21,7 @@ const InventoryAudit = require('../models/InventoryAudit');
 const InventoryAuditItem = require('../models/InventoryAuditItem');
 const { inventoryService } = require('../services/inventory.service');
 const notificationService = require('../services/notification.service');
+const { createSafeRegex, sanitizePagination } = require('../utils/safeSearch.util');
 
 // -------------------------------------------------------------
 // 1. CATEGORIES & LOCATIONS
@@ -79,7 +80,10 @@ exports.getLocations = async (req, res) => {
     const { type, building, department, status } = req.query;
     const filter = {};
     if (type) filter.type = type;
-    if (building) filter.building = new RegExp(building, 'i');
+
+    const buildingRegex = createSafeRegex(building, { paramName: 'Building filter' });
+    if (buildingRegex) filter.building = buildingRegex;
+
     if (department) filter.department = department;
     if (status) filter.isActive = status === 'active';
 
@@ -89,7 +93,7 @@ exports.getLocations = async (req, res) => {
 
     res.status(200).json({ success: true, count: locations.length, data: locations });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
   }
 };
 
@@ -147,13 +151,16 @@ exports.getAssets = async (req, res) => {
       assignedTo
     } = req.query;
 
+    const { page: safePage, limit: safeLimit, skip } = sanitizePagination(page, limit, 20, 100);
+
     const filter = {};
-    if (search) {
+    const searchRegex = createSafeRegex(search, { paramName: 'Search query' });
+    if (searchRegex) {
       filter.$or = [
-        { assetId: new RegExp(search, 'i') },
-        { name: new RegExp(search, 'i') },
-        { serialNumber: new RegExp(search, 'i') },
-        { model: new RegExp(search, 'i') }
+        { assetId: searchRegex },
+        { name: searchRegex },
+        { serialNumber: searchRegex },
+        { model: searchRegex }
       ];
     }
     if (category) filter.category = category;
@@ -163,7 +170,6 @@ exports.getAssets = async (req, res) => {
     if (department) filter.department = department;
     if (assignedTo) filter.assignedTo = assignedTo;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
     const [assets, total] = await Promise.all([
       Asset.find(filter)
         .populate('category', 'name code')
@@ -171,7 +177,7 @@ exports.getAssets = async (req, res) => {
         .populate('assignedTo', 'name email role')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit)),
+        .limit(safeLimit),
       Asset.countDocuments(filter)
     ]);
 
@@ -191,13 +197,13 @@ exports.getAssets = async (req, res) => {
       data: mappedAssets,
       pagination: {
         total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        pages: Math.ceil(total / parseInt(limit))
+        page: safePage,
+        limit: safeLimit,
+        pages: Math.ceil(total / safeLimit)
       }
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
   }
 };
 
@@ -537,10 +543,12 @@ exports.getStockItems = async (req, res) => {
     const filter = { isActive: true };
 
     if (category) filter.category = category;
-    if (search) {
+
+    const searchRegex = createSafeRegex(search, { paramName: 'Search query' });
+    if (searchRegex) {
       filter.$or = [
-        { sku: new RegExp(search, 'i') },
-        { name: new RegExp(search, 'i') }
+        { sku: searchRegex },
+        { name: searchRegex }
       ];
     }
     if (lowStockOnly === 'true') {
@@ -564,7 +572,7 @@ exports.getStockItems = async (req, res) => {
 
     res.status(200).json({ success: true, count: mapped.length, data: mapped });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
   }
 };
 
@@ -787,11 +795,13 @@ exports.getVendors = async (req, res) => {
   try {
     const { search, status } = req.query;
     const filter = {};
-    if (search) {
+
+    const searchRegex = createSafeRegex(search, { paramName: 'Search query' });
+    if (searchRegex) {
       filter.$or = [
-        { name: new RegExp(search, 'i') },
-        { vendorCode: new RegExp(search, 'i') },
-        { contactPerson: new RegExp(search, 'i') }
+        { name: searchRegex },
+        { vendorCode: searchRegex },
+        { contactPerson: searchRegex }
       ];
     }
     if (status) filter.isActive = status === 'active';
@@ -805,7 +815,7 @@ exports.getVendors = async (req, res) => {
     const vendors = await query.exec();
     res.status(200).json({ success: true, count: vendors.length, data: vendors });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.statusCode || 500).json({ success: false, message: err.message });
   }
 };
 
