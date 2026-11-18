@@ -734,45 +734,7 @@ exports.getLeavePolicies = async (req, res) => {
     if (category) filter.applicableCategory = { $in: ['all', category] };
     if (isActive !== undefined) filter.isActive = isActive === 'true';
 
-    let policies = await LeavePolicy.find(filter).sort({ name: 1 });
-
-    // Auto-seed standard institutional policies if empty
-    if (policies.length === 0) {
-      const defaultPolicies = [
-        {
-          code: 'CL',
-          name: 'Casual Leave',
-          description: 'Standard paid short-term casual leave for personal commitments',
-          applicableCategory: 'all',
-          annualEntitlement: 12,
-          maxConsecutiveDays: 3,
-          requiresProof: false,
-          isActive: true
-        },
-        {
-          code: 'SL',
-          name: 'Sick / Medical Leave',
-          description: 'Medical leave with doctor certificate requirement for extended recovery',
-          applicableCategory: 'all',
-          annualEntitlement: 10,
-          maxConsecutiveDays: 7,
-          requiresProof: true,
-          isActive: true
-        },
-        {
-          code: 'EL',
-          name: 'Earned / Privileged Leave',
-          description: 'Annual accumulated privilege leave eligible for academic inter-semester breaks',
-          applicableCategory: 'all',
-          annualEntitlement: 15,
-          maxConsecutiveDays: 10,
-          requiresProof: false,
-          isActive: true
-        }
-      ];
-      await LeavePolicy.insertMany(defaultPolicies);
-      policies = await LeavePolicy.find(filter).sort({ name: 1 });
-    }
+    const policies = await LeavePolicy.find(filter).sort({ name: 1 }).lean();
 
     res.status(200).json({ success: true, count: policies.length, data: policies });
   } catch (err) {
