@@ -642,7 +642,23 @@ const FacultyHR = () => {
                       ))}
                     </select>
                     {policies.length === 0 && (
-                      <p className="text-xs text-amber-600 mt-1">Loading institutional leave policies...</p>
+                      <div className="flex items-center justify-between text-xs text-amber-600 mt-1">
+                        <span>Loading institutional leave policies...</span>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const polRes = await hrService.getLeavePolicies();
+                              if (polRes?.success && Array.isArray(polRes.data)) {
+                                setPolicies(polRes.data);
+                              }
+                            } catch (_) {}
+                          }}
+                          className="text-indigo-600 underline font-medium hover:text-indigo-800 cursor-pointer"
+                        >
+                          Retry
+                        </button>
+                      </div>
                     )}
                   </div>
 

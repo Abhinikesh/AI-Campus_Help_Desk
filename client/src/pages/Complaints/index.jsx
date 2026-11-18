@@ -97,6 +97,7 @@ const Complaints = () => {
   const [selected,     setSelected]     = useState(null);
   const [toast,        setToast]        = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError,    setFormError]    = useState('');
   const [formData,     setFormData]     = useState({ title: '', category: 'Academic', description: '' });
 
   const showToast = (msg, type = 'success') => {
@@ -104,36 +105,55 @@ const Complaints = () => {
     setTimeout(() => setToast(null), 3500);
   };
 
-  const fetchComplaints = async () => {
+  const fetchComplaints = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const res = await studentService.getComplaints();
       if (res.success) setComplaints(res.data);
-    } catch { /* ignore */ } finally { setLoading(false); }
+    } catch { /* ignore */ } finally {
+      if (!silent) setLoading(false);
+    }
   };
 
   useEffect(() => { fetchComplaints(); }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.description.length < 10) {
-      showToast('Description must be at least 10 characters.', 'error'); return;
+    setFormError('');
+
+    const cleanTitle = (formData.title || '').trim();
+    const cleanDesc = (formData.description || '').trim();
+
+    if (!cleanTitle || cleanTitle.length < 3) {
+      setFormError('Subject must be at least 3 characters.');
+      return;
     }
+
+    if (!cleanDesc || cleanDesc.length < 10) {
+      setFormError('Description must be at least 10 characters.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const res = await studentService.createComplaint({
-        ...formData, category: formData.category.toLowerCase()
+        title: cleanTitle,
+        description: cleanDesc,
+        category: formData.category.toLowerCase()
       });
       if (res.success) {
         showToast('Complaint submitted successfully.');
         setShowForm(false);
         setFormData({ title: '', category: 'Academic', description: '' });
-        fetchComplaints();
+        setFormError('');
+        fetchComplaints(true);
       } else {
+        setFormError(res.message || 'Submission failed.');
         showToast(res.message || 'Submission failed.', 'error');
       }
     } catch (err) {
       const errMsg = err.response?.data?.message || err.message || 'Server error. Please try again.';
+      setFormError(errMsg);
       showToast(errMsg, 'error');
     }
     finally { setIsSubmitting(false); }
@@ -219,25 +239,41 @@ const Complaints = () => {
               <input className="ds-input" style={{ width: '100%' }}
                 type="text" placeholder="Brief title of your complaint"
                 value={formData.title} required
-                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                onChange={e => {
+                  setFormData({ ...formData, title: e.target.value });
+                  if (formError) setFormError('');
+                }}
               />
             </div>
             <div>
               <label className="comp-label">Description <span style={{ color: '#DC2626' }}>*</span></label>
               <textarea className="ds-textarea" rows={5}
-                placeholder="Describe your complaint in detail…"
+                placeholder="Describe your complaint in detail (minimum 10 characters)…"
                 value={formData.description} required
-                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                onChange={e => {
+                  setFormData({ ...formData, description: e.target.value });
+                  if (formError) setFormError('');
+                }}
               />
             </div>
-            {/* File attach zone */}
-            <div className="comp-drop-zone">
-              <Paperclip size={16} color="#9CA3AF" />
-              <span>Click to upload or drag & drop</span>
-              <span className="comp-drop-sub">PDF, JPG, PNG up to 5MB</span>
-            </div>
+            {formError && (
+              <div style={{
+                padding: '10px 14px',
+                borderRadius: '8px',
+                background: '#FEF2F2',
+                border: '1px solid #FCA5A5',
+                color: '#B91C1C',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <AlertCircle size={15} />
+                <span>{formError}</span>
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 10 }}>
-              <button type="button" className="ds-btn ghost" onClick={() => setShowForm(false)}>Cancel</button>
+              <button type="button" className="ds-btn ghost" onClick={() => { setShowForm(false); setFormError(''); }}>Cancel</button>
               <button type="submit" className="ds-btn primary" disabled={isSubmitting}>
                 {isSubmitting ? <><Loader2 size={15} style={{ animation: 'dspin 0.7s linear infinite' }} /> Submitting…</> : 'Submit Complaint'}
               </button>

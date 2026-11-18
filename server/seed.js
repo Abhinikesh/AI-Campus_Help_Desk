@@ -23,6 +23,11 @@ const Attendance         = require('./models/Attendance');
 const AttendanceSession  = require('./models/AttendanceSession');
 const FaceEmbedding      = require('./models/FaceEmbedding');
 const AttendanceSettings = require('./models/AttendanceSettings');
+const Department         = require('./models/Department');
+const Designation        = require('./models/Designation');
+const LeavePolicy        = require('./models/LeavePolicy');
+const EmployeeProfile    = require('./models/EmployeeProfile');
+const { hrService }      = require('./services/hr.service');
 
 const SALT = 10;
 
@@ -142,6 +147,93 @@ const seed = async (shouldExit = true) => {
       designation: 'Associate Professor',
       phone: '9876543210',
     });
+
+    // ── HR Infrastructure & Institutional Leave Policies ──────────────────────
+    let cseDept = await Department.findOne({ code: 'CSE' });
+    if (!cseDept) {
+      cseDept = await Department.create({
+        name: 'Computer Science & Engineering',
+        code: 'CSE',
+        type: 'academic',
+        isActive: true,
+      });
+    }
+
+    let assocProfDesig = await Designation.findOne({ code: 'ASSOC_PROF' });
+    if (!assocProfDesig) {
+      assocProfDesig = await Designation.create({
+        name: 'Associate Professor',
+        title: 'Associate Professor',
+        code: 'ASSOC_PROF',
+        category: 'teaching_faculty',
+        department: cseDept._id,
+      });
+    }
+
+    const defaultPolicies = [
+      {
+        code: 'CL',
+        name: 'Casual Leave',
+        description: 'Standard paid short-term casual leave for personal commitments',
+        applicableCategory: 'all',
+        annualEntitlement: 12,
+        maxConsecutiveDays: 3,
+        requiresProof: false,
+        isActive: true,
+      },
+      {
+        code: 'SL',
+        name: 'Sick / Medical Leave',
+        description: 'Medical leave with doctor certificate requirement for extended recovery',
+        applicableCategory: 'all',
+        annualEntitlement: 10,
+        maxConsecutiveDays: 7,
+        requiresProof: true,
+        isActive: true,
+      },
+      {
+        code: 'EL',
+        name: 'Earned / Privileged Leave',
+        description: 'Annual accumulated privilege leave eligible for academic inter-semester breaks',
+        applicableCategory: 'all',
+        annualEntitlement: 15,
+        maxConsecutiveDays: 10,
+        requiresProof: false,
+        isActive: true,
+      },
+    ];
+
+    for (const p of defaultPolicies) {
+      const existing = await LeavePolicy.findOne({ code: p.code });
+      if (!existing) {
+        await LeavePolicy.create(p);
+      }
+    }
+
+    let empProfile = await EmployeeProfile.findOne({ user: facultyUser._id });
+    if (!empProfile) {
+      empProfile = await EmployeeProfile.create({
+        employeeId: 'FAC001',
+        user: facultyUser._id,
+        firstName: 'Priya',
+        lastName: 'Mehta',
+        displayName: 'Dr. Priya Mehta',
+        officialEmail: facultyUser.email,
+        phone: '9876543210',
+        employeeCategory: 'teaching_faculty',
+        department: cseDept._id,
+        designation: assocProfDesig._id,
+        employmentType: 'permanent',
+        employmentStatus: 'active',
+        joiningDate: new Date('2022-08-01'),
+        onboardingStatus: 'completed',
+      });
+    }
+
+    try {
+      await hrService.initializeLeaveBalancesForEmployee(empProfile._id, new Date().getFullYear(), facultyUser._id);
+    } catch (_) {}
+    console.log('  ✅ Institutional HR departments, designations, leave policies & employee profiles ready');
 
     // ── Subjects ──────────────────────────────────────────────────────────────
     const subjects = await Subject.insertMany([
