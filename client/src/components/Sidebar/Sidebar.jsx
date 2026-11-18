@@ -49,19 +49,16 @@ export const NAV_CONFIG = {
   transport_manager: [
     { label: 'Transport Desk',     icon: Bus,             to: '/admin/transport'     },
     { label: 'Notifications',      icon: Bell,            to: '/notifications'       },
-    { label: 'Complaints Hub',     icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',       icon: MessageCircle,   to: '/admin/ai-help'       },
   ],
   placement_officer: [
     { label: 'Placement Desk',     icon: Briefcase,       to: '/admin/placement'     },
     { label: 'Notifications',      icon: Bell,            to: '/notifications'       },
-    { label: 'Complaints Hub',     icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',       icon: MessageCircle,   to: '/admin/ai-help'       },
   ],
   placement_coordinator: [
     { label: 'Placement Desk',     icon: Briefcase,       to: '/admin/placement'     },
     { label: 'Notifications',      icon: Bell,            to: '/notifications'       },
-    { label: 'Complaints Hub',     icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',       icon: MessageCircle,   to: '/admin/ai-help'       },
   ],
   driver: [
@@ -87,43 +84,36 @@ export const NAV_CONFIG = {
   warden: [
     { label: 'Hostel Desk',        icon: Building,        to: '/admin/hostel'        },
     { label: 'Notifications',      icon: Bell,            to: '/notifications'       },
-    { label: 'Complaints Hub',     icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',       icon: MessageCircle,   to: '/admin/ai-help'       },
   ],
   librarian: [
     { label: 'Library Desk',       icon: Library,         to: '/admin/library'       },
     { label: 'Notifications',      icon: Bell,            to: '/notifications'       },
-    { label: 'Complaints Hub',     icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',       icon: MessageCircle,   to: '/admin/ai-help'       },
   ],
   inventory_manager: [
     { label: 'Inventory Desk',     icon: Boxes,           to: '/admin/inventory'     },
     { label: 'Notifications',      icon: Bell,            to: '/notifications'       },
-    { label: 'Complaints Hub',     icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',       icon: MessageCircle,   to: '/admin/ai-help'       },
   ],
   procurement_officer: [
     { label: 'Procurement Desk',   icon: Boxes,           to: '/admin/inventory'     },
     { label: 'Notifications',      icon: Bell,            to: '/notifications'       },
-    { label: 'Complaints Hub',     icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',       icon: MessageCircle,   to: '/admin/ai-help'       },
   ],
   storekeeper: [
     { label: 'Inventory Desk',     icon: Boxes,           to: '/admin/inventory'     },
     { label: 'Notifications',      icon: Bell,            to: '/notifications'       },
-    { label: 'Complaints Hub',     icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',       icon: MessageCircle,   to: '/admin/ai-help'       },
   ],
   hr_admin: [
     { label: 'HR & Workforce',     icon: Users,           to: '/admin/hr'            },
     { label: 'Notifications',      icon: Bell,            to: '/notifications'       },
-    { label: 'Complaints Hub',     icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',       icon: MessageCircle,   to: '/admin/ai-help'       },
   ],
   hr_officer: [
     { label: 'HR & Workforce',     icon: Users,           to: '/admin/hr'            },
     { label: 'Notifications',      icon: Bell,            to: '/notifications'       },
-    { label: 'Complaints Hub',     icon: Flag,            to: '/admin/complaints'    },
     { label: 'AI Help Desk',       icon: MessageCircle,   to: '/admin/ai-help'       },
   ],
   employee: [

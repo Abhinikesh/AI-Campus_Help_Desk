@@ -3,6 +3,7 @@
  */
 'use strict';
 
+const mongoose = require('mongoose');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
@@ -133,11 +134,18 @@ const resetUserPassword = asyncHandler(async (req, res) => {
   });
 });
 
+const CANONICAL_COMPLAINT_STATUSES = ['pending', 'in-progress', 'resolved'];
+
 // GET /api/admin/complaints
 const getAllComplaints = asyncHandler(async (req, res) => {
   const { status } = req.query;
   const filter = {};
-  if (status) filter.status = status;
+  if (status) {
+    if (!CANONICAL_COMPLAINT_STATUSES.includes(status)) {
+      throw new ApiError(400, `Invalid status filter. Must be one of: ${CANONICAL_COMPLAINT_STATUSES.join(', ')}`);
+    }
+    filter.status = status;
+  }
 
   const complaints = await Complaint.find(filter)
     .populate('raisedBy', 'name email role loginId')
@@ -146,26 +154,55 @@ const getAllComplaints = asyncHandler(async (req, res) => {
   return res.status(200).json({ success: true, data: complaints, message: 'Complaints fetched' });
 });
 
+// GET /api/admin/complaints/:id
+const getComplaintById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, 'Invalid complaint ID');
+  }
+
+  const complaint = await Complaint.findById(id)
+    .populate('raisedBy', 'name email role loginId');
+  if (!complaint) {
+    throw new ApiError(404, 'Complaint not found');
+  }
+
+  return res.status(200).json({ success: true, data: complaint, message: 'Complaint fetched' });
+});
+
 // PATCH /api/admin/complaints/:id/status
 const updateComplaintStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, 'Invalid complaint ID');
+  }
+
   const { status, adminResponse } = req.body;
-  const validStatuses = ['pending', 'in-progress', 'resolved'];
-  if (!validStatuses.includes(status)) {
-    throw new ApiError(400, `Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+  if (!status || !CANONICAL_COMPLAINT_STATUSES.includes(status)) {
+    throw new ApiError(400, `Invalid status. Must be one of: ${CANONICAL_COMPLAINT_STATUSES.join(', ')}`);
   }
 
   const update = { status };
-  if (adminResponse !== undefined) update.adminResponse = adminResponse;
-  if (status === 'resolved') update.resolvedAt = new Date();
 
-  const complaint = await Complaint.findByIdAndUpdate(req.params.id, update, { new: true });
+  // Phase 4: Resolution response integrity
+  if (status === 'resolved') {
+    if (!adminResponse || typeof adminResponse !== 'string' || !adminResponse.trim()) {
+      throw new ApiError(400, 'A non-empty resolution response is required when resolving a complaint');
+    }
+    update.adminResponse = adminResponse.trim();
+    update.resolvedAt = new Date();
+  } else if (adminResponse !== undefined) {
+    update.adminResponse = typeof adminResponse === 'string' ? adminResponse.trim() : '';
+  }
+
+  const complaint = await Complaint.findByIdAndUpdate(id, update, { new: true });
   if (!complaint) throw new ApiError(404, 'Complaint not found');
 
   if (complaint.raisedBy) {
     notificationService.createNotification({
       recipient: complaint.raisedBy,
       title: `Complaint Status: ${complaint.title}`,
-      message: `Your complaint status has been updated to "${status.toUpperCase()}". ${adminResponse ? `Response: ${adminResponse}` : ''}`,
+      message: `Your complaint status has been updated to "${status.toUpperCase()}". ${update.adminResponse ? `Response: ${update.adminResponse}` : ''}`,
       category: 'administrative',
       priority: status === 'resolved' ? 'normal' : 'high',
       relatedEntityType: 'Complaint',
@@ -739,6 +776,7 @@ module.exports = {
   activateUser,
   resetUserPassword,
   getAllComplaints,
+  getComplaintById,
   updateComplaintStatus,
   createAnnouncement,
   getAllAnnouncements,

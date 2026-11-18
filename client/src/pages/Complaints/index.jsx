@@ -64,7 +64,7 @@ const DetailDrawer = ({ complaint, onClose }) => {
             {[
               { label: 'Complaint Received', done: true, date: new Date(complaint.createdAt).toLocaleDateString('en-IN') },
               { label: 'Under Review',       done: complaint.status !== 'pending', date: 'In progress' },
-              { label: 'Resolved & Closed',  done: complaint.status === 'resolved' || complaint.status === 'closed', date: complaint.resolvedAt ? new Date(complaint.resolvedAt).toLocaleDateString('en-IN') : 'Pending' },
+              { label: 'Resolved',           done: complaint.status === 'resolved', date: complaint.resolvedAt ? new Date(complaint.resolvedAt).toLocaleDateString('en-IN') : 'Pending' },
             ].map((step, i, arr) => (
               <div key={i}>
                 <div className="ds-step">

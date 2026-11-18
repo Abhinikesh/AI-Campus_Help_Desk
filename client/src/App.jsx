@@ -180,7 +180,7 @@ const App = () => (
           <Route path="/admin/attendance"
             element={<ProtectedRoute role="admin"><AdminAttendanceHub /></ProtectedRoute>} />
           <Route path="/admin/complaints"
-            element={<ProtectedRoute role={['admin', 'warden', 'librarian', 'transport_manager', 'inventory_manager', 'procurement_officer', 'storekeeper', 'hr_admin', 'hr_officer']}><AdminComplaints /></ProtectedRoute>} />
+            element={<ProtectedRoute role="admin"><AdminComplaints /></ProtectedRoute>} />
           <Route path="/admin/ai-help"
             element={<ProtectedRoute role={['transport_manager', 'placement_officer', 'placement_coordinator', 'driver', 'attendant', 'event_organizer', 'club_coordinator', 'warden', 'librarian', 'inventory_manager', 'procurement_officer', 'storekeeper', 'hr_admin', 'hr_officer', 'employee']}><AIHelpDesk /></ProtectedRoute>} />
 

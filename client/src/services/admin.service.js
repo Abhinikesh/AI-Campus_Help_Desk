@@ -9,8 +9,12 @@ export const adminService = {
     const response = await api.get('/api/admin/users');
     return response.data;
   },
-  getComplaints: async () => {
-    const response = await api.get('/api/admin/complaints');
+  getComplaints: async (params = {}) => {
+    const response = await api.get('/api/admin/complaints', { params });
+    return response.data;
+  },
+  getComplaintById: async (id) => {
+    const response = await api.get(`/api/admin/complaints/${id}`);
     return response.data;
   },
   updateComplaintStatus: async (id, status, adminResponse) => {

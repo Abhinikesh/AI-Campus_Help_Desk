@@ -12,6 +12,7 @@ const {
   activateUser,
   resetUserPassword,
   getAllComplaints,
+  getComplaintById,
   updateComplaintStatus,
   createAnnouncement,
   getAllAnnouncements,
@@ -90,6 +91,7 @@ router.patch('/users/:id/deactivate',         deactivateUser);
 router.patch('/users/:id/activate',           activateUser);
 router.post('/users/:id/reset-password',      resetUserPassword);
 router.get('/complaints',                     getAllComplaints);
+router.get('/complaints/:id',                 getComplaintById);
 router.patch('/complaints/:id/status',        updateComplaintStatus);
 router.post('/announcements',                 createAnnouncement);
 router.get('/announcements',                  getAllAnnouncements);

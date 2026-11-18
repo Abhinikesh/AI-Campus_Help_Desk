@@ -12,6 +12,7 @@ const {
   getAnnouncements,
   raiseComplaint,
   getMyComplaints,
+  getComplaintById,
   getFees,
   getFeeById,
   getAttendance,
@@ -44,6 +45,7 @@ router.put('/profile',              rejectStudentProfileEdit);
 router.get('/announcements',        getAnnouncements);
 router.post('/complaints',          raiseComplaint);
 router.get('/complaints',           getMyComplaints);
+router.get('/complaints/:id',       getComplaintById);
 router.get('/fees',                 getFees);
 router.get('/fees/:id',             getFeeById);
 

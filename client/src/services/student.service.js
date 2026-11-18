@@ -29,6 +29,10 @@ export const studentService = {
     const response = await api.get('/api/student/complaints');
     return response.data;
   },
+  getComplaintById: async (id) => {
+    const response = await api.get(`/api/student/complaints/${id}`);
+    return response.data;
+  },
   createComplaint: async (complaintData) => {
     const response = await api.post('/api/student/complaints', complaintData);
     return response.data;

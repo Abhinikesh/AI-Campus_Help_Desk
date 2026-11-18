@@ -3,6 +3,7 @@
  */
 'use strict';
 
+const mongoose = require('mongoose');
 const Student = require('../models/Student');
 const Mark = require('../models/Mark');
 const Complaint = require('../models/Complaint');
@@ -98,10 +99,15 @@ const getAnnouncements = asyncHandler(async (req, res) => {
   return res.status(200).json({ success: true, data: announcements, message: 'OK' });
 });
 
+const ALLOWED_COMPLAINT_CATEGORIES = [
+  'academic', 'admin', 'administration', 'faculty', 'hostel',
+  'transport', 'placement', 'event', 'asset', 'infrastructure', 'other'
+];
+
 // POST /api/student/complaints
 const raiseComplaint = asyncHandler(async (req, res) => {
   const { title, description, category, raisedBy, studentId } = req.body || {};
-  if (!title || !description || !category) {
+  if (!title || !description || !category || !String(title).trim() || !String(description).trim() || !String(category).trim()) {
     throw new ApiError(400, 'title, description, and category are required');
   }
 
@@ -117,12 +123,16 @@ const raiseComplaint = asyncHandler(async (req, res) => {
   }
 
   const normalizedCategory = String(category).trim().toLowerCase();
+  if (!ALLOWED_COMPLAINT_CATEGORIES.includes(normalizedCategory)) {
+    throw new ApiError(400, `Invalid category. Must be one of: ${ALLOWED_COMPLAINT_CATEGORIES.join(', ')}`);
+  }
 
   const complaint = await Complaint.create({
     raisedBy: currentUserId,
     title: String(title).trim(),
     description: String(description).trim(),
     category: normalizedCategory,
+    status: 'pending',
   });
 
   return res.status(201).json({ success: true, data: complaint, message: 'Complaint submitted' });
@@ -133,6 +143,28 @@ const getMyComplaints = asyncHandler(async (req, res) => {
   const currentUserId = req.user.userId || req.user._id || req.user.id;
   const complaints = await Complaint.find({ raisedBy: currentUserId }).sort({ createdAt: -1 });
   return res.status(200).json({ success: true, data: complaints, message: 'OK' });
+});
+
+// GET /api/student/complaints/:id
+const getComplaintById = asyncHandler(async (req, res) => {
+  const currentUserId = String(req.user.userId || req.user._id || req.user.id);
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, 'Invalid complaint ID');
+  }
+
+  const complaint = await Complaint.findById(id);
+  if (!complaint) {
+    throw new ApiError(404, 'Complaint not found');
+  }
+
+  // Anti-IDOR: Student can only view their own complaint
+  if (String(complaint.raisedBy) !== currentUserId) {
+    throw new ApiError(403, 'Forbidden: You do not have permission to view this complaint');
+  }
+
+  return res.status(200).json({ success: true, data: complaint, message: 'OK' });
 });
 
 // GET /api/student/fees
@@ -962,6 +994,7 @@ module.exports = {
   getAnnouncements,
   raiseComplaint,
   getMyComplaints,
+  getComplaintById,
   getFees,
   getFeeById,
   getAttendance,

@@ -88,6 +88,11 @@ const AdminComplaints = () => {
     e.preventDefault();
     if (!selected) return;
 
+    if (updatingStatus === 'resolved' && !adminResponseText.trim()) {
+      showToast('A resolution response is required when resolving a complaint.', 'error');
+      return;
+    }
+
     try {
       setSavingResolution(true);
       const res = await adminService.updateComplaintStatus(
@@ -145,7 +150,7 @@ const AdminComplaints = () => {
   const totalCount = complaints.length;
   const pendingCount = complaints.filter((c) => c.status === 'pending').length;
   const inProgressCount = complaints.filter((c) => c.status === 'in-progress').length;
-  const resolvedCount = complaints.filter((c) => c.status === 'resolved' || c.status === 'closed').length;
+  const resolvedCount = complaints.filter((c) => c.status === 'resolved').length;
   const resolutionRate = totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : 0;
 
   if (loading) {
