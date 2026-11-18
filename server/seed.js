@@ -170,45 +170,9 @@ const seed = async (shouldExit = true) => {
       });
     }
 
-    const defaultPolicies = [
-      {
-        code: 'CL',
-        name: 'Casual Leave',
-        description: 'Standard paid short-term casual leave for personal commitments',
-        applicableCategory: 'all',
-        annualEntitlement: 12,
-        maxConsecutiveDays: 3,
-        requiresProof: false,
-        isActive: true,
-      },
-      {
-        code: 'SL',
-        name: 'Sick / Medical Leave',
-        description: 'Medical leave with doctor certificate requirement for extended recovery',
-        applicableCategory: 'all',
-        annualEntitlement: 10,
-        maxConsecutiveDays: 7,
-        requiresProof: true,
-        isActive: true,
-      },
-      {
-        code: 'EL',
-        name: 'Earned / Privileged Leave',
-        description: 'Annual accumulated privilege leave eligible for academic inter-semester breaks',
-        applicableCategory: 'all',
-        annualEntitlement: 15,
-        maxConsecutiveDays: 10,
-        requiresProof: false,
-        isActive: true,
-      },
-    ];
-
-    for (const p of defaultPolicies) {
-      const existing = await LeavePolicy.findOne({ code: p.code });
-      if (!existing) {
-        await LeavePolicy.create(p);
-      }
-    }
+    // Note (Part 10.7): Unapproved automatic default leave policy creation (CL/SL/EL)
+    // has been removed. Institutional leave policies must be explicitly configured through
+    // authorized administrative workflows. Existing policies are never deleted or modified.
 
     let empProfile = await EmployeeProfile.findOne({ user: facultyUser._id });
     if (!empProfile) {
@@ -231,9 +195,14 @@ const seed = async (shouldExit = true) => {
     }
 
     try {
-      await hrService.initializeLeaveBalancesForEmployee(empProfile._id, new Date().getFullYear(), facultyUser._id);
+      const activePolicyCount = await LeavePolicy.countDocuments({ isActive: true });
+      if (activePolicyCount > 0) {
+        await hrService.initializeLeaveBalancesForEmployee(empProfile._id, new Date().getFullYear(), facultyUser._id);
+      } else {
+        console.log('  ℹ️  No approved leave policies configured; skipping leave balance initialization in seed.');
+      }
     } catch (_) {}
-    console.log('  ✅ Institutional HR departments, designations, leave policies & employee profiles ready');
+    console.log('  ✅ Institutional HR departments, designations & employee profiles ready');
 
     // ── Subjects ──────────────────────────────────────────────────────────────
     const subjects = await Subject.insertMany([

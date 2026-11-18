@@ -1,15 +1,15 @@
 /**
  * server/scripts/sync_faculty_employee_profiles.js
- * Syncs and provisions EmployeeProfile records, Departments, Designations,
- * and LeavePolicies for all registered Faculty members.
+ * Syncs and provisions EmployeeProfile records, Departments, and Designations
+ * for all registered Faculty members.
+ * Part 10.7: Separates employee-profile synchronization from leave-policy creation.
+ * Unapproved default leave policies (CL/SL/EL) are never created silently.
  */
 'use strict';
 
 const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
-
-const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27018/campus-erp';
 
 const User = require('../models/User');
 const Faculty = require('../models/Faculty');
@@ -19,9 +19,13 @@ const EmployeeProfile = require('../models/EmployeeProfile');
 const LeavePolicy = require('../models/LeavePolicy');
 const { hrService } = require('../services/hr.service');
 
-async function sync() {
-  console.log('Connecting to MongoDB at:', MONGO_URI);
-  await mongoose.connect(MONGO_URI);
+async function syncFacultyProfiles(options = {}) {
+  const uri = options.mongoUri || process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27018/campus-erp';
+
+  if (mongoose.connection.readyState === 0) {
+    console.log('Connecting to MongoDB at:', uri);
+    await mongoose.connect(uri);
+  }
 
   // 1. Ensure Standard Departments
   const deptDefs = [
@@ -60,46 +64,18 @@ async function sync() {
     desigMap[d.code] = desig;
   }
 
-  // 3. Ensure Standard Leave Policies
-  const policyDefs = [
-    {
-      code: 'CL',
-      name: 'Casual Leave',
-      description: 'Standard paid short-term casual leave for personal commitments',
-      applicableCategory: 'all',
-      annualEntitlement: 12,
-      maxConsecutiveDays: 3,
-      requiresProof: false,
-      isActive: true
-    },
-    {
-      code: 'SL',
-      name: 'Sick / Medical Leave',
-      description: 'Medical leave with doctor certificate requirement for extended recovery',
-      applicableCategory: 'all',
-      annualEntitlement: 10,
-      maxConsecutiveDays: 7,
-      requiresProof: true,
-      isActive: true
-    },
-    {
-      code: 'EL',
-      name: 'Earned / Privileged Leave',
-      description: 'Annual accumulated privilege leave eligible for academic inter-semester breaks',
-      applicableCategory: 'all',
-      annualEntitlement: 15,
-      maxConsecutiveDays: 10,
-      requiresProof: false,
-      isActive: true
-    }
-  ];
+  // 3. Preflight Validation: Audit Existing Leave Policies
+  // Note (Part 10.7): Unapproved automatic default leave policy creation (CL/SL/EL)
+  // has been completely removed. Institutional policies must be created administratively.
+  const activePolicies = await LeavePolicy.find({ isActive: true });
+  const hasApprovedPolicies = activePolicies.length > 0;
 
-  for (const p of policyDefs) {
-    let policy = await LeavePolicy.findOne({ code: p.code });
-    if (!policy) {
-      await LeavePolicy.create(p);
-      console.log(`Created leave policy: ${p.name} (${p.code})`);
-    }
+  if (!hasApprovedPolicies) {
+    console.log('⚠️  [Preflight Notice] Zero active LeavePolicy records found in database.');
+    console.log('   EmployeeProfile synchronization will proceed safely, but leave balance allocation is skipped.');
+    console.log('   Approved institutional leave policies must be created administratively before balances can be allocated.');
+  } else {
+    console.log(`ℹ️  [Preflight] Verified ${activePolicies.length} active LeavePolicy record(s) available.`);
   }
 
   // 4. Sync Faculty to EmployeeProfile
@@ -108,6 +84,7 @@ async function sync() {
 
   let createdCount = 0;
   let existingCount = 0;
+  let balancesInitializedCount = 0;
 
   for (const u of facultyUsers) {
     let employee = await EmployeeProfile.findOne({ user: u._id });
@@ -159,11 +136,14 @@ async function sync() {
       existingCount++;
     }
 
-    // Initialize leave balances
-    try {
-      await hrService.initializeLeaveBalancesForEmployee(employee._id, new Date().getFullYear(), u._id);
-    } catch (e) {
-      // Ignore if already initialized
+    // Initialize leave balances only if approved policies exist
+    if (hasApprovedPolicies) {
+      try {
+        await hrService.initializeLeaveBalancesForEmployee(employee._id, new Date().getFullYear(), u._id);
+        balancesInitializedCount++;
+      } catch (e) {
+        // Balances already exist or employee category has no matching policy
+      }
     }
   }
 
@@ -171,13 +151,28 @@ async function sync() {
   console.log(`- Created EmployeeProfiles: ${createdCount}`);
   console.log(`- Existing EmployeeProfiles: ${existingCount}`);
   console.log(`- Total synced: ${createdCount + existingCount}`);
+  console.log(`- Leave Policies Active: ${activePolicies.length}`);
+  console.log(`- Balances Initialized: ${balancesInitializedCount}`);
 
-  await mongoose.disconnect();
-  console.log('Done!');
+  if (!options.skipDisconnect && mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+    console.log('Done!');
+  }
+
+  return {
+    createdCount,
+    existingCount,
+    totalSynced: createdCount + existingCount,
+    activePoliciesCount: activePolicies.length,
+    balancesInitializedCount,
+  };
 }
 
-sync().catch(err => {
-  console.error('Sync failed:', err);
-  process.exit(1);
-});
+module.exports = { syncFacultyProfiles };
 
+if (require.main === module) {
+  syncFacultyProfiles().catch(err => {
+    console.error('Sync failed:', err);
+    process.exit(1);
+  });
+}
