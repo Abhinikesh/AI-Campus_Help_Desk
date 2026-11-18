@@ -10,6 +10,7 @@ const {
   getAllUsers,
   deactivateUser,
   activateUser,
+  resetUserPassword,
   getAllComplaints,
   updateComplaintStatus,
   createAnnouncement,
@@ -87,6 +88,7 @@ router.get('/stats',                          getStats);
 router.get('/users',                          getAllUsers);
 router.patch('/users/:id/deactivate',         deactivateUser);
 router.patch('/users/:id/activate',           activateUser);
+router.post('/users/:id/reset-password',      resetUserPassword);
 router.get('/complaints',                     getAllComplaints);
 router.patch('/complaints/:id/status',        updateComplaintStatus);
 router.post('/announcements',                 createAnnouncement);

@@ -29,7 +29,6 @@ const AttendanceHistory         = lazyWithRetry(() => import('./pages/Attendance
 const FaceRegistration          = lazyWithRetry(() => import('./pages/Attendance/FaceRegistration'));
 const Exams                     = lazyWithRetry(() => import('./pages/Exams/index'));
 const Results                   = lazyWithRetry(() => import('./pages/Results/index'));
-const StudentDrive              = lazyWithRetry(() => import('./pages/Drive/index'));
 const Complaints                = lazyWithRetry(() => import('./pages/Complaints/index'));
 const AIHelpDesk                = lazyWithRetry(() => import('./pages/AIHelpDesk/index'));
 
@@ -117,8 +116,6 @@ const App = () => (
             element={<ProtectedRoute role="student"><Exams /></ProtectedRoute>} />
           <Route path="/student/results"
             element={<ProtectedRoute role="student"><Results /></ProtectedRoute>} />
-          <Route path="/student/drive"
-            element={<ProtectedRoute role={[]}><StudentDrive /></ProtectedRoute>} />
           <Route path="/student/complaints"
             element={<ProtectedRoute role="student"><Complaints /></ProtectedRoute>} />
           <Route path="/student/ai-help"
@@ -148,8 +145,6 @@ const App = () => (
           {/* ── Faculty Modules with Access Removed (Redirects to Faculty Dashboard) ── */}
           <Route path="/faculty/complaints"
             element={<ProtectedRoute role={[]}><Complaints /></ProtectedRoute>} />
-          <Route path="/faculty/drive"
-            element={<ProtectedRoute role={[]}><StudentDrive /></ProtectedRoute>} />
           <Route path="/faculty/inventory"
             element={<ProtectedRoute role={[]}><FacultyInventory /></ProtectedRoute>} />
           <Route path="/faculty/hr"

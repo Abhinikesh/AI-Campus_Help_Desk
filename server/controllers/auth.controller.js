@@ -187,7 +187,6 @@ const studentLogin = asyncHandler(async (req, res) => {
  */
 const login = asyncHandler(async (req, res) => {
   const { loginId, password, role } = req.body;
-  console.log(`👉 Login attempt received: loginId="${loginId}", role="${role}", passwordLength=${password?.length}`);
 
   if (!loginId || !password || !role) {
     throw new ApiError(400, 'loginId, password, and role are required');
@@ -202,12 +201,12 @@ const login = asyncHandler(async (req, res) => {
   const user = await User.findOne({ loginId: loginId.trim(), role: userRole }).select('+passwordHash');
 
   if (!user) {
-    console.log(`❌ Login failed: User not found for loginId="${loginId}", role="${role}"`);
+    console.log(`❌ Login failed: Invalid credentials for role="${role}"`);
     throw new ApiError(401, 'Invalid credentials');
   }
 
   if (!user.isActive) {
-    console.log(`❌ Login failed: Account deactivated for loginId="${loginId}"`);
+    console.log(`❌ Login failed: Account deactivated for role="${role}"`);
     throw new ApiError(403, 'Your account has been deactivated. Please contact admin.');
   }
 
@@ -215,12 +214,16 @@ const login = asyncHandler(async (req, res) => {
   if (!isMatch) {
     // Check if trimmed password matches (common autocomplete/paste issue)
     const isTrimmedMatch = await bcrypt.compare(password.trim(), user.passwordHash);
-    if (isTrimmedMatch) {
-      console.log(`⚠️ Password matched after trimming trailing/leading whitespace!`);
-    } else {
-      console.log(`❌ Login failed: Password mismatch for user ${user.loginId}`);
+    if (!isTrimmedMatch) {
+      console.log(`❌ Login failed: Invalid credentials for role="${role}"`);
       throw new ApiError(401, 'Invalid credentials');
     }
+  }
+
+  // Check if temporary credential has expired
+  if (user.mustChangePassword && user.temporaryPasswordExpiresAt && new Date() > user.temporaryPasswordExpiresAt) {
+    console.log(`❌ Login failed: Temporary password expired for role="${role}"`);
+    throw new ApiError(401, 'Temporary password has expired. Please contact administrator.');
   }
 
   // Update last login timestamp
@@ -230,7 +233,7 @@ const login = asyncHandler(async (req, res) => {
   const token = generateToken(user);
   setCookieToken(res, token);
 
-  console.log(`✅ Login: ${loginId} [${role}]`);
+  console.log(`✅ Login: ${user.loginId} [${role}]`);
 
   return res.status(200).json({
     success: true,
@@ -239,7 +242,7 @@ const login = asyncHandler(async (req, res) => {
       role:       user.role,
       name:       user.name,
       redirectTo: ROLE_REDIRECTS[user.role],
-      mustChangePassword: user.mustChangePassword,
+      mustChangePassword: Boolean(user.mustChangePassword),
     },
     message: 'Login successful',
   });
@@ -291,6 +294,9 @@ const changePassword = asyncHandler(async (req, res) => {
   if (newPassword.length < 8) {
     throw new ApiError(400, 'New password must be at least 8 characters');
   }
+  if (currentPassword === newPassword) {
+    throw new ApiError(400, 'New password must be different from current password');
+  }
 
   const user = await User.findById(req.user.userId).select('+passwordHash');
   if (!user) throw new ApiError(404, 'User not found');
@@ -300,11 +306,20 @@ const changePassword = asyncHandler(async (req, res) => {
 
   user.passwordHash = await bcrypt.hash(newPassword, 12);
   user.mustChangePassword = false;
+  user.temporaryPasswordExpiresAt = null;
+  user.passwordChangedAt = new Date();
   await user.save();
+
+  // Invalidate existing session token by issuing fresh authenticated token
+  const token = generateToken(user);
+  setCookieToken(res, token);
 
   return res.status(200).json({
     success: true,
-    data: null,
+    data: {
+      token,
+      mustChangePassword: false,
+    },
     message: 'Password changed successfully',
   });
 });

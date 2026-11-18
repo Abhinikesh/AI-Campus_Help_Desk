@@ -3,6 +3,8 @@
  */
 'use strict';
 
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Complaint = require('../models/Complaint');
 const Announcement = require('../models/Announcement');
@@ -88,6 +90,47 @@ const activateUser = asyncHandler(async (req, res) => {
   if (!user) throw new ApiError(404, 'User not found');
 
   return res.status(200).json({ success: true, data: user, message: 'User activated' });
+});
+
+// POST /api/admin/users/:id/reset-password
+const resetUserPassword = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { customPassword } = req.body || {};
+
+  const user = await User.findById(id).select('+passwordHash');
+  if (!user) throw new ApiError(404, 'User not found');
+
+  // Generate cryptographically secure random temporary password if not provided
+  let tempPassword = customPassword;
+  if (!tempPassword) {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+    const bytes = crypto.randomBytes(16);
+    tempPassword = Array.from(bytes).map((b) => chars[b % chars.length]).join('');
+  }
+
+  if (tempPassword.length < 8) {
+    throw new ApiError(400, 'Temporary password must be at least 8 characters');
+  }
+
+  user.passwordHash = await bcrypt.hash(tempPassword, 12);
+  user.mustChangePassword = true;
+  user.temporaryPasswordExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+  user.passwordChangedAt = null;
+  await user.save();
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      userId: user._id,
+      loginId: user.loginId,
+      name: user.name,
+      role: user.role,
+      temporaryPassword: tempPassword,
+      mustChangePassword: true,
+      expiresAt: user.temporaryPasswordExpiresAt,
+    },
+    message: 'User password reset successfully. Please share temporary credentials securely with the user.',
+  });
 });
 
 // GET /api/admin/complaints
@@ -694,6 +737,7 @@ module.exports = {
   getAllUsers,
   deactivateUser,
   activateUser,
+  resetUserPassword,
   getAllComplaints,
   updateComplaintStatus,
   createAnnouncement,

@@ -138,18 +138,22 @@ async function seed() {
 
   // ── 2. Upsert Faculty Users ────────────────────────────────────────────────
   const bcrypt = require('bcryptjs');
-  const defaultPwHash = await bcrypt.hash('Faculty@123', 10);
+  const crypto = require('crypto');
 
   const facultyMap = {}; // abbr -> Faculty doc
   for (const t of TEACHERS) {
     let userDoc = await User.findOne({ loginId: t.loginId });
     if (!userDoc) {
+      const uniquePass = crypto.randomBytes(16).toString('hex');
+      const uniqueHash = await bcrypt.hash(uniquePass, 12);
       userDoc = await User.create({
         loginId: t.loginId,
         name: t.name,
         email: `${t.loginId.toLowerCase()}@campussphere.edu`,
         role: 'faculty',
-        passwordHash: defaultPwHash,
+        passwordHash: uniqueHash,
+        mustChangePassword: true,
+        temporaryPasswordExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         isActive: true,
       });
     }

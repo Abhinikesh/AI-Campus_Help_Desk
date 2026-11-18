@@ -122,10 +122,8 @@ test('Faculty/Teacher Module Access Cleanup Suite', async (t) => {
     const appPath = path.join(CLIENT_ROOT, 'App.jsx');
     const content = fs.readFileSync(appPath, 'utf8');
 
-    // Faculty routes for Drive, Complaints, and AI Help must have empty allowed roles
-    const driveRouteMatch = content.match(/<Route\s+path="\/faculty\/drive"\s+element=\{<ProtectedRoute\s+role=\{([^}]+)\}>/);
-    assert.ok(driveRouteMatch, '/faculty/drive route must exist and be protected');
-    assert.equal(driveRouteMatch[1].trim(), '[]', '/faculty/drive role must be empty array []');
+    // Faculty routes: Drive is completely removed per Part 10.1; Complaints & AI Help disallowed
+    assert.ok(!content.includes('/faculty/drive'), '/faculty/drive route must be completely removed from App.jsx');
 
     const complaintsRouteMatch = content.match(/<Route\s+path="\/faculty\/complaints"\s+element=\{<ProtectedRoute\s+role=\{([^}]+)\}>/);
     assert.ok(complaintsRouteMatch, '/faculty/complaints route must exist and be protected');

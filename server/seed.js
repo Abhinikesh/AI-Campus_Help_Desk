@@ -8,6 +8,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt   = require('bcryptjs');
+const crypto   = require('crypto');
 const connectDB = require('./config/db');
 
 const User               = require('./models/User');
@@ -31,11 +32,8 @@ const seed = async (shouldExit = true) => {
       await connectDB();
     }
 
-    console.log('🗑️  Clearing existing collections...');
+    console.log('🧹 Clearing operational collections (preserving users & institutional registries)...');
     await Promise.all([
-      User.deleteMany({}),
-      Student.deleteMany({}),
-      Faculty.deleteMany({}),
       Subject.deleteMany({}),
       Fee.deleteMany({}),
       Complaint.deleteMany({}),
@@ -46,29 +44,45 @@ const seed = async (shouldExit = true) => {
       FaceEmbedding.deleteMany({}),
       AttendanceSettings.deleteMany({}),
     ]);
-    console.log('✅ Collections cleared');
+    console.log('✅ Operational collections cleared');
 
     // ── Users ────────────────────────────────────────────────────────────────
-    console.log('👤 Creating users...');
-    const adminHash = await bcrypt.hash('Admin@1234', SALT);
-    const admin = await User.create({
-      name: 'Campus Admin',
-      email: 'admin@campus.edu',
-      loginId: 'ADMIN001',
-      passwordHash: adminHash,
-      role: 'admin',
-    });
+    console.log('👤 Ensuring users with secure credentials...');
+    let admin = await User.findOne({ loginId: 'ADMIN001', role: 'admin' });
+    if (!admin) {
+      const tempAdminPass = crypto.randomBytes(16).toString('hex');
+      const adminHash = await bcrypt.hash(tempAdminPass, SALT);
+      admin = await User.create({
+        name: 'Campus Admin',
+        email: 'admin@campus.edu',
+        loginId: 'ADMIN001',
+        passwordHash: adminHash,
+        role: 'admin',
+        mustChangePassword: true,
+        temporaryPasswordExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+      console.log('  ✅ Admin account created. Use bootstrap_admin script to set/retrieve credentials.');
+    } else {
+      console.log('  ℹ️ Admin account ADMIN001 already exists. Preserving credentials.');
+    }
 
-    const facultyHash = await bcrypt.hash('Faculty@123', SALT);
-    const facultyUser = await User.create({
-      name: 'Dr. Priya Mehta',
-      email: 'priya.mehta@campus.edu',
-      loginId: 'FAC001',
-      passwordHash: facultyHash,
-      role: 'faculty',
-    });
-
-    const studentHash = await bcrypt.hash('Student@123', SALT);
+    let facultyUser = await User.findOne({ loginId: 'FAC001', role: 'faculty' });
+    if (!facultyUser) {
+      const tempFacultyPass = crypto.randomBytes(16).toString('hex');
+      const facultyHash = await bcrypt.hash(tempFacultyPass, SALT);
+      facultyUser = await User.create({
+        name: 'Dr. Priya Mehta',
+        email: 'priya.mehta@campus.edu',
+        loginId: 'FAC001',
+        passwordHash: facultyHash,
+        role: 'faculty',
+        mustChangePassword: true,
+        temporaryPasswordExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+      console.log('  ✅ Faculty account created with unique temporary credentials.');
+    } else {
+      console.log('  ℹ️ Faculty account FAC001 already exists. Preserving credentials.');
+    }
 
     const studentData = [
       { name: 'Arjun Sharma', roll: '20240001', gender: 'male', phone: '9000000001' },
@@ -85,32 +99,40 @@ const seed = async (shouldExit = true) => {
     const studentProfiles = [];
 
     for (const s of studentData) {
-      const u = await User.create({
-        name: s.name,
-        email: `${s.roll.toLowerCase()}@campus.edu`,
-        loginId: s.roll,
-        passwordHash: studentHash,
-        role: 'student',
-      });
+      let u = await User.findOne({ loginId: s.roll, role: 'student' });
+      if (!u) {
+        const studentRandomPass = crypto.randomBytes(16).toString('hex');
+        const studentHash = await bcrypt.hash(studentRandomPass, SALT);
+        u = await User.create({
+          name: s.name,
+          email: `${s.roll.toLowerCase()}@campus.edu`,
+          loginId: s.roll,
+          passwordHash: studentHash,
+          role: 'student',
+        });
+      }
       studentUsers.push(u);
 
-      const sp = await Student.create({
-        user: u._id,
-        rollNumber: s.roll,
-        fullName: s.name,
-        email: u.email,
-        phone: s.phone,
-        branch: 'Computer Science & Engineering',
-        program: 'B.Tech',
-        semester: 4,
-        section: 'A',
-        admissionYear: 2024,
-        gender: s.gender,
-        status: 'active',
-      });
+      let sp = await Student.findOne({ rollNumber: s.roll });
+      if (!sp) {
+        sp = await Student.create({
+          user: u._id,
+          rollNumber: s.roll,
+          fullName: s.name,
+          email: u.email,
+          phone: s.phone,
+          branch: 'Computer Science & Engineering',
+          program: 'B.Tech',
+          semester: 4,
+          section: 'A',
+          admissionYear: 2024,
+          gender: s.gender,
+          status: 'active',
+        });
+      }
       studentProfiles.push(sp);
     }
-    console.log(`  ✅ 1 Admin, 1 Faculty, and ${studentProfiles.length} Students created`);
+    console.log(`  ✅ Verified Admin, Faculty, and ${studentProfiles.length} Student accounts`);
 
     // ── Faculty Profile ───────────────────────────────────────────────────────
     await Faculty.create({
@@ -311,10 +333,9 @@ const seed = async (shouldExit = true) => {
 
     console.log('\n🎉 Comprehensive seed completed successfully!');
     console.log('─────────────────────────────────────────────────');
-    console.log('Admin:   loginId=ADMIN001   password=Admin@1234');
-    console.log('Faculty: loginId=FAC001     password=Faculty@123');
-    console.log('Student: loginId=20240001   password=Student@123 (Arjun Sharma)');
-    console.log('Student: loginId=20240002   password=Student@123 (Abhinikesh)');
+    console.log('Admin:   loginId=ADMIN001   (Run npm run bootstrap:admin to set/retrieve credentials)');
+    console.log('Faculty: loginId=FAC001     (Use Admin portal to manage individual credentials)');
+    console.log('Student: Roll Number + Registered Gmail (Part 7 Passwordless Policy)');
     console.log('─────────────────────────────────────────────────');
 
     if (shouldExit) process.exit(0);

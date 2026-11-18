@@ -65,6 +65,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    temporaryPasswordExpiresAt: {
+      type: Date,
+      default: null,
+    },
+    passwordChangedAt: {
+      type: Date,
+      default: null,
+    },
     lastLoginAt: {
       type: Date,
       default: null,
