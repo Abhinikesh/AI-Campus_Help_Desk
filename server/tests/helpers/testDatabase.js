@@ -6,13 +6,68 @@ const DEFAULT_ISOLATED_URI = 'mongodb://127.0.0.1:27018/campus-erp-test-isolated
 const TEST_DB_URI = process.env.TEST_MONGODB_URI || DEFAULT_ISOLATED_URI;
 
 /**
- * Ensures the given MongoDB connection URI targets an isolated test database
- * and NEVER targets development or production databases.
- * Throws a fatal Error if any forbidden database name is detected.
+ * Explicit, strictly audited allowlist of approved test databases.
+ * No database is accepted merely because its name contains 'test', 'isolated', or 'staging'.
+ * Every database in this set has been audited and verified safe for automated test fixtures.
+ */
+const APPROVED_TEST_DATABASES = new Set([
+  // Core test fixtures & isolated database targets
+  'campus-erp-test-isolated',
+  'campus-erp-test-search360',
+  'campus-erp-staging-isolated',
+  'ci-test-db',
+  'ci-test-isolated-db',
+  'ci_test_isolated_db',
+  'test_attendance_isolated',
+  'test_smart_attendance_isolated',
+  'test_smart_attendance',
+  'test_unit_isolated',
+  'test_memory_db',
+
+  // Feature-specific & phase-specific test suites
+  'test_admin_profile_mgmt',
+  'test_student_auth',
+  'test_student_hardening',
+  'test_phase3_9a',
+  'test_phase3_9b',
+  'test_phase3_8',
+  'test_phase3_7',
+  'test_phase3_6',
+  'test_phase3_3a_isolated',
+  'campus-erp-test-phase3-3a-isolated',
+  'campus-erp-test-phase3-1-2-isolated',
+  'campus-erp-test-phase3-1-isolated',
+  'campus-erp-test-phase3-2-2-isolated',
+  'test_uploads_security_part10_2',
+  'test_faculty_phone_privacy',
+  'test_redos_security',
+  'test_security_part10',
+  'test_isolated',
+]);
+
+/**
+ * Explicitly forbidden databases that must NEVER be accessed under any testing scenario.
+ */
+const FORBIDDEN_DATABASES = new Set([
+  'campus-erp',
+  'production',
+  'prod',
+  'development',
+  'admin',
+  'local',
+  'config',
+  'test',
+]);
+
+/**
+ * Ensures the given MongoDB connection URI targets an explicitly approved test database
+ * and NEVER targets operational, development, or production databases.
+ * Broad substring matching is strictly prohibited; unknown databases fail closed.
  *
  * @param {string} uri - MongoDB connection string
  * @param {Object} [options]
  * @param {boolean} [options.disallowPort27018=false] - When true, rejects any URI on canonical port 27018
+ * @param {boolean} [options.isMemoryServer=false] - When true, indicates an ephemeral in-memory server
  * @returns {boolean} true if safe
  */
 function verifyTestDatabaseIsolation(uri, options = {}) {
@@ -25,8 +80,14 @@ function verifyTestDatabaseIsolation(uri, options = {}) {
 
   const cleanUri = targetUri.trim();
 
-  // Strict port 27018 check if explicitly requested
-  if (options.disallowPort27018 && (cleanUri.includes(':27018') || cleanUri.includes('/27018'))) {
+  // Basic URI format check
+  if (!cleanUri.startsWith('mongodb://') && !cleanUri.startsWith('mongodb+srv://')) {
+    throw new Error('TEST SAFETY VIOLATION: Database URI must begin with mongodb:// or mongodb+srv://');
+  }
+
+  // Canonical port 27018 check
+  const isPort27018 = cleanUri.includes(':27018') || cleanUri.includes('/27018');
+  if (isPort27018 && options.disallowPort27018) {
     throw new Error('TEST SAFETY VIOLATION: Refusing connection to operational port 27018 in strict isolation mode.');
   }
 
@@ -41,27 +102,48 @@ function verifyTestDatabaseIsolation(uri, options = {}) {
     throw new Error('TEST SAFETY VIOLATION: Database name could not be parsed from URI.');
   }
 
-  const forbiddenNames = ['campus-erp', 'test', 'production', 'prod', 'development', 'admin', 'local', 'config'];
   const lowerName = dbName.toLowerCase();
 
-  if (forbiddenNames.includes(lowerName) || lowerName === 'campus-erp') {
+  // 1. Strict rejection of canonical operational database and forbidden system databases
+  if (FORBIDDEN_DATABASES.has(lowerName) || lowerName === 'campus-erp') {
     throw new Error(
-      `TEST SAFETY VIOLATION: Refusing to run tests against '${dbName}'. Tests must use an isolated test database containing 'test' or 'isolated' (e.g. campus-erp-test-isolated).`
+      `TEST SAFETY VIOLATION: Refusing to run tests against '${dbName}'. Operational and production databases are strictly forbidden.`
     );
   }
 
-  if (!lowerName.includes('test') && !lowerName.includes('isolated') && !lowerName.includes('staging')) {
+  // 2. If port 27018 is used without strict mode, ensure it only targets approved test databases
+  if (isPort27018 && !APPROVED_TEST_DATABASES.has(lowerName)) {
     throw new Error(
-      `TEST SAFETY VIOLATION: Database name '${dbName}' must include 'test' or 'isolated' to guarantee isolation.`
+      `TEST SAFETY VIOLATION: Refusing connection to port 27018 for unapproved database '${dbName}'.`
     );
   }
 
-  return true;
+  // 3. Strict allowlist validation: approved database targets succeed immediately
+  if (APPROVED_TEST_DATABASES.has(lowerName)) {
+    return true;
+  }
+
+  // 4. Dynamic MongoMemoryServer databases validation:
+  // Support dynamically generated MongoMemoryServer connection strings,
+  // ensuring they run on loopback, on an ephemeral port (NEVER 27018), and match dynamic UUID/hex format.
+  const hostPart = segments[1] || '';
+  const isLoopback = hostPart.startsWith('127.0.0.1') || hostPart.startsWith('localhost');
+  const isEphemeralPort = !hostPart.includes(':27018') && !hostPart.includes(':27017');
+  const isDynamicHexOrUuid = /^[0-9a-f]{24,36}$/i.test(lowerName) || /^mongo-mem-[a-zA-Z0-9]+$/i.test(lowerName);
+
+  if (isLoopback && isEphemeralPort && (options.isMemoryServer || isDynamicHexOrUuid)) {
+    return true;
+  }
+
+  // 5. Fail closed: Reject all unknown database names by default
+  throw new Error(
+    `TEST SAFETY VIOLATION: Database name '${dbName}' is not in the approved test database allowlist. Unknown database names are rejected by default.`
+  );
 }
 
 /**
- * Validates that an active Mongoose connection is strictly connected to an isolated test database.
- * Throws a fatal Error if connected to campus-erp or any non-isolated database.
+ * Validates that an active Mongoose connection is strictly connected to an approved isolated test database.
+ * Throws a fatal Error if connected to campus-erp, production, or any non-allowlisted database.
  *
  * @param {mongoose.Connection} [connection=mongoose.connection]
  * @returns {boolean} true if active connection is isolated
@@ -77,24 +159,40 @@ function assertConnectionIsolated(connection = mongoose.connection) {
   }
 
   const lowerName = dbName.toLowerCase();
-  const forbiddenNames = ['campus-erp', 'production', 'prod', 'development', 'admin', 'local', 'config'];
 
-  if (forbiddenNames.includes(lowerName) || lowerName === 'campus-erp') {
+  // 1. Strict rejection of canonical operational database and forbidden system databases
+  if (FORBIDDEN_DATABASES.has(lowerName) || lowerName === 'campus-erp') {
     throw new Error(`TEST SAFETY VIOLATION: Active connection targets forbidden database '${dbName}'.`);
   }
 
-  if (!lowerName.includes('test') && !lowerName.includes('isolated') && !lowerName.includes('staging')) {
-    throw new Error(`TEST SAFETY VIOLATION: Active database '${dbName}' must include 'test' or 'isolated'.`);
+  // 2. Strict allowlist validation
+  if (APPROVED_TEST_DATABASES.has(lowerName)) {
+    return true;
   }
 
-  return true;
+  // 3. Ephemeral MongoMemoryServer dynamic database validation
+  const host = connection.host;
+  const port = connection.port;
+  const isLoopback = host === '127.0.0.1' || host === 'localhost';
+  const isNotOperationalPort = port && port !== 27018 && port !== 27017;
+  const isDynamicHexOrUuid = /^[0-9a-f]{24,36}$/i.test(lowerName) || /^mongo-mem-[a-zA-Z0-9]+$/i.test(lowerName);
+
+  if (isLoopback && isNotOperationalPort && isDynamicHexOrUuid) {
+    return true;
+  }
+
+  // 4. Fail closed: Reject unapproved active databases
+  throw new Error(
+    `TEST SAFETY VIOLATION: Active database '${dbName}' is not in the approved test database allowlist. Cleanup and operations aborted.`
+  );
 }
 
 /**
  * Guard that must be called prior to dropping or performing bulk deletion in tests.
- * Ensures the target database is verified safe and not the canonical database.
+ * Ensures the target database is verified safe and strictly in the approved allowlist.
  *
  * @param {mongoose.Connection} [connection=mongoose.connection]
+ * @returns {boolean} true if cleanup is permitted
  */
 function guardCleanup(connection = mongoose.connection) {
   assertConnectionIsolated(connection);
@@ -102,9 +200,11 @@ function guardCleanup(connection = mongoose.connection) {
 }
 
 module.exports = {
+  DEFAULT_ISOLATED_URI,
   TEST_DB_URI,
+  APPROVED_TEST_DATABASES,
+  FORBIDDEN_DATABASES,
   verifyTestDatabaseIsolation,
   assertConnectionIsolated,
   guardCleanup,
 };
-
