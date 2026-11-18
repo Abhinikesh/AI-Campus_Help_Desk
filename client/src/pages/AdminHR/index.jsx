@@ -112,6 +112,29 @@ const AdminHR = () => {
   const [editEmpSubmitting, setEditEmpSubmitting] = useState(false);
 
   const [showAddPolicyModal, setShowAddPolicyModal] = useState(false);
+  const [addPolicyError, setAddPolicyError] = useState('');
+  const [addPolicySubmitting, setAddPolicySubmitting] = useState(false);
+
+  const [showEditPolicyModal, setShowEditPolicyModal] = useState(false);
+  const [editingPolicy, setEditingPolicy] = useState({
+    _id: '',
+    name: '',
+    code: '',
+    description: '',
+    annualEntitlement: '',
+    applicableCategory: 'all',
+    accrualFrequency: 'annual',
+    maxConsecutiveDays: '',
+    minNoticeDays: '',
+    carryForwardMax: '',
+    allowNegativeBalance: false,
+    isActive: true
+  });
+  const [editPolicyError, setEditPolicyError] = useState('');
+  const [editPolicySubmitting, setEditPolicySubmitting] = useState(false);
+
+  const [showViewPolicyModal, setShowViewPolicyModal] = useState(false);
+  const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [showReviewLeaveModal, setShowReviewLeaveModal] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState(null);
   const [reviewAction, setReviewAction] = useState('approve');
@@ -138,18 +161,20 @@ const AdminHR = () => {
   };
   const [newEmp, setNewEmp] = useState(initialNewEmp);
 
-  const [newPolicy, setNewPolicy] = useState({
+  const initialNewPolicy = {
     name: '',
     code: '',
     description: '',
-    annualEntitlement: 12,
+    annualEntitlement: '',
     applicableCategory: 'all',
     accrualFrequency: 'annual',
-    maxConsecutiveDays: 14,
-    minNoticeDays: 2,
-    carryForwardMax: 5,
-    allowNegativeBalance: false
-  });
+    maxConsecutiveDays: '',
+    minNoticeDays: '',
+    carryForwardMax: '',
+    allowNegativeBalance: false,
+    isActive: true
+  };
+  const [newPolicy, setNewPolicy] = useState(initialNewPolicy);
 
   const [newAnnouncement, setNewAnnouncement] = useState({
     title: '',
@@ -532,10 +557,126 @@ const AdminHR = () => {
   const handleCreatePolicy = async (e) => {
     e.preventDefault();
     try {
-      const res = await hrService.createLeavePolicy(newPolicy);
+      setAddPolicySubmitting(true);
+      setAddPolicyError('');
+
+      if (!newPolicy.name.trim() || !newPolicy.code.trim() || newPolicy.annualEntitlement === '' || newPolicy.annualEntitlement === null) {
+        setAddPolicyError('Policy Name, Unique Code, and Annual Entitlement are required.');
+        setAddPolicySubmitting(false);
+        return;
+      }
+
+      const entitlement = Number(newPolicy.annualEntitlement);
+      if (isNaN(entitlement) || entitlement < 0) {
+        setAddPolicyError('Annual Entitlement must be a non-negative number.');
+        setAddPolicySubmitting(false);
+        return;
+      }
+
+      const payload = {
+        name: newPolicy.name.trim(),
+        code: newPolicy.code.trim().toUpperCase(),
+        description: newPolicy.description ? newPolicy.description.trim() : '',
+        annualEntitlement: entitlement,
+        applicableCategory: newPolicy.applicableCategory || 'all',
+        accrualFrequency: newPolicy.accrualFrequency || 'annual',
+        maxConsecutiveDays: newPolicy.maxConsecutiveDays !== '' ? Number(newPolicy.maxConsecutiveDays) : 30,
+        minNoticeDays: newPolicy.minNoticeDays !== '' ? Number(newPolicy.minNoticeDays) : 0,
+        carryForwardMax: newPolicy.carryForwardMax !== '' ? Number(newPolicy.carryForwardMax) : 0,
+        allowNegativeBalance: Boolean(newPolicy.allowNegativeBalance),
+        isActive: Boolean(newPolicy.isActive)
+      };
+
+      const res = await hrService.createLeavePolicy(payload);
       if (res.success) {
-        showToast('Leave policy created successfully', 'success');
+        showToast(`Leave policy ${res.data.code} created successfully!`, 'success');
         setShowAddPolicyModal(false);
+        setNewPolicy(initialNewPolicy);
+        const polRes = await hrService.getLeavePolicies();
+        if (polRes.success) setLeavePolicies(polRes.data);
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to create leave policy';
+      setAddPolicyError(msg);
+      showToast(msg, 'error');
+    } finally {
+      setAddPolicySubmitting(false);
+    }
+  };
+
+  const handleOpenEditPolicy = (pol) => {
+    setEditingPolicy({
+      _id: pol._id,
+      name: pol.name || '',
+      code: pol.code || '',
+      description: pol.description || '',
+      annualEntitlement: pol.annualEntitlement !== undefined ? pol.annualEntitlement : '',
+      applicableCategory: pol.applicableCategory || 'all',
+      accrualFrequency: pol.accrualFrequency || 'annual',
+      maxConsecutiveDays: pol.maxConsecutiveDays !== undefined ? pol.maxConsecutiveDays : '',
+      minNoticeDays: pol.minNoticeDays !== undefined ? pol.minNoticeDays : '',
+      carryForwardMax: pol.carryForwardMax !== undefined ? pol.carryForwardMax : '',
+      allowNegativeBalance: Boolean(pol.allowNegativeBalance),
+      isActive: pol.isActive !== undefined ? pol.isActive : true
+    });
+    setEditPolicyError('');
+    setShowEditPolicyModal(true);
+  };
+
+  const handleSaveEditPolicy = async (e) => {
+    e.preventDefault();
+    if (!editingPolicy._id) return;
+    try {
+      setEditPolicySubmitting(true);
+      setEditPolicyError('');
+
+      if (!editingPolicy.name.trim() || editingPolicy.annualEntitlement === '' || editingPolicy.annualEntitlement === null) {
+        setEditPolicyError('Policy Name and Annual Entitlement are required.');
+        setEditPolicySubmitting(false);
+        return;
+      }
+
+      const entitlement = Number(editingPolicy.annualEntitlement);
+      if (isNaN(entitlement) || entitlement < 0) {
+        setEditPolicyError('Annual Entitlement must be a non-negative number.');
+        setEditPolicySubmitting(false);
+        return;
+      }
+
+      const payload = {
+        name: editingPolicy.name.trim(),
+        description: editingPolicy.description ? editingPolicy.description.trim() : '',
+        annualEntitlement: entitlement,
+        applicableCategory: editingPolicy.applicableCategory || 'all',
+        accrualFrequency: editingPolicy.accrualFrequency || 'annual',
+        maxConsecutiveDays: editingPolicy.maxConsecutiveDays !== '' ? Number(editingPolicy.maxConsecutiveDays) : 30,
+        minNoticeDays: editingPolicy.minNoticeDays !== '' ? Number(editingPolicy.minNoticeDays) : 0,
+        carryForwardMax: editingPolicy.carryForwardMax !== '' ? Number(editingPolicy.carryForwardMax) : 0,
+        allowNegativeBalance: Boolean(editingPolicy.allowNegativeBalance),
+        isActive: Boolean(editingPolicy.isActive)
+      };
+
+      const res = await hrService.updateLeavePolicy(editingPolicy._id, payload);
+      if (res.success) {
+        showToast(`Leave policy ${editingPolicy.code} updated successfully!`, 'success');
+        setShowEditPolicyModal(false);
+        const polRes = await hrService.getLeavePolicies();
+        if (polRes.success) setLeavePolicies(polRes.data);
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to update leave policy';
+      setEditPolicyError(msg);
+      showToast(msg, 'error');
+    } finally {
+      setEditPolicySubmitting(false);
+    }
+  };
+
+  const handleTogglePolicyActive = async (policyId, currentStatus) => {
+    try {
+      const res = await hrService.updateLeavePolicy(policyId, { isActive: !currentStatus });
+      if (res.success) {
+        showToast(`Policy ${!currentStatus ? 'activated' : 'deactivated'} successfully`, 'success');
         const polRes = await hrService.getLeavePolicies();
         if (polRes.success) setLeavePolicies(polRes.data);
       }
@@ -1144,31 +1285,135 @@ const AdminHR = () => {
 
               {/* Active Leave Policies Section */}
               <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <h3 className="font-semibold text-slate-900 mb-3">Institutional Leave Policies</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {leavePolicies.map((pol) => (
-                    <div
-                      key={pol._id}
-                      className="p-4 rounded-lg border border-slate-200 bg-slate-50"
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="font-semibold text-slate-900">Institutional Leave Policies</h3>
+                    <p className="text-xs text-slate-500">
+                      Approved leave categories, quotas, and entitlement policies established by institutional administration.
+                    </p>
+                  </div>
+                  {['admin', 'hr_admin'].includes(user?.role) && (
+                    <button
+                      onClick={() => {
+                        setAddPolicyError('');
+                        setNewPolicy(initialNewPolicy);
+                        setShowAddPolicyModal(true);
+                      }}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors whitespace-nowrap"
                     >
-                      <div className="flex justify-between items-start">
-                        <span className="font-semibold text-slate-900">{pol.name}</span>
-                        <span className="text-xs font-mono bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">
-                          {pol.code}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1">{pol.description || 'Institutional leave benefit'}</p>
-                      <div className="mt-3 flex justify-between text-xs text-slate-600">
-                        <span>Annual Quota:</span>
-                        <span className="font-semibold">{pol.annualEntitlement} days</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-slate-600 mt-1">
-                        <span>Max Consecutive:</span>
-                        <span>{pol.maxConsecutiveDays} days</span>
-                      </div>
-                    </div>
-                  ))}
+                      <Plus className="w-3.5 h-3.5" />
+                      Add Leave Policy
+                    </button>
+                  )}
                 </div>
+
+                {leavePolicies.length === 0 ? (
+                  <div className="py-10 text-center text-slate-400 max-w-sm mx-auto space-y-2">
+                    <Calendar className="w-8 h-8 text-slate-300 mx-auto" />
+                    <p className="font-medium text-slate-700">No institutional leave policies defined yet</p>
+                    <p className="text-xs text-slate-500">
+                      Institutional leave policies must be explicitly established by an authorized administrator. No policies are created automatically.
+                    </p>
+                    {['admin', 'hr_admin'].includes(user?.role) && (
+                      <button
+                        onClick={() => {
+                          setAddPolicyError('');
+                          setNewPolicy(initialNewPolicy);
+                          setShowAddPolicyModal(true);
+                        }}
+                        className="mt-2 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded-lg border border-indigo-200 inline-flex items-center gap-1.5 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Create First Policy</span>
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {leavePolicies.map((pol) => (
+                      <div
+                        key={pol._id}
+                        className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-white hover:shadow-sm transition-all flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="font-semibold text-slate-900 leading-tight">{pol.name}</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-xs font-mono font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">
+                                {pol.code}
+                              </span>
+                              <span
+                                className={`px-1.5 py-0.5 text-[10px] rounded font-medium ${
+                                  pol.isActive !== false
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : 'bg-slate-200 text-slate-600'
+                                }`}
+                              >
+                                {pol.isActive !== false ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                            {pol.description || 'Institutional leave benefit'}
+                          </p>
+                          <div className="mt-3 space-y-1 text-xs text-slate-600">
+                            <div className="flex justify-between">
+                              <span>Annual Entitlement:</span>
+                              <span className="font-semibold text-slate-900">{pol.annualEntitlement} days</span>
+                            </div>
+                            <div className="flex justify-between capitalize">
+                              <span>Category:</span>
+                              <span>{pol.applicableCategory?.replace(/_/g, ' ') || 'All'}</span>
+                            </div>
+                            <div className="flex justify-between capitalize">
+                              <span>Accrual:</span>
+                              <span>{pol.accrualFrequency || 'Annual'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Max Consecutive:</span>
+                              <span>{pol.maxConsecutiveDays ? `${pol.maxConsecutiveDays} days` : '—'}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
+                          <button
+                            onClick={() => {
+                              setSelectedPolicy(pol);
+                              setShowViewPolicyModal(true);
+                            }}
+                            className="text-slate-600 hover:text-slate-900 font-medium inline-flex items-center gap-1"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Details</span>
+                          </button>
+
+                          {['admin', 'hr_admin'].includes(user?.role) && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleTogglePolicyActive(pol._id, pol.isActive !== false)}
+                                className={`text-[11px] font-medium px-2 py-0.5 rounded border transition-colors ${
+                                  pol.isActive !== false
+                                    ? 'border-slate-200 text-slate-600 hover:bg-slate-100'
+                                    : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                }`}
+                              >
+                                {pol.isActive !== false ? 'Deactivate' : 'Activate'}
+                              </button>
+                              <button
+                                onClick={() => handleOpenEditPolicy(pol)}
+                                className="text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center gap-1"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                                <span>Edit</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -2040,6 +2285,530 @@ const AdminHR = () => {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL: ADD LEAVE POLICY */}
+          {showAddPolicyModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="font-bold text-lg text-slate-900">Create Institutional Leave Policy</h3>
+                    <p className="text-xs text-slate-500">
+                      Establish an approved institutional leave quota and entitlement rule.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowAddPolicyModal(false);
+                      setAddPolicyError('');
+                      setNewPolicy(initialNewPolicy);
+                    }}
+                    className="text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {addPolicyError && (
+                  <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{addPolicyError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleCreatePolicy} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Policy Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newPolicy.name}
+                        onChange={(e) => setNewPolicy({ ...newPolicy, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="e.g. Casual Leave"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Policy Code *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newPolicy.code}
+                        onChange={(e) => setNewPolicy({ ...newPolicy, code: e.target.value.toUpperCase() })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold"
+                        placeholder="e.g. CL, SL, EL"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">
+                        Annual Entitlement (Days) *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="0.5"
+                        value={newPolicy.annualEntitlement}
+                        onChange={(e) => setNewPolicy({ ...newPolicy, annualEntitlement: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Approved days (e.g. 12)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Applicable Category</label>
+                      <select
+                        value={newPolicy.applicableCategory}
+                        onChange={(e) => setNewPolicy({ ...newPolicy, applicableCategory: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="all">All Staff & Faculty</option>
+                        <option value="teaching_faculty">Teaching Faculty</option>
+                        <option value="non_teaching_staff">Non-Teaching Staff</option>
+                        <option value="administrative_staff">Administrative Staff</option>
+                        <option value="technical_staff">Technical Staff</option>
+                        <option value="support_staff">Support Staff</option>
+                        <option value="contract_employee">Contract Employee</option>
+                        <option value="visiting_faculty">Visiting Faculty</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Accrual Frequency</label>
+                      <select
+                        value={newPolicy.accrualFrequency}
+                        onChange={(e) => setNewPolicy({ ...newPolicy, accrualFrequency: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="annual">Annual</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="none">None</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Max Consecutive Days</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={newPolicy.maxConsecutiveDays}
+                        onChange={(e) => setNewPolicy({ ...newPolicy, maxConsecutiveDays: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="e.g. 14 (Optional)"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Min Notice (Days)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={newPolicy.minNoticeDays}
+                        onChange={(e) => setNewPolicy({ ...newPolicy, minNoticeDays: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="e.g. 2 (Optional)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Max Carry Forward (Days)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={newPolicy.carryForwardMax}
+                        onChange={(e) => setNewPolicy({ ...newPolicy, carryForwardMax: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="e.g. 5 (Optional)"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Description & Eligibility</label>
+                    <textarea
+                      rows="2"
+                      value={newPolicy.description}
+                      onChange={(e) => setNewPolicy({ ...newPolicy, description: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Institutional leave rules, eligibility requirements, or approval criteria..."
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-6 pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newPolicy.allowNegativeBalance}
+                        onChange={(e) => setNewPolicy({ ...newPolicy, allowNegativeBalance: e.target.checked })}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-xs text-slate-700">Allow Negative Balance</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newPolicy.isActive}
+                        onChange={(e) => setNewPolicy({ ...newPolicy, isActive: e.target.checked })}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-xs text-slate-700">Active Immediately</span>
+                    </label>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddPolicyModal(false);
+                        setAddPolicyError('');
+                        setNewPolicy(initialNewPolicy);
+                      }}
+                      className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={addPolicySubmitting}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5 transition-colors"
+                    >
+                      {addPolicySubmitting ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Creating Policy...</span>
+                        </>
+                      ) : (
+                        <span>Create Policy</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL: EDIT LEAVE POLICY */}
+          {showEditPolicyModal && editingPolicy && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="font-bold text-lg text-slate-900">
+                      Edit Policy: <span className="font-mono text-indigo-600">{editingPolicy.code}</span>
+                    </h3>
+                    <p className="text-xs text-slate-500">Update quota entitlements, rules, and active status.</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowEditPolicyModal(false);
+                      setEditPolicyError('');
+                    }}
+                    className="text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {editPolicyError && (
+                  <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{editPolicyError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveEditPolicy} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Policy Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editingPolicy.name}
+                        onChange={(e) => setEditingPolicy({ ...editingPolicy, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Policy Code</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={editingPolicy.code}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500 font-mono font-bold cursor-not-allowed"
+                        title="Policy code is unique and immutable"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">
+                        Annual Entitlement (Days) *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="0.5"
+                        value={editingPolicy.annualEntitlement}
+                        onChange={(e) => setEditingPolicy({ ...editingPolicy, annualEntitlement: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Applicable Category</label>
+                      <select
+                        value={editingPolicy.applicableCategory}
+                        onChange={(e) => setEditingPolicy({ ...editingPolicy, applicableCategory: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="all">All Staff & Faculty</option>
+                        <option value="teaching_faculty">Teaching Faculty</option>
+                        <option value="non_teaching_staff">Non-Teaching Staff</option>
+                        <option value="administrative_staff">Administrative Staff</option>
+                        <option value="technical_staff">Technical Staff</option>
+                        <option value="support_staff">Support Staff</option>
+                        <option value="contract_employee">Contract Employee</option>
+                        <option value="visiting_faculty">Visiting Faculty</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Accrual Frequency</label>
+                      <select
+                        value={editingPolicy.accrualFrequency}
+                        onChange={(e) => setEditingPolicy({ ...editingPolicy, accrualFrequency: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="annual">Annual</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="none">None</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Max Consecutive Days</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editingPolicy.maxConsecutiveDays}
+                        onChange={(e) => setEditingPolicy({ ...editingPolicy, maxConsecutiveDays: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Min Notice (Days)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editingPolicy.minNoticeDays}
+                        onChange={(e) => setEditingPolicy({ ...editingPolicy, minNoticeDays: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Max Carry Forward (Days)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editingPolicy.carryForwardMax}
+                        onChange={(e) => setEditingPolicy({ ...editingPolicy, carryForwardMax: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Description</label>
+                    <textarea
+                      rows="2"
+                      value={editingPolicy.description}
+                      onChange={(e) => setEditingPolicy({ ...editingPolicy, description: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-6 pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editingPolicy.allowNegativeBalance}
+                        onChange={(e) => setEditingPolicy({ ...editingPolicy, allowNegativeBalance: e.target.checked })}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-xs text-slate-700">Allow Negative Balance</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editingPolicy.isActive}
+                        onChange={(e) => setEditingPolicy({ ...editingPolicy, isActive: e.target.checked })}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-xs text-slate-700">Policy Active</span>
+                    </label>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowEditPolicyModal(false);
+                        setEditPolicyError('');
+                      }}
+                      className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={editPolicySubmitting}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5 transition-colors"
+                    >
+                      {editPolicySubmitting ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Saving Changes...</span>
+                        </>
+                      ) : (
+                        <span>Save Changes</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL: VIEW LEAVE POLICY DETAILS */}
+          {showViewPolicyModal && selectedPolicy && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-start mb-4 border-b border-slate-100 pb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-lg text-slate-900">{selectedPolicy.name}</h3>
+                      <span className="text-xs font-mono font-bold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">
+                        {selectedPolicy.code}
+                      </span>
+                    </div>
+                    <span
+                      className={`inline-block mt-1 px-2 py-0.5 text-xs rounded font-medium ${
+                        selectedPolicy.isActive !== false
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-slate-100 text-slate-600 border border-slate-200'
+                      }`}
+                    >
+                      {selectedPolicy.isActive !== false ? 'Active Policy' : 'Inactive'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowViewPolicyModal(false);
+                      setSelectedPolicy(null);
+                    }}
+                    className="text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4 text-xs">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-slate-500 block mb-0.5">Annual Entitlement</span>
+                      <span className="font-bold text-slate-900 text-sm">
+                        {selectedPolicy.annualEntitlement} days / year
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block mb-0.5">Applicable Category</span>
+                      <span className="font-medium text-slate-900 capitalize">
+                        {selectedPolicy.applicableCategory?.replace(/_/g, ' ') || 'All'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block mb-0.5">Accrual Frequency</span>
+                      <span className="font-medium text-slate-900 capitalize">
+                        {selectedPolicy.accrualFrequency || 'Annual'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block mb-0.5">Max Consecutive Days</span>
+                      <span className="font-medium text-slate-900">
+                        {selectedPolicy.maxConsecutiveDays ? `${selectedPolicy.maxConsecutiveDays} days` : 'Unlimited'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block mb-0.5">Min Notice Required</span>
+                      <span className="font-medium text-slate-900">
+                        {selectedPolicy.minNoticeDays ? `${selectedPolicy.minNoticeDays} days` : 'None'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block mb-0.5">Max Carry Forward</span>
+                      <span className="font-medium text-slate-900">
+                        {selectedPolicy.carryForwardMax ? `${selectedPolicy.carryForwardMax} days` : 'None'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block mb-0.5">Negative Balance</span>
+                      <span className="font-medium text-slate-900">
+                        {selectedPolicy.allowNegativeBalance ? 'Allowed' : 'Not Allowed'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-500 block font-medium mb-1">Description & Guidelines</span>
+                    <p className="text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-200 leading-relaxed">
+                      {selectedPolicy.description || 'No additional description provided.'}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                    {['admin', 'hr_admin'].includes(user?.role) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const polToEdit = selectedPolicy;
+                          setShowViewPolicyModal(false);
+                          handleOpenEditPolicy(polToEdit);
+                        }}
+                        className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded-lg border border-indigo-200 inline-flex items-center gap-1.5 transition-colors"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        <span>Edit Policy</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowViewPolicyModal(false);
+                        setSelectedPolicy(null);
+                      }}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}

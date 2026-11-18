@@ -755,11 +755,17 @@ exports.createLeavePolicy = async (req, res) => {
       carryForwardMax,
       encashable,
       requiresAttachmentBeyondDays,
-      allowNegativeBalance
+      allowNegativeBalance,
+      isActive
     } = req.body;
 
-    if (!name || !code || annualEntitlement === undefined) {
+    if (!name || !name.trim() || !code || !code.trim() || annualEntitlement === undefined || annualEntitlement === null || annualEntitlement === '') {
       return res.status(400).json({ success: false, message: 'Name, unique code, and annual entitlement are required' });
+    }
+
+    const numEntitlement = Number(annualEntitlement);
+    if (isNaN(numEntitlement) || numEntitlement < 0) {
+      return res.status(400).json({ success: false, message: 'Annual entitlement must be a non-negative number' });
     }
 
     const cleanCode = code.toUpperCase().trim();
@@ -771,20 +777,24 @@ exports.createLeavePolicy = async (req, res) => {
     const policy = await LeavePolicy.create({
       name: name.trim(),
       code: cleanCode,
-      description: description || '',
-      annualEntitlement: Number(annualEntitlement),
+      description: description ? description.trim() : '',
+      annualEntitlement: numEntitlement,
       applicableCategory: applicableCategory || 'all',
       accrualFrequency: accrualFrequency || 'annual',
-      maxConsecutiveDays: maxConsecutiveDays || 30,
-      minNoticeDays: minNoticeDays || 0,
-      carryForwardMax: carryForwardMax || 0,
+      maxConsecutiveDays: maxConsecutiveDays !== undefined && maxConsecutiveDays !== '' ? Number(maxConsecutiveDays) : 30,
+      minNoticeDays: minNoticeDays !== undefined && minNoticeDays !== '' ? Number(minNoticeDays) : 0,
+      carryForwardMax: carryForwardMax !== undefined && carryForwardMax !== '' ? Number(carryForwardMax) : 0,
       encashable: encashable || false,
-      requiresAttachmentBeyondDays: requiresAttachmentBeyondDays || 3,
-      allowNegativeBalance: allowNegativeBalance || false
+      requiresAttachmentBeyondDays: requiresAttachmentBeyondDays !== undefined && requiresAttachmentBeyondDays !== '' ? Number(requiresAttachmentBeyondDays) : 3,
+      allowNegativeBalance: allowNegativeBalance || false,
+      isActive: isActive !== undefined ? Boolean(isActive) : true
     });
 
     res.status(201).json({ success: true, data: policy });
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({ success: false, message: 'Leave policy with this code already exists' });
+    }
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -797,10 +807,23 @@ exports.updateLeavePolicy = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Leave policy not found' });
     }
 
+    if (req.body.annualEntitlement !== undefined) {
+      const numEntitlement = Number(req.body.annualEntitlement);
+      if (isNaN(numEntitlement) || numEntitlement < 0) {
+        return res.status(400).json({ success: false, message: 'Annual entitlement must be a non-negative number' });
+      }
+      policy.annualEntitlement = numEntitlement;
+    }
+
+    if (req.body.name !== undefined) {
+      if (!req.body.name.trim()) {
+        return res.status(400).json({ success: false, message: 'Policy name cannot be empty' });
+      }
+      policy.name = req.body.name.trim();
+    }
+
     const fields = [
-      'name',
       'description',
-      'annualEntitlement',
       'applicableCategory',
       'accrualFrequency',
       'maxConsecutiveDays',
