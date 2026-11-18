@@ -11,8 +11,9 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 
-const { verifyTestDatabaseIsolation, TEST_DB_URI } = require('./helpers/testDatabase');
+const { verifyTestDatabaseIsolation } = require('./helpers/testDatabase');
 const Timetable = require('../models/Timetable');
 const TimetableStaging = require('../models/TimetableStaging');
 const ConflictRecord = require('../models/ConflictRecord');
@@ -44,10 +45,17 @@ const TEST_BATCH_ID = 'TEST-BATCH-PHASE3_5-001';
 
 test('Phase 3.5: Timetable Staging Ingestion & Conflict Engine Suite', async (t) => {
   let rawEntries;
+  let mongod;
+  let testDbUri;
 
   await t.test('Setup: Connect to isolated test DB & load source dataset', async () => {
-    verifyTestDatabaseIsolation(TEST_DB_URI);
-    await mongoose.connect(TEST_DB_URI);
+    mongod = await MongoMemoryServer.create({
+      instance: { dbName: 'test_phase3_5_isolated' },
+    });
+    testDbUri = mongod.getUri() + 'test_phase3_5_isolated';
+    assert.ok(!testDbUri.includes('27018'), 'Must not connect to canonical port 27018');
+    verifyTestDatabaseIsolation(testDbUri, { disallowPort27018: true });
+    await mongoose.connect(testDbUri);
 
     // Clean test batch in isolated test database
     await Promise.all([
@@ -127,15 +135,14 @@ test('Phase 3.5: Timetable Staging Ingestion & Conflict Engine Suite', async (t)
       () => assertIsolatedDatabase('mongodb://localhost:27017/production'),
       /STAGING SAFETY VIOLATION/
     );
-    assert.ok(assertIsolatedDatabase('mongodb://127.0.0.1:27018/campus-erp-staging-isolated'));
-    assert.ok(assertIsolatedDatabase(TEST_DB_URI));
+    assert.ok(assertIsolatedDatabase(testDbUri));
   });
 
   // ── 7. Controlled Staging Ingestion ────────────────────────────────────────
   await t.test('7. Controlled staging ingestion inserts all 977 entries into TimetableStaging', async () => {
     const result = await ingestStagingBatch({
       batchId: TEST_BATCH_ID,
-      dbUri: TEST_DB_URI,
+      dbUri: testDbUri,
       stagingJsonPath: STAGING_JSON_PATH,
     });
 
@@ -152,7 +159,7 @@ test('Phase 3.5: Timetable Staging Ingestion & Conflict Engine Suite', async (t)
   await t.test('8. Staging ingestion is strictly idempotent (re-run creates 0 duplicates)', async () => {
     const result = await ingestStagingBatch({
       batchId: TEST_BATCH_ID,
-      dbUri: TEST_DB_URI,
+      dbUri: testDbUri,
       stagingJsonPath: STAGING_JSON_PATH,
     });
 
@@ -218,7 +225,7 @@ test('Phase 3.5: Timetable Staging Ingestion & Conflict Engine Suite', async (t)
 
   // ── 14. Conflict Detection: Room Overlap Categorization ────────────────────
   await t.test('14. Conflict engine separates room overlaps into triplets, venue exempt, and collisions', async () => {
-    const report = await runConflictDetection({ batchId: TEST_BATCH_ID, dbUri: TEST_DB_URI });
+    const report = await runConflictDetection({ batchId: TEST_BATCH_ID, dbUri: testDbUri });
     assert.equal(report.roomOverlapsCount, 107);
     assert.equal(report.tripletJointSessionsCount, 100, 'Exactly 100 identical triplet matches');
     assert.equal(report.venueExemptCount, 2, 'Exactly 2 outdoor venue exempt slots');
@@ -227,13 +234,13 @@ test('Phase 3.5: Timetable Staging Ingestion & Conflict Engine Suite', async (t)
 
   // ── 15. Evidentiary Joint-Session Rule Enforcement ─────────────────────────
   await t.test('15. Overlap alone is rejected; unverified room overlaps are flagged as blockers', async () => {
-    const report = await runConflictDetection({ batchId: TEST_BATCH_ID, dbUri: TEST_DB_URI });
+    const report = await runConflictDetection({ batchId: TEST_BATCH_ID, dbUri: testDbUri });
     assert.ok(report.unverifiedRoomCollisions > 0, 'Unverified room overlaps must remain conflicts');
   });
 
   // ── 16. Conflict Detection: Faculty Overlap Categorization ─────────────────
   await t.test('16. Conflict engine separates faculty overlaps into joint sessions and collisions', async () => {
-    const report = await runConflictDetection({ batchId: TEST_BATCH_ID, dbUri: TEST_DB_URI });
+    const report = await runConflictDetection({ batchId: TEST_BATCH_ID, dbUri: testDbUri });
     assert.equal(report.facultyOverlapsCount, 129);
     assert.equal(report.facultyJointExemptCount, 124, '124 verified joint faculty sessions');
     assert.equal(report.facultyCollisionBlockersCount, 5, '5 faculty collisions including SJ blocker');
@@ -241,7 +248,7 @@ test('Phase 3.5: Timetable Staging Ingestion & Conflict Engine Suite', async (t)
 
   // ── 17. Ground-Truth SJ Conflict Detection ─────────────────────────────────
   await t.test('17. SJ Wednesday Period 8 collision across AS18 and AS19 is accurately detected', async () => {
-    const report = await runConflictDetection({ batchId: TEST_BATCH_ID, dbUri: TEST_DB_URI });
+    const report = await runConflictDetection({ batchId: TEST_BATCH_ID, dbUri: testDbUri });
     assert.equal(report.sjConflictDetected, true);
     assert.equal(report.sjBlockerActive, true);
   });
@@ -380,10 +387,13 @@ test('Phase 3.5: Timetable Staging Ingestion & Conflict Engine Suite', async (t)
   });
 
   // ── Teardown ───────────────────────────────────────────────────────────────
-  await t.test('Teardown: Disconnect test database cleanly', async () => {
-    await TimetableStaging.deleteMany({ importBatchId: TEST_BATCH_ID });
-    await ConflictRecord.deleteMany({ academicYear: '2026-2027', resourceId: 'SJ' });
-    await mongoose.disconnect();
+  await t.test('Teardown: Disconnect and stop isolated MongoMemoryServer', async () => {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
+    if (mongod) {
+      await mongod.stop();
+    }
     assert.equal(mongoose.connection.readyState, 0);
   });
 });
