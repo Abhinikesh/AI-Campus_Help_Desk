@@ -51,6 +51,7 @@ const userSchema = new mongoose.Schema(
         'inventory_manager',
         'procurement_officer',
         'storekeeper',
+        'department_head',
         'hr_admin',
         'hr_officer',
         'employee',

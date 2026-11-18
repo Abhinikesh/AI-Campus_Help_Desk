@@ -1367,6 +1367,16 @@ exports.checkIn = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Employee profile not found' });
     }
 
+    // Check identity spoofing: ensure users cannot check in on behalf of another employee
+    const reqEmpId = req.body?.employeeId || req.body?.employee;
+    if (reqEmpId && reqEmpId.toString() !== employee._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Cannot check in on behalf of another employee' });
+    }
+    const reqUserId = req.body?.userId || req.body?.user;
+    if (reqUserId && reqUserId.toString() !== userId.toString()) {
+      return res.status(403).json({ success: false, message: 'Cannot check in on behalf of another employee' });
+    }
+
     const now = new Date();
     const today = now.toISOString().split('T')[0];
     const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -1385,7 +1395,7 @@ exports.checkIn = async (req, res) => {
     }
 
     // Default shift start 09:30 AM with 15 min grace period
-    const shiftStart = new Date();
+    const shiftStart = new Date(now);
     shiftStart.setHours(9, 30, 0, 0);
     const graceLimit = new Date(shiftStart.getTime() + 15 * 60 * 1000);
 
@@ -1411,6 +1421,20 @@ exports.checkIn = async (req, res) => {
 
     res.status(200).json({ success: true, message: 'Checked in successfully', data: attendance });
   } catch (err) {
+    if (err.code === 11000) {
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const existing = await EmployeeAttendance.findOne({
+        user: getUserId(req),
+        $or: [{ date: today }, { date: localDate }]
+      });
+      return res.status(400).json({
+        success: false,
+        message: 'You have already checked in for today',
+        data: existing
+      });
+    }
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -1421,6 +1445,16 @@ exports.checkOut = async (req, res) => {
     const employee = await EmployeeProfile.findOne({ user: userId });
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee profile not found' });
+    }
+
+    // Check identity spoofing: ensure users cannot check out on behalf of another employee
+    const reqEmpId = req.body?.employeeId || req.body?.employee;
+    if (reqEmpId && reqEmpId.toString() !== employee._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Cannot check out on behalf of another employee' });
+    }
+    const reqUserId = req.body?.userId || req.body?.user;
+    if (reqUserId && reqUserId.toString() !== userId.toString()) {
+      return res.status(403).json({ success: false, message: 'Cannot check out on behalf of another employee' });
     }
 
     const now = new Date();
@@ -1439,17 +1473,55 @@ exports.checkOut = async (req, res) => {
       });
     }
 
-    attendance.checkOut = now;
-    attendance.checkOutTime = now;
+    if (attendance.checkOut || attendance.checkOutTime) {
+      return res.status(400).json({
+        success: false,
+        message: 'You have already checked out for today',
+        data: attendance
+      });
+    }
 
     const inTime = new Date(attendance.checkIn || attendance.checkInTime);
+    if (now.getTime() < inTime.getTime()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Check-out time cannot precede check-in time'
+      });
+    }
+
     const diffHours = (now.getTime() - inTime.getTime()) / (1000 * 60 * 60);
-    attendance.workingHours = Math.round(diffHours * 100) / 100;
-    attendance.hoursWorked = attendance.workingHours;
+    const workingHours = Math.round(Math.max(0, diffHours) * 100) / 100;
 
-    await attendance.save();
+    // Use atomic update to prevent concurrent duplicate check-out overwrites
+    const updated = await EmployeeAttendance.findOneAndUpdate(
+      {
+        _id: attendance._id,
+        $or: [
+          { checkOut: null },
+          { checkOutTime: null }
+        ]
+      },
+      {
+        $set: {
+          checkOut: now,
+          checkOutTime: now,
+          workingHours: workingHours,
+          hoursWorked: workingHours
+        }
+      },
+      { new: true }
+    );
 
-    res.status(200).json({ success: true, message: 'Checked out successfully', data: attendance });
+    if (!updated) {
+      const current = await EmployeeAttendance.findById(attendance._id);
+      return res.status(400).json({
+        success: false,
+        message: 'You have already checked out for today',
+        data: current
+      });
+    }
+
+    res.status(200).json({ success: true, message: 'Checked out successfully', data: updated });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1463,25 +1535,38 @@ exports.getMyAttendance = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Employee profile not found' });
     }
 
-    const { month, year } = req.query;
-    const targetYear = parseInt(year || new Date().getFullYear(), 10);
-    const targetMonth = parseInt(month || new Date().getMonth() + 1, 10);
+    const { month, year, startDate, endDate } = req.query;
+    const query = { employee: employee._id };
 
-    const startDate = new Date(targetYear, targetMonth - 1, 1);
-    const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) query.date.$gte = String(startDate).split('T')[0];
+      if (endDate) query.date.$lte = String(endDate).split('T')[0];
+    } else if (month || year) {
+      const targetYear = parseInt(year || new Date().getFullYear(), 10);
+      if (month) {
+        const targetMonth = parseInt(month, 10);
+        const monthStr = String(targetMonth).padStart(2, '0');
+        const startStr = `${targetYear}-${monthStr}-01`;
+        const lastDay = new Date(targetYear, targetMonth, 0).getDate();
+        const endStr = `${targetYear}-${monthStr}-${String(lastDay).padStart(2, '0')}`;
+        query.date = { $gte: startStr, $lte: endStr };
+      } else {
+        query.date = { $gte: `${targetYear}-01-01`, $lte: `${targetYear}-12-31` };
+      }
+    } else {
+      // Default to current month matching established contract
+      const now = new Date();
+      const targetYear = now.getFullYear();
+      const targetMonth = now.getMonth() + 1;
+      const monthStr = String(targetMonth).padStart(2, '0');
+      const startStr = `${targetYear}-${monthStr}-01`;
+      const lastDay = new Date(targetYear, targetMonth, 0).getDate();
+      const endStr = `${targetYear}-${monthStr}-${String(lastDay).padStart(2, '0')}`;
+      query.date = { $gte: startStr, $lte: endStr };
+    }
 
-    const monthStr = String(targetMonth).padStart(2, '0');
-    const startStr = `${targetYear}-${monthStr}-01`;
-    const lastDay = new Date(targetYear, targetMonth, 0).getDate();
-    const endStr = `${targetYear}-${monthStr}-${String(lastDay).padStart(2, '0')}`;
-
-    const attendances = await EmployeeAttendance.find({
-      employee: employee._id,
-      $or: [
-        { date: { $gte: startStr, $lte: endStr } },
-        { date: { $gte: startDate, $lte: endDate } }
-      ]
-    }).sort({ date: -1 });
+    const attendances = await EmployeeAttendance.find(query).sort({ date: -1 });
 
     res.status(200).json({ success: true, count: attendances.length, data: attendances });
   } catch (err) {
@@ -1510,15 +1595,25 @@ exports.getAttendanceRoster = async (req, res) => {
       })
       .populate('approvedLeave', 'applicationNumber');
 
-    // Filter by department if requested
     let filtered = attendances;
-    if (department) {
+    const userRole = req.user?.role;
+
+    if (userRole === 'department_head') {
+      const headProfile = await EmployeeProfile.findOne({ user: getUserId(req) });
+      if (headProfile && headProfile.department) {
+        filtered = attendances.filter(
+          (a) => a.employee?.department?._id?.toString() === headProfile.department.toString() ||
+                 a.employee?.department?.toString() === headProfile.department.toString()
+        );
+      }
+    } else if (department) {
       filtered = attendances.filter(
-        (a) => a.employee?.department?._id?.toString() === department.toString()
+        (a) => a.employee?.department?._id?.toString() === department.toString() ||
+               a.employee?.department?.toString() === department.toString()
       );
     }
 
-    res.status(200).json({ success: true, count: filtered.length, date: targetDate, data: filtered });
+    res.status(200).json({ success: true, count: filtered.length, date: targetDateStr, data: filtered });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1529,13 +1624,45 @@ exports.correctAttendance = async (req, res) => {
     const { id } = req.params;
     const { status, checkIn, checkOut, reason } = req.body;
 
-    if (!reason) {
+    if (!reason || !reason.trim()) {
       return res.status(400).json({ success: false, message: 'Correction reason is mandatory for audit logging' });
     }
 
     const attendance = await EmployeeAttendance.findById(id).populate('employee');
     if (!attendance) {
       return res.status(404).json({ success: false, message: 'Attendance record not found' });
+    }
+
+    if (status) {
+      const validStatuses = [
+        'present',
+        'absent',
+        'late',
+        'half_day',
+        'on_leave',
+        'holiday',
+        'weekly_off',
+        'work_from_home',
+        'official_duty'
+      ];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ success: false, message: `Invalid attendance status: ${status}` });
+      }
+      attendance.status = status;
+    }
+
+    const targetCheckIn = checkIn !== undefined ? new Date(checkIn) : attendance.checkIn;
+    const targetCheckOut = checkOut !== undefined ? new Date(checkOut) : attendance.checkOut;
+
+    if (targetCheckIn && isNaN(targetCheckIn.getTime())) {
+      return res.status(400).json({ success: false, message: 'Invalid check-in date/time' });
+    }
+    if (targetCheckOut && isNaN(targetCheckOut.getTime())) {
+      return res.status(400).json({ success: false, message: 'Invalid check-out date/time' });
+    }
+
+    if (targetCheckIn && targetCheckOut && targetCheckOut.getTime() < targetCheckIn.getTime()) {
+      return res.status(400).json({ success: false, message: 'Check-out time cannot precede check-in time' });
     }
 
     const previousData = {
@@ -1545,16 +1672,22 @@ exports.correctAttendance = async (req, res) => {
       workingHours: attendance.workingHours
     };
 
-    if (status) attendance.status = status;
-    if (checkIn) attendance.checkIn = new Date(checkIn);
-    if (checkOut) attendance.checkOut = new Date(checkOut);
-
-    if (attendance.checkIn && attendance.checkOut) {
-      const diffHours =
-        (new Date(attendance.checkOut).getTime() - new Date(attendance.checkIn).getTime()) / (1000 * 60 * 60);
-      attendance.workingHours = Math.round(diffHours * 100) / 100;
+    if (checkIn !== undefined) {
+      attendance.checkIn = targetCheckIn;
+      attendance.checkInTime = targetCheckIn;
+    }
+    if (checkOut !== undefined) {
+      attendance.checkOut = targetCheckOut;
+      attendance.checkOutTime = targetCheckOut;
     }
 
+    if (attendance.checkIn && attendance.checkOut) {
+      const diffHours = (new Date(attendance.checkOut).getTime() - new Date(attendance.checkIn).getTime()) / (1000 * 60 * 60);
+      attendance.workingHours = Math.round(Math.max(0, diffHours) * 100) / 100;
+      attendance.hoursWorked = attendance.workingHours;
+    }
+
+    attendance.isCorrected = true;
     attendance.correctionHistory.push({
       previousStatus: previousData.status,
       newStatus: attendance.status,

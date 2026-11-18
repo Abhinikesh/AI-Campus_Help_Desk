@@ -142,6 +142,7 @@ const AdminHR = () => {
   const [showAttendanceCorrectionModal, setShowAttendanceCorrectionModal] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
   const [correctionData, setCorrectionData] = useState({ status: 'present', reason: '' });
+  const [correctionSubmitting, setCorrectionSubmitting] = useState(false);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
 
   // Form states
@@ -711,8 +712,9 @@ const AdminHR = () => {
 
   const handleCorrectAttendance = async (e) => {
     e.preventDefault();
-    if (!selectedAttendance) return;
+    if (!selectedAttendance || correctionSubmitting) return;
 
+    setCorrectionSubmitting(true);
     try {
       const res = await hrService.correctAttendance(selectedAttendance._id, {
         status: correctionData.status,
@@ -726,6 +728,8 @@ const AdminHR = () => {
       }
     } catch (err) {
       showToast(err.response?.data?.message || err.message, 'error');
+    } finally {
+      setCorrectionSubmitting(false);
     }
   };
 
@@ -2956,9 +2960,10 @@ const AdminHR = () => {
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-indigo-600 hover text-white text-sm font-medium rounded-lg"
+                      disabled={correctionSubmitting}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg cursor-pointer"
                     >
-                      Save Correction
+                      {correctionSubmitting ? 'Saving...' : 'Save Correction'}
                     </button>
                   </div>
                 </form>

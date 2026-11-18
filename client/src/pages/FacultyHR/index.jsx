@@ -38,6 +38,7 @@ const FacultyHR = () => {
   const [leaveBalances, setLeaveBalances] = useState([]);
   const [leaveApplications, setLeaveApplications] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [attendanceSubmitting, setAttendanceSubmitting] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [policies, setPolicies] = useState([]);
@@ -158,6 +159,8 @@ const FacultyHR = () => {
   };
 
   const handleCheckIn = async () => {
+    if (attendanceSubmitting) return;
+    setAttendanceSubmitting(true);
     try {
       const res = await hrService.checkIn();
       if (res.success) {
@@ -173,10 +176,14 @@ const FacultyHR = () => {
       }
     } catch (err) {
       showToast(err.response?.data?.message || err.message, 'error');
+    } finally {
+      setAttendanceSubmitting(false);
     }
   };
 
   const handleCheckOut = async () => {
+    if (attendanceSubmitting) return;
+    setAttendanceSubmitting(true);
     try {
       const res = await hrService.checkOut();
       if (res.success) {
@@ -192,6 +199,8 @@ const FacultyHR = () => {
       }
     } catch (err) {
       showToast(err.response?.data?.message || err.message, 'error');
+    } finally {
+      setAttendanceSubmitting(false);
     }
   };
 
@@ -296,16 +305,18 @@ const FacultyHR = () => {
               {!hasCheckedIn ? (
                 <button
                   onClick={handleCheckIn}
-                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer transition-colors"
+                  disabled={attendanceSubmitting}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer transition-colors"
                 >
-                  Check In
+                  {attendanceSubmitting ? 'Checking In...' : 'Check In'}
                 </button>
               ) : !hasCheckedOut ? (
                 <button
                   onClick={handleCheckOut}
-                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer transition-colors"
+                  disabled={attendanceSubmitting}
+                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer transition-colors"
                 >
-                  Check Out
+                  {attendanceSubmitting ? 'Checking Out...' : 'Check Out'}
                 </button>
               ) : (
                 <span className="px-2 py-1 text-xs text-emerald-600 bg-emerald-50 rounded font-medium flex items-center gap-1">
