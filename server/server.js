@@ -79,8 +79,18 @@ app.use('/api/certificates/verify/:identifier', (req, res, next) => {
   return require('./controllers/event.controller').verifyCertificate(req, res, next);
 });
 
-// ── Static file serving for uploads ──────────────────────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// ── Protected Uploads Guard ──────────────────────────────────────────────────
+// Direct unauthenticated static access to /uploads is explicitly disabled to
+// protect confidential student resumes, assignment submissions, and documents.
+// All downloads must use authenticated controller endpoints with IDOR defense.
+app.use('/uploads', (req, res) => {
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.set('Cache-Control', 'no-store');
+  return res.status(404).json({
+    success: false,
+    message: 'Direct access to uploads is disabled. Please use authorized API endpoints.',
+  });
+});
 
 // ── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

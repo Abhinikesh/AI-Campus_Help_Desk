@@ -1794,6 +1794,10 @@ exports.downloadDocument = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Physical document file missing on server' });
     }
 
+    if (typeof res.set === 'function') {
+      res.set('X-Content-Type-Options', 'nosniff');
+      res.set('Cache-Control', 'private, no-store');
+    }
     res.download(safePath, doc.title || doc.fileName);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

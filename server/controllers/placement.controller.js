@@ -363,7 +363,8 @@ exports.downloadResume = async (req, res, next) => {
     const { filename } = req.params;
     const safePath = placementService.resolveSafeDocumentPath('resumes', filename);
 
-    // Anti-IDOR Authorization Check
+    // Anti-IDOR Authorization Check: Student can only download their own resume; Staff must have placement privileges
+    const ALLOWED_STAFF_ROLES = ['admin', 'placement_officer', 'placement_coordinator'];
     if (req.user.role === 'student') {
       const currentUserId = req.user.userId || req.user._id || req.user.id;
       const student = await Student.findOne({ user: currentUserId });
@@ -378,8 +379,14 @@ exports.downloadResume = async (req, res, next) => {
           throw new ApiError(403, 'Access denied: You can only download your own resume');
         }
       }
+    } else if (!ALLOWED_STAFF_ROLES.includes(req.user.role)) {
+      throw new ApiError(403, 'Access denied: You do not have permission to view placement resumes');
     }
 
+    if (typeof res.set === 'function') {
+      res.set('X-Content-Type-Options', 'nosniff');
+      res.set('Cache-Control', 'private, no-store');
+    }
     res.download(safePath, filename);
   } catch (err) {
     next(err);
@@ -1440,7 +1447,8 @@ exports.downloadOfferLetter = async (req, res, next) => {
     const { filename } = req.params;
     const safePath = placementService.resolveSafeDocumentPath('offers', filename);
 
-    // Anti-IDOR Authorization Check
+    // Anti-IDOR Authorization Check: Student can only download their own offer letter; Staff must have placement privileges
+    const ALLOWED_STAFF_ROLES = ['admin', 'placement_officer', 'placement_coordinator'];
     if (req.user.role === 'student') {
       const currentUserId = req.user.userId || req.user._id || req.user.id;
       const student = await Student.findOne({ user: currentUserId });
@@ -1451,8 +1459,14 @@ exports.downloadOfferLetter = async (req, res, next) => {
       if (!offer) {
         throw new ApiError(403, 'Access denied: You can only download your own offer letters');
       }
+    } else if (!ALLOWED_STAFF_ROLES.includes(req.user.role)) {
+      throw new ApiError(403, 'Access denied: You do not have permission to view offer letters');
     }
 
+    if (typeof res.set === 'function') {
+      res.set('X-Content-Type-Options', 'nosniff');
+      res.set('Cache-Control', 'private, no-store');
+    }
     res.download(safePath, filename);
   } catch (err) {
     next(err);

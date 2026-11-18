@@ -848,6 +848,10 @@ const downloadAssignmentAttachment = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'File not found on server');
   }
 
+  if (typeof res.set === 'function') {
+    res.set('X-Content-Type-Options', 'nosniff');
+    res.set('Cache-Control', 'private, no-store');
+  }
   return res.download(safePath, attachment.name);
 });
 
@@ -879,6 +883,10 @@ const downloadSubmissionFile = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'File not found on server');
   }
 
+  if (typeof res.set === 'function') {
+    res.set('X-Content-Type-Options', 'nosniff');
+    res.set('Cache-Control', 'private, no-store');
+  }
   return res.download(safePath, fileDoc.name);
 });
 
