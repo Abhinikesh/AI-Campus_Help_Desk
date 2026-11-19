@@ -167,8 +167,8 @@ const StudentDashboard = () => {
             <div className="sd-welcome-badges">
               <div className="sd-quick-stat-badge">
                 <span className="sd-stat-badge-label">Attendance</span>
-                <span className={`sd-stat-badge-val ${attendanceAvg < 75 ? 'warn' : 'good'}`}>
-                  {attendanceAvg}%
+                <span className={`sd-stat-badge-val ${attendanceAvg != null && attendanceAvg < 75 ? 'warn' : 'good'}`}>
+                  {attendanceAvg != null ? `${attendanceAvg}%` : '--'}
                 </span>
               </div>
               <div className="sd-quick-stat-badge">
@@ -177,7 +177,7 @@ const StudentDashboard = () => {
               </div>
               <div className="sd-quick-stat-badge">
                 <span className="sd-stat-badge-label">Courses</span>
-                <span className="sd-stat-badge-val">{displayAttendance.length}</span>
+                <span className="sd-stat-badge-val">{attendance.length}</span>
               </div>
             </div>
           </div>
@@ -242,7 +242,7 @@ const StudentDashboard = () => {
                 <div className="sd-glance-left">
                   <span className="sd-glance-heading">Academic Snapshot</span>
                   <span className="sd-glance-text">
-                    Semester {semester} {branch} • {displayAttendance.length} enrolled courses • Attendance: {attendanceAvg}% • CGPA: {cgpa}
+                    Semester {semester} {branch} • {attendance.length} enrolled courses • Attendance: {attendanceAvg != null ? `${attendanceAvg}%` : '--'} • CGPA: {cgpa}
                   </span>
                 </div>
                 <button

@@ -486,7 +486,7 @@ const finalizeAttendanceSession = asyncHandler(async (req, res) => {
 
 // POST /api/faculty/attendance/mark-student — Manual toggle/correction
 const markAttendanceStudent = asyncHandler(async (req, res) => {
-  const { attendanceId, status, note = '', reason = '' } = req.body;
+  const { attendanceId, status, note = '', reason = '', studentId, sessionId } = req.body;
   if (!attendanceId || !status) {
     throw new ApiError(400, 'attendanceId and status are required');
   }
@@ -496,8 +496,76 @@ const markAttendanceStudent = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'A valid reason is required for manual attendance correction');
   }
 
-  const attendance = await Attendance.findById(attendanceId);
-  if (!attendance) throw new ApiError(404, 'Attendance record not found');
+  const isPending = typeof attendanceId === 'string' && attendanceId.startsWith('pending-');
+  let attendance = null;
+
+  if (!isPending && mongoose.Types.ObjectId.isValid(attendanceId)) {
+    attendance = await Attendance.findById(attendanceId);
+  }
+
+  // Handle pending or uncreated attendance records for students on the session roster
+  if (!attendance) {
+    const targetStudentId = studentId || (isPending ? attendanceId.replace('pending-', '') : null);
+    const targetSessionId = sessionId;
+
+    if (targetStudentId && targetSessionId) {
+      const session = await AttendanceSession.findById(targetSessionId);
+      if (!session) throw new ApiError(404, 'Attendance session not found');
+      await assertFacultySessionOwnership(session, req);
+
+      const sessionPeriods = session.periods && session.periods.length > 0 ? session.periods : [session.period || 1];
+      const sessionPeriodCount = session.periodCount || sessionPeriods.length;
+
+      attendance = await Attendance.findOne({ session: session._id, student: targetStudentId });
+      if (!attendance) {
+        attendance = new Attendance({
+          student: targetStudentId,
+          session: session._id,
+          subject: session.subject,
+          date: session.date || new Date().toISOString().split('T')[0],
+          period: session.period || 1,
+          periods: sessionPeriods,
+          periodCount: sessionPeriodCount,
+          status,
+          attendanceStatus: status,
+          verificationMethod: 'manual',
+          verificationStatus: 'manual',
+          isManualOverride: true,
+          overrideBy: req.user.userId,
+          overrideNote: finalReason.trim(),
+          verifiedAt: new Date(),
+        });
+        await attendance.save();
+
+        const presentCount = await Attendance.countDocuments({
+          session: session._id,
+          status: 'present',
+        });
+        await AttendanceSession.findByIdAndUpdate(session._id, { presentCount });
+
+        await AttendanceAuditLog.record({
+          actorId: req.user.userId,
+          actorRole: 'faculty',
+          action: 'manual_correction',
+          attendanceId: attendance._id,
+          sessionId: session._id,
+          affectedStudentId: attendance.student,
+          previousValue: { status: 'pending' },
+          newValue: { status },
+          reason: finalReason.trim(),
+          ipAddress: req.ip,
+        });
+
+        return res.status(200).json({
+          success: true,
+          data: attendance,
+          message: `Student status updated to ${status}`,
+        });
+      }
+    } else {
+      throw new ApiError(404, 'Attendance record not found');
+    }
+  }
 
   if (attendance.session) {
     const session = await AttendanceSession.findById(attendance.session);
@@ -511,7 +579,7 @@ const markAttendanceStudent = asyncHandler(async (req, res) => {
   attendance.status = status;
   attendance.isManualOverride = true;
   attendance.overrideBy = req.user.userId;
-  attendance.overrideNote = finalReason;
+  attendance.overrideNote = finalReason.trim();
   attendance.verifiedAt = new Date();
   await attendance.save();
 
@@ -533,7 +601,7 @@ const markAttendanceStudent = asyncHandler(async (req, res) => {
     affectedStudentId: attendance.student,
     previousValue: { status: previousStatus },
     newValue: { status },
-    reason: finalReason,
+    reason: finalReason.trim(),
     ipAddress: req.ip
   });
 

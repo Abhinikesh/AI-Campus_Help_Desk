@@ -142,6 +142,8 @@ const LiveAttendance = () => {
       setActionLoading(true);
       await attendanceService.updateStudentAttendance({
         attendanceId: overrideModal.student._id,
+        sessionId: session?._id,
+        studentId: overrideModal.student.studentId || (typeof overrideModal.student._id === 'string' && overrideModal.student._id.startsWith('pending-') ? overrideModal.student._id.replace('pending-', '') : overrideModal.student._id),
         status: overrideModal.targetStatus,
         reason: overrideModal.reason || `Manual override by faculty: ${user?.name || 'Instructor'}`,
         note: overrideModal.reason || `Manual override by faculty: ${user?.name || 'Instructor'}`,
