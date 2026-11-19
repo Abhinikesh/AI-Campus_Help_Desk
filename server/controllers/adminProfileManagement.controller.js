@@ -45,7 +45,7 @@ const validateEmail = (email) => {
 
 // GET /api/admin/students — List & search canonical enrolled students
 const listCanonicalStudents = asyncHandler(async (req, res) => {
-  const { search, branch, semester, page = 1, limit = 20 } = req.query;
+  const { search, branch, semester, status, page = 1, limit = 20 } = req.query;
 
   const andConditions = [];
 
@@ -59,6 +59,7 @@ const listCanonicalStudents = asyncHandler(async (req, res) => {
     });
   }
   if (semester) andConditions.push({ semester: Number(semester) });
+  if (status) andConditions.push({ status: String(status).trim().toLowerCase() });
 
   const queryStr = typeof search === 'string' ? search.trim() : '';
   if (queryStr) {
@@ -104,6 +105,7 @@ const listCanonicalStudents = asyncHandler(async (req, res) => {
       limit: limitNum,
       total,
       totalPages: Math.ceil(total / limitNum) || 0,
+      pages: Math.ceil(total / limitNum) || 0,
     },
     message: 'Students retrieved successfully',
   });
@@ -358,6 +360,190 @@ const updateCanonicalStudentProfile = asyncHandler(async (req, res) => {
   });
 });
 
+// POST /api/admin/students — Create an individual canonical enrolled student
+const createCanonicalStudent = asyncHandler(async (req, res) => {
+  const adminUserId = req.user.userId;
+  const body = req.body || {};
+
+  // 1. Validate required fields
+  const rawRoll = body.rollNumber ? String(body.rollNumber).trim().toUpperCase() : '';
+  if (!rawRoll) {
+    throw new ApiError(400, 'Roll number is required.');
+  }
+
+  const rawName = body.fullName ? String(body.fullName).trim() : '';
+  if (!rawName || rawName.length < 2) {
+    throw new ApiError(400, 'Full name is required and must contain at least 2 characters.');
+  }
+
+  // 2. Prevent duplicate roll number (conflict 409)
+  const existingRoll = await Student.findOne({ rollNumber: rawRoll }).lean();
+  if (existingRoll) {
+    throw new ApiError(409, `A student with roll number "${rawRoll}" already exists.`);
+  }
+
+  // 3. Validate and check email if provided
+  let validatedEmail = null;
+  if (body.email !== undefined && body.email !== null && String(body.email).trim() !== '') {
+    validatedEmail = validateEmail(body.email);
+    if (validatedEmail) {
+      const existingEmail = await Student.findOne({ email: validatedEmail }).lean();
+      if (existingEmail) {
+        throw new ApiError(409, 'Email address is already in use by another student.');
+      }
+    }
+  }
+
+  // 4. Validate phone if provided
+  let normalizedPhone = null;
+  if (body.phone !== undefined && body.phone !== null && String(body.phone).trim() !== '') {
+    normalizedPhone = normalizePhone(body.phone);
+  }
+
+  // 5. Validate semester if provided
+  let semesterVal = null;
+  if (body.semester !== undefined && body.semester !== null && body.semester !== '') {
+    semesterVal = Number(body.semester);
+    if (isNaN(semesterVal) || semesterVal < 1 || semesterVal > 10) {
+      throw new ApiError(400, 'Semester must be a valid number between 1 and 10.');
+    }
+  }
+
+  // 6. Validate admissionYear if provided
+  let admissionYearVal = null;
+  if (body.admissionYear !== undefined && body.admissionYear !== null && body.admissionYear !== '') {
+    admissionYearVal = Number(body.admissionYear);
+    if (isNaN(admissionYearVal) || admissionYearVal < 1990 || admissionYearVal > 2050) {
+      throw new ApiError(400, 'Admission year must be between 1990 and 2050.');
+    }
+  }
+
+  // 7. Validate gender if provided
+  let genderVal = '';
+  if (body.gender !== undefined && body.gender !== null) {
+    const g = String(body.gender).trim().toLowerCase();
+    if (g && !['male', 'female', 'other'].includes(g)) {
+      throw new ApiError(400, 'Gender must be male, female, other, or empty.');
+    }
+    genderVal = g;
+  }
+
+  // 8. Validate dateOfBirth if provided
+  let dobVal = null;
+  if (body.dateOfBirth) {
+    dobVal = new Date(body.dateOfBirth);
+    if (isNaN(dobVal.getTime())) {
+      throw new ApiError(400, 'Invalid date of birth format.');
+    }
+  }
+
+  // 9. Validate status if provided
+  let statusVal = 'active';
+  if (body.status !== undefined && body.status !== null && String(body.status).trim() !== '') {
+    const s = String(body.status).trim().toLowerCase();
+    const allowedStatuses = ['active', 'inactive', 'suspended', 'graduated', 'withdrawn', 'alumni'];
+    if (!allowedStatuses.includes(s)) {
+      throw new ApiError(400, `Invalid status "${s}". Allowed values: ${allowedStatuses.join(', ')}`);
+    }
+    statusVal = s;
+  }
+
+  // 10. Create canonical student record
+  // Note: user is null (offline institutional student per spec); no User account, biometric or attendance records created.
+  const newStudent = await Student.create({
+    rollNumber: rawRoll,
+    fullName: rawName,
+    email: validatedEmail,
+    phone: normalizedPhone,
+    branch: body.branch ? String(body.branch).trim() : null,
+    program: body.program ? String(body.program).trim() : null,
+    course: body.course ? String(body.course).trim() : null,
+    batch: body.batch ? String(body.batch).trim() : null,
+    semester: semesterVal,
+    section: body.section ? String(body.section).trim().toUpperCase() : null,
+    admissionYear: admissionYearVal || new Date().getFullYear(),
+    school: body.school ? String(body.school).trim() : null,
+    gender: genderVal,
+    dateOfBirth: dobVal,
+    status: statusVal,
+    accountStatus: 'enrolled_offline',
+    user: null,
+  });
+
+  // 11. Audit log
+  await AuditLog.create({
+    actor: adminUserId,
+    action: 'ADMIN_STUDENT_CREATE',
+    entityType: 'Student',
+    entityId: newStudent._id,
+    summary: `Admin created student record: ${newStudent.rollNumber} (${newStudent.fullName})`,
+    ip: req.ip || '',
+  });
+
+  return res.status(201).json({
+    success: true,
+    data: newStudent,
+    message: 'Student record created successfully',
+  });
+});
+
+// PATCH /api/admin/students/:id/status — Manage canonical student status (active, inactive, suspended, graduated, withdrawn)
+const updateCanonicalStudentStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const adminUserId = req.user.userId;
+  const { status } = req.body || {};
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, 'Invalid student identifier format');
+  }
+
+  if (!status || typeof status !== 'string') {
+    throw new ApiError(400, 'Status is required.');
+  }
+
+  const normalizedStatus = status.trim().toLowerCase();
+  const allowedStatuses = ['active', 'inactive', 'suspended', 'graduated', 'withdrawn', 'alumni'];
+  if (!allowedStatuses.includes(normalizedStatus)) {
+    throw new ApiError(400, `Invalid status "${status}". Allowed values: ${allowedStatuses.join(', ')}`);
+  }
+
+  const student = await Student.findById(id);
+  if (!student) {
+    throw new ApiError(404, 'Student record not found');
+  }
+
+  const previousStatus = student.status;
+  if (previousStatus === normalizedStatus) {
+    return res.status(200).json({
+      success: true,
+      data: student,
+      message: `Student status is already "${normalizedStatus}".`,
+    });
+  }
+
+  // Update status (Preserve attendance, academic history, and user without mutation)
+  student.status = normalizedStatus;
+  await student.save();
+
+  // Audit log
+  await AuditLog.create({
+    actor: adminUserId,
+    action: 'ADMIN_STUDENT_STATUS_UPDATE',
+    entityType: 'Student',
+    entityId: student._id,
+    summary: `Admin changed student ${student.rollNumber} status from "${previousStatus}" to "${normalizedStatus}"`,
+    ip: req.ip || '',
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: student,
+    previousStatus,
+    newStatus: normalizedStatus,
+    message: `Student status updated to "${normalizedStatus}" successfully.`,
+  });
+});
+
 // ══════════════════════════════════════════════════════════════
 // 2. ADMIN FACULTY PROFILE MANAGEMENT
 // ══════════════════════════════════════════════════════════════
@@ -573,6 +759,8 @@ module.exports = {
   listCanonicalStudents,
   getCanonicalStudentDetail,
   updateCanonicalStudentProfile,
+  createCanonicalStudent,
+  updateCanonicalStudentStatus,
   listFacultyProfiles,
   getFacultyDetail,
   updateFacultyProfile,

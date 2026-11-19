@@ -177,9 +177,9 @@ export const adminService = {
   },
 
   // ── Part 6: Canonical Student & Faculty Profile Management ──────────────────
-  getCanonicalStudents: async ({ search, branch, semester, page, limit } = {}) => {
+  getCanonicalStudents: async ({ search, branch, semester, status, page, limit } = {}) => {
     const response = await api.get('/api/admin/students', {
-      params: { search, branch, semester, page, limit },
+      params: { search, branch, semester, status, page, limit },
     });
     return response.data;
   },
@@ -187,8 +187,16 @@ export const adminService = {
     const response = await api.get(`/api/admin/students/${id}`);
     return response.data;
   },
+  createCanonicalStudent: async (studentData) => {
+    const response = await api.post('/api/admin/students', studentData);
+    return response.data;
+  },
   updateCanonicalStudentProfile: async (id, data) => {
     const response = await api.patch(`/api/admin/students/${id}`, data);
+    return response.data;
+  },
+  updateCanonicalStudentStatus: async (id, status) => {
+    const response = await api.patch(`/api/admin/students/${id}/status`, { status });
     return response.data;
   },
   getFacultyList: async ({ search, department, page, limit } = {}) => {

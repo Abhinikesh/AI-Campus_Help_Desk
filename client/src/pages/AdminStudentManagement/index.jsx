@@ -29,7 +29,7 @@ import {
   AlertCircle, CheckCircle, HelpCircle, XCircle, ClipboardList,
   BookOpen, Briefcase, Info, X, GraduationCap,
   ShieldCheck, FileCheck, FileText, Clock, AlertTriangle, UserCheck,
-  Lock, Edit3, Save, RotateCcw, History, Mail, Phone, Calendar
+  Lock, Edit3, Save, RotateCcw, History, Mail, Phone, Calendar, UserPlus
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './AdminStudentManagement.css';
@@ -1403,6 +1403,7 @@ function CanonicalStudentsTab() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
   const [semesterFilter, setSemesterFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -1433,6 +1434,30 @@ function CanonicalStudentsTab() {
   const [saveSuccess, setSaveSuccess] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  // Add Student modal state
+  const [isAddingStudent, setIsAddingStudent] = useState(false);
+  const [addSaving, setAddSaving] = useState(false);
+  const [addError, setAddError] = useState(null);
+  const [addFormErrors, setAddFormErrors] = useState({});
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  const [addFormData, setAddFormData] = useState({
+    rollNumber: '',
+    fullName: '',
+    email: '',
+    phone: '',
+    branch: 'CSE',
+    program: 'B.Tech',
+    course: 'CSE',
+    batch: '2024/1st',
+    semester: '1',
+    section: 'A',
+    admissionYear: String(new Date().getFullYear()),
+    school: 'School of Engineering',
+    gender: '',
+    dateOfBirth: '',
+    status: 'active',
+  });
+
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -1451,13 +1476,14 @@ function CanonicalStudentsTab() {
         search: debouncedSearch || undefined,
         branch: branchFilter || undefined,
         semester: semesterFilter || undefined,
+        status: statusFilter || undefined,
         page,
         limit: 15,
       });
       if (res.success) {
         setStudents(res.data);
         setTotal(res.pagination.total);
-        setTotalPages(res.pagination.pages || 1);
+        setTotalPages(res.pagination.totalPages || res.pagination.pages || 1);
       } else {
         setError(res.message || 'Failed to load canonical students');
       }
@@ -1466,7 +1492,7 @@ function CanonicalStudentsTab() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, branchFilter, semesterFilter, page]);
+  }, [debouncedSearch, branchFilter, semesterFilter, statusFilter, page]);
 
   useEffect(() => {
     loadStudents();
@@ -1609,6 +1635,113 @@ function CanonicalStudentsTab() {
     }
   };
 
+  const handleAddStudentSubmit = async (e) => {
+    e.preventDefault();
+    setAddFormErrors({});
+    setAddError(null);
+
+    const errors = {};
+    if (!addFormData.rollNumber || !addFormData.rollNumber.trim()) {
+      errors.rollNumber = 'Roll Number is required';
+    }
+    if (!addFormData.fullName || !addFormData.fullName.trim() || addFormData.fullName.trim().length < 2) {
+      errors.fullName = 'Full Name is required (minimum 2 characters)';
+    }
+    if (addFormData.email && addFormData.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(addFormData.email.trim())) {
+        errors.email = 'Please provide a valid email address';
+      }
+    }
+    if (addFormData.phone && addFormData.phone.trim()) {
+      const digits = addFormData.phone.replace(/[\s\-\(\)\+]/g, '');
+      if (digits.length < 10 || digits.length > 15) {
+        errors.phone = 'Phone number must contain between 10 and 15 digits';
+      }
+    }
+    if (addFormData.semester && String(addFormData.semester).trim()) {
+      const semNum = Number(addFormData.semester);
+      if (isNaN(semNum) || semNum < 1 || semNum > 10) {
+        errors.semester = 'Semester must be between 1 and 10';
+      }
+    }
+    if (addFormData.admissionYear && String(addFormData.admissionYear).trim()) {
+      const yearNum = Number(addFormData.admissionYear);
+      if (isNaN(yearNum) || yearNum < 1990 || yearNum > 2050) {
+        errors.admissionYear = 'Admission year must be between 1990 and 2050';
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setAddFormErrors(errors);
+      return;
+    }
+
+    setAddSaving(true);
+    try {
+      const payload = {
+        rollNumber: addFormData.rollNumber.trim().toUpperCase(),
+        fullName: addFormData.fullName.trim(),
+        email: addFormData.email.trim() || null,
+        phone: addFormData.phone.trim() || null,
+        branch: addFormData.branch.trim() || null,
+        program: addFormData.program.trim() || null,
+        course: addFormData.course.trim() || null,
+        batch: addFormData.batch.trim() || null,
+        semester: addFormData.semester ? Number(addFormData.semester) : null,
+        section: addFormData.section ? addFormData.section.trim().toUpperCase() : null,
+        admissionYear: addFormData.admissionYear ? Number(addFormData.admissionYear) : null,
+        school: addFormData.school.trim() || null,
+        gender: addFormData.gender || '',
+        dateOfBirth: addFormData.dateOfBirth || null,
+        status: addFormData.status || 'active',
+      };
+
+      const res = await adminService.createCanonicalStudent(payload);
+      if (res.success) {
+        setIsAddingStudent(false);
+        setSaveSuccess(`Student "${payload.fullName}" (${payload.rollNumber}) created successfully.`);
+        await loadStudents();
+        if (res.data?._id) {
+          handleSelectStudent(res.data._id);
+        }
+      } else {
+        setAddError(res.message || 'Failed to create student');
+      }
+    } catch (err) {
+      setAddError(err?.response?.data?.message || err.message || 'Failed to create student');
+    } finally {
+      setAddSaving(false);
+    }
+  };
+
+  const handleStatusChange = async (studentId, newStatus) => {
+    if (!studentId || !newStatus) return;
+    setStatusUpdating(true);
+    setDetailError(null);
+    setSaveSuccess(null);
+    try {
+      const res = await adminService.updateCanonicalStudentStatus(studentId, newStatus);
+      if (res.success) {
+        setSaveSuccess(`Status updated to "${newStatus}" successfully.`);
+        if (studentDetail?.student) {
+          setStudentDetail((prev) => ({
+            ...prev,
+            student: { ...prev.student, status: newStatus },
+          }));
+        }
+        loadStudents();
+        loadDetail(studentId);
+      } else {
+        setDetailError(res.message || 'Failed to update student status');
+      }
+    } catch (err) {
+      setDetailError(err?.response?.data?.message || err.message || 'Failed to update student status');
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
   const student = studentDetail?.student;
   const user = studentDetail?.user;
 
@@ -1656,18 +1789,65 @@ function CanonicalStudentsTab() {
                 <option key={s} value={s}>Semester {s}</option>
               ))}
             </select>
+
+            <select
+              className="ds-select"
+              style={{ height: 38, fontSize: 13 }}
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            >
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="suspended">Suspended</option>
+              <option value="graduated">Graduated</option>
+              <option value="withdrawn">Withdrawn</option>
+            </select>
           </div>
 
-          <button
-            className="ds-btn ghost sm"
-            title="Refresh List"
-            onClick={loadStudents}
-            disabled={loading}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 38 }}
-          >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            Refresh
-          </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              className="ds-btn primary sm"
+              title="Add Student"
+              onClick={() => {
+                setAddFormData({
+                  rollNumber: '',
+                  fullName: '',
+                  email: '',
+                  phone: '',
+                  branch: 'CSE',
+                  program: 'B.Tech',
+                  course: 'CSE',
+                  batch: '2024/1st',
+                  semester: '1',
+                  section: 'A',
+                  admissionYear: String(new Date().getFullYear()),
+                  school: 'School of Engineering',
+                  gender: '',
+                  dateOfBirth: '',
+                  status: 'active',
+                });
+                setAddFormErrors({});
+                setAddError(null);
+                setIsAddingStudent(true);
+              }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 38 }}
+            >
+              <UserPlus size={14} />
+              Add Student
+            </button>
+
+            <button
+              className="ds-btn ghost sm"
+              title="Refresh List"
+              onClick={loadStudents}
+              disabled={loading}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 38 }}
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1754,7 +1934,7 @@ function CanonicalStudentsTab() {
                             </div>
                           </td>
                           <td>
-                            <span className={`ds-pill ${s.status === 'active' ? 'green' : s.status === 'alumni' ? 'blue' : 'gray'}`}>
+                            <span className={`ds-pill ${s.status === 'active' ? 'green' : s.status === 'suspended' ? 'amber' : s.status === 'withdrawn' ? 'red' : s.status === 'alumni' || s.status === 'graduated' ? 'blue' : 'gray'}`}>
                               {s.status}
                             </span>
                           </td>
@@ -1830,7 +2010,7 @@ function CanonicalStudentsTab() {
                   <div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
                       {student.fullName}
-                      <span className={`ds-pill ${student.status === 'active' ? 'green' : 'gray'}`}>
+                      <span className={`ds-pill ${student.status === 'active' ? 'green' : student.status === 'suspended' ? 'amber' : student.status === 'withdrawn' ? 'red' : student.status === 'graduated' || student.status === 'alumni' ? 'blue' : 'gray'}`}>
                         {student.status}
                       </span>
                     </div>
@@ -1849,6 +2029,31 @@ function CanonicalStudentsTab() {
                   >
                     <X size={16} />
                   </button>
+                </div>
+
+                {/* Administrative Status Management */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: 6, border: '1px solid #E2E8F0', marginTop: 10, marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#334155' }}>Manage Status:</span>
+                    <select
+                      className="ds-select"
+                      style={{ height: 30, fontSize: 12, padding: '2px 8px' }}
+                      value={student.status}
+                      disabled={statusUpdating}
+                      onChange={(e) => handleStatusChange(student._id, e.target.value)}
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                      <option value="suspended">Suspended</option>
+                      <option value="graduated">Graduated</option>
+                      <option value="withdrawn">Withdrawn</option>
+                    </select>
+                  </div>
+                  {statusUpdating && (
+                    <span style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <RefreshCw size={12} className="animate-spin" /> Updating...
+                    </span>
+                  )}
                 </div>
 
                 {/* Identity & Lifecycle Protection Banner */}
@@ -2230,6 +2435,225 @@ function CanonicalStudentsTab() {
           </div>
         )}
       </div>
+
+      {/* Add Student Modal */}
+      {isAddingStudent && (
+        <div className="sm-modal-overlay">
+          <div className="sm-modal-container" style={{ maxWidth: 640 }}>
+            <div className="sm-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <UserPlus size={18} style={{ color: '#2563EB' }} />
+                <span style={{ fontWeight: 700, fontSize: 16, color: '#0F172A' }}>Add Enrolled Student</span>
+              </div>
+              <button
+                className="sm-detail-close"
+                onClick={() => setIsAddingStudent(false)}
+                disabled={addSaving}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddStudentSubmit}>
+              <div className="sm-modal-body">
+                {addError && (
+                  <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#991B1B', padding: '10px 12px', borderRadius: 6, fontSize: 12, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <AlertCircle size={15} />
+                    <span>{addError}</span>
+                  </div>
+                )}
+
+                <div className="sm-profile-form-grid">
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Roll Number *</label>
+                    <input
+                      type="text"
+                      className={`sm-form-input ${addFormErrors.rollNumber ? 'has-error' : ''}`}
+                      placeholder="e.g. 20240099"
+                      value={addFormData.rollNumber}
+                      onChange={(e) => setAddFormData({ ...addFormData, rollNumber: e.target.value })}
+                    />
+                    {addFormErrors.rollNumber && <div className="sm-input-error-msg">{addFormErrors.rollNumber}</div>}
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Status</label>
+                    <select
+                      className="sm-form-input"
+                      value={addFormData.status}
+                      onChange={(e) => setAddFormData({ ...addFormData, status: e.target.value })}
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                      <option value="suspended">Suspended</option>
+                      <option value="graduated">Graduated</option>
+                      <option value="withdrawn">Withdrawn</option>
+                    </select>
+                  </div>
+
+                  <div className="sm-form-group full-width">
+                    <label className="sm-form-label">Full Name *</label>
+                    <input
+                      type="text"
+                      className={`sm-form-input ${addFormErrors.fullName ? 'has-error' : ''}`}
+                      placeholder="e.g. Ankit Verma"
+                      value={addFormData.fullName}
+                      onChange={(e) => setAddFormData({ ...addFormData, fullName: e.target.value })}
+                    />
+                    {addFormErrors.fullName && <div className="sm-input-error-msg">{addFormErrors.fullName}</div>}
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Email (Personal Gmail for Login)</label>
+                    <input
+                      type="email"
+                      className={`sm-form-input ${addFormErrors.email ? 'has-error' : ''}`}
+                      placeholder="e.g. ankit@gmail.com"
+                      value={addFormData.email}
+                      onChange={(e) => setAddFormData({ ...addFormData, email: e.target.value })}
+                    />
+                    {addFormErrors.email && <div className="sm-input-error-msg">{addFormErrors.email}</div>}
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Phone Number (10–15 digits)</label>
+                    <input
+                      type="tel"
+                      className={`sm-form-input ${addFormErrors.phone ? 'has-error' : ''}`}
+                      placeholder="e.g. 9876543210"
+                      value={addFormData.phone}
+                      onChange={(e) => setAddFormData({ ...addFormData, phone: e.target.value })}
+                    />
+                    {addFormErrors.phone && <div className="sm-input-error-msg">{addFormErrors.phone}</div>}
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Program</label>
+                    <input
+                      type="text"
+                      className="sm-form-input"
+                      placeholder="e.g. B.Tech"
+                      value={addFormData.program}
+                      onChange={(e) => setAddFormData({ ...addFormData, program: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Branch / Department</label>
+                    <input
+                      type="text"
+                      className="sm-form-input"
+                      placeholder="e.g. CSE"
+                      value={addFormData.branch}
+                      onChange={(e) => setAddFormData({ ...addFormData, branch: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Semester (1–10)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="10"
+                      className={`sm-form-input ${addFormErrors.semester ? 'has-error' : ''}`}
+                      placeholder="e.g. 1"
+                      value={addFormData.semester}
+                      onChange={(e) => setAddFormData({ ...addFormData, semester: e.target.value })}
+                    />
+                    {addFormErrors.semester && <div className="sm-input-error-msg">{addFormErrors.semester}</div>}
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Section</label>
+                    <input
+                      type="text"
+                      className="sm-form-input"
+                      placeholder="e.g. A"
+                      value={addFormData.section}
+                      onChange={(e) => setAddFormData({ ...addFormData, section: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Admission Year</label>
+                    <input
+                      type="number"
+                      className={`sm-form-input ${addFormErrors.admissionYear ? 'has-error' : ''}`}
+                      placeholder="e.g. 2024"
+                      value={addFormData.admissionYear}
+                      onChange={(e) => setAddFormData({ ...addFormData, admissionYear: e.target.value })}
+                    />
+                    {addFormErrors.admissionYear && <div className="sm-input-error-msg">{addFormErrors.admissionYear}</div>}
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">School / College</label>
+                    <input
+                      type="text"
+                      className="sm-form-input"
+                      placeholder="e.g. School of Engineering"
+                      value={addFormData.school}
+                      onChange={(e) => setAddFormData({ ...addFormData, school: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Gender</label>
+                    <select
+                      className="sm-form-input"
+                      value={addFormData.gender}
+                      onChange={(e) => setAddFormData({ ...addFormData, gender: e.target.value })}
+                    >
+                      <option value="">Unspecified</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Date of Birth</label>
+                    <input
+                      type="date"
+                      className="sm-form-input"
+                      value={addFormData.dateOfBirth}
+                      onChange={(e) => setAddFormData({ ...addFormData, dateOfBirth: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="sm-modal-footer">
+                <button
+                  type="button"
+                  className="sm-btn-cancel"
+                  onClick={() => setIsAddingStudent(false)}
+                  disabled={addSaving}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="sm-btn-save"
+                  disabled={addSaving}
+                >
+                  {addSaving ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={14} />
+                      Create Student Record
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

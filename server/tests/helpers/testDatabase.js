@@ -24,6 +24,7 @@ const APPROVED_TEST_DATABASES = new Set([
   'test_memory_db',
 
   // Feature-specific & phase-specific test suites
+  'test_admin_student_mgmt_isolated',
   'test_hr_attendance_lifecycle_isolated',
   'test_admin_leave_policy_ui_isolated',
   'test_admin_employee_mgmt_isolated',

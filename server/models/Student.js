@@ -127,7 +127,7 @@ const studentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'alumni', 'suspended', 'withdrawn'],
+      enum: ['active', 'inactive', 'suspended', 'graduated', 'alumni', 'withdrawn'],
       default: 'active',
     },
     // Lifecycle Account State

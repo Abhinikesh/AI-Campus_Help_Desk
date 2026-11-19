@@ -72,6 +72,8 @@ const {
   listCanonicalStudents,
   getCanonicalStudentDetail,
   updateCanonicalStudentProfile,
+  createCanonicalStudent,
+  updateCanonicalStudentStatus,
   listFacultyProfiles,
   getFacultyDetail,
   updateFacultyProfile,
@@ -98,8 +100,10 @@ router.get('/announcements',                  getAllAnnouncements);
 
 // ── Part 6: Admin Canonical Student & Faculty Profile Management ──────────────
 router.get('/students',                       listCanonicalStudents);
+router.post('/students',                      createCanonicalStudent);
 router.get('/students/:id',                   getCanonicalStudentDetail);
 router.patch('/students/:id',                 updateCanonicalStudentProfile);
+router.patch('/students/:id/status',          updateCanonicalStudentStatus);
 
 router.get('/faculty',                        listFacultyProfiles);
 router.get('/faculty/:id',                    getFacultyDetail);
