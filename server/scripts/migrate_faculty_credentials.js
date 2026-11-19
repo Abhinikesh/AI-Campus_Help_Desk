@@ -23,17 +23,31 @@ function generateSecurePassword(length = 16) {
   return Array.from(bytes).map((b) => chars[b % chars.length]).join('');
 }
 
-async function migrateFaculty() {
+async function migrateFaculty(targetIdentifier) {
   try {
     if (mongoose.connection.readyState === 0) {
       await connectDB();
     }
 
-    const facultyUsers = await User.find({ role: 'faculty' });
-    console.log(`Found ${facultyUsers.length} faculty accounts to secure.`);
+    const query = { role: 'faculty' };
+    if (targetIdentifier) {
+      query.$or = [
+        { loginId: targetIdentifier.trim() },
+        { email: targetIdentifier.trim().toLowerCase() },
+      ];
+    }
 
-    let updatedCount = 0;
+    const facultyUsers = await User.find(query);
+    if (!facultyUsers.length) {
+      console.log(`No faculty account found matching: ${targetIdentifier}`);
+      await mongoose.disconnect();
+      process.exit(0);
+    }
+
+    console.log(`Found ${facultyUsers.length} faculty account(s) to secure.`);
+
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const results = [];
 
     for (const faculty of facultyUsers) {
       const tempPassword = generateSecurePassword(16);
@@ -44,21 +58,31 @@ async function migrateFaculty() {
       faculty.temporaryPasswordExpiresAt = expiresAt;
       faculty.passwordChangedAt = null;
       await faculty.save();
-      updatedCount++;
+
+      results.push({
+        loginId: faculty.loginId,
+        name: faculty.name,
+        email: faculty.email,
+        temporaryPassword: tempPassword,
+        expiresAt: expiresAt.toISOString(),
+      });
     }
 
-    console.log('\n' + '═'.repeat(68));
-    console.log('       FACULTY CREDENTIAL SECURITY MIGRATION COMPLETE');
-    console.log('═'.repeat(68));
-    console.log(`  Accounts Updated:           ${updatedCount}`);
-    console.log(`  Credential Model:           100% Unique Random Cryptographic Passwords`);
-    console.log(`  Shared Default Passwords:   ELIMINATED`);
+    console.log('\n' + '═'.repeat(78));
+    console.log('       CAMPUSSPHERE AI — FACULTY CREDENTIAL INITIALIZATION / RESET');
+    console.log('═'.repeat(78));
+    console.log(`  Accounts Updated:           ${results.length}`);
+    console.log(`  Credential Model:           Cryptographically Secure Temporary Passwords`);
     console.log(`  Must Change On First Login: YES (7-day validity)`);
-    console.log('─'.repeat(68));
-    console.log('  [MANAGEMENT NOTE]');
-    console.log('  Admin can view users and securely trigger individual password resets');
-    console.log('  at any time via: POST /api/admin/users/:id/reset-password');
-    console.log('═'.repeat(68) + '\n');
+    console.log('─'.repeat(78));
+    for (const r of results) {
+      console.log(`  [${r.loginId}] ${r.name.padEnd(22)} | Email: ${r.email.padEnd(28)} | Temp PW: ${r.temporaryPassword}`);
+    }
+    console.log('─'.repeat(78));
+    console.log('  [SECURITY NOTICE]');
+    console.log('  • Credentials generated locally; never committed to git or stored plaintext.');
+    console.log('  • Share temporary credentials securely with faculty members.');
+    console.log('═'.repeat(78) + '\n');
 
     await mongoose.disconnect();
     process.exit(0);
@@ -72,7 +96,8 @@ async function migrateFaculty() {
 }
 
 if (require.main === module) {
-  migrateFaculty();
+  const target = process.argv[2];
+  migrateFaculty(target);
 }
 
 module.exports = { migrateFaculty };

@@ -210,6 +210,25 @@ before(async () => {
     isActive: true,
   });
 
+  // 9. Synthetic Non-Gmail Student (Legitimate Yahoo domain)
+  const userYahoo = await User.create({
+    name: 'Synthetic Student Yahoo',
+    email: 'student.yahoo@yahoo.com',
+    loginId: 'ROLL2024Y',
+    role: 'student',
+    passwordHash: defaultPasswordHash,
+    isActive: true,
+  });
+
+  await Student.create({
+    user: userYahoo._id,
+    rollNumber: 'ROLL2024Y',
+    fullName: 'Synthetic Student Yahoo',
+    email: 'student.yahoo@yahoo.com',
+    phone: '9876543219',
+    status: 'active',
+  });
+
   initialStudentCount = await Student.countDocuments();
   initialUserCount = await User.countDocuments();
   resetStudentLoginThrottler();
@@ -309,16 +328,25 @@ describe('CampusSphere Part 7: Student Login Using Roll Number + Personal Gmail'
     assert.ok(res.data.data.token);
   });
 
-  test('7. Non-Gmail address → rejected for this login flow', async () => {
+  test('7. Legitimate non-Gmail address → supported when matching registered email, rejected when mismatched', async () => {
     resetStudentLoginThrottler();
-    const res = await studentLoginPost({
+    // Mismatched non-Gmail on student registered with gmail -> rejected with 401 (not 400 format error)
+    const mismatchRes = await studentLoginPost({
       rollNumber: 'ROLL2024A',
       gmail: 'student.one@yahoo.com',
     });
+    assert.equal(mismatchRes.status, 401);
+    assert.equal(mismatchRes.data.success, false);
+    assert.match(mismatchRes.data.message, /invalid roll number or registered gmail address/i);
 
-    assert.equal(res.status, 400);
-    assert.equal(res.data.success, false);
-    assert.match(res.data.message, /@gmail\.com/i);
+    // Matching legitimate non-Gmail address -> login succeeds
+    const matchRes = await studentLoginPost({
+      rollNumber: 'ROLL2024Y',
+      gmail: 'student.yahoo@yahoo.com',
+    });
+    assert.equal(matchRes.status, 200);
+    assert.equal(matchRes.data.success, true);
+    assert.ok(matchRes.data.data.token);
   });
 
   test('8. Invalid email format → rejected', async () => {

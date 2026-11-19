@@ -13,7 +13,7 @@ const ROLE_META = {
     label:    'Student',
     icon:     GraduationCap,
     title:    'Student Login',
-    subtitle: 'Sign in with your Roll Number and registered personal Gmail',
+    subtitle: 'Sign in with your Roll Number and registered personal email',
     btnText:  'Login',
   },
   faculty: {
@@ -122,10 +122,10 @@ const LoginModal = ({ role, onClose }) => {
         ok = false;
       }
       if (!gmail.trim()) {
-        setGmailError('Personal Gmail is required');
+        setGmailError('Registered email is required');
         ok = false;
-      } else if (!gmail.trim().toLowerCase().endsWith('@gmail.com')) {
-        setGmailError('Must be a personal Gmail address ending in @gmail.com');
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(gmail.trim().toLowerCase())) {
+        setGmailError('Please enter a valid email address');
         ok = false;
       }
     } else {
@@ -205,7 +205,7 @@ const LoginModal = ({ role, onClose }) => {
     : 'Admin ID or Email';
 
   const idPlaceholder = isStudent
-    ? 'e.g. 20240001'
+    ? 'e.g. 1/24/SET/BCS/001'
     : activeRole === 'faculty'
     ? 'e.g. FAC001 or faculty email'
     : 'e.g. ADMIN001 or admin@campus.edu';
@@ -281,7 +281,7 @@ const LoginModal = ({ role, onClose }) => {
                   <input
                     className={`modal-input${rollError ? ' error-input' : ''}`}
                     type="text"
-                    placeholder="e.g. 20240001"
+                    placeholder="e.g. 1/24/SET/BCS/001"
                     value={rollNumber}
                     onChange={(e) => { setRollNumber(e.target.value); setRollError(''); }}
                     autoComplete="username"
@@ -292,9 +292,9 @@ const LoginModal = ({ role, onClose }) => {
                   )}
                 </div>
 
-                {/* Student Registered Personal Gmail */}
+                {/* Student Registered Personal Email */}
                 <div className="modal-field">
-                  <label className="modal-label">Registered Personal Gmail</label>
+                  <label className="modal-label">Registered Personal Email</label>
                   <input
                     className={`modal-input${gmailError ? ' error-input' : ''}`}
                     type="email"
@@ -304,7 +304,7 @@ const LoginModal = ({ role, onClose }) => {
                     autoComplete="email"
                   />
                   <span className="field-hint" style={{ fontSize: 11, color: '#64748B', marginTop: 4 }}>
-                    Enter your personal @gmail.com address registered with the college.
+                    Enter your personal email address registered with the college.
                   </span>
                   {gmailError && (
                     <span className="field-error">{gmailError}</span>
