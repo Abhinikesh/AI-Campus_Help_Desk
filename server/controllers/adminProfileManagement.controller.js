@@ -11,6 +11,13 @@ const Student = require('../models/Student');
 const Faculty = require('../models/Faculty');
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
+const Attendance = require('../models/Attendance');
+const FaceEmbedding = require('../models/FaceEmbedding');
+const Fee = require('../models/Fee');
+const FeeInvoice = require('../models/FeeInvoice');
+const Mark = require('../models/Mark');
+const Complaint = require('../models/Complaint');
+const Submission = require('../models/Submission');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -371,6 +378,10 @@ const createCanonicalStudent = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Roll number is required.');
   }
 
+  if (/^\d{10}$/.test(rawRoll)) {
+    throw new ApiError(400, 'Invalid roll number format: 10-digit mobile phone numbers cannot be used as roll numbers.');
+  }
+
   const rawName = body.fullName ? String(body.fullName).trim() : '';
   if (!rawName || rawName.length < 2) {
     throw new ApiError(400, 'Full name is required and must contain at least 2 characters.');
@@ -525,6 +536,12 @@ const updateCanonicalStudentStatus = asyncHandler(async (req, res) => {
   student.status = normalizedStatus;
   await student.save();
 
+  // Deactivate or activate linked User account in sync with student status
+  if (student.user) {
+    const shouldBeActive = normalizedStatus === 'active';
+    await User.findByIdAndUpdate(student.user, { isActive: shouldBeActive });
+  }
+
   // Audit log
   await AuditLog.create({
     actor: adminUserId,
@@ -541,6 +558,86 @@ const updateCanonicalStudentStatus = asyncHandler(async (req, res) => {
     previousStatus,
     newStatus: normalizedStatus,
     message: `Student status updated to "${normalizedStatus}" successfully.`,
+  });
+});
+
+// DELETE /api/admin/students/:id — Safely delete or prevent deletion of canonical student
+const deleteCanonicalStudent = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const adminUserId = req.user.userId;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, 'Invalid student identifier format');
+  }
+
+  const student = await Student.findById(id);
+  if (!student) {
+    throw new ApiError(404, 'Student record not found');
+  }
+
+  // 1. Check for dependent records across attendance, biometric, financial, mark, complaint, and submission systems
+  const [
+    attendanceCount,
+    faceCount,
+    feeCount,
+    invoiceCount,
+    markCount,
+    complaintCount,
+    submissionCount,
+  ] = await Promise.all([
+    Attendance.countDocuments({ student: student._id }),
+    FaceEmbedding.countDocuments({ student: student._id }),
+    Fee.countDocuments({ student: student._id }),
+    FeeInvoice.countDocuments({ student: student._id }),
+    Mark.countDocuments({ student: student._id }),
+    Complaint.countDocuments({ student: student._id }),
+    Submission.countDocuments({ student: student._id }),
+  ]);
+
+  const dependencyDetails = [];
+  if (attendanceCount > 0) dependencyDetails.push(`${attendanceCount} attendance record(s)`);
+  if (faceCount > 0) dependencyDetails.push(`${faceCount} biometric face vector(s)`);
+  if (feeCount > 0 || invoiceCount > 0) dependencyDetails.push(`${feeCount + invoiceCount} fee/invoice record(s)`);
+  if (markCount > 0) dependencyDetails.push(`${markCount} exam mark(s)`);
+  if (complaintCount > 0) dependencyDetails.push(`${complaintCount} complaint record(s)`);
+  if (submissionCount > 0) dependencyDetails.push(`${submissionCount} assignment submission(s)`);
+
+  if (dependencyDetails.length > 0) {
+    throw new ApiError(
+      400,
+      `Cannot permanently delete student "${student.rollNumber}" with existing records (${dependencyDetails.join(', ')}). To preserve institutional and academic history, please deactivate the student by setting status to "inactive" or "withdrawn" instead.`
+    );
+  }
+
+  // 2. If student has a linked User, delete linked student user account
+  if (student.user) {
+    const user = await User.findById(student.user);
+    if (user && user.role === 'student') {
+      await User.findByIdAndDelete(student.user);
+    }
+  }
+
+  // 3. Delete student document
+  await Student.findByIdAndDelete(student._id);
+
+  // 4. Audit log
+  await AuditLog.create({
+    actor: adminUserId,
+    action: 'ADMIN_STUDENT_DELETE',
+    entityType: 'Student',
+    entityId: student._id,
+    summary: `Admin permanently deleted student record: ${student.rollNumber} (${student.fullName}) with zero dependent records.`,
+    ip: req.ip || '',
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      _id: student._id,
+      rollNumber: student.rollNumber,
+      fullName: student.fullName,
+    },
+    message: `Student "${student.fullName}" (${student.rollNumber}) deleted successfully.`,
   });
 });
 
@@ -761,6 +858,7 @@ module.exports = {
   updateCanonicalStudentProfile,
   createCanonicalStudent,
   updateCanonicalStudentStatus,
+  deleteCanonicalStudent,
   listFacultyProfiles,
   getFacultyDetail,
   updateFacultyProfile,

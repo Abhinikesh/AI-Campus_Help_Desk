@@ -74,6 +74,7 @@ const {
   updateCanonicalStudentProfile,
   createCanonicalStudent,
   updateCanonicalStudentStatus,
+  deleteCanonicalStudent,
   listFacultyProfiles,
   getFacultyDetail,
   updateFacultyProfile,
@@ -104,6 +105,7 @@ router.post('/students',                      createCanonicalStudent);
 router.get('/students/:id',                   getCanonicalStudentDetail);
 router.patch('/students/:id',                 updateCanonicalStudentProfile);
 router.patch('/students/:id/status',          updateCanonicalStudentStatus);
+router.delete('/students/:id',                deleteCanonicalStudent);
 
 router.get('/faculty',                        listFacultyProfiles);
 router.get('/faculty/:id',                    getFacultyDetail);

@@ -29,7 +29,8 @@ import {
   AlertCircle, CheckCircle, HelpCircle, XCircle, ClipboardList,
   BookOpen, Briefcase, Info, X, GraduationCap,
   ShieldCheck, FileCheck, FileText, Clock, AlertTriangle, UserCheck,
-  Lock, Edit3, Save, RotateCcw, History, Mail, Phone, Calendar, UserPlus
+  Lock, Edit3, Save, RotateCcw, History, Mail, Phone, Calendar, UserPlus,
+  Trash2, UserMinus
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './AdminStudentManagement.css';
@@ -1440,6 +1441,9 @@ function CanonicalStudentsTab() {
   const [addError, setAddError] = useState(null);
   const [addFormErrors, setAddFormErrors] = useState({});
   const [statusUpdating, setStatusUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const [addFormData, setAddFormData] = useState({
     rollNumber: '',
     fullName: '',

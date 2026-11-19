@@ -199,6 +199,10 @@ export const adminService = {
     const response = await api.patch(`/api/admin/students/${id}/status`, { status });
     return response.data;
   },
+  deleteCanonicalStudent: async (id) => {
+    const response = await api.delete(`/api/admin/students/${id}`);
+    return response.data;
+  },
   getFacultyList: async ({ search, department, page, limit } = {}) => {
     const response = await api.get('/api/admin/faculty', {
       params: { search, department, page, limit },

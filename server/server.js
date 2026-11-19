@@ -27,10 +27,23 @@ const app = express();
 // ── Security headers (Helmet) ────────────────────────────────────────────────
 app.use(helmet());
 
-// ── CORS — only allow the configured client origin ───────────────────────────
+// ── CORS — allow configured client origin and local development origins ─────
+const allowedOrigins = [
+  env.CLIENT_URL,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5001',
+  'http://127.0.0.1:5001',
+];
+
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
     exposedHeaders: ['Content-Disposition'],
   })

@@ -197,8 +197,15 @@ const login = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Invalid role');
   }
 
-  // Find user by loginId AND role (prevents cross-role login)
-  const user = await User.findOne({ loginId: loginId.trim(), role: userRole }).select('+passwordHash');
+  // Find user by loginId OR email AND role (prevents cross-role login)
+  const identifier = loginId.trim();
+  const user = await User.findOne({
+    $or: [
+      { loginId: identifier },
+      { email: identifier.toLowerCase() },
+    ],
+    role: userRole,
+  }).select('+passwordHash');
 
   if (!user) {
     console.log(`❌ Login failed: Invalid credentials for role="${role}"`);

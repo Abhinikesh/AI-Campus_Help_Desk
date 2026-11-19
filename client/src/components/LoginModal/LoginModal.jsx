@@ -168,11 +168,15 @@ const LoginModal = ({ role, onClose }) => {
         navigate(data?.data?.redirectTo || '/');
       }
     } catch (err) {
-      setApiError(
-        err?.response?.data?.message ||
-        err.message ||
-        'Invalid credentials. Please try again.'
-      );
+      if (!err.response && (err.message === 'Network Error' || err.code === 'ERR_NETWORK')) {
+        setApiError('Unable to connect to ERP server. Please ensure the backend is running on port 5001.');
+      } else {
+        setApiError(
+          err?.response?.data?.message ||
+          err.message ||
+          'Invalid credentials. Please try again.'
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -193,18 +197,18 @@ const LoginModal = ({ role, onClose }) => {
   }, []);
 
   // ── Identifier label / placeholder per role ─────────────────
-  // loginId is: roll number for students, employee ID for faculty, admin ID for admin
+  // loginId is: roll number for students, employee ID / email for faculty, admin ID / email for admin
   const idLabel = isStudent
     ? 'Roll Number'
     : activeRole === 'faculty'
-    ? 'Employee ID'
-    : 'Admin ID';
+    ? 'Employee ID or Email'
+    : 'Admin ID or Email';
 
   const idPlaceholder = isStudent
     ? 'e.g. 20240001'
     : activeRole === 'faculty'
-    ? 'e.g. FAC001'
-    : 'e.g. ADMIN001';
+    ? 'e.g. FAC001 or faculty email'
+    : 'e.g. ADMIN001 or admin@campus.edu';
 
   const idType = 'text'; // always text — IDs are not emails
 
