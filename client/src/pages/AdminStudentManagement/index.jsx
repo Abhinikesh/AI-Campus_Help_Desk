@@ -1261,28 +1261,32 @@ function RegisterImportTab() {
                 <div className="sm-register-side-by-side">
                   <div className="sm-register-side">
                     <div className="sm-detail-section-label">Register Data</div>
-                    <div className="sm-kv-row"><span>Roll Number</span><code>{selectedRow.rawRollNumber || '—'}</code></div>
-                    <div className="sm-kv-row"><span>Name</span><span>{selectedRow.rawStudentName || '—'}</span></div>
-                    <div className="sm-kv-row"><span>Program</span><span>{selectedRow.rawProgram || '—'}</span></div>
-                    <div className="sm-kv-row"><span>Branch</span><span>{selectedRow.rawBranch || '—'}</span></div>
-                    <div className="sm-kv-row"><span>Semester</span><span>{selectedRow.rawSemester || '—'}</span></div>
-                    <div className="sm-kv-row"><span>Section</span><span>{selectedRow.rawSection || '—'}</span></div>
-                    <div className="sm-kv-row"><span>Acad. Year</span><span>{selectedRow.rawAcademicYear || '—'}</span></div>
-                    <div className="sm-kv-row"><span>Reg. ID</span><code>{selectedRow.rawRegistrationId || '—'}</code></div>
+                    <div className="sm-kv-card">
+                      <div className="sm-kv-row"><span>Roll Number</span><code>{selectedRow.rawRollNumber || '—'}</code></div>
+                      <div className="sm-kv-row"><span>Name</span><span>{selectedRow.rawStudentName || '—'}</span></div>
+                      <div className="sm-kv-row"><span>Program</span><span>{selectedRow.rawProgram || '—'}</span></div>
+                      <div className="sm-kv-row"><span>Branch</span><span>{selectedRow.rawBranch || '—'}</span></div>
+                      <div className="sm-kv-row"><span>Semester</span><span>{selectedRow.rawSemester || '—'}</span></div>
+                      <div className="sm-kv-row"><span>Section</span><span>{selectedRow.rawSection || '—'}</span></div>
+                      <div className="sm-kv-row"><span>Acad. Year</span><span>{selectedRow.rawAcademicYear || '—'}</span></div>
+                      <div className="sm-kv-row"><span>Reg. ID</span><code>{selectedRow.rawRegistrationId || '—'}</code></div>
+                    </div>
                   </div>
                   <div className="sm-register-side">
                     <div className="sm-detail-section-label">Batch 003 Staging Match</div>
-                    {selectedRow.matchedStagingRollNumber ? (
-                      <>
-                        <div className="sm-kv-row"><span>Roll Number</span><code>{selectedRow.matchedStagingRollNumber}</code></div>
-                        <div className="sm-kv-row"><span>Staging Name</span><span>{selectedRow.matchedStagingName || '—'}</span></div>
-                      </>
-                    ) : (
-                      <div style={{ color: '#6B7280', fontSize: 13 }}>No staging match found</div>
-                    )}
-                    <div className="sm-kv-row" style={{ marginTop: 12 }}><span>Reconciliation</span><ReconBadge status={selectedRow.reconciliationStatus} /></div>
-                    <div className="sm-kv-row"><span>Evidence Review</span><EvidenceReviewBadge status={selectedRow.evidenceReviewStatus} /></div>
-                    {selectedRow.reviewRemarks && <div className="sm-kv-row"><span>Remarks</span><span>{selectedRow.reviewRemarks}</span></div>}
+                    <div className="sm-kv-card">
+                      {selectedRow.matchedStagingRollNumber ? (
+                        <>
+                          <div className="sm-kv-row"><span>Roll Number</span><code>{selectedRow.matchedStagingRollNumber}</code></div>
+                          <div className="sm-kv-row"><span>Staging Name</span><span>{selectedRow.matchedStagingName || '—'}</span></div>
+                        </>
+                      ) : (
+                        <div style={{ color: '#6B7280', fontSize: 13, padding: '10px 14px' }}>No staging match found</div>
+                      )}
+                      <div className="sm-kv-row"><span>Reconciliation</span><ReconBadge status={selectedRow.reconciliationStatus} /></div>
+                      <div className="sm-kv-row"><span>Evidence Review</span><EvidenceReviewBadge status={selectedRow.evidenceReviewStatus} /></div>
+                      {selectedRow.reviewRemarks && <div className="sm-kv-row"><span>Remarks</span><span>{selectedRow.reviewRemarks}</span></div>}
+                    </div>
                   </div>
                 </div>
 
@@ -2023,479 +2027,519 @@ function CanonicalStudentsTab() {
 
         {/* Detail Panel */}
         {selectedStudentId && (
-          <div className="sm-detail-panel" style={{ flex: '1', minWidth: 320 }}>
+          <div className="sm-detail-panel">
             {detailLoading ? (
-              <div style={{ padding: 32, textAlign: 'center', color: '#64748B' }}>
-                <RefreshCw size={20} className="animate-spin" style={{ display: 'inline', marginRight: 8 }} />
-                Loading profile details...
+              <div style={{ padding: 48, textAlign: 'center', color: '#64748B' }}>
+                <RefreshCw size={24} className="animate-spin" style={{ display: 'inline', marginBottom: 12 }} />
+                <div style={{ fontSize: 13, fontWeight: 500 }}>Loading profile details...</div>
               </div>
             ) : !student ? (
-              <div style={{ padding: 24, textAlign: 'center', color: '#94A3B8' }}>
+              <div style={{ padding: 32, textAlign: 'center', color: '#94A3B8' }}>
                 Student record not found.
               </div>
             ) : (
               <>
-                <div className="sm-detail-panel-header" style={{ alignItems: 'flex-start' }}>
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {student.fullName}
-                      <span className={`ds-pill ${student.status === 'active' ? 'green' : student.status === 'suspended' ? 'amber' : student.status === 'withdrawn' ? 'red' : student.status === 'graduated' || student.status === 'alumni' ? 'blue' : 'gray'}`}>
-                        {student.status}
-                      </span>
+                {/* Fixed Header */}
+                <div className="sm-detail-panel-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div className="sm-avatar-circle">
+                      {student.fullName ? student.fullName.split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() : 'ST'}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                      <code style={{ fontSize: 12, fontWeight: 600, color: '#2563EB', background: '#EFF6FF', padding: '2px 6px', borderRadius: 4 }}>
-                        {student.rollNumber}
-                      </code>
-                      <span className="sm-badge-locked">
-                        <Lock size={10} /> Roll Number Immutable
-                      </span>
+                    <div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span>{student.fullName}</span>
+                        <span className={`ds-pill ${student.status === 'active' ? 'green' : student.status === 'suspended' ? 'amber' : student.status === 'withdrawn' ? 'red' : student.status === 'graduated' || student.status === 'alumni' ? 'blue' : 'gray'}`}>
+                          {student.status}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                        <code style={{ fontSize: 12, fontWeight: 700, color: '#2563EB', background: '#EFF6FF', padding: '2px 8px', borderRadius: 4, border: '1px solid #DBEAFE' }}>
+                          {student.rollNumber}
+                        </code>
+                        <span className="sm-badge-locked">
+                          <Lock size={10} /> Roll Number Immutable
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <button
                     className="sm-detail-close"
+                    title="Close details"
                     onClick={() => { setSelectedStudentId(null); setStudentDetail(null); }}
                   >
                     <X size={16} />
                   </button>
                 </div>
 
-                {/* Administrative Status & Lifecycle Management */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: 6, border: '1px solid #E2E8F0', marginTop: 10, marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#334155' }}>Manage Status:</span>
-                    <select
-                      className="ds-select"
-                      style={{ height: 30, fontSize: 12, padding: '2px 8px' }}
-                      value={student.status}
-                      disabled={statusUpdating}
-                      onChange={(e) => handleStatusChange(student._id, e.target.value)}
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                      <option value="suspended">Suspended</option>
-                      <option value="graduated">Graduated</option>
-                      <option value="alumni">Alumni</option>
-                      <option value="withdrawn">Withdrawn</option>
-                    </select>
-
-                    {student.status === 'active' ? (
-                      <button
-                        type="button"
-                        onClick={() => handleStatusChange(student._id, 'inactive')}
+                {/* Scrollable Content Body */}
+                <div className="sm-detail-body">
+                  {/* Administrative Status & Lifecycle Management */}
+                  <div className="sm-drawer-status-bar">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Status:</span>
+                      <select
+                        className="ds-select"
+                        style={{ height: 30, fontSize: 12, padding: '2px 8px', fontWeight: 600, borderRadius: 6 }}
+                        value={student.status}
                         disabled={statusUpdating}
-                        title="Deactivate student account"
-                        className="sm-btn-secondary"
-                        style={{ padding: '3px 8px', fontSize: 11, color: '#B45309', borderColor: '#FDE68A', background: '#FFFBEB', display: 'flex', alignItems: 'center', gap: 4 }}
+                        onChange={(e) => handleStatusChange(student._id, e.target.value)}
                       >
-                        <UserMinus size={13} /> Deactivate
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleStatusChange(student._id, 'active')}
-                        disabled={statusUpdating}
-                        title="Reactivate student account"
-                        className="sm-btn-secondary"
-                        style={{ padding: '3px 8px', fontSize: 11, color: '#15803D', borderColor: '#BBF7D0', background: '#F0FDF4', display: 'flex', alignItems: 'center', gap: 4 }}
-                      >
-                        <UserCheck size={13} /> Reactivate
-                      </button>
-                    )}
-                  </div>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="suspended">Suspended</option>
+                        <option value="graduated">Graduated</option>
+                        <option value="alumni">Alumni</option>
+                        <option value="withdrawn">Withdrawn</option>
+                      </select>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {statusUpdating && (
-                      <span style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <RefreshCw size={12} className="animate-spin" /> Updating...
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => { setIsDeleting(true); setDeleteError(null); }}
-                      title="Permanently remove student record (strictly checks dependencies)"
-                      className="sm-btn-secondary"
-                      style={{ padding: '3px 8px', fontSize: 11, color: '#DC2626', borderColor: '#FECACA', background: '#FEF2F2', display: 'flex', alignItems: 'center', gap: 4 }}
-                    >
-                      <Trash2 size={13} /> Remove
-                    </button>
-                  </div>
-                </div>
-
-                {/* Identity & Lifecycle Protection Banner */}
-                <div className="sm-profile-guard-banner">
-                  <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: 2 }} />
-                  <div>
-                    <strong>Institutional Identity & Integrity Safeguard</strong>
-                    <div style={{ marginTop: 2 }}>
-                      Roll Number and Enrollment Status cannot be modified from profile editing. Academic progression and enrollment verification are strictly governed through institutional Registrar workflows.
-                    </div>
-                  </div>
-                </div>
-
-                {saveSuccess && (
-                  <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#065F46', padding: '10px 12px', borderRadius: 6, fontSize: 12, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <CheckCircle size={15} />
-                    <span>{saveSuccess}</span>
-                  </div>
-                )}
-
-                {detailError && (
-                  <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#991B1B', padding: '10px 12px', borderRadius: 6, fontSize: 12, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <AlertCircle size={15} />
-                    <span>{detailError}</span>
-                  </div>
-                )}
-
-                {/* VIEW MODE */}
-                {!isEditing ? (
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-                      <button
-                        className="sm-btn-save"
-                        onClick={startEditing}
-                        style={{ padding: '6px 12px', fontSize: 12 }}
-                      >
-                        <Edit3 size={14} />
-                        Edit Permitted Profile Fields
-                      </button>
-                    </div>
-
-                    <div className="sm-detail-section-label">Academic Placement</div>
-                    <div className="sm-kv-row"><span>School / College</span><span>{student.school || 'School of Engineering'}</span></div>
-                    <div className="sm-kv-row"><span>Course</span><span>{student.course || 'CSE'}</span></div>
-                    <div className="sm-kv-row"><span>Batch / Year</span><span>{student.batch || '2024/3rd'}</span></div>
-                    <div className="sm-kv-row"><span>Program</span><span>{student.program || 'B.Tech'}</span></div>
-                    <div className="sm-kv-row"><span>Branch</span><span>{student.branch || 'CSE'}</span></div>
-                    <div className="sm-kv-row"><span>Semester</span><span>{student.semester ? `Semester ${student.semester}` : <span style={{ color: '#94A3B8' }}>Not Set</span>}</span></div>
-                    <div className="sm-kv-row"><span>Section</span><span>{student.section || <span style={{ color: '#94A3B8' }}>Not Set</span>}</span></div>
-                    <div className="sm-kv-row"><span>Admission Year</span><span>{student.admissionYear || 2024}</span></div>
-
-                    <div className="sm-detail-section-label" style={{ marginTop: 16 }}>Contact Information</div>
-                    <div className="sm-kv-row">
-                      <span>Registered Gmail / Email</span>
-                      <span>
-                        {student.email ? (
-                          <>
-                            {student.email}
-                            {student.email.toLowerCase().endsWith('@gmail.com') ? (
-                              <span style={{ marginLeft: 6, fontSize: 10, background: '#DCFCE7', color: '#166534', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
-                                Gmail Login Enabled
-                              </span>
-                            ) : (
-                              <span style={{ marginLeft: 6, fontSize: 10, background: '#FEF3C7', color: '#92400E', padding: '1px 6px', borderRadius: 4, fontWeight: 500 }}>
-                                Non-Gmail
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <span style={{ color: '#94A3B8' }}>Not Set (Click Edit to Fill)</span>
-                        )}
-                      </span>
-                    </div>
-                    <div className="sm-kv-row">
-                      <span>Contact Phone</span>
-                      <span>{student.phone || <span style={{ color: '#94A3B8' }}>Not Set (Click Edit to Fill)</span>}</span>
-                    </div>
-
-                    <div className="sm-detail-section-label" style={{ marginTop: 16 }}>Personal Demographics</div>
-                    <div className="sm-kv-row"><span>Gender</span><span style={{ textTransform: 'capitalize' }}>{student.gender || <span style={{ color: '#94A3B8' }}>Not Set</span>}</span></div>
-                    <div className="sm-kv-row"><span>Date of Birth</span><span>{student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString() : <span style={{ color: '#94A3B8' }}>Not Set</span>}</span></div>
-
-                    <div className="sm-detail-section-label" style={{ marginTop: 16 }}>Portal Account Linkage</div>
-                    <div className="sm-kv-row">
-                      <span>Linked Portal Account</span>
-                      <span>
-                        {user ? (
-                          <span style={{ color: '#16A34A', fontWeight: 600 }}>
-                            Yes ({user.role}) — {user.email}
-                          </span>
-                        ) : (
-                          <span style={{ color: '#64748B' }}>
-                            Unlinked (Offline Institutional Record)
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                    <div className="sm-kv-row">
-                      <span>Account Lifecycle</span>
-                      <span><code>{student.accountStatus}</code></span>
-                    </div>
-
-                    {/* Audit History */}
-                    <div className="sm-audit-section">
-                      <div className="sm-audit-title">
-                        <History size={15} />
-                        Profile Change Audit Trail
-                      </div>
-                      {auditHistory.length === 0 ? (
-                        <div style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic', padding: '6px 0' }}>
-                          No administrative profile edits recorded yet.
-                        </div>
+                      {student.status === 'active' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleStatusChange(student._id, 'inactive')}
+                          disabled={statusUpdating}
+                          title="Deactivate student account"
+                          className="sm-btn-secondary"
+                          style={{ padding: '3px 8px', fontSize: 11, fontWeight: 600, color: '#B45309', borderColor: '#FDE68A', background: '#FFFBEB', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <UserMinus size={13} /> Deactivate
+                        </button>
                       ) : (
-                        auditHistory.map((item, idx) => (
-                          <div key={idx} className="sm-audit-item">
-                            <div className="sm-audit-header">
-                              <span className="sm-audit-actor">{item.performedBy?.name || item.performedBy?.email || 'Administrator'}</span>
-                              <span>{new Date(item.timestamp).toLocaleString()}</span>
-                            </div>
-                            <div style={{ fontSize: 11, color: '#475569' }}>
-                              Modified fields:
-                            </div>
-                            <div className="sm-audit-tag-list">
-                              {(item.details?.modifiedFields || item.details?.updatedFields || []).map((f, fIdx) => (
-                                <span key={fIdx} className="sm-audit-tag">{f}</span>
-                              ))}
-                            </div>
-                          </div>
-                        ))
+                        <button
+                          type="button"
+                          onClick={() => handleStatusChange(student._id, 'active')}
+                          disabled={statusUpdating}
+                          title="Reactivate student account"
+                          className="sm-btn-secondary"
+                          style={{ padding: '3px 8px', fontSize: 11, fontWeight: 600, color: '#15803D', borderColor: '#BBF7D0', background: '#F0FDF4', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <UserCheck size={13} /> Reactivate
+                        </button>
                       )}
                     </div>
-                  </div>
-                ) : (
-                  /* EDIT MODE */
-                  <form onSubmit={handleSave} className="sm-profile-form">
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#1E293B', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Edit3 size={14} className="text-blue-600" />
-                      Edit Permitted Profile Information
-                    </div>
 
-                    <div className="sm-profile-form-grid">
-                      {/* Immutable Roll Number */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">
-                          Roll Number
-                          <span className="sm-badge-locked"><Lock size={10} /> Locked</span>
-                        </label>
-                        <input
-                          type="text"
-                          className="sm-form-input"
-                          value={student.rollNumber}
-                          disabled
-                        />
-                      </div>
-
-                      {/* Immutable Status */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">
-                          Enrollment Status
-                          <span className="sm-badge-locked"><Lock size={10} /> Locked</span>
-                        </label>
-                        <input
-                          type="text"
-                          className="sm-form-input"
-                          value={student.status}
-                          disabled
-                        />
-                      </div>
-
-                      {/* Full Name */}
-                      <div className="sm-form-group full-width">
-                        <label className="sm-form-label">
-                          Full Name *
-                        </label>
-                        <input
-                          type="text"
-                          className={`sm-form-input ${formErrors.fullName ? 'has-error' : ''}`}
-                          value={editFormData.fullName}
-                          onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value })}
-                          placeholder="e.g. Rahul Sharma"
-                        />
-                        {formErrors.fullName && <div className="sm-input-error-msg">{formErrors.fullName}</div>}
-                      </div>
-
-                      {/* Registered Personal Gmail */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">
-                          Registered Personal Gmail (Student Login)
-                          {editFormData.email && editFormData.email.trim().toLowerCase().endsWith('@gmail.com') && (
-                            <span style={{ marginLeft: 8, fontSize: 11, color: '#16A34A', fontWeight: 500 }}>
-                              ● Eligible for Login
-                            </span>
-                          )}
-                        </label>
-                        <input
-                          type="email"
-                          className={`sm-form-input ${formErrors.email ? 'has-error' : ''}`}
-                          value={editFormData.email}
-                          onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                          placeholder="student@gmail.com"
-                        />
-                        <span style={{ fontSize: 11, color: '#64748B', display: 'block', marginTop: 3 }}>
-                          Student login requires a personal @gmail.com address matching their roll number.
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {statusUpdating && (
+                        <span style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <RefreshCw size={12} className="animate-spin" /> Updating...
                         </span>
-                        {formErrors.email && <div className="sm-input-error-msg">{formErrors.email}</div>}
-                      </div>
-
-                      {/* Phone Number */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">Phone Number (10–15 digits)</label>
-                        <input
-                          type="tel"
-                          className={`sm-form-input ${formErrors.phone ? 'has-error' : ''}`}
-                          value={editFormData.phone}
-                          onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                          placeholder="e.g. 9876543210"
-                        />
-                        {formErrors.phone && <div className="sm-input-error-msg">{formErrors.phone}</div>}
-                      </div>
-
-                      {/* Program */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">Program</label>
-                        <input
-                          type="text"
-                          className="sm-form-input"
-                          value={editFormData.program}
-                          onChange={(e) => setEditFormData({ ...editFormData, program: e.target.value })}
-                          placeholder="e.g. B.Tech"
-                        />
-                      </div>
-
-                      {/* Branch */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">Branch / Department</label>
-                        <input
-                          type="text"
-                          className="sm-form-input"
-                          value={editFormData.branch}
-                          onChange={(e) => setEditFormData({ ...editFormData, branch: e.target.value })}
-                          placeholder="e.g. CSE"
-                        />
-                      </div>
-
-                      {/* Semester */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">Semester (1–10)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="10"
-                          className={`sm-form-input ${formErrors.semester ? 'has-error' : ''}`}
-                          value={editFormData.semester}
-                          onChange={(e) => setEditFormData({ ...editFormData, semester: e.target.value })}
-                          placeholder="e.g. 5"
-                        />
-                        {formErrors.semester && <div className="sm-input-error-msg">{formErrors.semester}</div>}
-                      </div>
-
-                      {/* Section */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">Section</label>
-                        <input
-                          type="text"
-                          className="sm-form-input"
-                          value={editFormData.section}
-                          onChange={(e) => setEditFormData({ ...editFormData, section: e.target.value })}
-                          placeholder="e.g. A"
-                        />
-                      </div>
-
-                      {/* Admission Year */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">Admission Year</label>
-                        <input
-                          type="number"
-                          className={`sm-form-input ${formErrors.admissionYear ? 'has-error' : ''}`}
-                          value={editFormData.admissionYear}
-                          onChange={(e) => setEditFormData({ ...editFormData, admissionYear: e.target.value })}
-                          placeholder="e.g. 2024"
-                        />
-                        {formErrors.admissionYear && <div className="sm-input-error-msg">{formErrors.admissionYear}</div>}
-                      </div>
-
-                      {/* School */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">School / College</label>
-                        <input
-                          type="text"
-                          className="sm-form-input"
-                          value={editFormData.school}
-                          onChange={(e) => setEditFormData({ ...editFormData, school: e.target.value })}
-                          placeholder="e.g. School of Engineering"
-                        />
-                      </div>
-
-                      {/* Course */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">Course</label>
-                        <input
-                          type="text"
-                          className="sm-form-input"
-                          value={editFormData.course}
-                          onChange={(e) => setEditFormData({ ...editFormData, course: e.target.value })}
-                          placeholder="e.g. CSE"
-                        />
-                      </div>
-
-                      {/* Batch / Year */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">Batch / Year</label>
-                        <input
-                          type="text"
-                          className="sm-form-input"
-                          value={editFormData.batch}
-                          onChange={(e) => setEditFormData({ ...editFormData, batch: e.target.value })}
-                          placeholder="e.g. 2024/3rd"
-                        />
-                      </div>
-
-                      {/* Gender */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">Gender</label>
-                        <select
-                          className="sm-form-input"
-                          value={editFormData.gender}
-                          onChange={(e) => setEditFormData({ ...editFormData, gender: e.target.value })}
-                        >
-                          <option value="">Unspecified</option>
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
-
-                      {/* Date of Birth */}
-                      <div className="sm-form-group">
-                        <label className="sm-form-label">Date of Birth</label>
-                        <input
-                          type="date"
-                          className="sm-form-input"
-                          value={editFormData.dateOfBirth}
-                          onChange={(e) => setEditFormData({ ...editFormData, dateOfBirth: e.target.value })}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="sm-form-actions">
+                      )}
                       <button
                         type="button"
-                        className="sm-btn-cancel"
-                        onClick={cancelEditing}
-                        disabled={saving}
+                        onClick={() => { setIsDeleting(true); setDeleteError(null); }}
+                        title="Permanently remove student record (strictly checks dependencies)"
+                        className="sm-btn-secondary"
+                        style={{ padding: '3px 8px', fontSize: 11, fontWeight: 600, color: '#DC2626', borderColor: '#FECACA', background: '#FEF2F2', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                       >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="sm-btn-save"
-                        disabled={saving}
-                      >
-                        {saving ? (
-                          <>
-                            <RefreshCw size={14} className="animate-spin" />
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <Save size={14} />
-                            Save Profile Changes
-                          </>
-                        )}
+                        <Trash2 size={13} /> Remove
                       </button>
                     </div>
-                  </form>
-                )}
+                  </div>
+
+                  {/* Identity & Lifecycle Protection Banner */}
+                  <div className="sm-profile-guard-banner">
+                    <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: 2, color: '#0284C7' }} />
+                    <div>
+                      <strong>Institutional Identity & Integrity Safeguard</strong>
+                      <div style={{ marginTop: 2, fontSize: 11.5, color: '#0369A1' }}>
+                        Roll Number and Enrollment Status cannot be modified from profile editing. Academic progression and enrollment verification are strictly governed through institutional Registrar workflows.
+                      </div>
+                    </div>
+                  </div>
+
+                  {saveSuccess && (
+                    <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#065F46', padding: '10px 12px', borderRadius: 8, fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <CheckCircle size={15} />
+                      <span>{saveSuccess}</span>
+                    </div>
+                  )}
+
+                  {detailError && (
+                    <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#991B1B', padding: '10px 12px', borderRadius: 8, fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <AlertCircle size={15} />
+                      <span>{detailError}</span>
+                    </div>
+                  )}
+
+                  {/* VIEW MODE */}
+                  {!isEditing ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>Student Profile Fields</span>
+                        <button
+                          type="button"
+                          className="sm-btn-save"
+                          onClick={startEditing}
+                          style={{ padding: '6px 12px', fontSize: 12, borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6, boxShadow: '0 1px 3px rgba(37, 99, 235, 0.2)' }}
+                        >
+                          <Edit3 size={14} />
+                          Edit Permitted Profile Fields
+                        </button>
+                      </div>
+
+                      {/* Card 1: Academic Placement */}
+                      <div>
+                        <div className="sm-detail-section-label">
+                          <BookOpen size={13} className="text-blue-600" /> Academic Placement
+                        </div>
+                        <div className="sm-kv-card">
+                          <div className="sm-kv-row"><span>School / College</span><span>{student.school || 'School of Engineering'}</span></div>
+                          <div className="sm-kv-row"><span>Course</span><span>{student.course || 'CSE'}</span></div>
+                          <div className="sm-kv-row"><span>Batch / Year</span><span>{student.batch || '2024/3rd'}</span></div>
+                          <div className="sm-kv-row"><span>Program</span><span>{student.program || 'B.Tech'}</span></div>
+                          <div className="sm-kv-row"><span>Branch</span><span>{student.branch || 'CSE'}</span></div>
+                          <div className="sm-kv-row"><span>Semester</span><span>{student.semester ? `Semester ${student.semester}` : <span style={{ color: '#94A3B8', fontStyle: 'italic' }}>Not Set</span>}</span></div>
+                          <div className="sm-kv-row"><span>Section</span><span>{student.section ? `Section ${student.section}` : <span style={{ color: '#94A3B8', fontStyle: 'italic' }}>Not Set</span>}</span></div>
+                          <div className="sm-kv-row"><span>Admission Year</span><span>{student.admissionYear || 2024}</span></div>
+                        </div>
+                      </div>
+
+                      {/* Card 2: Contact Information */}
+                      <div>
+                        <div className="sm-detail-section-label">
+                          <Mail size={13} className="text-emerald-600" /> Contact Information
+                        </div>
+                        <div className="sm-kv-card">
+                          <div className="sm-kv-row">
+                            <span>Registered Gmail / Email</span>
+                            <span>
+                              {student.email ? (
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                  <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{student.email}</span>
+                                  {student.email.toLowerCase().endsWith('@gmail.com') ? (
+                                    <span style={{ fontSize: 10, background: '#DCFCE7', color: '#166534', padding: '1px 6px', borderRadius: 4, fontWeight: 700, border: '1px solid #BBF7D0' }}>
+                                      ✓ Gmail Login
+                                    </span>
+                                  ) : (
+                                    <span style={{ fontSize: 10, background: '#FEF3C7', color: '#92400E', padding: '1px 6px', borderRadius: 4, fontWeight: 600, border: '1px solid #FDE68A' }}>
+                                      Non-Gmail
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span style={{ color: '#94A3B8', fontStyle: 'italic' }}>Not Set (Click Edit to Fill)</span>
+                              )}
+                            </span>
+                          </div>
+                          <div className="sm-kv-row">
+                            <span>Contact Phone</span>
+                            <span>{student.phone ? <span style={{ fontFamily: 'monospace' }}>{student.phone}</span> : <span style={{ color: '#94A3B8', fontStyle: 'italic' }}>Not Set (Click Edit to Fill)</span>}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card 3: Personal Demographics */}
+                      <div>
+                        <div className="sm-detail-section-label">
+                          <Users size={13} className="text-indigo-600" /> Personal Demographics
+                        </div>
+                        <div className="sm-kv-card">
+                          <div className="sm-kv-row"><span>Gender</span><span style={{ textTransform: 'capitalize' }}>{student.gender || <span style={{ color: '#94A3B8', fontStyle: 'italic' }}>Not Set</span>}</span></div>
+                          <div className="sm-kv-row"><span>Date of Birth</span><span>{student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : <span style={{ color: '#94A3B8', fontStyle: 'italic' }}>Not Set</span>}</span></div>
+                        </div>
+                      </div>
+
+                      {/* Card 4: Portal Account Linkage */}
+                      <div>
+                        <div className="sm-detail-section-label">
+                          <ShieldCheck size={13} className="text-violet-600" /> Portal Account Linkage
+                        </div>
+                        <div className="sm-kv-card">
+                          <div className="sm-kv-row">
+                            <span>Linked Portal Account</span>
+                            <span>
+                              {user ? (
+                                <span style={{ color: '#16A34A', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                  <CheckCircle size={13} /> Active ({user.role}) — {user.email}
+                                </span>
+                              ) : (
+                                <span style={{ color: '#64748B', fontWeight: 600 }}>
+                                  Unlinked (Offline Institutional Record)
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                          <div className="sm-kv-row">
+                            <span>Account Lifecycle</span>
+                            <span><code style={{ background: '#F1F5F9', padding: '2px 6px', borderRadius: 4, color: '#334155' }}>{student.accountStatus}</code></span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card 5: Audit History */}
+                      <div className="sm-audit-section">
+                        <div className="sm-audit-title">
+                          <History size={15} />
+                          Profile Change Audit Trail
+                        </div>
+                        {auditHistory.length === 0 ? (
+                          <div style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic', padding: '10px 12px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0', textAlign: 'center' }}>
+                            No administrative profile edits recorded yet.
+                          </div>
+                        ) : (
+                          auditHistory.map((item, idx) => (
+                            <div key={idx} className="sm-audit-item">
+                              <div className="sm-audit-header">
+                                <span className="sm-audit-actor">{item.performedBy?.name || item.performedBy?.email || 'Administrator'}</span>
+                                <span style={{ fontSize: 11, color: '#94A3B8' }}>{new Date(item.timestamp).toLocaleString('en-IN')}</span>
+                              </div>
+                              <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>
+                                Modified fields:
+                              </div>
+                              <div className="sm-audit-tag-list">
+                                {(item.details?.modifiedFields || item.details?.updatedFields || []).map((f, fIdx) => (
+                                  <span key={fIdx} className="sm-audit-tag">{f}</span>
+                                ))}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    /* EDIT MODE */
+                    <form onSubmit={handleSave} className="sm-profile-form">
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Edit3 size={15} className="text-blue-600" />
+                        Edit Permitted Profile Information
+                      </div>
+
+                      <div className="sm-profile-form-grid">
+                        {/* Immutable Roll Number */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">
+                            Roll Number
+                            <span className="sm-badge-locked"><Lock size={10} /> Locked</span>
+                          </label>
+                          <input
+                            type="text"
+                            className="sm-form-input"
+                            value={student.rollNumber}
+                            disabled
+                          />
+                        </div>
+
+                        {/* Immutable Status */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">
+                            Enrollment Status
+                            <span className="sm-badge-locked"><Lock size={10} /> Locked</span>
+                          </label>
+                          <input
+                            type="text"
+                            className="sm-form-input"
+                            value={student.status}
+                            disabled
+                          />
+                        </div>
+
+                        {/* Full Name */}
+                        <div className="sm-form-group full-width">
+                          <label className="sm-form-label">
+                            Full Name *
+                          </label>
+                          <input
+                            type="text"
+                            className={`sm-form-input ${formErrors.fullName ? 'has-error' : ''}`}
+                            value={editFormData.fullName}
+                            onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value })}
+                            placeholder="e.g. Rahul Sharma"
+                          />
+                          {formErrors.fullName && <div className="sm-input-error-msg">{formErrors.fullName}</div>}
+                        </div>
+
+                        {/* Registered Personal Gmail */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">
+                            Registered Personal Gmail (Student Login)
+                            {editFormData.email && editFormData.email.trim().toLowerCase().endsWith('@gmail.com') && (
+                              <span style={{ marginLeft: 8, fontSize: 11, color: '#16A34A', fontWeight: 600 }}>
+                                ● Eligible for Login
+                              </span>
+                            )}
+                          </label>
+                          <input
+                            type="email"
+                            className={`sm-form-input ${formErrors.email ? 'has-error' : ''}`}
+                            value={editFormData.email}
+                            onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                            placeholder="student@gmail.com"
+                          />
+                          <span style={{ fontSize: 11, color: '#64748B', display: 'block', marginTop: 3 }}>
+                            Student login requires a personal @gmail.com address matching their roll number.
+                          </span>
+                          {formErrors.email && <div className="sm-input-error-msg">{formErrors.email}</div>}
+                        </div>
+
+                        {/* Phone Number */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">Phone Number (10–15 digits)</label>
+                          <input
+                            type="tel"
+                            className={`sm-form-input ${formErrors.phone ? 'has-error' : ''}`}
+                            value={editFormData.phone}
+                            onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                            placeholder="e.g. 9876543210"
+                          />
+                          {formErrors.phone && <div className="sm-input-error-msg">{formErrors.phone}</div>}
+                        </div>
+
+                        {/* Program */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">Program</label>
+                          <input
+                            type="text"
+                            className="sm-form-input"
+                            value={editFormData.program}
+                            onChange={(e) => setEditFormData({ ...editFormData, program: e.target.value })}
+                            placeholder="e.g. B.Tech"
+                          />
+                        </div>
+
+                        {/* Branch */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">Branch / Department</label>
+                          <input
+                            type="text"
+                            className="sm-form-input"
+                            value={editFormData.branch}
+                            onChange={(e) => setEditFormData({ ...editFormData, branch: e.target.value })}
+                            placeholder="e.g. CSE"
+                          />
+                        </div>
+
+                        {/* Semester */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">Semester (1–10)</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="10"
+                            className={`sm-form-input ${formErrors.semester ? 'has-error' : ''}`}
+                            value={editFormData.semester}
+                            onChange={(e) => setEditFormData({ ...editFormData, semester: e.target.value })}
+                            placeholder="e.g. 5"
+                          />
+                          {formErrors.semester && <div className="sm-input-error-msg">{formErrors.semester}</div>}
+                        </div>
+
+                        {/* Section */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">Section</label>
+                          <input
+                            type="text"
+                            className="sm-form-input"
+                            value={editFormData.section}
+                            onChange={(e) => setEditFormData({ ...editFormData, section: e.target.value })}
+                            placeholder="e.g. A"
+                          />
+                        </div>
+
+                        {/* Admission Year */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">Admission Year</label>
+                          <input
+                            type="number"
+                            className={`sm-form-input ${formErrors.admissionYear ? 'has-error' : ''}`}
+                            value={editFormData.admissionYear}
+                            onChange={(e) => setEditFormData({ ...editFormData, admissionYear: e.target.value })}
+                            placeholder="e.g. 2024"
+                          />
+                          {formErrors.admissionYear && <div className="sm-input-error-msg">{formErrors.admissionYear}</div>}
+                        </div>
+
+                        {/* School */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">School / College</label>
+                          <input
+                            type="text"
+                            className="sm-form-input"
+                            value={editFormData.school}
+                            onChange={(e) => setEditFormData({ ...editFormData, school: e.target.value })}
+                            placeholder="e.g. School of Engineering"
+                          />
+                        </div>
+
+                        {/* Course */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">Course</label>
+                          <input
+                            type="text"
+                            className="sm-form-input"
+                            value={editFormData.course}
+                            onChange={(e) => setEditFormData({ ...editFormData, course: e.target.value })}
+                            placeholder="e.g. CSE"
+                          />
+                        </div>
+
+                        {/* Batch / Year */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">Batch / Year</label>
+                          <input
+                            type="text"
+                            className="sm-form-input"
+                            value={editFormData.batch}
+                            onChange={(e) => setEditFormData({ ...editFormData, batch: e.target.value })}
+                            placeholder="e.g. 2024/3rd"
+                          />
+                        </div>
+
+                        {/* Gender */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">Gender</label>
+                          <select
+                            className="sm-form-input"
+                            value={editFormData.gender}
+                            onChange={(e) => setEditFormData({ ...editFormData, gender: e.target.value })}
+                          >
+                            <option value="">Unspecified</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+
+                        {/* Date of Birth */}
+                        <div className="sm-form-group">
+                          <label className="sm-form-label">Date of Birth</label>
+                          <input
+                            type="date"
+                            className="sm-form-input"
+                            value={editFormData.dateOfBirth}
+                            onChange={(e) => setEditFormData({ ...editFormData, dateOfBirth: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="sm-form-actions">
+                        <button
+                          type="button"
+                          className="sm-btn-cancel"
+                          onClick={cancelEditing}
+                          disabled={saving}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="sm-btn-save"
+                          disabled={saving}
+                        >
+                          {saving ? (
+                            <>
+                              <RefreshCw size={14} className="animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Save size={14} />
+                              Save Profile Changes
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
               </>
             )}
           </div>
