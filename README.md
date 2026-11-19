@@ -94,3 +94,18 @@ MIT License — feel free to use, modify and distribute.
 ⭐ Star this repo if you found it useful!
 
 </div>
+
+
+
+terminal 1- 
+
+cd ~/AI-Campus_Help_Desk
+npm run client
+
+terminal 2-
+
+cd ~/AI-Campus_Help_Desk
+npm run ai
+
+kill 3720
+npm run dev
