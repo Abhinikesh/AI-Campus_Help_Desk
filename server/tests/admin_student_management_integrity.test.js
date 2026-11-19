@@ -350,7 +350,7 @@ test('Part 11.2: Admin Student Management Integrity Suite', async (t) => {
     assert.equal(resBadPhone.status, 400);
 
     // 4e. Invalid semester (> 10)
-    const resBadSem = await fetch(`${baseUrl}/api/admin/students`, {
+    const resBadSemHigh = await fetch(`${baseUrl}/api/admin/students`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${adminToken}`,
@@ -359,12 +359,42 @@ test('Part 11.2: Admin Student Management Integrity Suite', async (t) => {
       body: JSON.stringify({
         rollNumber: '2024CS099',
         fullName: 'Divya Sen',
-        semester: 12,
+        semester: 11,
       }),
     });
-    assert.equal(resBadSem.status, 400);
+    assert.equal(resBadSemHigh.status, 400);
 
-    // 4f. Invalid status value
+    // 4f. Invalid semester (< 1)
+    const resBadSemLow = await fetch(`${baseUrl}/api/admin/students`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        rollNumber: '2024CS099',
+        fullName: 'Divya Sen',
+        semester: 0,
+      }),
+    });
+    assert.equal(resBadSemLow.status, 400);
+
+    // 4g. Non-integer semester (1.5)
+    const resBadSemFloat = await fetch(`${baseUrl}/api/admin/students`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        rollNumber: '2024CS099',
+        fullName: 'Divya Sen',
+        semester: 1.5,
+      }),
+    });
+    assert.equal(resBadSemFloat.status, 400);
+
+    // 4h. Invalid status value
     const resBadStatus = await fetch(`${baseUrl}/api/admin/students`, {
       method: 'POST',
       headers: {
@@ -378,6 +408,77 @@ test('Part 11.2: Admin Student Management Integrity Suite', async (t) => {
       }),
     });
     assert.equal(resBadStatus.status, 400);
+
+    // 4i. Valid boundary: semester = 1 (minimum valid)
+    const resSemMin = await fetch(`${baseUrl}/api/admin/students`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        rollNumber: '2024BND001',
+        fullName: 'Boundary Student Min',
+        semester: 1,
+      }),
+    });
+    assert.equal(resSemMin.status, 201);
+    const bodySemMin = await resSemMin.json();
+    assert.equal(bodySemMin.data.semester, 1);
+
+    // 4j. Valid boundary: semester = 10 (maximum valid)
+    const resSemMax = await fetch(`${baseUrl}/api/admin/students`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        rollNumber: '2024BND010',
+        fullName: 'Boundary Student Max',
+        semester: 10,
+      }),
+    });
+    assert.equal(resSemMax.status, 201);
+    const bodySemMax = await resSemMax.json();
+    assert.equal(bodySemMax.data.semester, 10);
+
+    // 4k. Valid missing semester & missing admissionYear (stored as null without fake defaults)
+    const resMissingOptional = await fetch(`${baseUrl}/api/admin/students`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        rollNumber: '2024BNDNULL',
+        fullName: 'Missing Optional Fields Student',
+      }),
+    });
+    assert.equal(resMissingOptional.status, 201);
+    const bodyMissing = await resMissingOptional.json();
+    assert.equal(bodyMissing.data.semester, null);
+    assert.equal(bodyMissing.data.admissionYear, null);
+    assert.equal(bodyMissing.data.branch, null);
+    assert.equal(bodyMissing.data.batch, null);
+    assert.equal(bodyMissing.data.program, null);
+
+    // 4l. Valid status: alumni is accepted
+    const resAlumni = await fetch(`${baseUrl}/api/admin/students`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        rollNumber: '2024ALUM001',
+        fullName: 'Alumni Student',
+        status: 'alumni',
+      }),
+    });
+    assert.equal(resAlumni.status, 201);
+    const bodyAlumni = await resAlumni.json();
+    assert.equal(bodyAlumni.data.status, 'alumni');
   });
 
   // ── Test 5: Duplicate Rejection (409 Conflict) ─────────────────────────────

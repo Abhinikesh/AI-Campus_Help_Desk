@@ -1445,14 +1445,14 @@ function CanonicalStudentsTab() {
     fullName: '',
     email: '',
     phone: '',
-    branch: 'CSE',
-    program: 'B.Tech',
-    course: 'CSE',
-    batch: '2024/1st',
-    semester: '1',
-    section: 'A',
-    admissionYear: String(new Date().getFullYear()),
-    school: 'School of Engineering',
+    branch: '',
+    program: '',
+    course: '',
+    batch: '',
+    semester: '',
+    section: '',
+    admissionYear: '',
+    school: '',
     gender: '',
     dateOfBirth: '',
     status: 'active',
@@ -1785,7 +1785,7 @@ function CanonicalStudentsTab() {
               onChange={(e) => { setSemesterFilter(e.target.value); setPage(1); }}
             >
               <option value="">All Semesters</option>
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => (
                 <option key={s} value={s}>Semester {s}</option>
               ))}
             </select>
@@ -1801,6 +1801,7 @@ function CanonicalStudentsTab() {
               <option value="inactive">Inactive</option>
               <option value="suspended">Suspended</option>
               <option value="graduated">Graduated</option>
+              <option value="alumni">Alumni</option>
               <option value="withdrawn">Withdrawn</option>
             </select>
           </div>
@@ -1815,14 +1816,14 @@ function CanonicalStudentsTab() {
                   fullName: '',
                   email: '',
                   phone: '',
-                  branch: 'CSE',
-                  program: 'B.Tech',
-                  course: 'CSE',
-                  batch: '2024/1st',
-                  semester: '1',
-                  section: 'A',
-                  admissionYear: String(new Date().getFullYear()),
-                  school: 'School of Engineering',
+                  branch: '',
+                  program: '',
+                  course: '',
+                  batch: '',
+                  semester: '',
+                  section: '',
+                  admissionYear: '',
+                  school: '',
                   gender: '',
                   dateOfBirth: '',
                   status: 'active',
@@ -2046,6 +2047,7 @@ function CanonicalStudentsTab() {
                       <option value="inactive">Inactive</option>
                       <option value="suspended">Suspended</option>
                       <option value="graduated">Graduated</option>
+                      <option value="alumni">Alumni</option>
                       <option value="withdrawn">Withdrawn</option>
                     </select>
                   </div>
@@ -2487,6 +2489,7 @@ function CanonicalStudentsTab() {
                       <option value="inactive">Inactive</option>
                       <option value="suspended">Suspended</option>
                       <option value="graduated">Graduated</option>
+                      <option value="alumni">Alumni</option>
                       <option value="withdrawn">Withdrawn</option>
                     </select>
                   </div>

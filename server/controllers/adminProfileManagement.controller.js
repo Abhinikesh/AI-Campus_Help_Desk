@@ -245,7 +245,7 @@ const updateCanonicalStudentProfile = asyncHandler(async (req, res) => {
 
   if (body.semester !== undefined) {
     const val = body.semester !== null && body.semester !== '' ? Number(body.semester) : null;
-    if (val !== null && (isNaN(val) || val < 1 || val > 10)) {
+    if (val !== null && (isNaN(val) || !Number.isInteger(val) || val < 1 || val > 10)) {
       throw new ApiError(400, 'Semester must be a valid number between 1 and 10.');
     }
     if (val !== (student.semester != null ? student.semester : null)) {
@@ -404,8 +404,8 @@ const createCanonicalStudent = asyncHandler(async (req, res) => {
   let semesterVal = null;
   if (body.semester !== undefined && body.semester !== null && body.semester !== '') {
     semesterVal = Number(body.semester);
-    if (isNaN(semesterVal) || semesterVal < 1 || semesterVal > 10) {
-      throw new ApiError(400, 'Semester must be a valid number between 1 and 10.');
+    if (isNaN(semesterVal) || !Number.isInteger(semesterVal) || semesterVal < 1 || semesterVal > 10) {
+      throw new ApiError(400, 'Semester must be an integer between 1 and 10.');
     }
   }
 
@@ -461,7 +461,7 @@ const createCanonicalStudent = asyncHandler(async (req, res) => {
     batch: body.batch ? String(body.batch).trim() : null,
     semester: semesterVal,
     section: body.section ? String(body.section).trim().toUpperCase() : null,
-    admissionYear: admissionYearVal || new Date().getFullYear(),
+    admissionYear: admissionYearVal,
     school: body.school ? String(body.school).trim() : null,
     gender: genderVal,
     dateOfBirth: dobVal,
