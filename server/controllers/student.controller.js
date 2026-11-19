@@ -356,7 +356,7 @@ const getActiveSessions = asyncHandler(async (req, res) => {
 
   const sessions = await AttendanceSession.find({
     semester: student.semester,
-    status: 'open',
+    status: { $in: ['open', 'active'] },
   })
     .populate('subject', 'name code')
     .populate('faculty', 'name');
@@ -468,7 +468,7 @@ const joinAttendanceSession = asyncHandler(async (req, res) => {
     student: student._id,
   });
 
-  if (attendance && ['present', 'late'].includes(attendance.status)) {
+  if (attendance && (['present', 'late'].includes(attendance.status) || (attendance.status === 'pending' && attendance.markedAt))) {
     return res.status(200).json({
       success: true,
       data: {
@@ -483,7 +483,7 @@ const joinAttendanceSession = asyncHandler(async (req, res) => {
         verificationMethod: attendance.verificationMethod,
         alreadyMarked: true,
       },
-      message: 'Attendance was already marked present for this session',
+      message: 'Attendance was already marked for this session',
     });
   }
 

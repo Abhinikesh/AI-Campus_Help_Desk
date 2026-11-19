@@ -43,6 +43,7 @@ const {
   getAdminSettings,
   updateAdminSettings
 } = require('../controllers/attendance.controller');
+const { getAdminAttendanceRecords } = require('../controllers/admin.controller');
 
 const authMiddleware = require('../middleware/auth.middleware');
 const { allowRoles } = require('../middleware/role.middleware');
@@ -54,7 +55,9 @@ router.get('/sessions',                       authMiddleware, allowRoles('facult
 router.get('/sessions/:sessionId',            authMiddleware, getSessionById);
 router.post('/sessions/:sessionId/start',     authMiddleware, allowRoles('faculty', 'admin'), startSession);
 router.post('/sessions/:sessionId/pause',     authMiddleware, allowRoles('faculty', 'admin'), pauseSession);
+router.patch('/sessions/:sessionId/pause',    authMiddleware, allowRoles('faculty', 'admin'), pauseSession);
 router.post('/sessions/:sessionId/resume',    authMiddleware, allowRoles('faculty', 'admin'), resumeSession);
+router.patch('/sessions/:sessionId/resume',   authMiddleware, allowRoles('faculty', 'admin'), resumeSession);
 router.post('/sessions/:sessionId/end',       authMiddleware, allowRoles('faculty', 'admin'), endSession);
 router.post('/sessions/:sessionId/finalize',  authMiddleware, allowRoles('faculty', 'admin'), finalizeSession);
 router.post('/sessions/:sessionId/cancel',    authMiddleware, allowRoles('faculty', 'admin'), cancelSession);
@@ -87,7 +90,7 @@ router.get('/audit-logs/adjustments',         authMiddleware, allowRoles('facult
 router.get('/admin/overview',                 authMiddleware, allowRoles('admin'), getAdminOverview);
 router.get('/admin/risk-register',            authMiddleware, allowRoles('admin'), getAdminRiskRegister);
 router.get('/admin/sessions',                 authMiddleware, allowRoles('admin'), getSessions);
-router.get('/admin/records',                  authMiddleware, allowRoles('admin'), getFacultyRecords);
+router.get('/admin/records',                  authMiddleware, allowRoles('admin'), getAdminAttendanceRecords);
 router.get('/admin/audit-logs',               authMiddleware, allowRoles('admin'), getAdminAuditLogs);
 router.get('/admin/face-profiles',            authMiddleware, allowRoles('admin'), getAdminFaceProfiles);
 router.delete('/admin/face-profiles/:studentId', authMiddleware, allowRoles('admin'), deleteAdminFaceProfile);

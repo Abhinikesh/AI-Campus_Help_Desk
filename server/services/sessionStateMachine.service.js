@@ -50,8 +50,17 @@ async function transitionSessionState({
 
   // 1. Authorization check: only assigned faculty or admin
   if (actorRole === 'faculty') {
-    const facultyId = session.faculty?._id ? session.faculty._id.toString() : session.faculty.toString();
-    if (facultyId !== actorId.toString()) {
+    const sessionFacultyId = session.faculty?._id ? session.faculty._id.toString() : session.faculty?.toString();
+    const actorIdStr = actorId.toString();
+    let isOwner = sessionFacultyId === actorIdStr;
+    if (!isOwner) {
+      const Faculty = require('../models/Faculty');
+      const faculty = await Faculty.findOne({ user: actorId });
+      if (faculty && sessionFacultyId === faculty._id.toString()) {
+        isOwner = true;
+      }
+    }
+    if (!isOwner) {
       throw new ApiError(403, 'Unauthorized: You can only control your own attendance sessions');
     }
   } else if (actorRole !== 'admin' && actorRole !== 'system') {

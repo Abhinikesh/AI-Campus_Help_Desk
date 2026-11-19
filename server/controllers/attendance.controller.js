@@ -82,7 +82,7 @@ const createSession = asyncHandler(async (req, res) => {
       (subject.faculty && (subject.faculty.toString() === req.user.userId?.toString() || subject.faculty.toString() === faculty._id.toString())) ||
       faculty.assignedSubjects?.some(s => s.toString() === subjectId.toString());
 
-    if (subject.faculty && !isAssigned) {
+    if (!isAssigned) {
       throw new ApiError(403, 'You are not assigned to conduct attendance for this subject');
     }
   }
@@ -531,8 +531,12 @@ const getQrChallenge = asyncHandler(async (req, res) => {
 
   if (req.user.role === 'faculty') {
     const facultyId = session.faculty?._id ? session.faculty._id.toString() : session.faculty.toString();
-    if (facultyId !== req.user.userId) {
-      throw new ApiError(403, 'Unauthorized');
+    const isOwner = facultyId === req.user.userId;
+    if (!isOwner) {
+      const faculty = await Faculty.findOne({ user: req.user.userId });
+      if (!faculty || facultyId !== faculty._id.toString()) {
+        throw new ApiError(403, 'Unauthorized: You can only generate QR codes for your own attendance sessions');
+      }
     }
   }
 
@@ -788,6 +792,16 @@ const recordStudentAttendance = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'This attendance session has expired and is no longer accepting check-ins.');
   }
 
+  // Branch & semester eligibility check
+  const isSameBranch = !session.branch || !student.branch ||
+    session.branch.toLowerCase().trim() === student.branch.toLowerCase().trim() ||
+    (session.branch.toUpperCase().includes('CSE') && student.branch.toUpperCase().includes('CSE')) ||
+    (session.branch.toUpperCase().includes('COMPUTER') && student.branch.toUpperCase().includes('COMPUTER'));
+
+  if (session.semester !== student.semester || !isSameBranch) {
+    throw new ApiError(403, 'You are not enrolled in this session class/section');
+  }
+
   // QR token validation if attendance method requires QR or token is supplied
   if ((session.attendanceMethod === 'qr_face' || qrChallengeToken) && session.attendanceMethod !== 'manual') {
     qrChallengeService.validateChallenge(session, qrChallengeToken, new Date());
@@ -842,7 +856,7 @@ const recordStudentAttendance = asyncHandler(async (req, res) => {
     student: student._id
   });
 
-  if (attendance && ['present', 'late'].includes(attendance.status)) {
+  if (attendance && (['present', 'late'].includes(attendance.status) || (attendance.status === 'pending' && attendance.markedAt))) {
     return res.status(200).json({
       success: true,
       data: {

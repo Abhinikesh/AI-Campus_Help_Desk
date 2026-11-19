@@ -159,7 +159,7 @@ const createAttendanceSession = asyncHandler(async (req, res) => {
     (subject.faculty && facultyUserIds.some(id => id.toString() === subject.faculty.toString())) ||
     facultyProfile?.assignedSubjects?.some(s => s.toString() === subjectId.toString());
 
-  if (subject.faculty && !isAssigned && req.user.role !== 'admin') {
+  if (!isAssigned && req.user.role !== 'admin') {
     throw new ApiError(403, 'You are not authorized to create an attendance session for this subject');
   }
 
@@ -257,6 +257,16 @@ const getAttendanceSessions = asyncHandler(async (req, res) => {
 });
 
 // GET /api/faculty/attendance/sessions/:id — Live Session Roster
+async function assertFacultySessionOwnership(session, req) {
+  if (req.user.role === 'admin') return;
+  const facultyId = session.faculty?._id ? session.faculty._id.toString() : session.faculty?.toString();
+  const userId = (req.user.userId || req.user._id || '').toString();
+  if (facultyId && facultyId === userId) return;
+  const facultyProfile = await Faculty.findOne({ user: userId });
+  if (facultyProfile && facultyId === facultyProfile._id.toString()) return;
+  throw new ApiError(403, 'Unauthorized: You can only view or manage your own attendance sessions');
+}
+
 const getSessionDetails = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const session = await AttendanceSession.findById(id)
@@ -264,6 +274,8 @@ const getSessionDetails = asyncHandler(async (req, res) => {
     .populate('faculty', 'name email');
 
   if (!session) throw new ApiError(404, 'Attendance session not found');
+
+  await assertFacultySessionOwnership(session, req);
 
   // Get all attendance records for this session
   const records = await Attendance.find({ session: session._id })
@@ -338,11 +350,71 @@ const getSessionDetails = asyncHandler(async (req, res) => {
   });
 });
 
+// POST/PATCH /api/faculty/attendance/sessions/:id/pause — Pause Session
+const pauseAttendanceSession = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const session = await AttendanceSession.findById(id);
+  if (!session) throw new ApiError(404, 'Attendance session not found');
+
+  await assertFacultySessionOwnership(session, req);
+
+  if (session.status !== 'open' && session.status !== 'active') {
+    throw new ApiError(400, `Cannot pause session in '${session.status}' status`);
+  }
+
+  session.status = 'paused';
+  await session.save();
+
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: req.user.role || 'faculty',
+    action: 'pause_session',
+    sessionId: session._id,
+    previousValue: { status: 'active' },
+    newValue: { status: 'paused' },
+    reason: req.body?.reason || 'Faculty paused session',
+    ipAddress: req.ip,
+  });
+
+  return res.status(200).json({ success: true, data: session, message: 'Attendance session has been paused' });
+});
+
+// POST/PATCH /api/faculty/attendance/sessions/:id/resume — Resume Session
+const resumeAttendanceSession = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const session = await AttendanceSession.findById(id);
+  if (!session) throw new ApiError(404, 'Attendance session not found');
+
+  await assertFacultySessionOwnership(session, req);
+
+  if (session.status !== 'paused') {
+    throw new ApiError(400, `Cannot resume session in '${session.status}' status`);
+  }
+
+  session.status = 'active';
+  await session.save();
+
+  await AttendanceAuditLog.record({
+    actorId: req.user.userId,
+    actorRole: req.user.role || 'faculty',
+    action: 'resume_session',
+    sessionId: session._id,
+    previousValue: { status: 'paused' },
+    newValue: { status: 'active' },
+    reason: req.body?.reason || 'Faculty resumed session',
+    ipAddress: req.ip,
+  });
+
+  return res.status(200).json({ success: true, data: session, message: 'Attendance session has been resumed' });
+});
+
 // PATCH /api/faculty/attendance/sessions/:id/close — Close Session
 const closeAttendanceSession = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const session = await AttendanceSession.findById(id);
   if (!session) throw new ApiError(404, 'Attendance session not found');
+
+  await assertFacultySessionOwnership(session, req);
 
   // Mark all remaining 'pending' students as 'absent'
   await Attendance.updateMany(
@@ -377,6 +449,8 @@ const finalizeAttendanceSession = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const session = await AttendanceSession.findById(id);
   if (!session) throw new ApiError(404, 'Attendance session not found');
+
+  await assertFacultySessionOwnership(session, req);
 
   // Ensure no pendings
   await Attendance.updateMany(
@@ -417,11 +491,22 @@ const markAttendanceStudent = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'attendanceId and status are required');
   }
 
+  const finalReason = reason || note;
+  if (!finalReason || !finalReason.trim()) {
+    throw new ApiError(400, 'A valid reason is required for manual attendance correction');
+  }
+
   const attendance = await Attendance.findById(attendanceId);
   if (!attendance) throw new ApiError(404, 'Attendance record not found');
 
+  if (attendance.session) {
+    const session = await AttendanceSession.findById(attendance.session);
+    if (session) {
+      await assertFacultySessionOwnership(session, req);
+    }
+  }
+
   const previousStatus = attendance.status;
-  const finalReason = reason || note || 'Faculty manual adjustment';
 
   attendance.status = status;
   attendance.isManualOverride = true;
@@ -1149,6 +1234,8 @@ module.exports = {
   createAttendanceSession,
   getAttendanceSessions,
   getSessionDetails,
+  pauseAttendanceSession,
+  resumeAttendanceSession,
   closeAttendanceSession,
   finalizeAttendanceSession,
   markAttendanceStudent,

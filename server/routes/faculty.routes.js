@@ -13,6 +13,8 @@ const {
   createAttendanceSession,
   getAttendanceSessions,
   getSessionDetails,
+  pauseAttendanceSession,
+  resumeAttendanceSession,
   closeAttendanceSession,
   finalizeAttendanceSession,
   markAttendanceStudent,
@@ -153,6 +155,10 @@ router.post('/attendance/sessions', createAttendanceSession);
 router.get('/attendance/sessions',  getAttendanceSessions);
 router.get('/attendance/sessions/:id', getSessionDetails);
 router.get('/attendance/sessions/:sessionId/qr-challenge', getQrChallenge);
+router.post('/attendance/sessions/:id/pause', pauseAttendanceSession);
+router.patch('/attendance/sessions/:id/pause', pauseAttendanceSession);
+router.post('/attendance/sessions/:id/resume', resumeAttendanceSession);
+router.patch('/attendance/sessions/:id/resume', resumeAttendanceSession);
 router.patch('/attendance/sessions/:id/close', closeAttendanceSession);
 router.patch('/attendance/sessions/:id/finalize', finalizeAttendanceSession);
 router.post('/attendance/mark-student', markAttendanceStudent);

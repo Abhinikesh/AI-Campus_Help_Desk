@@ -1242,8 +1242,66 @@ class AttendanceCalculationService {
         const studentProfile = await Student.findOne({ user: userId }).lean();
         if (!studentProfile) throw new Error('Student profile not found');
         targetStudentId = studentProfile._id;
-      } else if (!targetStudentId) {
-        throw new Error('studentId is required to generate student report');
+      }
+
+      // If no specific studentId is provided (e.g. admin or faculty viewing cohort student report without student filter)
+      if (!targetStudentId) {
+        const studentQuery = {};
+        if (filters.branch) studentQuery.branch = { $regex: new RegExp(filters.branch, 'i') };
+        if (filters.semester) studentQuery.semester = Number(filters.semester);
+        if (filters.section) studentQuery.section = filters.section;
+
+        const students = await Student.find(studentQuery).limit(100).lean();
+
+        const columns = [
+          { key: 'rollNumber', label: 'Roll Number' },
+          { key: 'name', label: 'Student Name' },
+          { key: 'branch', label: 'Branch' },
+          { key: 'semester', label: 'Semester' },
+          { key: 'heldUnits', label: 'Classes Held' },
+          { key: 'attendedUnits', label: 'Classes Attended' },
+          { key: 'missedUnits', label: 'Classes Missed' },
+          { key: 'percentage', label: 'Percentage' },
+          { key: 'requirement', label: 'Requirement' },
+          { key: 'status', label: 'Compliance Status' },
+        ];
+
+        const rows = [];
+        for (const st of students) {
+          const overview = await this.calculateStudentOverview({
+            studentId: st._id,
+            semester: filters.semester,
+            branch: filters.branch,
+            startDate: filters.startDate,
+            endDate: filters.endDate,
+          });
+
+          rows.push({
+            rollNumber: st.rollNumber || 'N/A',
+            name: st.fullName || st.name || 'Student',
+            branch: st.branch || filters.branch || '—',
+            semester: st.semester || filters.semester || '—',
+            heldUnits: overview.summary.totalHeldUnits,
+            attendedUnits: overview.summary.totalAttendedUnits,
+            missedUnits: overview.summary.totalMissedUnits,
+            percentage: overview.hasData ? `${overview.summary.overallPercentage}%` : '—',
+            requirement: `${minAttendancePercent}%`,
+            status: overview.summary.complianceStatus,
+          });
+        }
+
+        return {
+          reportType,
+          title: 'Student Attendance Summary Report',
+          generatedAt,
+          appliedFilters: { ...filters },
+          summary: {
+            'Total Students': students.length,
+            'Requirement': `${minAttendancePercent}%`,
+          },
+          columns,
+          rows,
+        };
       }
 
       const overview = await this.calculateStudentOverview({
