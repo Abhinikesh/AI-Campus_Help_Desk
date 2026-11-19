@@ -74,14 +74,21 @@ const FaceRegistration = () => {
   }, []);
 
   const handleProceedFromConsent = async () => {
+    if (!consentChecked) {
+      setErrorMsg('Please tick the consent box to proceed.');
+      return;
+    }
     try {
       setLoading(true);
       setErrorMsg('');
       const res = await attendanceService.grantConsent({
+        consentGiven: true,
+        policyReference: 'CAMPUS-BIO-PRIVACY-v1.0',
         policyVersion: 'v1.0.0',
         acceptedPurposes: ['smart_attendance_verification']
       });
       if (res?.success) {
+        setFaceStatus(prev => ({ ...prev, consentGiven: true }));
         setActiveStep(2);
       } else {
         setErrorMsg(res?.message || 'Failed to record biometric consent on the server.');
@@ -134,6 +141,12 @@ const FaceRegistration = () => {
     if (frame3) frames.push(frame3);
 
     const primaryImage = frames[frames.length - 1] || null;
+
+    if (frames.length === 0 || !primaryImage) {
+      setErrorMsg('No camera frame detected. Please ensure your camera permission is allowed and your camera preview is visible.');
+      setCapturing(false);
+      return;
+    }
 
     try {
       const enrollRes = await attendanceService.enrollFace({
@@ -256,6 +269,7 @@ const FaceRegistration = () => {
           {/* Stepper Navigation */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
             <div
+              onClick={() => setActiveStep(1)}
               style={{
                 flex: 1,
                 padding: '12px 16px',
@@ -265,6 +279,7 @@ const FaceRegistration = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
+                cursor: 'pointer',
               }}
             >
               <span style={{ width: 22, height: 22, borderRadius: '50%', background: activeStep === 1 ? '#1A56DB' : '#E2E8F0', color: activeStep === 1 ? '#FFFFFF' : '#6B7280', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>1</span>
@@ -272,6 +287,13 @@ const FaceRegistration = () => {
             </div>
 
             <div
+              onClick={() => {
+                if (consentChecked || faceStatus.consentGiven) {
+                  setActiveStep(2);
+                } else {
+                  setErrorMsg('Please grant consent first before proceeding to camera capture.');
+                }
+              }}
               style={{
                 flex: 1,
                 padding: '12px 16px',
@@ -281,6 +303,7 @@ const FaceRegistration = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
+                cursor: (consentChecked || faceStatus.consentGiven) ? 'pointer' : 'default',
               }}
             >
               <span style={{ width: 22, height: 22, borderRadius: '50%', background: activeStep === 2 ? '#1A56DB' : '#E2E8F0', color: activeStep === 2 ? '#FFFFFF' : '#6B7280', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
@@ -288,6 +311,11 @@ const FaceRegistration = () => {
             </div>
 
             <div
+              onClick={() => {
+                if (faceStatus.isEnrolled) {
+                  setActiveStep(3);
+                }
+              }}
               style={{
                 flex: 1,
                 padding: '12px 16px',
@@ -297,6 +325,7 @@ const FaceRegistration = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
+                cursor: faceStatus.isEnrolled ? 'pointer' : 'default',
               }}
             >
               <span style={{ width: 22, height: 22, borderRadius: '50%', background: activeStep === 3 ? '#16A34A' : '#E2E8F0', color: activeStep === 3 ? '#FFFFFF' : '#6B7280', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
@@ -320,26 +349,40 @@ const FaceRegistration = () => {
                 <p><strong>3. Right to Revoke:</strong> You retain the full legal right to withdraw consent and delete your biometric template at any point. Institutional policies govern alternative attendance methods (such as instructor roll-call) if biometric consent is declined or withdrawn.</p>
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 13, color: '#111827', fontWeight: 500, marginBottom: 24 }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 13, color: '#111827', fontWeight: 500, marginBottom: 20 }}>
                 <input
                   type="checkbox"
                   checked={consentChecked}
                   onChange={(e) => setConsentChecked(e.target.checked)}
-                  style={{ width: 18, height: 18, marginTop: 2 }}
+                  style={{ width: 18, height: 18, marginTop: 2, cursor: 'pointer' }}
                 />
                 <span>
                   I give explicit, informed consent for CampusSphere to process and securely store my facial biometric embedding for academic attendance verification.
                 </span>
               </label>
 
+              {errorMsg && (
+                <div style={{ marginBottom: 18, padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 8, color: '#DC2626', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <AlertTriangle size={16} />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
               <button
                 type="button"
-                className="ds-btn ds-btn-primary"
+                className="ds-btn primary"
                 disabled={!consentChecked || loading}
                 onClick={handleProceedFromConsent}
-                style={{ padding: '0 24px' }}
+                style={{ padding: '0 24px', height: 42, fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8 }}
               >
-                Proceed to Camera Capture →
+                {loading ? (
+                  <>
+                    <RefreshCw size={16} className="ds-spinner-inline" />
+                    <span>Recording Consent…</span>
+                  </>
+                ) : (
+                  <span>Proceed to Camera Capture →</span>
+                )}
               </button>
             </div>
           )}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 import Sidebar from '../../components/Sidebar/Sidebar';
@@ -9,13 +9,18 @@ import AttendanceStatusBadge from '../../components/AttendanceShared/AttendanceS
 import EmptyState from '../../components/AttendanceShared/EmptyState';
 import {
   GraduationCap, ArrowLeft, CheckCircle2, AlertTriangle,
-  Clock, ShieldCheck, RefreshCw, Camera, ChevronRight, User, BookOpen
+  Clock, ShieldCheck, RefreshCw, Camera, ChevronRight, User, BookOpen, QrCode
 } from 'lucide-react';
 import '../../styles/dashboard-shared.css';
 import './Attendance.css';
 
 const MarkAttendance = () => {
   const { sessionId: routeSessionId } = useParams();
+  const [searchParams] = useSearchParams();
+  const querySessionId = searchParams.get('session');
+  const queryToken = searchParams.get('token');
+  const targetSessionId = routeSessionId || querySessionId;
+
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -24,7 +29,13 @@ const MarkAttendance = () => {
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
-  const [qrChallengeInput, setQrChallengeInput] = useState('');
+  const [qrChallengeInput, setQrChallengeInput] = useState(queryToken || '');
+
+  useEffect(() => {
+    if (queryToken) {
+      setQrChallengeInput(queryToken);
+    }
+  }, [queryToken]);
 
   // Verification state: 'idle' | 'ready' | 'capturing' | 'compressing' | 'submitting' | 'verifying' | 'success' | 'failed'
   const [verifyState, setVerifyState] = useState('ready');
@@ -40,8 +51,8 @@ const MarkAttendance = () => {
         const res = await attendanceService.getStudentActiveSessions();
         if (res?.success && res.data) {
           setSessions(res.data);
-          if (routeSessionId) {
-            const found = res.data.find(s => s._id === routeSessionId);
+          if (targetSessionId) {
+            const found = res.data.find(s => s._id === targetSessionId);
             if (found) setSelectedSession(found);
             else if (res.data.length > 0) setSelectedSession(res.data[0]);
           } else if (res.data.length > 0) {
@@ -56,7 +67,7 @@ const MarkAttendance = () => {
     };
 
     loadSessions();
-  }, [routeSessionId]);
+  }, [targetSessionId]);
 
   const handleStartVerification = async () => {
     if (!selectedSession || isSubmittingRef.current) return;
@@ -354,19 +365,30 @@ const MarkAttendance = () => {
                   guideMessage={verifyStatusText}
                 />
 
-                {/* Optional QR Challenge Token Input */}
+                {/* QR Challenge Token (Auto-filled on QR scan or entered) */}
                 {selectedSession?.attendanceMethod === 'qr_face' && (
-                  <div style={{ marginTop: 14, background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
-                      Session QR Challenge Code (Shown on Faculty Screen)
-                    </label>
+                  <div style={{ marginTop: 14, background: '#EFF6FF', padding: 12, borderRadius: 8, border: '1px solid #BFDBFE' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: '#1E40AF', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <ShieldCheck size={14} /> Classroom QR Challenge Code
+                      </label>
+                      {qrChallengeInput ? (
+                        <span style={{ fontSize: 11, color: '#16A34A', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <CheckCircle2 size={12} /> Code Active
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 11, color: '#6B7280' }}>
+                          Auto-fills on QR scan
+                        </span>
+                      )}
+                    </div>
                     <input
                       type="text"
                       className="ds-input"
-                      placeholder="Enter 45-second challenge code…"
+                      placeholder="Scan faculty screen QR code or paste challenge code…"
                       value={qrChallengeInput}
                       onChange={(e) => setQrChallengeInput(e.target.value.trim())}
-                      style={{ width: '100%', height: 34, fontSize: 13 }}
+                      style={{ width: '100%', height: 34, fontSize: 12, fontFamily: 'monospace' }}
                     />
                   </div>
                 )}

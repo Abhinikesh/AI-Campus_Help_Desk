@@ -320,6 +320,93 @@ const StudentFees = () => {
             </div>
           )}
 
+          {/* ── Prominent Quick Fee Status & Pay Box ── */}
+          <div className="bg-gradient-to-r from-blue-50 via-indigo-50/60 to-white border-2 border-indigo-200 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-3 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-1 bg-indigo-600 text-white text-[11px] font-bold rounded-md uppercase tracking-wider">
+                  Current Academic Fee
+                </span>
+                <span className="text-xs font-semibold text-slate-600">
+                  B.Tech CSE • Semester 5 (2026-2027)
+                </span>
+                {overview?.totalOutstandingInRupees > 0 ? (
+                  <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[11px] font-bold rounded-full">
+                    Payment Pending
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-full">
+                    ✓ All Fees Cleared
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">
+                  {invoices[0]?.feeStructure?.name || 'Semester 5 Tuition & Academic Fee'}
+                </h2>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Invoice <span className="font-mono font-bold text-indigo-700">{invoices[0]?.invoiceNumber || 'INV-2026-CSE5-0231'}</span> • Due Date: {invoices[0]?.dueDate ? new Date(invoices[0].dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '14 Dec 2026'}
+                </p>
+              </div>
+
+              {/* Visual Paid vs Pending Bar */}
+              <div className="w-full max-w-md space-y-1.5">
+                <div className="flex justify-between text-xs font-semibold">
+                  <span className="text-emerald-700">Submitted / Paid: ₹{overview?.totalPaidInRupees?.toLocaleString('en-IN') || 0}</span>
+                  <span className="text-rose-700">Pending: ₹{overview?.totalOutstandingInRupees?.toLocaleString('en-IN') || 0}</span>
+                </div>
+                <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden flex">
+                  <div
+                    className="bg-emerald-500 h-full transition-all duration-500"
+                    style={{ width: `${overview?.totalBilledInRupees ? Math.min(100, Math.round(((overview.totalPaidInRupees || 0) / overview.totalBilledInRupees) * 100)) : 0}%` }}
+                    title={`Paid: ₹${overview?.totalPaidInRupees?.toLocaleString('en-IN')}`}
+                  />
+                  <div
+                    className="bg-rose-400 h-full transition-all duration-500"
+                    style={{ width: `${overview?.totalBilledInRupees ? Math.min(100, Math.round(((overview.totalOutstandingInRupees || 0) / overview.totalBilledInRupees) * 100)) : 0}%` }}
+                    title={`Pending: ₹${overview?.totalOutstandingInRupees?.toLocaleString('en-IN')}`}
+                  />
+                </div>
+                <div className="flex justify-between text-[11px] text-slate-500">
+                  <span>Total Course Billed: ₹{overview?.totalBilledInRupees?.toLocaleString('en-IN') || 0}</span>
+                  <span>{overview?.totalBilledInRupees ? Math.round(((overview.totalPaidInRupees || 0) / overview.totalBilledInRupees) * 100) : 0}% Cleared</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row md:flex-col items-start md:items-end justify-between gap-4 border-t md:border-t-0 md:border-l border-indigo-100 pt-4 md:pt-0 md:pl-8 min-w-[220px]">
+              <div className="text-left md:text-right">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Pending Balance</span>
+                <span className="text-3xl font-extrabold text-rose-600">
+                  ₹{overview?.totalOutstandingInRupees?.toLocaleString('en-IN') || 0}
+                </span>
+                <span className="text-[11px] text-slate-500 block mt-0.5">
+                  {overview?.pendingPaymentsCount > 0 ? (
+                    <span className="text-amber-600 font-semibold">⏳ {overview.pendingPaymentsCount} payment under review</span>
+                  ) : (
+                    'No late fees applicable'
+                  )}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const targetInv = invoices.find(i => i.outstandingBalance > 0) || invoices[0];
+                  if (targetInv) {
+                    handleOpenPayment(targetInv);
+                  }
+                }}
+                disabled={!overview?.totalOutstandingInRupees || overview.totalOutstandingInRupees <= 0}
+                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer w-full md:w-auto justify-center"
+              >
+                <CreditCard className="w-5 h-5" />
+                <span>{overview?.totalOutstandingInRupees > 0 ? 'Pay / Submit Fees' : 'Fees Fully Settled'}</span>
+              </button>
+            </div>
+          </div>
+
           {/* Navigation Tabs */}
           <div className="cs-tab-bar">
             <button
@@ -538,53 +625,103 @@ const StudentFees = () => {
 
           {/* MODAL: Offline Payment Submission */}
           {showPayModal && selectedInvoice && (
-            <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+            <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
                 <button
+                  type="button"
                   onClick={() => setShowPayModal(false)}
-                  className="absolute top-4 right-4 text-slate-500 hover"
+                  className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-indigo-400" />
-                  Submit Offline Payment Proof
-                </h2>
-                <p className="text-xs text-slate-500 mt-1">
-                  Invoice <span className="font-mono text-indigo-400">{selectedInvoice.invoiceNumber}</span> | Outstanding: <span className="text-rose-400 font-bold">₹{selectedInvoice.outstandingBalance}</span>
-                </p>
-
-                <form onSubmit={handleSubmitPayment} className="mt-5 space-y-4">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
-                      Payment Amount (₹) *
-                    </label>
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Submit Fee Payment
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      Invoice <span className="font-mono font-bold text-indigo-600">{selectedInvoice.invoiceNumber}</span> • Remaining: <span className="text-rose-600 font-bold">₹{selectedInvoice.outstandingBalance?.toLocaleString('en-IN')}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* College Bank & UPI Info Box */}
+                <div className="my-4 p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-xl text-xs text-slate-800 space-y-1.5">
+                  <p className="font-bold text-blue-900 flex items-center gap-1.5">
+                    <Building2 className="w-4 h-4 text-blue-600" /> Official College Payment Destination:
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-[11px] bg-white p-2.5 rounded-lg border border-blue-100">
+                    <div><span className="text-slate-500">UPI ID:</span> <strong className="text-slate-900 font-mono select-all">campus.fees@hdfcbank</strong></div>
+                    <div><span className="text-slate-500">Bank:</span> <strong className="text-slate-900">HDFC Bank Ltd.</strong></div>
+                    <div><span className="text-slate-500">Account No:</span> <strong className="text-slate-900 font-mono select-all">50200084920192</strong></div>
+                    <div><span className="text-slate-500">IFSC Code:</span> <strong className="text-slate-900 font-mono select-all">HDFC0000123</strong></div>
+                  </div>
+                  <p className="text-[11px] text-blue-700">
+                    Pay via UPI, Net Banking, or Card, then enter your transaction UTR / Reference ID below to verify.
+                  </p>
+                </div>
+
+                <form onSubmit={handleSubmitPayment} className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-xs font-semibold text-slate-700">
+                        Payment Amount (₹) *
+                      </label>
+                      <span className="text-[11px] text-slate-500">Max: ₹{selectedInvoice.outstandingBalance?.toLocaleString('en-IN')}</span>
+                    </div>
                     <input
                       type="number"
-                      step="0.01"
+                      step="1"
                       required
                       max={selectedInvoice.outstandingBalance}
                       min="1"
                       value={paymentForm.amount}
                       onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-900 font-semibold focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                      placeholder="e.g. 50000"
                     />
-                    <span className="text-[11px] text-gray-500">Cannot exceed remaining balance of ₹{selectedInvoice.outstandingBalance}</span>
+                    {/* Quick Amount Suggestion Chips */}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentForm({ ...paymentForm, amount: '10000' })}
+                        className="px-2.5 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition cursor-pointer"
+                      >
+                        ₹10,000
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentForm({ ...paymentForm, amount: '25000' })}
+                        className="px-2.5 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition cursor-pointer"
+                      >
+                        ₹25,000
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentForm({ ...paymentForm, amount: String(selectedInvoice.outstandingBalance) })}
+                        className="px-2.5 py-1 text-xs rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 transition cursor-pointer"
+                      >
+                        Full Balance (₹{selectedInvoice.outstandingBalance?.toLocaleString('en-IN')})
+                      </button>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Payment Method *
                     </label>
                     <select
                       value={paymentForm.paymentMethod}
                       onChange={(e) => setPaymentForm({ ...paymentForm, paymentMethod: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 cursor-pointer"
                     >
                       <option value="upi">UPI Transfer (Google Pay, PhonePe, Paytm, BHIM)</option>
-                      <option value="bank_transfer">Direct Bank Transfer</option>
-                      <option value="neft_rtgs">NEFT / RTGS / IMPS</option>
+                      <option value="bank_transfer">Direct Bank Transfer (IMPS / NEFT)</option>
+                      <option value="neft_rtgs">RTGS / Net Banking</option>
                       <option value="cheque">Bank Cheque</option>
                       <option value="dd">Demand Draft (DD)</option>
                       <option value="cash">Direct Cash at Campus Accounts Desk</option>
@@ -592,21 +729,21 @@ const StudentFees = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
-                      Bank Transaction ID / UTR / Cheque No. *
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Bank Transaction ID / UTR / Reference No. *
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. 12-digit UTR 428901238910 or Cheque # 001928"
+                      placeholder="e.g. 12-digit UPI UTR 428901238910 or Bank Ref No."
                       value={paymentForm.externalReference}
                       onChange={(e) => setPaymentForm({ ...paymentForm, externalReference: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-900 font-mono focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Payment Date *
                     </label>
                     <input
@@ -614,44 +751,44 @@ const StudentFees = () => {
                       required
                       value={paymentForm.paymentDate}
                       onChange={(e) => setPaymentForm({ ...paymentForm, paymentDate: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 cursor-pointer"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
-                      Remarks / Student Notes (Optional)
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Remarks / Notes (Optional)
                     </label>
                     <textarea
                       rows="2"
-                      placeholder="Optional notes for the Accounts Department..."
+                      placeholder="e.g. Paid via father's HDFC bank account..."
                       value={paymentForm.notes}
                       onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
                     ></textarea>
                   </div>
 
-                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs text-amber-300">
-                    <p className="font-semibold">Verification Notice:</p>
-                    <p className="mt-0.5 text-amber-200/80">
-                      Your submission will be recorded in <b>pending</b> status. An authorized finance officer will verify your bank reference against college bank statements. Your invoice balance updates upon verification.
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+                    <p className="font-bold flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-amber-600" /> Admin Verification Notice:</p>
+                    <p className="text-[11px] text-amber-800 leading-relaxed">
+                      Your payment will be submitted in <b>Pending Verification</b> status. The Finance Admin will verify your UTR against the university bank statement, and your paid balance will automatically update.
                     </p>
                   </div>
 
-                  <div className="flex justify-end gap-3 pt-2">
+                  <div className="flex justify-end gap-3 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowPayModal(false)}
-                      className="px-4 py-2 bg-gray-800 hover text-gray-300 rounded-lg text-xs font-medium"
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="px-5 py-2 bg-indigo-600 hover text-white rounded-lg text-xs font-semibold disabled:opacity-50 flex items-center gap-1.5"
+                      className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold disabled:opacity-50 flex items-center gap-2 shadow-sm transition cursor-pointer"
                     >
-                      {submitting ? 'Submitting...' : 'Submit Payment Proof'}
+                      {submitting ? 'Submitting Payment…' : 'Submit Fee Payment'}
                     </button>
                   </div>
                 </form>
@@ -661,42 +798,43 @@ const StudentFees = () => {
 
           {/* MODAL: Fee Breakdown Detail */}
           {showDetailModal && selectedInvoice && (
-            <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+            <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
                 <button
+                  type="button"
                   onClick={() => setShowDetailModal(false)}
-                  className="absolute top-4 right-4 text-slate-500 hover"
+                  className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-indigo-400" />
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-indigo-600" />
                   Fee Invoice Breakdown
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Invoice <span className="font-mono text-indigo-400">{selectedInvoice.invoiceNumber}</span> | Term: {selectedInvoice.academicYear} Sem {selectedInvoice.semester}
+                  Invoice <span className="font-mono font-bold text-indigo-600">{selectedInvoice.invoiceNumber}</span> | Term: {selectedInvoice.academicYear} Sem {selectedInvoice.semester}
                 </p>
 
                 <div className="mt-5 space-y-4">
                   <div className="border border-slate-200 rounded-xl overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-50 text-slate-500 font-semibold uppercase">
+                      <thead className="bg-slate-50 text-slate-600 font-bold uppercase border-b border-slate-200">
                         <tr>
                           <th className="px-4 py-2.5">Component</th>
                           <th className="px-4 py-2.5">Type</th>
                           <th className="px-4 py-2.5 text-right">Amount (₹)</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-800 text-gray-300">
+                      <tbody className="divide-y divide-slate-100 text-slate-800">
                         {selectedInvoice.components?.map((c, i) => (
-                          <tr key={i}>
-                            <td className="px-4 py-2.5 font-medium">{c.name}</td>
+                          <tr key={i} className="hover:bg-slate-50/50">
+                            <td className="px-4 py-2.5 font-medium text-slate-900">{c.name}</td>
                             <td className="px-4 py-2.5 text-slate-500">
                               {c.isMandatory ? 'Mandatory' : 'Optional'}
                             </td>
-                            <td className="px-4 py-2.5 text-right font-mono">
-                              ₹{(c.amountInPaise / 100).toLocaleString()}
+                            <td className="px-4 py-2.5 text-right font-mono font-semibold text-slate-900">
+                              ₹{(c.amountInPaise / 100).toLocaleString('en-IN')}
                             </td>
                           </tr>
                         ))}
@@ -705,44 +843,57 @@ const StudentFees = () => {
                   </div>
 
                   <div className="bg-slate-50 p-4 rounded-xl space-y-2 text-xs border border-slate-200">
-                    <div className="flex justify-between text-slate-500">
+                    <div className="flex justify-between text-slate-600">
                       <span>Gross Components Total:</span>
-                      <span className="font-mono">₹{selectedInvoice.grossAmount?.toLocaleString()}</span>
+                      <span className="font-mono font-semibold text-slate-900">₹{selectedInvoice.grossAmount?.toLocaleString('en-IN')}</span>
                     </div>
                     {selectedInvoice.concessionAmount > 0 && (
-                      <div className="flex justify-between text-emerald-400">
+                      <div className="flex justify-between text-emerald-600">
                         <span>Scholarship / Approved Concessions:</span>
-                        <span className="font-mono">- ₹{selectedInvoice.concessionAmount?.toLocaleString()}</span>
+                        <span className="font-mono font-semibold">- ₹{selectedInvoice.concessionAmount?.toLocaleString('en-IN')}</span>
                       </div>
                     )}
                     {selectedInvoice.lateFeeAmount > 0 && (
-                      <div className="flex justify-between text-rose-400">
+                      <div className="flex justify-between text-rose-600">
                         <span>Late Fee Charged:</span>
-                        <span className="font-mono">+ ₹{selectedInvoice.lateFeeAmount?.toLocaleString()}</span>
+                        <span className="font-mono font-semibold">+ ₹{selectedInvoice.lateFeeAmount?.toLocaleString('en-IN')}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-slate-900 font-bold pt-1 border-t border-slate-200">
                       <span>Net Payable:</span>
-                      <span className="font-mono">₹{selectedInvoice.netPayable?.toLocaleString()}</span>
+                      <span className="font-mono text-sm">₹{selectedInvoice.netPayable?.toLocaleString('en-IN')}</span>
                     </div>
-                    <div className="flex justify-between text-emerald-400">
+                    <div className="flex justify-between text-emerald-700 font-semibold">
                       <span>Verified Amount Paid:</span>
-                      <span className="font-mono">₹{selectedInvoice.amountPaid?.toLocaleString()}</span>
+                      <span className="font-mono">₹{selectedInvoice.amountPaid?.toLocaleString('en-IN')}</span>
                     </div>
-                    <div className="flex justify-between text-rose-400 font-bold pt-1 border-t border-slate-200 text-sm">
+                    <div className="flex justify-between text-rose-600 font-extrabold pt-1 border-t border-slate-200 text-sm">
                       <span>Outstanding Balance:</span>
-                      <span className="font-mono">₹{selectedInvoice.outstandingBalance?.toLocaleString()}</span>
+                      <span className="font-mono">₹{selectedInvoice.outstandingBalance?.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4">
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-4">
                   <button
+                    type="button"
                     onClick={() => setShowDetailModal(false)}
-                    className="px-4 py-2 bg-gray-800 hover text-gray-300 rounded-lg text-xs font-medium"
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition"
                   >
                     Close
                   </button>
+                  {selectedInvoice.outstandingBalance > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDetailModal(false);
+                        handleOpenPayment(selectedInvoice);
+                      }}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5"
+                    >
+                      <CreditCard className="w-4 h-4" /> Pay Outstanding
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -750,32 +901,33 @@ const StudentFees = () => {
 
           {/* MODAL: Concession / Scholarship Application */}
           {showConcessionModal && selectedInvoice && (
-            <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+            <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
                 <button
+                  type="button"
                   onClick={() => setShowConcessionModal(false)}
-                  className="absolute top-4 right-4 text-slate-500 hover"
+                  className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-indigo-600" />
                   Apply for Fee Concession / Scholarship
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Invoice <span className="font-mono text-indigo-400">{selectedInvoice.invoiceNumber}</span> | Gross: ₹{selectedInvoice.grossAmount}
+                  Invoice <span className="font-mono font-bold text-indigo-600">{selectedInvoice.invoiceNumber}</span> | Gross: ₹{selectedInvoice.grossAmount?.toLocaleString('en-IN')}
                 </p>
 
                 <form onSubmit={handleSubmitConcession} className="mt-5 space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Concession / Adjustment Category *
                     </label>
                     <select
                       value={concessionForm.adjustmentType}
                       onChange={(e) => setConcessionForm({ ...concessionForm, adjustmentType: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-600"
                     >
                       <option value="need_based_concession">Need-based Financial Concession</option>
                       <option value="merit_scholarship">Academic Merit Scholarship</option>
@@ -786,24 +938,24 @@ const StudentFees = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Requested Concession Amount (₹) *
                     </label>
                     <input
                       type="number"
-                      step="0.01"
+                      step="1"
                       required
                       max={selectedInvoice.grossAmount}
                       min="1"
                       value={concessionForm.amount}
                       onChange={(e) => setConcessionForm({ ...concessionForm, amount: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-600"
                     />
-                    <span className="text-[11px] text-gray-500">Cannot exceed invoice gross amount of ₹{selectedInvoice.grossAmount}</span>
+                    <span className="text-[11px] text-slate-500">Cannot exceed invoice gross amount of ₹{selectedInvoice.grossAmount?.toLocaleString('en-IN')}</span>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Justification & Reason *
                     </label>
                     <textarea
@@ -812,12 +964,12 @@ const StudentFees = () => {
                       placeholder="Explain the background, scholarship award criteria, or financial hardship..."
                       value={concessionForm.reason}
                       onChange={(e) => setConcessionForm({ ...concessionForm, reason: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-600"
                     ></textarea>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Supporting Document Reference / Award Number
                     </label>
                     <input
@@ -825,22 +977,22 @@ const StudentFees = () => {
                       placeholder="e.g. Merit Order #CS-2026/89 or Gov Application ID"
                       value={concessionForm.supportingDocReference}
                       onChange={(e) => setConcessionForm({ ...concessionForm, supportingDocReference: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-600"
                     />
                   </div>
 
-                  <div className="flex justify-end gap-3 pt-2">
+                  <div className="flex justify-end gap-3 pt-2 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setShowConcessionModal(false)}
-                      className="px-4 py-2 bg-gray-800 hover text-gray-300 rounded-lg text-xs font-medium"
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="px-5 py-2 bg-indigo-600 hover text-white rounded-lg text-xs font-semibold disabled:opacity-50"
+                      className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold disabled:opacity-50 transition"
                     >
                       {submitting ? 'Submitting...' : 'Submit Concession Request'}
                     </button>
@@ -852,31 +1004,32 @@ const StudentFees = () => {
 
           {/* MODAL: Printable Official Receipt */}
           {showReceiptModal && selectedReceipt && (
-            <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
               <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-xl p-6 shadow-2xl relative text-slate-800">
                 <button
+                  type="button"
                   onClick={() => setShowReceiptModal(false)}
-                  className="absolute top-4 right-4 text-slate-500 hover"
+                  className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
                 {/* Receipt Content for Display / Printing */}
-                <div ref={receiptPrintRef} className="p-6 bg-slate-50 rounded-xl border border-slate-200 space-y-5">
+                <div ref={receiptPrintRef} className="p-6 bg-slate-50/80 rounded-xl border border-slate-200 space-y-5">
                   {/* Header */}
                   <div className="flex justify-between items-start border-b border-slate-200 pb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                      <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-200">
                         <Building2 className="w-6 h-6" />
                       </div>
                       <div>
-                        <h2 className="text-base font-bold text-white tracking-wide">CampusSphere AI College</h2>
-                        <p className="text-xs text-slate-500">Office of the Accounts & Financial Administration</p>
+                        <h2 className="text-base font-bold text-slate-900 tracking-wide">CampusSphere ERP College</h2>
+                        <p className="text-xs text-slate-500">Office of Accounts & Financial Administration</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="inline-block px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold rounded uppercase">
-                        Payment Receipt
+                      <span className="inline-block px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold rounded uppercase">
+                        Verified Receipt
                       </span>
                     </div>
                   </div>
@@ -884,20 +1037,20 @@ const StudentFees = () => {
                   {/* Receipt Meta */}
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div>
-                      <p className="text-gray-500">Receipt Number:</p>
-                      <p className="font-mono font-bold text-indigo-400 text-sm">{selectedReceipt.receiptNumber}</p>
+                      <p className="text-slate-500">Receipt Number:</p>
+                      <p className="font-mono font-bold text-indigo-700 text-sm">{selectedReceipt.receiptNumber}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Transaction ID:</p>
-                      <p className="font-mono text-gray-300">{selectedReceipt.transactionId}</p>
+                      <p className="text-slate-500">Transaction ID:</p>
+                      <p className="font-mono font-semibold text-slate-800">{selectedReceipt.transactionId}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Payment Date:</p>
-                      <p className="font-medium text-slate-800">{new Date(selectedReceipt.paymentDate).toLocaleDateString()}</p>
+                      <p className="text-slate-500">Payment Date:</p>
+                      <p className="font-medium text-slate-800">{new Date(selectedReceipt.paymentDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Invoice Number:</p>
-                      <p className="font-mono text-slate-800">{selectedReceipt.invoice?.invoiceNumber || '—'}</p>
+                      <p className="text-slate-500">Invoice Number:</p>
+                      <p className="font-mono font-semibold text-slate-800">{selectedReceipt.invoice?.invoiceNumber || '—'}</p>
                     </div>
                   </div>
 
@@ -905,45 +1058,47 @@ const StudentFees = () => {
                   <div className="bg-white p-4 rounded-lg space-y-2 text-xs border border-slate-200">
                     <div className="flex justify-between">
                       <span className="text-slate-500">Payment Mode:</span>
-                      <span className="font-semibold uppercase text-slate-800">{selectedReceipt.paymentMethod}</span>
+                      <span className="font-bold uppercase text-slate-800">{selectedReceipt.paymentMethod}</span>
                     </div>
                     {selectedReceipt.externalReference && (
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Bank Reference (UTR / Cheque):</span>
-                        <span className="font-mono text-slate-800">{selectedReceipt.externalReference}</span>
+                        <span className="text-slate-500">Bank Reference (UTR / ID):</span>
+                        <span className="font-mono font-semibold text-slate-800">{selectedReceipt.externalReference}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-base font-bold pt-2 border-t border-slate-200 text-emerald-400">
+                    <div className="flex justify-between text-base font-bold pt-2 border-t border-slate-200 text-emerald-700">
                       <span>Total Amount Paid:</span>
-                      <span>₹{(selectedReceipt.amountInPaise / 100).toLocaleString()}</span>
+                      <span>₹{(selectedReceipt.amountInPaise / 100).toLocaleString('en-IN')}</span>
                     </div>
                   </div>
 
                   {/* Verification Signature Block */}
-                  <div className="flex justify-between items-end pt-3 text-xs text-gray-500 border-t border-slate-200">
+                  <div className="flex justify-between items-end pt-3 text-xs text-slate-500 border-t border-slate-200">
                     <div>
-                      <p className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-                        <ShieldCheck className="w-4 h-4" /> System Verified Transaction
+                      <p className="flex items-center gap-1.5 text-emerald-700 font-semibold">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" /> System Verified Transaction
                       </p>
-                      <p className="text-[11px] mt-0.5">Verified on {selectedReceipt.verifiedAt ? new Date(selectedReceipt.verifiedAt).toLocaleString() : 'System Audit'}</p>
+                      <p className="text-[11px] mt-0.5">Verified on {selectedReceipt.verifiedAt ? new Date(selectedReceipt.verifiedAt).toLocaleString('en-IN') : 'Bank Settlement'}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-gray-300">Finance Registrar</p>
-                      <p className="text-[10px] text-gray-500">CampusSphere ERP</p>
+                      <p className="font-bold text-slate-800">Finance Registrar</p>
+                      <p className="text-[10px] text-slate-500">CampusSphere ERP</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex justify-end gap-3 mt-4">
                   <button
+                    type="button"
                     onClick={() => window.print()}
-                    className="px-4 py-2 bg-indigo-600 hover text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition"
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
                   >
                     <Printer className="w-4 h-4" /> Print / Save PDF
                   </button>
                   <button
+                    type="button"
                     onClick={() => setShowReceiptModal(false)}
-                    className="px-4 py-2 bg-gray-800 hover text-gray-300 rounded-lg text-xs font-medium"
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition"
                   >
                     Close
                   </button>

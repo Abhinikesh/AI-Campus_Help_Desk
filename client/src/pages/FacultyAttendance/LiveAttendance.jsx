@@ -10,8 +10,9 @@ import ConfirmationDialog from '../../components/AttendanceShared/ConfirmationDi
 import {
   GraduationCap, ArrowLeft, Clock, CheckCircle2, AlertTriangle,
   StopCircle, Lock, Search, RefreshCw, UserCheck, UserX,
-  Camera, ShieldCheck, Eye, Edit3, X, Play, Pause
+  Camera, ShieldCheck, Eye, Edit3, X, Play, Pause, Copy, Check
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import '../../styles/dashboard-shared.css';
 import '../../components/AttendanceShared/AttendanceShared.css';
 
@@ -42,6 +43,14 @@ const LiveAttendance = () => {
   const [qrChallenge, setQrChallenge] = useState(null);
   const [qrLoading, setQrLoading] = useState(false);
   const [qrCountdown, setQrCountdown] = useState(45);
+  const [copiedToken, setCopiedToken] = useState(false);
+
+  const handleCopyToken = (token) => {
+    if (!token) return;
+    navigator.clipboard?.writeText(token);
+    setCopiedToken(true);
+    setTimeout(() => setCopiedToken(false), 2000);
+  };
 
   // Manual Override Modal state with mandatory reason
   const [overrideModal, setOverrideModal] = useState({
@@ -445,34 +454,97 @@ const LiveAttendance = () => {
                   </div>
                 )}
 
-                {qrChallenge?.challengeToken || qrChallenge?.token || session?.qrChallengeToken ? (
-                  <div>
-                    <div style={{
-                      fontFamily: 'monospace',
-                      fontSize: 16,
-                      fontWeight: 700,
-                      letterSpacing: 2,
-                      background: '#FFFFFF',
-                      padding: '10px 14px',
-                      borderRadius: 6,
-                      border: '1px dashed #93C5FD',
-                      color: '#1E3A8A',
-                      marginBottom: 8,
-                      userSelect: 'all',
-                      textAlign: 'center',
-                    }}>
-                      {qrChallenge?.challengeToken || qrChallenge?.token || session?.qrChallengeToken}
+                {(() => {
+                  const activeToken = qrChallenge?.challengeToken || qrChallenge?.token || session?.qrChallengeToken || '';
+                  const checkInUrl = activeToken
+                    ? `${window.location.origin}/student/attendance/mark?session=${sessionId}&token=${encodeURIComponent(activeToken)}`
+                    : '';
+
+                  if (!activeToken) {
+                    return (
+                      <div style={{ fontSize: 12, color: '#64748B', padding: '12px 0' }}>
+                        Click Regenerate to broadcast a live attendance challenge QR code.
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 4 }}>
+                      {/* Scannable 2D QR Code Graphic */}
+                      <div style={{
+                        background: '#FFFFFF',
+                        padding: 14,
+                        borderRadius: 12,
+                        boxShadow: '0 4px 12px rgba(30,64,175,0.08)',
+                        border: '1px solid #BFDBFE',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        <QRCodeSVG
+                          value={checkInUrl}
+                          size={190}
+                          level="M"
+                          includeMargin={false}
+                        />
+                      </div>
+
+                      <div style={{ fontSize: 13, color: '#1E40AF', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>📱 Students scan this QR code with their camera to check in</span>
+                      </div>
+
+                      {/* Direct Token Snippet with 1-Click Copy */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        width: '100%',
+                        maxWidth: 480,
+                        background: '#FFFFFF',
+                        padding: '6px 12px',
+                        borderRadius: 6,
+                        border: '1px dashed #93C5FD',
+                      }}>
+                        <div style={{
+                          fontFamily: 'monospace',
+                          fontSize: 11,
+                          color: '#475569',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          flex: 1,
+                          textAlign: 'left',
+                        }} title={activeToken}>
+                          {activeToken}
+                        </div>
+                        <button
+                          type="button"
+                          className="ds-btn ds-btn-secondary"
+                          onClick={() => handleCopyToken(activeToken)}
+                          style={{ height: 26, padding: '0 10px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                          title="Copy rotating challenge token to clipboard"
+                        >
+                          {copiedToken ? (
+                            <>
+                              <Check size={12} color="#16A34A" />
+                              <span style={{ color: '#16A34A', fontWeight: 600 }}>Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={12} />
+                              <span>Copy Code</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <div style={{ fontSize: 11, color: '#1D4ED8', display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: 480 }}>
+                        <span>Rotates every 45s • Single-use per student</span>
+                        <span style={{ fontWeight: 600 }}>HMAC-SHA256</span>
+                      </div>
                     </div>
-                    <div style={{ fontSize: 12, color: '#1D4ED8', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>45s rotating token • Scan or enter code</span>
-                      <span style={{ fontWeight: 600 }}>HMAC-SHA256</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ fontSize: 12, color: '#64748B', padding: '8px 0' }}>
-                    Click Regenerate to broadcast a live attendance challenge token.
-                  </div>
-                )}
+                  );
+                })()}
               </div>
 
               {/* Privacy-Preserving Notice */}

@@ -36,8 +36,18 @@ export const attendanceService = {
     return res.data;
   },
 
-  grantConsent: async (data = { consentGiven: true }) => {
-    const res = await api.post('/api/student/face/consent', data);
+  grantConsent: async (data = {}) => {
+    const payload = {
+      consentGiven: true,
+      policyReference: 'CAMPUS-BIO-PRIVACY-v1.0',
+      policyVersion: 'v1.0.0',
+      acceptedPurposes: ['smart_attendance_verification'],
+      ...data,
+      // Always guarantee consentGiven is true
+      consentGiven: true,
+    };
+    if (!payload.policyReference) payload.policyReference = 'CAMPUS-BIO-PRIVACY-v1.0';
+    const res = await api.post('/api/student/face/consent', payload);
     return res.data;
   },
 

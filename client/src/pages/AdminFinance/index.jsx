@@ -489,40 +489,40 @@ const AdminFinance = () => {
                           <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-800/60">
+                      <tbody className="divide-y divide-slate-100">
                         {pendingTxns.map((tx) => (
-                          <tr key={tx._id} className="hover transition">
+                          <tr key={tx._id} className="hover:bg-slate-50/50 transition">
                             <td className="px-4 py-3">
-                              <p className="font-semibold text-slate-900">{tx.student?.user?.name || 'Student'}</p>
+                              <p className="font-semibold text-slate-900">{tx.student?.user?.name || tx.student?.fullName || 'Student'}</p>
                               <p className="text-slate-500 text-[11px] font-mono">{tx.student?.rollNumber || tx.student?.user?.loginId}</p>
                             </td>
-                            <td className="px-4 py-3 font-mono text-indigo-400">
+                            <td className="px-4 py-3 font-mono font-bold text-indigo-700">
                               {tx.invoice?.invoiceNumber || '—'}
                             </td>
-                            <td className="px-4 py-3 font-bold text-emerald-400 text-sm">
-                              ₹{(tx.amountInPaise / 100).toLocaleString()}
+                            <td className="px-4 py-3 font-bold text-emerald-700 text-sm">
+                              ₹{(tx.amountInPaise / 100).toLocaleString('en-IN')}
                             </td>
-                            <td className="px-4 py-3 uppercase font-medium text-slate-800">
+                            <td className="px-4 py-3 uppercase font-semibold text-slate-800">
                               {tx.paymentMethod}
                             </td>
-                            <td className="px-4 py-3 font-mono text-xs text-amber-300">
+                            <td className="px-4 py-3 font-mono text-xs text-amber-800 bg-amber-50/50 rounded px-1.5 py-0.5 inline-block my-2">
                               {tx.externalReference || 'Not provided'}
                             </td>
-                            <td className="px-4 py-3 text-slate-500">
-                              {new Date(tx.paymentDate).toLocaleDateString()}
+                            <td className="px-4 py-3 text-slate-600">
+                              {new Date(tx.paymentDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </td>
                             <td className="px-4 py-3 text-right space-x-2">
                               <button
                                 disabled={actionLoading}
                                 onClick={() => handleVerifyPayment(tx)}
-                                className="px-3 py-1.5 bg-emerald-600 hover text-white rounded-lg text-xs font-semibold transition"
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer"
                               >
                                 Verify & Credit
                               </button>
                               <button
                                 disabled={actionLoading}
                                 onClick={() => setRejectModalTxn(tx)}
-                                className="px-3 py-1.5 bg-rose-600/20 hover text-rose-300 border border-rose-500/30 rounded-lg text-xs font-semibold transition"
+                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold transition cursor-pointer"
                               >
                                 Reject
                               </button>

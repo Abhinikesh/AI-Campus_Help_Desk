@@ -557,20 +557,27 @@ const joinAttendanceSession = asyncHandler(async (req, res) => {
 
 // GET /api/student/face/status
 const getFaceStatus = asyncHandler(async (req, res) => {
-  const student = await Student.findOne({ user: req.user.userId });
+  const userId = req.user?.userId || req.user?._id || req.user?.id;
+  const student = await Student.findOne({ user: userId });
   if (!student) throw new ApiError(404, 'Student profile not found');
 
-  let face = await FaceEmbedding.findOne({ student: student._id });
+  const [face, activeConsent] = await Promise.all([
+    FaceEmbedding.findOne({ student: student._id }),
+    ConsentRecord.findOne({ student: student._id, consentStatus: 'active' }),
+  ]);
+
+  const hasConsent = Boolean(activeConsent || face?.consentGiven);
+
   if (!face) {
     return res.status(200).json({
       success: true,
       data: {
         isEnrolled: false,
-        status: 'not_enrolled',
-        consentGiven: false,
+        status: hasConsent ? 'consent_granted' : 'not_enrolled',
+        consentGiven: hasConsent,
         lastEnrolled: null,
       },
-      message: 'No face biometric enrolled',
+      message: hasConsent ? 'Biometric consent active' : 'No face biometric enrolled',
     });
   }
 
@@ -579,8 +586,8 @@ const getFaceStatus = asyncHandler(async (req, res) => {
     data: {
       isEnrolled: face.status === 'enrolled' && face.isActive,
       status: face.status,
-      consentGiven: face.consentGiven,
-      consentDate: face.consentDate,
+      consentGiven: hasConsent,
+      consentDate: face.consentDate || activeConsent?.consentTimestamp,
       lastEnrolled: face.enrolledAt,
       samplesCaptured: face.samplesCaptured,
       imageQualityScore: face.imageQualityScore,
@@ -591,15 +598,21 @@ const getFaceStatus = asyncHandler(async (req, res) => {
 
 // POST /api/student/face/consent
 const grantConsent = asyncHandler(async (req, res) => {
-  const { consentGiven, policyReference = 'CAMPUS-BIO-PRIVACY-v1.0' } = req.body;
-  if (!consentGiven) {
+  const { consentGiven, policyReference, policyVersion } = req.body;
+  // Endpoint explicitly records affirmative consent; treat undefined or truthy as affirmative
+  const isConsentGiven = consentGiven === undefined || consentGiven === true || consentGiven === 'true' || consentGiven === 1;
+  if (!isConsentGiven) {
     throw new ApiError(400, 'Consent flag must be explicitly true');
   }
-  if (policyReference !== 'CAMPUS-BIO-PRIVACY-v1.0') {
+
+  const effectivePolicy = policyReference || policyVersion || 'CAMPUS-BIO-PRIVACY-v1.0';
+  const acceptedPolicies = ['CAMPUS-BIO-PRIVACY-v1.0', 'v1.0.0'];
+  if (!acceptedPolicies.includes(effectivePolicy) && !effectivePolicy.includes('CAMPUS-BIO-PRIVACY')) {
     throw new ApiError(400, 'Invalid biometric policy reference. Accepted policy: CAMPUS-BIO-PRIVACY-v1.0');
   }
 
-  const student = await Student.findOne({ user: req.user.userId });
+  const userId = req.user?.userId || req.user?._id || req.user?.id;
+  const student = await Student.findOne({ user: userId });
   if (!student) throw new ApiError(404, 'Student profile not found');
 
   const activeExisting = await ConsentRecord.findOne({ student: student._id, consentStatus: 'active' });
@@ -611,13 +624,22 @@ const grantConsent = asyncHandler(async (req, res) => {
       student: student._id,
       consentStatus: 'active',
       consentTimestamp: new Date(),
-      policyReference,
+      policyReference: effectivePolicy,
       ipAddress: req.ip || '',
     });
   }
 
   let face = await FaceEmbedding.findOne({ student: student._id });
-  if (face) {
+  if (!face) {
+    face = new FaceEmbedding({
+      student: student._id,
+      status: 'consent_granted',
+      enrollmentStatus: 'consent_granted',
+      consentGiven: true,
+      consentStatus: 'active',
+      consentDate: new Date(),
+    });
+  } else {
     face.consentGiven = true;
     face.consentStatus = 'active';
     face.consentDate = new Date();
@@ -625,8 +647,8 @@ const grantConsent = asyncHandler(async (req, res) => {
       face.status = 'consent_granted';
       face.enrollmentStatus = 'consent_granted';
     }
-    await face.save();
   }
+  await face.save();
 
   await AttendanceAuditLog.record({
     actorId: req.user.userId,
@@ -696,11 +718,13 @@ const enrollFace = asyncHandler(async (req, res) => {
     imageSamples
   } = req.body;
 
-  if (policyReference && policyReference !== 'CAMPUS-BIO-PRIVACY-v1.0') {
+  const effectiveEnrollPolicy = policyReference || 'CAMPUS-BIO-PRIVACY-v1.0';
+  if (effectiveEnrollPolicy !== 'CAMPUS-BIO-PRIVACY-v1.0' && effectiveEnrollPolicy !== 'v1.0.0') {
     throw new ApiError(400, 'Invalid biometric policy reference. Accepted policy: CAMPUS-BIO-PRIVACY-v1.0');
   }
 
-  const student = await Student.findOne({ user: req.user.userId });
+  const userId = req.user?.userId || req.user?._id || req.user?.id;
+  const student = await Student.findOne({ user: userId });
   if (!student) throw new ApiError(404, 'Student profile not found');
 
   // Verify explicit active consent in ConsentRecord

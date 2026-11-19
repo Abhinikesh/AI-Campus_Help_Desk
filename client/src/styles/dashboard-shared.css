@@ -459,11 +459,34 @@
   transition: background 0.15s, border-color 0.15s;
   white-space: nowrap;
 }
-.ds-btn.primary {
-  background: var(--cs-primary, #1A56DB);
-  color: #FFFFFF;
+.ds-btn.primary,
+.ds-btn-primary {
+  background: var(--cs-primary, #1A56DB) !important;
+  color: #FFFFFF !important;
 }
-.ds-btn.primary:hover:not(:disabled) { background: var(--cs-primary-hover, #1648C0); }
+.ds-btn.primary:hover:not(:disabled),
+.ds-btn-primary:hover:not(:disabled) {
+  background: var(--cs-primary-hover, #1648C0) !important;
+}
+.ds-btn.secondary,
+.ds-btn-secondary {
+  background: var(--cs-card-bg, #FFFFFF) !important;
+  color: var(--cs-text-primary, #374151) !important;
+  border: 1px solid var(--cs-border-subtle, #E2E8F0) !important;
+}
+.ds-btn.secondary:hover:not(:disabled),
+.ds-btn-secondary:hover:not(:disabled) {
+  background: var(--cs-bg-hover, #F8F9FA) !important;
+}
+.ds-btn.danger,
+.ds-btn-danger {
+  background: var(--cs-danger, #DC2626) !important;
+  color: #FFFFFF !important;
+}
+.ds-btn.danger:hover:not(:disabled),
+.ds-btn-danger:hover:not(:disabled) {
+  background: #B91C1C !important;
+}
 .ds-btn.outline {
   background: var(--cs-card-bg, #FFFFFF);
   color: var(--cs-primary, #1A56DB);

@@ -17,6 +17,30 @@ const { verifySafePath } = require('../services/assignmentStorage.service');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const isBranchMatch = (assignDept, studentBranch) => {
+  if (!assignDept || !studentBranch) return true;
+  const d = String(assignDept).trim().toUpperCase();
+  const b = String(studentBranch).trim().toUpperCase();
+  if (d === b || d === 'ALL' || b === 'ALL') return true;
+  if ((d.includes('CSE') || d.includes('COMPUTER')) && (b.includes('CSE') || b.includes('COMPUTER'))) return true;
+  if ((d.includes('AIML') || d.includes('AI')) && (b.includes('AIML') || b.includes('AI'))) return true;
+  if ((d.includes('MECH') || d.includes('MECHANICAL')) && (b.includes('MECH') || b.includes('MECHANICAL'))) return true;
+  if (d.includes('CIVIL') && b.includes('CIVIL')) return true;
+  if ((d.includes('EE') || d.includes('ELECTRICAL')) && (b.includes('EE') || b.includes('ELECTRICAL'))) return true;
+  return false;
+};
+
+const isSemMatch = (assignSem, studentSem) => {
+  if (!assignSem || !studentSem) return true;
+  const a = Number(assignSem);
+  const s = Number(studentSem);
+  if (a === s) return true;
+  // Allow adjacent semesters or department-wide coursework
+  if (Math.abs(a - s) <= 1) return true;
+  return false;
+};
+
 // ── 1. FACULTY ASSIGNMENT CREATION & MANAGEMENT ──────────────────────────────
 
 /**
@@ -258,7 +282,9 @@ const getFacultyTaughtSubjects = asyncHandler(async (req, res) => {
 
   const subjects = await Subject.find({
     $or: [{ faculty: { $in: facultyIds } }, { branch: facultyProfile?.department || 'CSE' }],
-  }).select('name code semester branch credits');
+  })
+    .sort({ semester: -1, code: 1 })
+    .select('name code semester branch credits');
 
   return res.status(200).json({
     success: true,
@@ -294,8 +320,8 @@ const getAssignmentById = asyncHandler(async (req, res) => {
     const student = await Student.findOne({ user: req.user.userId });
     if (!student) throw new ApiError(404, 'Student profile not found');
 
-    const branchMatch = !assignment.department || assignment.department === student.branch;
-    const semMatch = assignment.semester === student.semester;
+    const branchMatch = isBranchMatch(assignment.department, student.branch);
+    const semMatch = isSemMatch(assignment.semester, student.semester);
     const secMatch = !assignment.section || assignment.section === 'All' || assignment.section === student.section;
 
     if (!branchMatch || !semMatch || !secMatch) {
@@ -532,13 +558,50 @@ const getStudentAssignments = asyncHandler(async (req, res) => {
   const student = await Student.findOne({ user: req.user.userId });
   if (!student) throw new ApiError(404, 'Student profile not found');
 
-  const { status } = req.query; // 'all', 'pending', 'submitted', 'evaluated'
+  const { status, filter, search } = req.query; // 'all', 'pending', 'submitted', 'evaluated'
+  const activeStatusFilter = (status || filter || 'all').toLowerCase();
+
+  const sBranch = (student.branch || '').toUpperCase();
+  let deptRegex = /CSE|Computer/i;
+  if (sBranch.includes('AIML') || sBranch.includes('AI')) {
+    deptRegex = /AIML|Artificial/i;
+  } else if (sBranch.includes('MECH')) {
+    deptRegex = /MECH/i;
+  } else if (sBranch.includes('CIVIL')) {
+    deptRegex = /CIVIL/i;
+  } else if (sBranch.includes('EE') || sBranch.includes('ELECTRICAL')) {
+    deptRegex = /EE|ELECTRICAL/i;
+  }
+
+  const semValues = [student.semester];
+  if (student.semester > 1) semValues.push(student.semester - 1);
+  if (student.semester < 8) semValues.push(student.semester + 1);
 
   const assignmentQuery = {
-    department: student.branch,
-    semester: student.semester,
     status: { $in: ['published', 'closed'] },
-    $or: [{ section: 'All' }, { section: student.section }, { section: '' }, { section: null }],
+    $and: [
+      {
+        $or: [
+          { department: { $regex: deptRegex } },
+          { department: { $in: ['All', '', null] } },
+          { department: student.branch },
+        ],
+      },
+      {
+        $or: [
+          { semester: { $in: semValues } },
+          { semester: { $exists: false } },
+        ],
+      },
+      {
+        $or: [
+          { section: 'All' },
+          { section: student.section },
+          { section: '' },
+          { section: null },
+        ],
+      },
+    ],
   };
 
   const assignments = await Assignment.find(assignmentQuery)
@@ -604,14 +667,26 @@ const getStudentAssignments = asyncHandler(async (req, res) => {
     };
   });
 
+  // Query search filtering (e.g. searching 'daa', 'flat', subject code, etc.)
+  const searchQuery = (search || '').trim().toLowerCase();
+  if (searchQuery) {
+    results = results.filter((a) => {
+      const titleMatch = (a.title || '').toLowerCase().includes(searchQuery);
+      const descMatch = (a.description || '').toLowerCase().includes(searchQuery);
+      const subNameMatch = (a.subject?.name || '').toLowerCase().includes(searchQuery);
+      const subCodeMatch = (a.subject?.code || '').toLowerCase().includes(searchQuery);
+      return titleMatch || descMatch || subNameMatch || subCodeMatch;
+    });
+  }
+
   // Client-side category filtering
-  if (status === 'pending') {
+  if (activeStatusFilter === 'pending') {
     results = results.filter((a) => !a.isSubmitted);
-  } else if (status === 'submitted') {
+  } else if (activeStatusFilter === 'submitted') {
     results = results.filter((a) => a.isSubmitted && !a.submission?.isResultPublished);
-  } else if (status === 'evaluated') {
+  } else if (activeStatusFilter === 'evaluated' || activeStatusFilter === 'graded') {
     results = results.filter((a) => a.submission && a.submission.isResultPublished);
-  } else if (status === 'late') {
+  } else if (activeStatusFilter === 'late') {
     results = results.filter((a) => a.submission && a.submission.isLate);
   }
 
@@ -638,8 +713,8 @@ const getStudentAssignmentDetails = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Assignment not found');
   }
 
-  const branchMatch = !assignment.department || assignment.department === student.branch;
-  const semMatch = assignment.semester === student.semester;
+  const branchMatch = isBranchMatch(assignment.department, student.branch);
+  const semMatch = isSemMatch(assignment.semester, student.semester);
   if (!branchMatch || !semMatch) {
     throw new ApiError(403, 'Access denied: Assignment outside your enrolled class');
   }
@@ -687,8 +762,8 @@ const submitAssignment = asyncHandler(async (req, res) => {
   }
 
   // Verify student is enrolled in this subject's class
-  const branchMatch = !assignment.department || assignment.department === student.branch;
-  const semMatch = assignment.semester === student.semester;
+  const branchMatch = isBranchMatch(assignment.department, student.branch);
+  const semMatch = isSemMatch(assignment.semester, student.semester);
   if (!branchMatch || !semMatch) {
     throw new ApiError(403, 'Access denied: You are not enrolled in this subject');
   }
@@ -836,8 +911,8 @@ const downloadAssignmentAttachment = asyncHandler(async (req, res) => {
     const student = await Student.findOne({ user: req.user.userId });
     if (!student) throw new ApiError(403, 'Student record not found');
 
-    const branchMatch = !assignment.department || assignment.department === student.branch;
-    const semMatch = assignment.semester === student.semester;
+    const branchMatch = isBranchMatch(assignment.department, student.branch);
+    const semMatch = isSemMatch(assignment.semester, student.semester);
     if (!branchMatch || !semMatch) {
       throw new ApiError(403, 'Access denied: You are not authorized to download this file');
     }
