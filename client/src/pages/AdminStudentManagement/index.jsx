@@ -1647,6 +1647,8 @@ function CanonicalStudentsTab() {
     const errors = {};
     if (!addFormData.rollNumber || !addFormData.rollNumber.trim()) {
       errors.rollNumber = 'Roll Number is required';
+    } else if (/^\d{10}$/.test(addFormData.rollNumber.trim())) {
+      errors.rollNumber = 'A 10-digit mobile phone number cannot be used as a roll number';
     }
     if (!addFormData.fullName || !addFormData.fullName.trim() || addFormData.fullName.trim().length < 2) {
       errors.fullName = 'Full Name is required (minimum 2 characters)';
@@ -1743,6 +1745,28 @@ function CanonicalStudentsTab() {
       setDetailError(err?.response?.data?.message || err.message || 'Failed to update student status');
     } finally {
       setStatusUpdating(false);
+    }
+  };
+
+  const handleDeleteStudent = async () => {
+    if (!selectedStudentId) return;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      const res = await adminService.deleteCanonicalStudent(selectedStudentId);
+      if (res.success) {
+        setIsDeleting(false);
+        setSelectedStudentId(null);
+        setStudentDetail(null);
+        setSaveSuccess(res.message || 'Student record deleted successfully.');
+        loadStudents();
+      } else {
+        setDeleteError(res.message || 'Failed to delete student record');
+      }
+    } catch (err) {
+      setDeleteError(err?.response?.data?.message || err.message || 'Failed to delete student record');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -2036,8 +2060,8 @@ function CanonicalStudentsTab() {
                   </button>
                 </div>
 
-                {/* Administrative Status Management */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: 6, border: '1px solid #E2E8F0', marginTop: 10, marginBottom: 12 }}>
+                {/* Administrative Status & Lifecycle Management */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: 6, border: '1px solid #E2E8F0', marginTop: 10, marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 12, fontWeight: 600, color: '#334155' }}>Manage Status:</span>
                     <select
@@ -2054,12 +2078,48 @@ function CanonicalStudentsTab() {
                       <option value="alumni">Alumni</option>
                       <option value="withdrawn">Withdrawn</option>
                     </select>
+
+                    {student.status === 'active' ? (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange(student._id, 'inactive')}
+                        disabled={statusUpdating}
+                        title="Deactivate student account"
+                        className="sm-btn-secondary"
+                        style={{ padding: '3px 8px', fontSize: 11, color: '#B45309', borderColor: '#FDE68A', background: '#FFFBEB', display: 'flex', alignItems: 'center', gap: 4 }}
+                      >
+                        <UserMinus size={13} /> Deactivate
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange(student._id, 'active')}
+                        disabled={statusUpdating}
+                        title="Reactivate student account"
+                        className="sm-btn-secondary"
+                        style={{ padding: '3px 8px', fontSize: 11, color: '#15803D', borderColor: '#BBF7D0', background: '#F0FDF4', display: 'flex', alignItems: 'center', gap: 4 }}
+                      >
+                        <UserCheck size={13} /> Reactivate
+                      </button>
+                    )}
                   </div>
-                  {statusUpdating && (
-                    <span style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <RefreshCw size={12} className="animate-spin" /> Updating...
-                    </span>
-                  )}
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {statusUpdating && (
+                      <span style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <RefreshCw size={12} className="animate-spin" /> Updating...
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => { setIsDeleting(true); setDeleteError(null); }}
+                      title="Permanently remove student record (strictly checks dependencies)"
+                      className="sm-btn-secondary"
+                      style={{ padding: '3px 8px', fontSize: 11, color: '#DC2626', borderColor: '#FECACA', background: '#FEF2F2', display: 'flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <Trash2 size={13} /> Remove
+                    </button>
+                  </div>
                 </div>
 
                 {/* Identity & Lifecycle Protection Banner */}
@@ -2475,7 +2535,7 @@ function CanonicalStudentsTab() {
                     <input
                       type="text"
                       className={`sm-form-input ${addFormErrors.rollNumber ? 'has-error' : ''}`}
-                      placeholder="e.g. 20240099"
+                      placeholder="e.g. 1/24/SET/BCS/001"
                       value={addFormData.rollNumber}
                       onChange={(e) => setAddFormData({ ...addFormData, rollNumber: e.target.value })}
                     />
@@ -2553,6 +2613,28 @@ function CanonicalStudentsTab() {
                       placeholder="e.g. CSE"
                       value={addFormData.branch}
                       onChange={(e) => setAddFormData({ ...addFormData, branch: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Course</label>
+                    <input
+                      type="text"
+                      className="sm-form-input"
+                      placeholder="e.g. CSE"
+                      value={addFormData.course}
+                      onChange={(e) => setAddFormData({ ...addFormData, course: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="sm-form-group">
+                    <label className="sm-form-label">Batch / Year</label>
+                    <input
+                      type="text"
+                      className="sm-form-input"
+                      placeholder="e.g. 2024/3rd"
+                      value={addFormData.batch}
+                      onChange={(e) => setAddFormData({ ...addFormData, batch: e.target.value })}
                     />
                   </div>
 
@@ -2658,6 +2740,80 @@ function CanonicalStudentsTab() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Safe Delete Confirmation Modal */}
+      {isDeleting && student && (
+        <div className="sm-modal-overlay">
+          <div className="sm-modal-container" style={{ maxWidth: 480 }}>
+            <div className="sm-modal-header" style={{ borderBottom: '1px solid #FEE2E2', background: '#FEF2F2' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <AlertTriangle size={18} style={{ color: '#DC2626' }} />
+                <span style={{ fontWeight: 700, fontSize: 15, color: '#991B1B' }}>Confirm Student Removal</span>
+              </div>
+              <button
+                className="sm-detail-close"
+                onClick={() => { setIsDeleting(false); setDeleteError(null); }}
+                disabled={deleteLoading}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="sm-modal-body" style={{ padding: '16px 20px' }}>
+              {deleteError && (
+                <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#991B1B', padding: '10px 12px', borderRadius: 6, fontSize: 12, marginBottom: 14, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <span>{deleteError}</span>
+                </div>
+              )}
+
+              <p style={{ fontSize: 13, color: '#334155', marginBottom: 12 }}>
+                Are you sure you want to permanently delete student record <strong>{student.rollNumber}</strong> ({student.fullName})?
+              </p>
+
+              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 6, padding: '10px 12px', fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
+                <strong style={{ color: '#0F172A' }}>Safe Deletion Safeguard:</strong>
+                <p style={{ margin: '4px 0 0 0' }}>
+                  A student record can only be permanently removed if they have zero historical dependencies (no attendance records, biometric face vectors, marks, fees, complaints, or submissions).
+                </p>
+                <p style={{ margin: '6px 0 0 0', color: '#64748B' }}>
+                  If historical records exist, deactivating the student by changing their status to <em>Inactive</em> or <em>Withdrawn</em> is required instead to maintain institutional compliance.
+                </p>
+              </div>
+            </div>
+
+            <div className="sm-modal-footer">
+              <button
+                type="button"
+                className="sm-btn-cancel"
+                onClick={() => { setIsDeleting(false); setDeleteError(null); }}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="sm-btn-save"
+                style={{ background: '#DC2626', borderColor: '#DC2626' }}
+                onClick={handleDeleteStudent}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" />
+                    Checking dependencies & deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={14} />
+                    Confirm Permanent Deletion
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

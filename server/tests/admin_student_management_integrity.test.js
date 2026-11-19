@@ -751,4 +751,183 @@ test('Part 11.2: Admin Student Management Integrity Suite', async (t) => {
       assert.ok(!log.summary.includes('password'), 'Passwords must never be mentioned in audit summaries');
     }
   });
+
+  // ── Test 11: 10-digit mobile phone numbers rejected as roll numbers ────────
+  await t.test('11. POST /api/admin/students rejects 10-digit mobile phone numbers as roll numbers', async () => {
+    const res = await fetch(`${baseUrl}/api/admin/students`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        rollNumber: '9876543210',
+        fullName: 'Phone As Roll',
+        branch: 'CSE',
+        semester: 3,
+      }),
+    });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.match(body.message, /10-digit mobile phone numbers? cannot be used as/i);
+  });
+
+  // ── Test 12: Status updates synchronize linked User.isActive ───────────────
+  await t.test('12. PATCH /api/admin/students/:id/status synchronizes linked User.isActive', async () => {
+    const linkedUser = await User.create({
+      name: 'Linked Student User',
+      email: 'linked.student@campus.edu',
+      loginId: 'TEST_LINKED_001',
+      passwordHash: 'hashed_pw_dummy_123',
+      role: 'student',
+      isActive: true,
+    });
+    const linkedStudent = await Student.create({
+      rollNumber: 'TEST_LINKED_ROLL',
+      fullName: 'Linked Student User',
+      user: linkedUser._id,
+      branch: 'CSE',
+      semester: 3,
+      status: 'active',
+      accountStatus: 'active_user',
+    });
+
+    // Deactivate student
+    const resDeact = await fetch(`${baseUrl}/api/admin/students/${linkedStudent._id}/status`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status: 'inactive' }),
+    });
+    assert.equal(resDeact.status, 200);
+
+    const updatedUserDeact = await User.findById(linkedUser._id);
+    assert.equal(updatedUserDeact.isActive, false);
+
+    // Reactivate student
+    const resReact = await fetch(`${baseUrl}/api/admin/students/${linkedStudent._id}/status`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status: 'active' }),
+    });
+    assert.equal(resReact.status, 200);
+
+    const updatedUserReact = await User.findById(linkedUser._id);
+    assert.equal(updatedUserReact.isActive, true);
+  });
+
+  // ── Test 13: DELETE blocks deletion when dependencies exist ────────────────
+  await t.test('13. DELETE /api/admin/students/:id rejects deletion when dependencies exist with 400', async () => {
+    const studentWithAtt = await Student.create({
+      rollNumber: 'ROLL_WITH_ATT',
+      fullName: 'Student With Attendance',
+      branch: 'CSE',
+      semester: 3,
+      status: 'active',
+    });
+    // Create attendance record
+    await Attendance.create({
+      student: studentWithAtt._id,
+      session: new mongoose.Types.ObjectId(),
+      subject: new mongoose.Types.ObjectId(),
+      status: 'present',
+      date: '2026-11-19',
+    });
+
+    const res = await fetch(`${baseUrl}/api/admin/students/${studentWithAtt._id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+    });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.match(body.message, /cannot permanently delete/i);
+    assert.match(body.message, /attendance record/i);
+
+    // Verify student still exists
+    const stillExists = await Student.findById(studentWithAtt._id);
+    assert.ok(stillExists);
+  });
+
+  // ── Test 14: DELETE successfully deletes student with zero dependencies ────
+  await t.test('14. DELETE /api/admin/students/:id deletes student with 0 dependencies and linked user', async () => {
+    const userToDelete = await User.create({
+      name: 'User To Delete',
+      email: 'delete.user@campus.edu',
+      loginId: 'TEST_DEL_001',
+      passwordHash: 'hashed_pw_dummy_123',
+      role: 'student',
+      isActive: true,
+    });
+    const studentToDelete = await Student.create({
+      rollNumber: 'ROLL_TO_DELETE',
+      fullName: 'Student To Delete',
+      user: userToDelete._id,
+      branch: 'CSE',
+      semester: 3,
+      status: 'active',
+    });
+
+    const res = await fetch(`${baseUrl}/api/admin/students/${studentToDelete._id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+    });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.success, true);
+
+    // Verify student is removed
+    const deletedStudent = await Student.findById(studentToDelete._id);
+    assert.equal(deletedStudent, null);
+
+    // Verify user is removed
+    const deletedUser = await User.findById(userToDelete._id);
+    assert.equal(deletedUser, null);
+
+    // Verify audit log
+    const auditLog = await AuditLog.findOne({
+      entityId: studentToDelete._id,
+      action: 'ADMIN_STUDENT_DELETE',
+    });
+    assert.ok(auditLog);
+  });
+
+  // ── Test 15: DELETE RBAC enforces admin only ───────────────────────────────
+  await t.test('15. DELETE /api/admin/students/:id blocks unauthenticated and non-admin requests', async () => {
+    const tempStudent = await Student.create({
+      rollNumber: 'ROLL_RBAC_TEST',
+      fullName: 'RBAC Test Student',
+      branch: 'CSE',
+      semester: 3,
+      status: 'active',
+    });
+
+    // Unauthenticated
+    const resNoAuth = await fetch(`${baseUrl}/api/admin/students/${tempStudent._id}`, {
+      method: 'DELETE',
+    });
+    assert.equal(resNoAuth.status, 401);
+
+    // Faculty token
+    const facultyToken = jwt.sign(
+      { userId: new mongoose.Types.ObjectId().toString(), role: 'faculty' },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+    const resFaculty = await fetch(`${baseUrl}/api/admin/students/${tempStudent._id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${facultyToken}`,
+      },
+    });
+    assert.equal(resFaculty.status, 403);
+  });
 });

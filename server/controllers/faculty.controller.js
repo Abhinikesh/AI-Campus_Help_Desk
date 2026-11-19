@@ -269,7 +269,7 @@ const getSessionDetails = asyncHandler(async (req, res) => {
   const records = await Attendance.find({ session: session._id })
     .populate({
       path: 'student',
-      select: 'rollNumber fullName email branch semester section phone user',
+      select: 'rollNumber fullName email branch semester section user',
       populate: { path: 'user', select: 'name email' },
     })
     .sort({ updatedAt: -1 });
